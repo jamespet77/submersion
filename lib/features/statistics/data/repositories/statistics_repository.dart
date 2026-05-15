@@ -311,7 +311,7 @@ class StatisticsRepository {
 
   /// Get volume-based average SAC by tank role (back gas, stage, deco, etc.)
   ///
-  /// Returns a map of tank role to average SAC in bar/min.
+  /// Returns a map of tank role to average SAC in L/min.
   /// Requires tank volume data.
   Future<Map<String, double>> getSacVolumeByTankRole({String? diverId}) async {
     try {
@@ -334,6 +334,7 @@ class StatisticsRepository {
           AND t.end_pressure IS NOT NULL
           AND COALESCE(d.runtime, d.bottom_time) > 0
           AND d.avg_depth > 0
+          AND t.volume > 0
           $diverFilter
         GROUP BY t.tank_role
         HAVING avg_sac IS NOT NULL

@@ -291,6 +291,23 @@ void main() {
       expect(sacByRole, isNotEmpty);
       expect(sacByRole['backGas']!, greaterThan(0));
     });
+
+    test('excludes tanks with zero volume', () async {
+      await insertDiveWithTank(
+        id: 'dive-zerovol',
+        bottomTimeSeconds: 40 * 60,
+        runtimeSeconds: 42 * 60,
+        avgDepth: 20.0,
+        startPressure: 200,
+        endPressure: 50,
+        tankRole: 'backGas',
+        volume: 0,
+      );
+
+      final sacByRole = await repository.getSacVolumeByTankRole();
+
+      expect(sacByRole, isEmpty);
+    });
   });
 
   // ---------------------------------------------------------------------------
