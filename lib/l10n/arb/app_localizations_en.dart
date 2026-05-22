@@ -2998,13 +2998,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_detail_label_elevation => 'Elevation';
 
   @override
-  String get diveLog_detail_label_entry => 'Entry:';
+  String get diveLog_detail_label_entry => 'Entry';
 
   @override
   String get diveLog_detail_label_entryMethod => 'Entry Method';
 
   @override
-  String get diveLog_detail_label_exit => 'Exit:';
+  String get diveLog_detail_label_exit => 'Exit';
 
   @override
   String get diveLog_detail_label_exitMethod => 'Exit Method';
@@ -9593,6 +9593,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get diveDetailSection_tide_description =>
       'Tide cycle graph and timing';
+
+  @override
+  String get diveDetailSection_surfaceGps_name => 'Surface GPS';
+
+  @override
+  String get diveDetailSection_surfaceGps_description =>
+      'GPS entry/exit points and surface drift';
+
+  @override
+  String get diveLog_detail_section_surfaceGps => 'Surface GPS';
+
+  @override
+  String get diveLog_detail_label_drift => 'Drift';
+
+  @override
+  String get diveLog_detail_surfaceGps_entryOnly => 'Entry point recorded';
+
+  @override
+  String get diveLog_detail_surfaceGps_exitOnly => 'Exit point recorded';
+
+  @override
+  String get diveLog_detail_openInMaps => 'Open in Maps';
 
   @override
   String get diveDetailSection_weights_name => 'Weights';
