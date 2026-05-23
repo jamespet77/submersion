@@ -22,6 +22,18 @@ Dive _diveWithGps({GeoPoint? entry, GeoPoint? exit}) => Dive(
   exitLocation: exit,
 );
 
+Dive _diveWithSite() => Dive(
+  id: 'site-dive',
+  diveNumber: 2,
+  dateTime: DateTime(2026, 5, 22, 9, 14),
+  maxDepth: 30.0,
+  site: const DiveSite(
+    id: 'site-1',
+    name: 'Blue Hole',
+    location: GeoPoint(17.3161, -87.5347),
+  ),
+);
+
 Future<void> _pump(WidgetTester tester, Dive dive) async {
   final overrides = await getBaseOverrides();
   final originalOnError = FlutterError.onError;
@@ -87,5 +99,30 @@ void main() {
     expect(find.byType(PolylineLayer), findsNothing);
     expect(find.byKey(const ValueKey('gps-entry-marker')), findsOneWidget);
     expect(find.byKey(const ValueKey('gps-exit-marker')), findsNothing);
+  });
+
+  testWidgets('exit-only dive centers on exit and shows only the exit marker', (
+    tester,
+  ) async {
+    await _pump(tester, _diveWithGps(exit: const GeoPoint(12.34612, 98.76489)));
+
+    expect(find.byType(FlutterMap), findsOneWidget);
+    expect(find.byType(PolylineLayer), findsNothing);
+    expect(find.byKey(const ValueKey('gps-entry-marker')), findsNothing);
+    expect(find.byKey(const ValueKey('gps-exit-marker')), findsOneWidget);
+  });
+
+  testWidgets('site without GPS renders the map with a View Site affordance', (
+    tester,
+  ) async {
+    await _pump(tester, _diveWithSite());
+
+    expect(find.byType(FlutterMap), findsOneWidget);
+    // No drift line or GPS markers when the location comes from the site.
+    expect(find.byType(PolylineLayer), findsNothing);
+    expect(find.byKey(const ValueKey('gps-entry-marker')), findsNothing);
+    expect(find.byKey(const ValueKey('gps-exit-marker')), findsNothing);
+    // The site affordance (badge + semantics) is present.
+    expect(find.text('View Site'), findsWidgets);
   });
 }

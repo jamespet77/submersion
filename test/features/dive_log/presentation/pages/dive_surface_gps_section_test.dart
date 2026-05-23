@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
@@ -119,5 +120,84 @@ void main() {
       ),
       findsWidgets,
     );
+  });
+
+  testWidgets('exit-only dive shows the exit-only collapsed subtitle', (
+    tester,
+  ) async {
+    await _pump(tester, _gpsDive(exit: const GeoPoint(12.34612, 98.76489)));
+
+    expect(find.text('Surface GPS'), findsOneWidget);
+    expect(find.text('Exit point recorded'), findsOneWidget);
+  });
+
+  testWidgets('tapping the header toggles the Surface GPS section expansion', (
+    tester,
+  ) async {
+    await _pump(
+      tester,
+      _gpsDive(
+        entry: const GeoPoint(12.34567, 98.76543),
+        exit: const GeoPoint(12.34612, 98.76489),
+      ),
+    );
+
+    final section = find.ancestor(
+      of: find.text('Surface GPS'),
+      matching: find.byType(CollapsibleCardSection),
+    );
+    final rotation = find.descendant(
+      of: section,
+      matching: find.byType(AnimatedRotation),
+    );
+    expect(tester.widget<AnimatedRotation>(rotation).turns, 0.0);
+
+    await tester.tap(find.text('Surface GPS'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(tester.widget<AnimatedRotation>(rotation).turns, 0.5);
+  });
+
+  testWidgets('tapping Open in Maps launches an OpenStreetMap url', (
+    tester,
+  ) async {
+    // Tall surface so the button (bottom of the expanded section) is on-screen
+    // and hit-testable rather than scrolled off the default 800x600 viewport.
+    await tester.binding.setSurfaceSize(const Size(600, 3000));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    String? launchedUrl;
+    const channel = MethodChannel('plugins.flutter.io/url_launcher');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (call) async {
+          if (call.method == 'canLaunch') return true;
+          if (call.method == 'launch') {
+            launchedUrl =
+                (call.arguments as Map<dynamic, dynamic>)['url'] as String?;
+            return true;
+          }
+          return null;
+        });
+    addTearDown(
+      () => TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(channel, null),
+    );
+
+    await _pump(
+      tester,
+      _gpsDive(
+        entry: const GeoPoint(12.34567, 98.76543),
+        exit: const GeoPoint(12.34612, 98.76489),
+      ),
+      expanded: true,
+    );
+
+    await tester.tap(find.text('Open in Maps'));
+    await tester.pump();
+
+    expect(launchedUrl, isNotNull);
+    expect(launchedUrl, contains('openstreetmap.org'));
+    expect(launchedUrl, contains('12.34567'));
   });
 }
