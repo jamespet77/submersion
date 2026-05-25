@@ -3638,9 +3638,17 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 74) await reportProgress();
         if (from < 75) {
-          await customStatement(
-            'ALTER TABLE diver_settings ADD COLUMN default_show_gas_timeline INTEGER NOT NULL DEFAULT 0',
-          );
+          final cols = await customSelect(
+            "PRAGMA table_info('diver_settings')",
+          ).get();
+          if (cols.isNotEmpty) {
+            final existing = cols.map((c) => c.read<String>('name')).toSet();
+            if (!existing.contains('default_show_gas_timeline')) {
+              await customStatement(
+                'ALTER TABLE diver_settings ADD COLUMN default_show_gas_timeline INTEGER NOT NULL DEFAULT 0',
+              );
+            }
+          }
         }
         if (from < 75) await reportProgress();
       },
