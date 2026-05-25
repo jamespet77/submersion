@@ -835,6 +835,8 @@ class DiverSettings extends Table {
       boolean().withDefault(const Constant(false))();
   BoolColumn get defaultShowGasSwitchMarkers =>
       boolean().withDefault(const Constant(true))();
+  BoolColumn get defaultShowGasTimeline =>
+      boolean().withDefault(const Constant(true))();
   // Notification settings (v26)
   BoolColumn get notificationsEnabled =>
       boolean().withDefault(const Constant(true))();
@@ -1457,7 +1459,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 74;
+  static const int currentSchemaVersion = 75;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1535,6 +1537,7 @@ class AppDatabase extends _$AppDatabase {
     72,
     73,
     74,
+    75,
   ];
 
   /// Returns the number of migration steps that will execute when upgrading
@@ -3634,6 +3637,12 @@ class AppDatabase extends _$AppDatabase {
           }
         }
         if (from < 74) await reportProgress();
+        if (from < 75) {
+          await customStatement(
+            'ALTER TABLE diver_settings ADD COLUMN default_show_gas_timeline INTEGER NOT NULL DEFAULT 1',
+          );
+        }
+        if (from < 75) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
