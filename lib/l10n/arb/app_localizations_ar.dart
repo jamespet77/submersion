@@ -15714,6 +15714,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'Connected services & integrations';
 
   @override
+  String get settings_siteMatch_title => 'Auto site matching';
+
+  @override
+  String get settings_siteMatch_subtitle =>
+      'How aggressively downloaded dives are matched to sites';
+
+  @override
+  String get settings_siteMatch_strict => 'Strict';
+
+  @override
+  String get settings_siteMatch_balanced => 'Balanced';
+
+  @override
+  String get settings_siteMatch_relaxed => 'Relaxed';
+
+  @override
   String get settings_dataSources_header => 'Data Sources';
 
   @override

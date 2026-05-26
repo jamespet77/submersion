@@ -15248,6 +15248,22 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_section_dataSources_subtitle => '健康数据集成';
 
   @override
+  String get settings_siteMatch_title => 'Auto site matching';
+
+  @override
+  String get settings_siteMatch_subtitle =>
+      'How aggressively downloaded dives are matched to sites';
+
+  @override
+  String get settings_siteMatch_strict => 'Strict';
+
+  @override
+  String get settings_siteMatch_balanced => 'Balanced';
+
+  @override
+  String get settings_siteMatch_relaxed => 'Relaxed';
+
+  @override
   String get settings_dataSources_header => 'Apple HealthKit 集成';
 
   @override

@@ -2,9 +2,9 @@ import 'package:submersion/core/providers/provider.dart';
 
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_sites/data/services/site_matching_service.dart';
-import 'package:submersion/features/dive_sites/domain/matching/site_match_sensitivity.dart';
 import 'package:submersion/features/dive_sites/presentation/providers/site_providers.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
+import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 
 class SiteMatchReviewState {
   final bool isLoading;
@@ -49,9 +49,7 @@ class SiteMatchReviewNotifier extends StateNotifier<SiteMatchReviewState> {
     try {
       final diverId = await _ref.read(validatedCurrentDiverIdProvider.future);
       final diveRepo = _ref.read(diveRepositoryProvider);
-      // Phase F (Task 17) swaps this for the persisted setting:
-      //   _ref.read(settingsProvider).siteMatchSensitivity
-      const sensitivity = SiteMatchSensitivity.balanced;
+      final sensitivity = _ref.read(settingsProvider).siteMatchSensitivity;
 
       final dives = await diveRepo.getDivesNeedingSiteMatch(
         diverId: diverId,

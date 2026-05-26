@@ -27018,6 +27018,36 @@ abstract class AppLocalizations {
   /// **'Health data integration'**
   String get settings_section_dataSources_subtitle;
 
+  /// No description provided for @settings_siteMatch_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto site matching'**
+  String get settings_siteMatch_title;
+
+  /// No description provided for @settings_siteMatch_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How aggressively downloaded dives are matched to sites'**
+  String get settings_siteMatch_subtitle;
+
+  /// No description provided for @settings_siteMatch_strict.
+  ///
+  /// In en, this message translates to:
+  /// **'Strict'**
+  String get settings_siteMatch_strict;
+
+  /// No description provided for @settings_siteMatch_balanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get settings_siteMatch_balanced;
+
+  /// No description provided for @settings_siteMatch_relaxed.
+  ///
+  /// In en, this message translates to:
+  /// **'Relaxed'**
+  String get settings_siteMatch_relaxed;
+
   /// No description provided for @settings_dataSources_header.
   ///
   /// In en, this message translates to:
