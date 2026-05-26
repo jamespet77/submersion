@@ -217,6 +217,66 @@ class DiveRepository {
     }
   }
 
+  /// Sets (or clears, when [siteId] is null) only the site association of a
+  /// dive. Single-column update — does not rewrite the whole row.
+  Future<void> setSite(String diveId, String? siteId) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.dives)..where((t) => t.id.equals(diveId))).write(
+        DivesCompanion(siteId: Value(siteId), updatedAt: Value(now)),
+      );
+      await _syncRepository.markRecordPending(
+        entityType: 'dives',
+        recordId: diveId,
+        localUpdatedAt: now,
+      );
+      SyncEventBus.notifyLocalChange();
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to set site on dive: $diveId',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// Dives that have entry or exit GPS but no assigned site.
+  /// When [limitToIds] is provided, restricts to that id set (post-download
+  /// seed); otherwise returns the whole eligible backlog.
+  Future<List<domain.Dive>> getDivesNeedingSiteMatch({
+    String? diverId,
+    List<String>? limitToIds,
+  }) async {
+    try {
+      final query = _db.select(_db.dives)
+        ..where((t) {
+          final hasGps =
+              (t.entryLatitude.isNotNull() & t.entryLongitude.isNotNull()) |
+              (t.exitLatitude.isNotNull() & t.exitLongitude.isNotNull());
+          var cond = t.siteId.isNull() & hasGps;
+          if (diverId != null) cond = cond & t.diverId.equals(diverId);
+          return cond;
+        })
+        ..orderBy([(t) => OrderingTerm.desc(t.diveDateTime)]);
+
+      var rows = await query.get();
+      if (limitToIds != null) {
+        final allowed = limitToIds.toSet();
+        rows = rows.where((r) => allowed.contains(r.id)).toList();
+      }
+      if (rows.isEmpty) return [];
+      return Future.wait(rows.map(_mapRowToDive));
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to get dives needing site match',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
   /// Get profile data for a single dive (for lazy loading in list views)
   Future<List<domain.DiveProfilePoint>> getDiveProfile(String diveId) async {
     try {
