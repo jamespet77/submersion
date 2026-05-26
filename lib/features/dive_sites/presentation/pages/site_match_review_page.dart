@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/features/dive_sites/data/services/site_matching_service.dart';
 import 'package:submersion/features/dive_sites/presentation/providers/site_match_review_notifier.dart';
+import 'package:submersion/l10n/l10n_extension.dart';
 
 /// Reviews auto-matched dives and lets the user resolve ambiguous/unmatched
 /// ones. Reached post-download (seeded with imported dive ids) and from the
@@ -14,16 +15,17 @@ class SiteMatchReviewPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final state = ref.watch(siteMatchReviewProvider(diveIds));
     final notifier = ref.read(siteMatchReviewProvider(diveIds).notifier);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Match Sites'),
+        title: Text(l10n.siteMatchReview_title),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Done'),
+            child: Text(l10n.siteMatchReview_done),
           ),
         ],
       ),
@@ -36,14 +38,20 @@ class SiteMatchReviewPage extends ConsumerWidget {
             return Center(child: Text(state.errorMessage!));
           }
           if (state.entries.isEmpty) {
-            return const Center(child: Text('Nothing to match.'));
+            return Center(child: Text(l10n.siteMatchReview_empty));
           }
           return ListView(
             children: [
-              _Summary(
-                matched: state.matchedCount,
-                review: state.reviewCount,
-                noMatch: state.noMatchCount,
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  l10n.siteMatchReview_summary(
+                    state.matchedCount,
+                    state.reviewCount,
+                    state.noMatchCount,
+                  ),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ),
               for (final e in state.entries)
                 _EntryTile(
@@ -59,27 +67,6 @@ class SiteMatchReviewPage extends ConsumerWidget {
   }
 }
 
-class _Summary extends StatelessWidget {
-  const _Summary({
-    required this.matched,
-    required this.review,
-    required this.noMatch,
-  });
-
-  final int matched;
-  final int review;
-  final int noMatch;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.all(16),
-    child: Text(
-      '$matched matched · $review to review · $noMatch no match',
-      style: Theme.of(context).textTheme.titleMedium,
-    ),
-  );
-}
-
 class _EntryTile extends StatelessWidget {
   const _EntryTile({
     required this.entry,
@@ -93,43 +80,62 @@ class _EntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final title = 'Dive #${entry.dive.diveNumber ?? '?'}';
+
+    List<Widget> candidateTiles() => [
+      for (final c in entry.candidates)
+        ListTile(
+          title: Text(c.name),
+          subtitle: Text(
+            l10n.siteMatchReview_candidateSubtitle(
+              c.distanceMeters.round(),
+              c.isExisting
+                  ? l10n.siteMatchReview_sourceExisting
+                  : l10n.siteMatchReview_sourceBundled,
+            ),
+          ),
+          onTap: () => onPick(c.id),
+        ),
+    ];
+
     switch (entry.status) {
       case MatchEntryStatus.autoMatched:
-        return ListTile(
+        final base = l10n.siteMatchReview_matchedSubtitle(
+          entry.siteName ?? '',
+          entry.distanceMeters?.round() ?? 0,
+        );
+        final subtitle = entry.isNewlyCreated
+            ? '$base · ${l10n.siteMatchReview_newlyAdded}'
+            : base;
+        return ExpansionTile(
           leading: const Icon(Icons.check_circle, color: Colors.green),
           title: Text(title),
-          subtitle: Text(
-            '${entry.siteName} · ${entry.distanceMeters?.round()} m'
-            '${entry.isNewlyCreated ? ' · newly added' : ''}',
-          ),
-          trailing: TextButton(
-            onPressed: onUnlink,
-            child: const Text('Unlink'),
-          ),
+          subtitle: Text(subtitle),
+          children: [
+            // Expand to unlink or change to a different nearby site.
+            ListTile(
+              leading: const Icon(Icons.link_off),
+              title: Text(l10n.siteMatchReview_unlink),
+              onTap: onUnlink,
+            ),
+            ...candidateTiles(),
+          ],
         );
       case MatchEntryStatus.needsReview:
         return ExpansionTile(
           leading: const Icon(Icons.help_outline),
           title: Text(title),
-          subtitle: Text('${entry.candidates.length} nearby sites'),
-          children: [
-            for (final c in entry.candidates)
-              ListTile(
-                title: Text(c.name),
-                subtitle: Text(
-                  '${c.distanceMeters.round()} m · '
-                  '${c.isExisting ? 'your site' : 'import'}',
-                ),
-                onTap: () => onPick(c.id),
-              ),
-          ],
+          subtitle: Text(
+            l10n.siteMatchReview_nearbySites(entry.candidates.length),
+          ),
+          children: candidateTiles(),
         );
       case MatchEntryStatus.noMatch:
         return ListTile(
           leading: const Icon(Icons.location_off_outlined),
           title: Text(title),
-          subtitle: const Text('No nearby site'),
+          subtitle: Text(l10n.siteMatchReview_noNearbySite),
         );
     }
   }

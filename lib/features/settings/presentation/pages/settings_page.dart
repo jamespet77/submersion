@@ -1846,12 +1846,11 @@ class _DataSectionContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader(context, context.l10n.settings_siteMatch_title),
-          const SizedBox(height: 8),
           Card(
             child: ListTile(
               leading: const Icon(Icons.add_location_alt_outlined),
-              title: Text(context.l10n.settings_siteMatch_subtitle),
+              title: Text(context.l10n.settings_siteMatch_title),
+              subtitle: Text(context.l10n.settings_siteMatch_subtitle),
               trailing: DropdownButton<SiteMatchSensitivity>(
                 value: ref.watch(settingsProvider).siteMatchSensitivity,
                 underline: const SizedBox.shrink(),

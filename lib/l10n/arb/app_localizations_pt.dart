@@ -4071,6 +4071,53 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
 
   @override
+  String get siteMatchReview_title => 'Match Sites';
+
+  @override
+  String get siteMatchReview_done => 'Done';
+
+  @override
+  String get siteMatchReview_empty => 'Nothing to match.';
+
+  @override
+  String siteMatchReview_summary(int matched, int review, int noMatch) {
+    return '$matched matched · $review to review · $noMatch no match';
+  }
+
+  @override
+  String siteMatchReview_matchedSubtitle(String site, int meters) {
+    return '$site · $meters m';
+  }
+
+  @override
+  String get siteMatchReview_newlyAdded => 'newly added';
+
+  @override
+  String get siteMatchReview_change => 'Change';
+
+  @override
+  String get siteMatchReview_unlink => 'Unlink';
+
+  @override
+  String siteMatchReview_nearbySites(int count) {
+    return '$count nearby sites';
+  }
+
+  @override
+  String siteMatchReview_candidateSubtitle(int meters, String source) {
+    return '$meters m · $source';
+  }
+
+  @override
+  String get siteMatchReview_sourceExisting => 'your site';
+
+  @override
+  String get siteMatchReview_sourceBundled => 'import';
+
+  @override
+  String get siteMatchReview_noNearbySite => 'No nearby site';
+
+  @override
   String importSummary_matchSitesButton(int count) {
     return 'Match $count dives to sites';
   }

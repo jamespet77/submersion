@@ -160,12 +160,28 @@ class SiteMatchingService {
       }
       _refsByDive[dive.id] = refs;
 
+      // Display views for every in-range candidate, so auto-matched rows can
+      // still offer "Change" and review rows can list alternatives.
+      final rankedViews =
+          candidates
+              .map(
+                (c) => MatchCandidateView(
+                  id: c.id,
+                  name: _nameOf(refs[c.id]!),
+                  isExisting: c.isExisting,
+                  distanceMeters: distanceMeters(point, c.location),
+                ),
+              )
+              .where((v) => v.distanceMeters <= thresholds.outerRadiusMeters)
+              .toList()
+            ..sort((a, b) => a.distanceMeters.compareTo(b.distanceMeters));
+
       final outcome = matchDive(
         point: point,
         candidates: candidates,
         thresholds: thresholds,
       );
-      entries.add(await _toEntry(dive, outcome, refs));
+      entries.add(await _toEntry(dive, outcome, refs, rankedViews));
     }
     return entries;
   }
@@ -174,24 +190,16 @@ class SiteMatchingService {
     Dive dive,
     SiteMatchOutcome outcome,
     Map<String, _CandidateRef> refs,
+    List<MatchCandidateView> rankedViews,
   ) async {
     switch (outcome) {
       case NoMatch():
         return DiveMatchEntry(dive: dive, status: MatchEntryStatus.noMatch);
-      case Suggested(:final candidates):
+      case Suggested():
         return DiveMatchEntry(
           dive: dive,
           status: MatchEntryStatus.needsReview,
-          candidates: candidates
-              .map(
-                (r) => MatchCandidateView(
-                  id: r.candidate.id,
-                  name: _nameOf(refs[r.candidate.id]!),
-                  isExisting: r.candidate.isExisting,
-                  distanceMeters: r.distanceMeters,
-                ),
-              )
-              .toList(),
+          candidates: rankedViews,
         );
       case AutoMatch(:final siteId, :final distanceMeters):
         final applied = await _applyCandidate(dive.id, refs[siteId]!);
@@ -203,6 +211,7 @@ class SiteMatchingService {
           siteName: applied.siteName,
           distanceMeters: distanceMeters,
           isNewlyCreated: applied.isNewlyCreated,
+          candidates: rankedViews,
         );
     }
   }
@@ -222,8 +231,9 @@ class SiteMatchingService {
 
   Future<void> unlink(String diveId) async {
     final prior = _appliedSiteByDive.remove(diveId);
-    await _diveRepository.setSite(diveId, null);
+    // Nothing was applied by this session -> no DB write or sync event needed.
     if (prior == null) return;
+    await _diveRepository.setSite(diveId, null);
 
     final refs = _createdSiteRefs[prior];
     if (refs != null) {

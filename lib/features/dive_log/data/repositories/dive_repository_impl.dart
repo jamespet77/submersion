@@ -248,6 +248,8 @@ class DiveRepository {
     String? diverId,
     List<String>? limitToIds,
   }) async {
+    // An explicit empty id set means "match nothing" — skip the query.
+    if (limitToIds != null && limitToIds.isEmpty) return [];
     try {
       final query = _db.select(_db.dives)
         ..where((t) {
@@ -256,15 +258,12 @@ class DiveRepository {
               (t.exitLatitude.isNotNull() & t.exitLongitude.isNotNull());
           var cond = t.siteId.isNull() & hasGps;
           if (diverId != null) cond = cond & t.diverId.equals(diverId);
+          if (limitToIds != null) cond = cond & t.id.isIn(limitToIds);
           return cond;
         })
         ..orderBy([(t) => OrderingTerm.desc(t.diveDateTime)]);
 
-      var rows = await query.get();
-      if (limitToIds != null) {
-        final allowed = limitToIds.toSet();
-        rows = rows.where((r) => allowed.contains(r.id)).toList();
-      }
+      final rows = await query.get();
       if (rows.isEmpty) return [];
       return Future.wait(rows.map(_mapRowToDive));
     } catch (e, stackTrace) {

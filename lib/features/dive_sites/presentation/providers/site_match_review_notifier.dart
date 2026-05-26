@@ -88,16 +88,22 @@ class SiteMatchReviewNotifier extends StateNotifier<SiteMatchReviewState> {
         siteName: applied.siteName,
         distanceMeters: chosen.distanceMeters,
         isNewlyCreated: applied.isNewlyCreated,
-        candidates: const [],
+        // Candidates are retained so the row can still offer "Change".
       );
     });
   }
 
   Future<void> unlink(String diveId) async {
     await _service?.unlink(diveId);
+    // Drop back to review when alternatives remain, otherwise no match.
     _replace(
       diveId,
-      (e) => e.copyWith(status: MatchEntryStatus.noMatch, clearSite: true),
+      (e) => e.copyWith(
+        status: e.candidates.isNotEmpty
+            ? MatchEntryStatus.needsReview
+            : MatchEntryStatus.noMatch,
+        clearSite: true,
+      ),
     );
   }
 

@@ -2019,6 +2019,43 @@
   "diveLog_listPage_menuAdvancedSearch": "Advanced Search",
   "diveLog_listPage_menuDiveNumbering": "Dive Numbering",
   "diveLog_listPage_menuMatchSites": "Match Dives to Sites",
+  "siteMatchReview_title": "Match Sites",
+  "siteMatchReview_done": "Done",
+  "siteMatchReview_empty": "Nothing to match.",
+  "siteMatchReview_summary": "{matched} matched · {review} to review · {noMatch} no match",
+  "@siteMatchReview_summary": {
+    "placeholders": {
+      "matched": { "type": "int" },
+      "review": { "type": "int" },
+      "noMatch": { "type": "int" }
+    }
+  },
+  "siteMatchReview_matchedSubtitle": "{site} · {meters} m",
+  "@siteMatchReview_matchedSubtitle": {
+    "placeholders": {
+      "site": { "type": "String" },
+      "meters": { "type": "int" }
+    }
+  },
+  "siteMatchReview_newlyAdded": "newly added",
+  "siteMatchReview_change": "Change",
+  "siteMatchReview_unlink": "Unlink",
+  "siteMatchReview_nearbySites": "{count} nearby sites",
+  "@siteMatchReview_nearbySites": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "siteMatchReview_candidateSubtitle": "{meters} m · {source}",
+  "@siteMatchReview_candidateSubtitle": {
+    "placeholders": {
+      "meters": { "type": "int" },
+      "source": { "type": "String" }
+    }
+  },
+  "siteMatchReview_sourceExisting": "your site",
+  "siteMatchReview_sourceBundled": "import",
+  "siteMatchReview_noNearbySite": "No nearby site",
   "importSummary_matchSitesButton": "Match {count} dives to sites",
   "@importSummary_matchSitesButton": {
     "placeholders": {

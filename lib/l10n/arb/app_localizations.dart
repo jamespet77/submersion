@@ -6928,6 +6928,84 @@ abstract class AppLocalizations {
   /// **'Match Dives to Sites'**
   String get diveLog_listPage_menuMatchSites;
 
+  /// No description provided for @siteMatchReview_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Match Sites'**
+  String get siteMatchReview_title;
+
+  /// No description provided for @siteMatchReview_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get siteMatchReview_done;
+
+  /// No description provided for @siteMatchReview_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to match.'**
+  String get siteMatchReview_empty;
+
+  /// No description provided for @siteMatchReview_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{matched} matched · {review} to review · {noMatch} no match'**
+  String siteMatchReview_summary(int matched, int review, int noMatch);
+
+  /// No description provided for @siteMatchReview_matchedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{site} · {meters} m'**
+  String siteMatchReview_matchedSubtitle(String site, int meters);
+
+  /// No description provided for @siteMatchReview_newlyAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'newly added'**
+  String get siteMatchReview_newlyAdded;
+
+  /// No description provided for @siteMatchReview_change.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get siteMatchReview_change;
+
+  /// No description provided for @siteMatchReview_unlink.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlink'**
+  String get siteMatchReview_unlink;
+
+  /// No description provided for @siteMatchReview_nearbySites.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} nearby sites'**
+  String siteMatchReview_nearbySites(int count);
+
+  /// No description provided for @siteMatchReview_candidateSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{meters} m · {source}'**
+  String siteMatchReview_candidateSubtitle(int meters, String source);
+
+  /// No description provided for @siteMatchReview_sourceExisting.
+  ///
+  /// In en, this message translates to:
+  /// **'your site'**
+  String get siteMatchReview_sourceExisting;
+
+  /// No description provided for @siteMatchReview_sourceBundled.
+  ///
+  /// In en, this message translates to:
+  /// **'import'**
+  String get siteMatchReview_sourceBundled;
+
+  /// No description provided for @siteMatchReview_noNearbySite.
+  ///
+  /// In en, this message translates to:
+  /// **'No nearby site'**
+  String get siteMatchReview_noNearbySite;
+
   /// No description provided for @importSummary_matchSitesButton.
   ///
   /// In en, this message translates to:
