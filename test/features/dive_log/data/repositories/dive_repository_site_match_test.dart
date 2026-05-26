@@ -88,4 +88,24 @@ void main() {
     final result = await repo.getDivesNeedingSiteMatch(limitToIds: ['a']);
     expect(result.map((d) => d.id), ['a']);
   });
+
+  test(
+    'getDivesNeedingSiteMatch filters by diverId and returns empty',
+    () async {
+      await insertDive('withGps', lat: 1, lng: 2); // no diverId on this dive
+
+      final result = await repo.getDivesNeedingSiteMatch(diverId: 'nobody');
+      expect(result, isEmpty);
+    },
+  );
+
+  test(
+    'getDivesNeedingSiteMatch short-circuits an empty limitToIds set',
+    () async {
+      await insertDive('withGps', lat: 1, lng: 2);
+
+      final result = await repo.getDivesNeedingSiteMatch(limitToIds: const []);
+      expect(result, isEmpty);
+    },
+  );
 }
