@@ -4073,38 +4073,38 @@ class AppLocalizationsIt extends AppLocalizations {
   String get diveLog_listPage_menuDiveNumbering => 'Numerazione immersioni';
 
   @override
-  String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
+  String get diveLog_listPage_menuMatchSites => 'Associa le immersioni ai siti';
 
   @override
-  String get siteMatchReview_title => 'Match Sites';
+  String get siteMatchReview_title => 'Associa siti';
 
   @override
-  String get siteMatchReview_empty => 'Nothing to match.';
+  String get siteMatchReview_empty => 'Niente da associare.';
 
   @override
   String siteMatchReview_summary(int selected, int review, int none) {
-    return '$selected selected · $review to review · $none no match';
+    return '$selected selezionate · $review da rivedere · $none senza corrispondenza';
   }
 
   @override
   String siteMatchReview_confirm(int count) {
-    return 'Confirm $count matches';
+    return 'Conferma $count associazioni';
   }
 
   @override
-  String get siteMatchReview_cancel => 'Cancel';
+  String get siteMatchReview_cancel => 'Annulla';
 
   @override
-  String get siteMatchReview_tapToChoose => 'Tap to choose a site';
+  String get siteMatchReview_tapToChoose => 'Tocca per scegliere un sito';
 
   @override
   String siteMatchReview_awayMeters(int meters) {
-    return '$meters m away';
+    return 'a $meters m';
   }
 
   @override
   String siteMatchReview_depthTo(int meters) {
-    return 'to $meters m';
+    return 'fino a $meters m';
   }
 
   @override
@@ -4114,37 +4114,38 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String siteMatchReview_appliedSnack(int dives, int sites) {
-    return 'Linked $dives dives · added $sites sites';
+    return '$dives immersioni associate · $sites siti aggiunti';
   }
 
   @override
-  String get siteMatchReview_applyError => 'Couldn\'t apply matches';
+  String get siteMatchReview_applyError =>
+      'Impossibile applicare le associazioni';
 
   @override
-  String get siteMatchReview_discardTitle => 'Discard matches?';
+  String get siteMatchReview_discardTitle => 'Scartare le associazioni?';
 
   @override
   String get siteMatchReview_discardMessage =>
-      'Your selections won\'t be saved.';
+      'La tua selezione non verrà salvata.';
 
   @override
-  String get siteMatchReview_discardConfirm => 'Discard';
+  String get siteMatchReview_discardConfirm => 'Scarta';
 
   @override
-  String get siteMatchReview_keepReviewing => 'Keep reviewing';
+  String get siteMatchReview_keepReviewing => 'Continua a rivedere';
 
   @override
-  String get siteMatchReview_sourceExisting => 'your site';
+  String get siteMatchReview_sourceExisting => 'il tuo sito';
 
   @override
-  String get siteMatchReview_sourceBundled => 'import';
+  String get siteMatchReview_sourceBundled => 'importato';
 
   @override
-  String get siteMatchReview_noNearbySite => 'No nearby site';
+  String get siteMatchReview_noNearbySite => 'Nessun sito nelle vicinanze';
 
   @override
   String importSummary_matchSitesButton(int count) {
-    return 'Match $count dives to sites';
+    return 'Associa $count immersioni ai siti';
   }
 
   @override
@@ -16087,20 +16088,20 @@ class AppLocalizationsIt extends AppLocalizations {
       'Connected services & integrations';
 
   @override
-  String get settings_siteMatch_title => 'Auto site matching';
+  String get settings_siteMatch_title => 'Associazione automatica dei siti';
 
   @override
   String get settings_siteMatch_subtitle =>
-      'How aggressively downloaded dives are matched to sites';
+      'Con quanta intensità le immersioni scaricate vengono associate ai siti';
 
   @override
-  String get settings_siteMatch_strict => 'Strict';
+  String get settings_siteMatch_strict => 'Rigoroso';
 
   @override
-  String get settings_siteMatch_balanced => 'Balanced';
+  String get settings_siteMatch_balanced => 'Bilanciato';
 
   @override
-  String get settings_siteMatch_relaxed => 'Relaxed';
+  String get settings_siteMatch_relaxed => 'Rilassato';
 
   @override
   String get settings_dataSources_header => 'Data Sources';

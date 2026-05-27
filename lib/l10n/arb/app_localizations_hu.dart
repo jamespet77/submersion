@@ -4054,38 +4054,39 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_listPage_menuDiveNumbering => 'Merules szamozas';
 
   @override
-  String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
+  String get diveLog_listPage_menuMatchSites =>
+      'Merülések hozzárendelése helyekhez';
 
   @override
-  String get siteMatchReview_title => 'Match Sites';
+  String get siteMatchReview_title => 'Helyek hozzárendelése';
 
   @override
-  String get siteMatchReview_empty => 'Nothing to match.';
+  String get siteMatchReview_empty => 'Nincs mit hozzárendelni.';
 
   @override
   String siteMatchReview_summary(int selected, int review, int none) {
-    return '$selected selected · $review to review · $none no match';
+    return '$selected kiválasztva · $review ellenőrzendő · $none nincs találat';
   }
 
   @override
   String siteMatchReview_confirm(int count) {
-    return 'Confirm $count matches';
+    return '$count hozzárendelés megerősítése';
   }
 
   @override
-  String get siteMatchReview_cancel => 'Cancel';
+  String get siteMatchReview_cancel => 'Mégse';
 
   @override
-  String get siteMatchReview_tapToChoose => 'Tap to choose a site';
+  String get siteMatchReview_tapToChoose => 'Koppints egy hely kiválasztásához';
 
   @override
   String siteMatchReview_awayMeters(int meters) {
-    return '$meters m away';
+    return '$meters m távolságra';
   }
 
   @override
   String siteMatchReview_depthTo(int meters) {
-    return 'to $meters m';
+    return '$meters m-ig';
   }
 
   @override
@@ -4095,37 +4096,38 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String siteMatchReview_appliedSnack(int dives, int sites) {
-    return 'Linked $dives dives · added $sites sites';
+    return '$dives merülés összekapcsolva · $sites hely hozzáadva';
   }
 
   @override
-  String get siteMatchReview_applyError => 'Couldn\'t apply matches';
+  String get siteMatchReview_applyError =>
+      'A hozzárendelések nem alkalmazhatók';
 
   @override
-  String get siteMatchReview_discardTitle => 'Discard matches?';
+  String get siteMatchReview_discardTitle => 'Elveted a hozzárendeléseket?';
 
   @override
   String get siteMatchReview_discardMessage =>
-      'Your selections won\'t be saved.';
+      'A kiválasztásod nem lesz mentve.';
 
   @override
-  String get siteMatchReview_discardConfirm => 'Discard';
+  String get siteMatchReview_discardConfirm => 'Elvetés';
 
   @override
-  String get siteMatchReview_keepReviewing => 'Keep reviewing';
+  String get siteMatchReview_keepReviewing => 'Ellenőrzés folytatása';
 
   @override
-  String get siteMatchReview_sourceExisting => 'your site';
+  String get siteMatchReview_sourceExisting => 'saját hely';
 
   @override
-  String get siteMatchReview_sourceBundled => 'import';
+  String get siteMatchReview_sourceBundled => 'importált';
 
   @override
-  String get siteMatchReview_noNearbySite => 'No nearby site';
+  String get siteMatchReview_noNearbySite => 'Nincs közeli hely';
 
   @override
   String importSummary_matchSitesButton(int count) {
-    return 'Match $count dives to sites';
+    return '$count merülés hozzárendelése helyekhez';
   }
 
   @override
@@ -16041,20 +16043,20 @@ class AppLocalizationsHu extends AppLocalizations {
       'Connected services & integrations';
 
   @override
-  String get settings_siteMatch_title => 'Auto site matching';
+  String get settings_siteMatch_title => 'Automatikus helyhozzárendelés';
 
   @override
   String get settings_siteMatch_subtitle =>
-      'How aggressively downloaded dives are matched to sites';
+      'Mennyire agresszíven rendelődnek a letöltött merülések a helyekhez';
 
   @override
-  String get settings_siteMatch_strict => 'Strict';
+  String get settings_siteMatch_strict => 'Szigorú';
 
   @override
-  String get settings_siteMatch_balanced => 'Balanced';
+  String get settings_siteMatch_balanced => 'Kiegyensúlyozott';
 
   @override
-  String get settings_siteMatch_relaxed => 'Relaxed';
+  String get settings_siteMatch_relaxed => 'Laza';
 
   @override
   String get settings_dataSources_header => 'Data Sources';

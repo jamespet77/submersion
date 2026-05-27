@@ -4038,38 +4038,38 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_listPage_menuDiveNumbering => 'Duiknummering';
 
   @override
-  String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
+  String get diveLog_listPage_menuMatchSites => 'Duiken aan stekken koppelen';
 
   @override
-  String get siteMatchReview_title => 'Match Sites';
+  String get siteMatchReview_title => 'Stekken koppelen';
 
   @override
-  String get siteMatchReview_empty => 'Nothing to match.';
+  String get siteMatchReview_empty => 'Niets om te koppelen.';
 
   @override
   String siteMatchReview_summary(int selected, int review, int none) {
-    return '$selected selected · $review to review · $none no match';
+    return '$selected geselecteerd · $review te beoordelen · $none geen match';
   }
 
   @override
   String siteMatchReview_confirm(int count) {
-    return 'Confirm $count matches';
+    return '$count koppelingen bevestigen';
   }
 
   @override
-  String get siteMatchReview_cancel => 'Cancel';
+  String get siteMatchReview_cancel => 'Annuleren';
 
   @override
-  String get siteMatchReview_tapToChoose => 'Tap to choose a site';
+  String get siteMatchReview_tapToChoose => 'Tik om een stek te kiezen';
 
   @override
   String siteMatchReview_awayMeters(int meters) {
-    return '$meters m away';
+    return '$meters m verderop';
   }
 
   @override
   String siteMatchReview_depthTo(int meters) {
-    return 'to $meters m';
+    return 'tot $meters m';
   }
 
   @override
@@ -4079,37 +4079,37 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String siteMatchReview_appliedSnack(int dives, int sites) {
-    return 'Linked $dives dives · added $sites sites';
+    return '$dives duiken gekoppeld · $sites stekken toegevoegd';
   }
 
   @override
-  String get siteMatchReview_applyError => 'Couldn\'t apply matches';
+  String get siteMatchReview_applyError => 'Kan koppelingen niet toepassen';
 
   @override
-  String get siteMatchReview_discardTitle => 'Discard matches?';
+  String get siteMatchReview_discardTitle => 'Koppelingen verwerpen?';
 
   @override
   String get siteMatchReview_discardMessage =>
-      'Your selections won\'t be saved.';
+      'Je selectie wordt niet opgeslagen.';
 
   @override
-  String get siteMatchReview_discardConfirm => 'Discard';
+  String get siteMatchReview_discardConfirm => 'Verwerpen';
 
   @override
-  String get siteMatchReview_keepReviewing => 'Keep reviewing';
+  String get siteMatchReview_keepReviewing => 'Doorgaan met beoordelen';
 
   @override
-  String get siteMatchReview_sourceExisting => 'your site';
+  String get siteMatchReview_sourceExisting => 'jouw stek';
 
   @override
   String get siteMatchReview_sourceBundled => 'import';
 
   @override
-  String get siteMatchReview_noNearbySite => 'No nearby site';
+  String get siteMatchReview_noNearbySite => 'Geen stek in de buurt';
 
   @override
   String importSummary_matchSitesButton(int count) {
-    return 'Match $count dives to sites';
+    return '$count duiken aan stekken koppelen';
   }
 
   @override
@@ -15958,20 +15958,20 @@ class AppLocalizationsNl extends AppLocalizations {
       'Connected services & integrations';
 
   @override
-  String get settings_siteMatch_title => 'Auto site matching';
+  String get settings_siteMatch_title => 'Automatisch stekken koppelen';
 
   @override
   String get settings_siteMatch_subtitle =>
-      'How aggressively downloaded dives are matched to sites';
+      'Hoe agressief gedownloade duiken aan stekken worden gekoppeld';
 
   @override
-  String get settings_siteMatch_strict => 'Strict';
+  String get settings_siteMatch_strict => 'Strikt';
 
   @override
-  String get settings_siteMatch_balanced => 'Balanced';
+  String get settings_siteMatch_balanced => 'Gebalanceerd';
 
   @override
-  String get settings_siteMatch_relaxed => 'Relaxed';
+  String get settings_siteMatch_relaxed => 'Soepel';
 
   @override
   String get settings_dataSources_header => 'Data Sources';

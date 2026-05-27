@@ -3968,78 +3968,77 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_listPage_menuDiveNumbering => 'ترقيم الغوصات';
 
   @override
-  String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
+  String get diveLog_listPage_menuMatchSites => 'مطابقة الغوصات بالمواقع';
 
   @override
-  String get siteMatchReview_title => 'Match Sites';
+  String get siteMatchReview_title => 'مطابقة المواقع';
 
   @override
-  String get siteMatchReview_empty => 'Nothing to match.';
+  String get siteMatchReview_empty => 'لا شيء للمطابقة.';
 
   @override
   String siteMatchReview_summary(int selected, int review, int none) {
-    return '$selected selected · $review to review · $none no match';
+    return '$selected محددة · $review للمراجعة · $none بدون تطابق';
   }
 
   @override
   String siteMatchReview_confirm(int count) {
-    return 'Confirm $count matches';
+    return 'تأكيد $count مطابقات';
   }
 
   @override
-  String get siteMatchReview_cancel => 'Cancel';
+  String get siteMatchReview_cancel => 'إلغاء';
 
   @override
-  String get siteMatchReview_tapToChoose => 'Tap to choose a site';
+  String get siteMatchReview_tapToChoose => 'اضغط لاختيار موقع';
 
   @override
   String siteMatchReview_awayMeters(int meters) {
-    return '$meters m away';
+    return 'على بعد $meters م';
   }
 
   @override
   String siteMatchReview_depthTo(int meters) {
-    return 'to $meters m';
+    return 'حتى $meters م';
   }
 
   @override
   String siteMatchReview_depthRange(int min, int max) {
-    return '$min–$max m';
+    return '$min–$max م';
   }
 
   @override
   String siteMatchReview_appliedSnack(int dives, int sites) {
-    return 'Linked $dives dives · added $sites sites';
+    return 'تم ربط $dives غوصات · تمت إضافة $sites مواقع';
   }
 
   @override
-  String get siteMatchReview_applyError => 'Couldn\'t apply matches';
+  String get siteMatchReview_applyError => 'تعذّر تطبيق المطابقات';
 
   @override
-  String get siteMatchReview_discardTitle => 'Discard matches?';
+  String get siteMatchReview_discardTitle => 'تجاهل المطابقات؟';
 
   @override
-  String get siteMatchReview_discardMessage =>
-      'Your selections won\'t be saved.';
+  String get siteMatchReview_discardMessage => 'لن يتم حفظ اختياراتك.';
 
   @override
-  String get siteMatchReview_discardConfirm => 'Discard';
+  String get siteMatchReview_discardConfirm => 'تجاهل';
 
   @override
-  String get siteMatchReview_keepReviewing => 'Keep reviewing';
+  String get siteMatchReview_keepReviewing => 'متابعة المراجعة';
 
   @override
-  String get siteMatchReview_sourceExisting => 'your site';
+  String get siteMatchReview_sourceExisting => 'موقعك';
 
   @override
-  String get siteMatchReview_sourceBundled => 'import';
+  String get siteMatchReview_sourceBundled => 'مستورد';
 
   @override
-  String get siteMatchReview_noNearbySite => 'No nearby site';
+  String get siteMatchReview_noNearbySite => 'لا يوجد موقع قريب';
 
   @override
   String importSummary_matchSitesButton(int count) {
-    return 'Match $count dives to sites';
+    return 'مطابقة $count غوصات بالمواقع';
   }
 
   @override
@@ -15781,20 +15780,20 @@ class AppLocalizationsAr extends AppLocalizations {
       'Connected services & integrations';
 
   @override
-  String get settings_siteMatch_title => 'Auto site matching';
+  String get settings_siteMatch_title => 'مطابقة المواقع تلقائيًا';
 
   @override
   String get settings_siteMatch_subtitle =>
-      'How aggressively downloaded dives are matched to sites';
+      'مدى صرامة مطابقة الغوصات التي تم تنزيلها بالمواقع';
 
   @override
-  String get settings_siteMatch_strict => 'Strict';
+  String get settings_siteMatch_strict => 'صارم';
 
   @override
-  String get settings_siteMatch_balanced => 'Balanced';
+  String get settings_siteMatch_balanced => 'متوازن';
 
   @override
-  String get settings_siteMatch_relaxed => 'Relaxed';
+  String get settings_siteMatch_relaxed => 'متساهل';
 
   @override
   String get settings_dataSources_header => 'Data Sources';

@@ -4066,38 +4066,40 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_listPage_menuDiveNumbering => 'Numeración de inmersiones';
 
   @override
-  String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
+  String get diveLog_listPage_menuMatchSites =>
+      'Asociar inmersiones a puntos de buceo';
 
   @override
-  String get siteMatchReview_title => 'Match Sites';
+  String get siteMatchReview_title => 'Asociar puntos';
 
   @override
-  String get siteMatchReview_empty => 'Nothing to match.';
+  String get siteMatchReview_empty => 'Nada que asociar.';
 
   @override
   String siteMatchReview_summary(int selected, int review, int none) {
-    return '$selected selected · $review to review · $none no match';
+    return '$selected seleccionadas · $review por revisar · $none sin coincidencia';
   }
 
   @override
   String siteMatchReview_confirm(int count) {
-    return 'Confirm $count matches';
+    return 'Confirmar $count asociaciones';
   }
 
   @override
-  String get siteMatchReview_cancel => 'Cancel';
+  String get siteMatchReview_cancel => 'Cancelar';
 
   @override
-  String get siteMatchReview_tapToChoose => 'Tap to choose a site';
+  String get siteMatchReview_tapToChoose =>
+      'Toca para elegir un punto de buceo';
 
   @override
   String siteMatchReview_awayMeters(int meters) {
-    return '$meters m away';
+    return 'a $meters m';
   }
 
   @override
   String siteMatchReview_depthTo(int meters) {
-    return 'to $meters m';
+    return 'hasta $meters m';
   }
 
   @override
@@ -4107,37 +4109,37 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String siteMatchReview_appliedSnack(int dives, int sites) {
-    return 'Linked $dives dives · added $sites sites';
+    return '$dives inmersiones asociadas · $sites puntos añadidos';
   }
 
   @override
-  String get siteMatchReview_applyError => 'Couldn\'t apply matches';
+  String get siteMatchReview_applyError =>
+      'No se pudieron aplicar las asociaciones';
 
   @override
-  String get siteMatchReview_discardTitle => 'Discard matches?';
+  String get siteMatchReview_discardTitle => '¿Descartar asociaciones?';
 
   @override
-  String get siteMatchReview_discardMessage =>
-      'Your selections won\'t be saved.';
+  String get siteMatchReview_discardMessage => 'Tu selección no se guardará.';
 
   @override
-  String get siteMatchReview_discardConfirm => 'Discard';
+  String get siteMatchReview_discardConfirm => 'Descartar';
 
   @override
-  String get siteMatchReview_keepReviewing => 'Keep reviewing';
+  String get siteMatchReview_keepReviewing => 'Seguir revisando';
 
   @override
-  String get siteMatchReview_sourceExisting => 'your site';
+  String get siteMatchReview_sourceExisting => 'tu punto';
 
   @override
-  String get siteMatchReview_sourceBundled => 'import';
+  String get siteMatchReview_sourceBundled => 'importado';
 
   @override
-  String get siteMatchReview_noNearbySite => 'No nearby site';
+  String get siteMatchReview_noNearbySite => 'Ningún punto cercano';
 
   @override
   String importSummary_matchSitesButton(int count) {
-    return 'Match $count dives to sites';
+    return 'Asociar $count inmersiones a puntos';
   }
 
   @override
@@ -16092,20 +16094,20 @@ class AppLocalizationsEs extends AppLocalizations {
       'Connected services & integrations';
 
   @override
-  String get settings_siteMatch_title => 'Auto site matching';
+  String get settings_siteMatch_title => 'Asociación automática de puntos';
 
   @override
   String get settings_siteMatch_subtitle =>
-      'How aggressively downloaded dives are matched to sites';
+      'Con qué intensidad se asocian a puntos de buceo las inmersiones descargadas';
 
   @override
-  String get settings_siteMatch_strict => 'Strict';
+  String get settings_siteMatch_strict => 'Estricto';
 
   @override
-  String get settings_siteMatch_balanced => 'Balanced';
+  String get settings_siteMatch_balanced => 'Equilibrado';
 
   @override
-  String get settings_siteMatch_relaxed => 'Relaxed';
+  String get settings_siteMatch_relaxed => 'Relajado';
 
   @override
   String get settings_dataSources_header => 'Data Sources';

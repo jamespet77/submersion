@@ -4067,38 +4067,40 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_listPage_menuDiveNumbering => 'Tauchgangnummerierung';
 
   @override
-  String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
+  String get diveLog_listPage_menuMatchSites =>
+      'Tauchgänge Tauchplätzen zuordnen';
 
   @override
-  String get siteMatchReview_title => 'Match Sites';
+  String get siteMatchReview_title => 'Tauchplätze zuordnen';
 
   @override
-  String get siteMatchReview_empty => 'Nothing to match.';
+  String get siteMatchReview_empty => 'Nichts zuzuordnen.';
 
   @override
   String siteMatchReview_summary(int selected, int review, int none) {
-    return '$selected selected · $review to review · $none no match';
+    return '$selected ausgewählt · $review zu prüfen · $none ohne Treffer';
   }
 
   @override
   String siteMatchReview_confirm(int count) {
-    return 'Confirm $count matches';
+    return '$count Zuordnungen bestätigen';
   }
 
   @override
-  String get siteMatchReview_cancel => 'Cancel';
+  String get siteMatchReview_cancel => 'Abbrechen';
 
   @override
-  String get siteMatchReview_tapToChoose => 'Tap to choose a site';
+  String get siteMatchReview_tapToChoose =>
+      'Tippen, um einen Tauchplatz zu wählen';
 
   @override
   String siteMatchReview_awayMeters(int meters) {
-    return '$meters m away';
+    return '$meters m entfernt';
   }
 
   @override
   String siteMatchReview_depthTo(int meters) {
-    return 'to $meters m';
+    return 'bis $meters m';
   }
 
   @override
@@ -4108,37 +4110,38 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String siteMatchReview_appliedSnack(int dives, int sites) {
-    return 'Linked $dives dives · added $sites sites';
+    return '$dives Tauchgänge verknüpft · $sites Tauchplätze hinzugefügt';
   }
 
   @override
-  String get siteMatchReview_applyError => 'Couldn\'t apply matches';
+  String get siteMatchReview_applyError =>
+      'Zuordnungen konnten nicht angewendet werden';
 
   @override
-  String get siteMatchReview_discardTitle => 'Discard matches?';
+  String get siteMatchReview_discardTitle => 'Zuordnungen verwerfen?';
 
   @override
   String get siteMatchReview_discardMessage =>
-      'Your selections won\'t be saved.';
+      'Ihre Auswahl wird nicht gespeichert.';
 
   @override
-  String get siteMatchReview_discardConfirm => 'Discard';
+  String get siteMatchReview_discardConfirm => 'Verwerfen';
 
   @override
-  String get siteMatchReview_keepReviewing => 'Keep reviewing';
+  String get siteMatchReview_keepReviewing => 'Weiter prüfen';
 
   @override
-  String get siteMatchReview_sourceExisting => 'your site';
+  String get siteMatchReview_sourceExisting => 'Ihr Tauchplatz';
 
   @override
-  String get siteMatchReview_sourceBundled => 'import';
+  String get siteMatchReview_sourceBundled => 'Import';
 
   @override
-  String get siteMatchReview_noNearbySite => 'No nearby site';
+  String get siteMatchReview_noNearbySite => 'Kein Tauchplatz in der Nähe';
 
   @override
   String importSummary_matchSitesButton(int count) {
-    return 'Match $count dives to sites';
+    return '$count Tauchgänge Tauchplätzen zuordnen';
   }
 
   @override
@@ -16055,20 +16058,20 @@ class AppLocalizationsDe extends AppLocalizations {
       'Connected services & integrations';
 
   @override
-  String get settings_siteMatch_title => 'Auto site matching';
+  String get settings_siteMatch_title => 'Automatische Tauchplatzzuordnung';
 
   @override
   String get settings_siteMatch_subtitle =>
-      'How aggressively downloaded dives are matched to sites';
+      'Wie aggressiv heruntergeladene Tauchgänge Tauchplätzen zugeordnet werden';
 
   @override
-  String get settings_siteMatch_strict => 'Strict';
+  String get settings_siteMatch_strict => 'Streng';
 
   @override
-  String get settings_siteMatch_balanced => 'Balanced';
+  String get settings_siteMatch_balanced => 'Ausgewogen';
 
   @override
-  String get settings_siteMatch_relaxed => 'Relaxed';
+  String get settings_siteMatch_relaxed => 'Locker';
 
   @override
   String get settings_dataSources_header => 'Data Sources';
