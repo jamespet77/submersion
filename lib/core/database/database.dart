@@ -1542,6 +1542,7 @@ class AppDatabase extends _$AppDatabase {
     74,
     75,
     76,
+    77,
   ];
 
   /// Returns the number of migration steps that will execute when upgrading
