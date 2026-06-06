@@ -1454,10 +1454,16 @@ class SyncDataSerializer {
   ///
   /// Including these in the payload causes the receiving device to flag a
   /// conflict on every cross-device pull (same `key` row, different value
-  /// per device). `active_diver_id` is the canonical case: at first launch
-  /// each device auto-creates an owner diver with its own UUID and writes
-  /// the pointer here; both devices then have a perfectly valid local value
-  /// that has no business overwriting the other side.
+  /// per device).
+  ///
+  /// Audit (last reviewed when [SyncData] grew to ~39 entities): only three
+  /// keys are ever written to the `settings` table in app code:
+  ///   - `active_diver_id` (per-device — each device auto-creates its own
+  ///     owner diver at first launch). FILTERED.
+  ///   - `share_new_records_by_default` (global user preference). Syncs.
+  ///   - `nav_primary_ids` (user's preferred top-level nav). Syncs.
+  /// New keys should be assessed against the rule: "is this answer the same
+  /// across all of one user's devices?" If no, add it here.
   static const Set<String> _deviceLocalSettingsKeys = {'active_diver_id'};
 
   Future<List<Map<String, dynamic>>> _exportSettings(int? since) async {
@@ -1621,5 +1627,4 @@ class SyncDataSerializer {
     }
     return merged;
   }
-
 }
