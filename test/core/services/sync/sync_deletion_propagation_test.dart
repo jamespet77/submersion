@@ -2,15 +2,19 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/data/repositories/sync_repository.dart';
+import 'package:submersion/core/database/database.dart' show MediaCompanion;
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:submersion/core/services/sync/sync_service.dart';
+import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
 import 'package:submersion/features/marine_life/data/repositories/species_repository.dart';
 import 'package:submersion/features/universal_import/data/repositories/csv_preset_repository.dart';
 
 import '../../../helpers/fake_cloud_storage_provider.dart';
+import '../../../helpers/mock_providers.dart';
 import '../../../helpers/sync_test_helpers.dart';
 import '../../../helpers/test_database.dart';
 
@@ -222,6 +226,261 @@ void main() {
         reason:
             'the local row was created (8000) after last sync (4000), so '
             'a stale remote tombstone must not delete it',
+      );
+    });
+  });
+
+  /// A device that has deleted a record must not have it resurrected by a peer
+  /// that still holds a live copy it has not yet seen deleted. This is the
+  /// other direction of deletion propagation: applying a remote *live* record
+  /// against a *local tombstone* (vs. applying a remote tombstone against a
+  /// local live row, covered above).
+  group('Local deletion is not resurrected by a peer live copy', () {
+    late FakeCloudStorageProvider cloud;
+
+    setUp(() async {
+      await setUpTestDatabase();
+      cloud = FakeCloudStorageProvider();
+    });
+
+    tearDown(() {
+      DatabaseService.instance.resetForTesting();
+    });
+
+    SyncService buildService() => SyncService(
+      syncRepository: SyncRepository(),
+      serializer: SyncDataSerializer(),
+      cloudProvider: cloud,
+    );
+
+    Future<void> uploadPeerDive(
+      SyncDataSerializer serializer,
+      Map<String, dynamic> diveJson,
+    ) async {
+      final peerData = SyncData(dives: [diveJson]);
+      final checksum = sha256
+          .convert(utf8.encode(jsonEncode(peerData.toJson())))
+          .toString();
+      final payload = SyncPayload(
+        version: syncFormatVersion,
+        exportedAt: 2000,
+        deviceId: 'peer-dev',
+        checksum: checksum,
+        data: peerData,
+        deletions: const {},
+      );
+      await cloud.uploadFile(
+        Uint8List.fromList(utf8.encode(serializer.serializePayload(payload))),
+        'submersion_sync_peer-dev.json',
+      );
+    }
+
+    test('a deleted dive is NOT resurrected by a peer copy older than the '
+        'deletion', () async {
+      final serializer = SyncDataSerializer();
+      final diveRepo = DiveRepository();
+
+      // Device A creates dive #43 and syncs it (so it is no longer "pending"
+      // -- a pending record is skipped on merge, which would mask the bug).
+      await diveRepo.createDive(
+        createTestDiveWithBottomTime(id: 'dive-43', diveNumber: 43),
+      );
+      await buildService().performSync();
+      final diveJson = await serializer.fetchRecord('dives', 'dive-43');
+      expect(diveJson, isNotNull);
+
+      // A deletes #43 (writes a tombstone, removes the local row).
+      await diveRepo.deleteDive('dive-43');
+      expect(await serializer.fetchRecord('dives', 'dive-43'), isNull);
+
+      // A peer that has not seen the delete still has the live dive, with an
+      // updatedAt far older than our (just-now) deletion.
+      await uploadPeerDive(serializer, {...diveJson!, 'updatedAt': 1000});
+
+      await buildService().performSync();
+
+      expect(
+        await serializer.fetchRecord('dives', 'dive-43'),
+        isNull,
+        reason:
+            "a peer's stale live copy must not resurrect a locally-deleted dive",
+      );
+    });
+
+    test('a peer edit newer than the local deletion revives the dive and '
+        'drops the tombstone', () async {
+      final serializer = SyncDataSerializer();
+      final diveRepo = DiveRepository();
+
+      await diveRepo.createDive(
+        createTestDiveWithBottomTime(id: 'dive-44', diveNumber: 44),
+      );
+      await buildService().performSync();
+      final diveJson = await serializer.fetchRecord('dives', 'dive-44');
+      await diveRepo.deleteDive('dive-44');
+
+      // Peer edited the dive AFTER our deletion (updatedAt in the far future).
+      await uploadPeerDive(serializer, {
+        ...diveJson!,
+        'updatedAt': 99999999999999,
+      });
+
+      await buildService().performSync();
+
+      expect(
+        await serializer.fetchRecord('dives', 'dive-44'),
+        isNotNull,
+        reason: 'a peer edit newer than the deletion is a genuine revival',
+      );
+      final remaining = await SyncRepository().getAllDeletions();
+      expect(
+        remaining.any((d) => d.recordId == 'dive-44'),
+        isFalse,
+        reason: 'a revived record should drop its now-obsolete tombstone',
+      );
+    });
+
+    test('a deleted dive WITH child records is not resurrected and does not '
+        'orphan its children', () async {
+      final serializer = SyncDataSerializer();
+      final diveRepo = DiveRepository();
+
+      await diveRepo.createDive(
+        createTestDiveWithBottomTime(id: 'dive-50', diveNumber: 50),
+      );
+      await serializer.upsertRecord('diveProfiles', {
+        'id': 'prof-50',
+        'diveId': 'dive-50',
+        'isPrimary': true,
+        'timestamp': 0,
+        'depth': 5.0,
+      });
+      await buildService().performSync();
+      final diveJson = await serializer.fetchRecord('dives', 'dive-50');
+      final profJson = await serializer.fetchRecord('diveProfiles', 'prof-50');
+      expect(profJson, isNotNull);
+
+      // Deleting the dive cascades the child away locally.
+      await diveRepo.deleteDive('dive-50');
+      expect(await serializer.fetchRecord('dives', 'dive-50'), isNull);
+      expect(await serializer.fetchRecord('diveProfiles', 'prof-50'), isNull);
+
+      // Peer still has the live dive AND its live child profile.
+      final peerData = SyncData(
+        dives: [
+          {...diveJson!, 'updatedAt': 1000},
+        ],
+        diveProfiles: [profJson!],
+      );
+      final checksum = sha256
+          .convert(utf8.encode(jsonEncode(peerData.toJson())))
+          .toString();
+      final payload = SyncPayload(
+        version: syncFormatVersion,
+        exportedAt: 2000,
+        deviceId: 'peer-dev',
+        checksum: checksum,
+        data: peerData,
+        deletions: const {},
+      );
+      await cloud.uploadFile(
+        Uint8List.fromList(utf8.encode(serializer.serializePayload(payload))),
+        'submersion_sync_peer-dev.json',
+      );
+
+      final result = await buildService().performSync();
+
+      expect(
+        result.status,
+        isNot(SyncResultStatus.error),
+        reason: 'a peer copy of a deleted dive+children must not error sync',
+      );
+      expect(
+        await serializer.fetchRecord('dives', 'dive-50'),
+        isNull,
+        reason: 'the dive stays deleted',
+      );
+      expect(
+        await serializer.fetchRecord('diveProfiles', 'prof-50'),
+        isNull,
+        reason: 'the orphaned child must not be resurrected either',
+      );
+    });
+
+    test('a photo whose dive was deleted is preserved (set-null), not lost '
+        'and not resurrected with a dangling link', () async {
+      final serializer = SyncDataSerializer();
+      final diveRepo = DiveRepository();
+      final db = DatabaseService.instance.database;
+
+      await diveRepo.createDive(
+        createTestDiveWithBottomTime(id: 'dive-60', diveNumber: 60),
+      );
+      await db
+          .into(db.media)
+          .insert(
+            MediaCompanion.insert(
+              id: 'media-60',
+              diveId: const Value('dive-60'),
+              filePath: '/photo.jpg',
+              createdAt: 1000,
+              updatedAt: 1000,
+            ),
+          );
+      await buildService().performSync();
+      final diveJson = await serializer.fetchRecord('dives', 'dive-60');
+      final mediaJson = await serializer.fetchRecord('media', 'media-60');
+      expect(mediaJson, isNotNull);
+
+      // Deleting the dive set-nulls the photo's diveId locally; the photo
+      // survives (Media.diveId is nullable / onDelete: setNull).
+      await diveRepo.deleteDive('dive-60');
+      expect(await serializer.fetchRecord('dives', 'dive-60'), isNull);
+      final localMedia = await serializer.fetchRecord('media', 'media-60');
+      expect(
+        localMedia,
+        isNotNull,
+        reason: 'the photo must survive the delete',
+      );
+      expect(localMedia!['diveId'], isNull);
+
+      // Peer still has the live dive AND the photo still linked to it.
+      final peerData = SyncData(
+        dives: [
+          {...diveJson!, 'updatedAt': 1000},
+        ],
+        media: [mediaJson!],
+      );
+      final checksum = sha256
+          .convert(utf8.encode(jsonEncode(peerData.toJson())))
+          .toString();
+      final payload = SyncPayload(
+        version: syncFormatVersion,
+        exportedAt: 2000,
+        deviceId: 'peer-dev',
+        checksum: checksum,
+        data: peerData,
+        deletions: const {},
+      );
+      await cloud.uploadFile(
+        Uint8List.fromList(utf8.encode(serializer.serializePayload(payload))),
+        'submersion_sync_peer-dev.json',
+      );
+
+      final result = await buildService().performSync();
+
+      expect(result.status, isNot(SyncResultStatus.error));
+      expect(await serializer.fetchRecord('dives', 'dive-60'), isNull);
+      final afterMedia = await serializer.fetchRecord('media', 'media-60');
+      expect(
+        afterMedia,
+        isNotNull,
+        reason: 'the photo must NOT be lost when its dive is deleted',
+      );
+      expect(
+        afterMedia!['diveId'],
+        isNull,
+        reason: 'the dangling dive link is cleared, not resurrected',
       );
     });
   });
