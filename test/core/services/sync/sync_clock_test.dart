@@ -30,7 +30,7 @@ void main() {
       'restart', () {
     SyncClock.instance.configure(
       nodeId: 'node',
-      persisted: Hlc(5000, 9, 'node'),
+      persisted: const Hlc(5000, 9, 'node'),
       now: () => 4000, // wall clock is behind the persisted physical time
     );
     final next = Hlc.parse(SyncClock.instance.issue()!);
@@ -43,23 +43,23 @@ void main() {
   });
 
   test('receive() advances the clock past a higher remote physical time', () {
-    var now = 1000;
+    const now = 1000;
     SyncClock.instance.configure(nodeId: 'me', now: () => now);
 
     // A remote device, with a clock far ahead of ours, is observed.
-    SyncClock.instance.receive(Hlc(9000, 2, 'other'));
+    SyncClock.instance.receive(const Hlc(9000, 2, 'other'));
 
     // Our next local write must be ordered after the remote event even though
     // our wall clock is still ~1000.
     final next = Hlc.parse(SyncClock.instance.issue()!);
     expect(next.physicalTime, 9000);
-    expect(next.compareTo(Hlc(9000, 2, 'other')), greaterThan(0));
+    expect(next.compareTo(const Hlc(9000, 2, 'other')), greaterThan(0));
     expect(next.nodeId, 'me');
   });
 
   test('receive() is a no-op when not configured', () {
     SyncClock.instance.reset();
-    SyncClock.instance.receive(Hlc(9000, 0, 'other'));
+    SyncClock.instance.receive(const Hlc(9000, 0, 'other'));
     expect(SyncClock.instance.issue(), isNull);
   });
 }

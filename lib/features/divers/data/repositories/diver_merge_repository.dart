@@ -40,9 +40,13 @@ class DiverMergeSnapshot {
   /// it can be reinserted on undo.
   final Map<String, dynamic> duplicateDiver;
 
-  /// (table, rowId) pairs whose `diver_id` was changed from the duplicate to
-  /// the keeper. Undo flips them back.
-  final List<({String table, String rowId})> repointedRows;
+  /// Rows whose `diver_id` was changed from the duplicate to the keeper, with
+  /// the `hlc` value they had before the merge re-stamped them. Undo flips the
+  /// diver_id back and restores the prior hlc so the merge is a true inverse.
+  /// [hasHlc] is false for tables without an hlc column (which undo must not
+  /// reference).
+  final List<({String table, String rowId, String? priorHlc, bool hasHlc})>
+  repointedRows;
 
   /// Full row data for rows in singleton-config tables that were deleted as
   /// part of the merge (keeper-wins policy). Each captures `(table, row)`.
@@ -100,7 +104,8 @@ class DiverMergeRepository {
 
     final tables = await _tablesWithDiverId();
     final now = DateTime.now().millisecondsSinceEpoch;
-    final repointed = <({String table, String rowId})>[];
+    final repointed =
+        <({String table, String rowId, String? priorHlc, bool hasHlc})>[];
     final deletedSingleton = <({String table, Map<String, dynamic> row})>[];
 
     // Capture the duplicate's row BEFORE the transaction so we can restore
@@ -130,9 +135,16 @@ class DiverMergeRepository {
           ]);
         } else {
           // Additive data: repoint onto the keeper and mark pending for sync.
-          final ids = await _rowIds(table, duplicateId);
-          for (final id in ids) {
-            repointed.add((table: table, rowId: id));
+          // Capture each row's prior hlc BEFORE markRowsPending re-stamps it,
+          // so undo can restore the exact pre-merge state.
+          final rows = await _rowsByDiverId(table, duplicateId);
+          for (final row in rows) {
+            repointed.add((
+              table: table,
+              rowId: row['id'] as String,
+              priorHlc: row['hlc'] as String?,
+              hasHlc: row.containsKey('hlc'),
+            ));
           }
           await _markRowsPending(table, duplicateId, now);
           await _db.customStatement(
@@ -183,12 +195,21 @@ class DiverMergeRepository {
       // on a valid target.
       await _insertRowMap('divers', snapshot.duplicateDiver);
 
-      // Repoint each previously-repointed row back to the duplicate.
+      // Repoint each previously-repointed row back to the duplicate and
+      // restore its pre-merge hlc (the merge re-stamped it). Tables without an
+      // hlc column only get their diver_id restored.
       for (final entry in snapshot.repointedRows) {
-        await _db.customStatement(
-          'UPDATE "${entry.table}" SET diver_id = ? WHERE id = ?',
-          [snapshot.duplicateId, entry.rowId],
-        );
+        if (entry.hasHlc) {
+          await _db.customStatement(
+            'UPDATE "${entry.table}" SET diver_id = ?, hlc = ? WHERE id = ?',
+            [snapshot.duplicateId, entry.priorHlc, entry.rowId],
+          );
+        } else {
+          await _db.customStatement(
+            'UPDATE "${entry.table}" SET diver_id = ? WHERE id = ?',
+            [snapshot.duplicateId, entry.rowId],
+          );
+        }
       }
 
       // Re-insert any singleton-config rows that the merge deleted.

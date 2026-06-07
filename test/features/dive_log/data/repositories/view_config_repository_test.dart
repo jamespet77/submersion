@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/constants/dive_field.dart';
 import 'package:submersion/core/constants/list_view_mode.dart';
 import 'package:submersion/core/database/database.dart' hide FieldPreset;
+import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/features/dive_log/data/repositories/view_config_repository.dart';
 import 'package:submersion/features/dive_log/domain/entities/view_field_config.dart';
 
@@ -15,6 +16,9 @@ void main() {
   setUp(() async {
     db = AppDatabase(NativeDatabase.memory());
     repository = ViewConfigRepository(db);
+    // deletePreset logs a deletion through SyncRepository(), which reads
+    // DatabaseService.instance -- point it at this same in-memory db.
+    DatabaseService.instance.setTestDatabase(db);
 
     final now = DateTime.now().millisecondsSinceEpoch;
     await db
@@ -30,6 +34,7 @@ void main() {
   });
 
   tearDown(() async {
+    DatabaseService.instance.resetForTesting();
     await db.close();
   });
 

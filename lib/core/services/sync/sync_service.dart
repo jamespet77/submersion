@@ -6,6 +6,8 @@ import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart' show SyncRecord;
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/sync/hlc.dart';
+import 'package:submersion/core/services/sync/sync_clock.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:uuid/uuid.dart';
 
@@ -269,6 +271,12 @@ class SyncService {
         'load last sync time',
         () => _syncRepository.getLastSyncTime(),
       );
+      // Make sure the HLC clock is live before merging so receiving remote
+      // payloads advances it (and any writes during the sync get stamped).
+      await _withStep(
+        'configure sync clock',
+        () => _syncRepository.ensureSyncClockConfigured(),
+      );
 
       // Try to download existing remote file
       _reportProgress(
@@ -404,6 +412,12 @@ class SyncService {
       await _withStep(
         'store last sync time',
         () => _syncRepository.updateLastSyncTime(result.uploadTime),
+      );
+      // Persist the HLC so the logical counter survives an app restart (it
+      // was advanced by SyncClock.receive() while applying remote payloads).
+      await _withStep(
+        'persist sync clock',
+        () => _syncRepository.persistSyncClock(),
       );
 
       // Keep deletions for propagation, but prune old entries
@@ -801,6 +815,14 @@ class SyncService {
         localUpdatedAt = _extractUpdatedAtMillis(local);
         final remoteUpdatedAt = _extractUpdatedAtMillis(record);
 
+        final localHlc = _extractHlc(local);
+        final remoteHlc = _extractHlc(record);
+        // Advance our clock past every remote HLC we observe, so this device's
+        // next local write is ordered after what it has seen (the skew fix).
+        if (remoteHlc != null) {
+          SyncClock.instance.receive(remoteHlc);
+        }
+
         if (localUpdatedAt != null &&
             remoteUpdatedAt != null &&
             lastSyncMs != null &&
@@ -817,9 +839,20 @@ class SyncService {
           continue;
         }
 
-        if (remoteUpdatedAt == null ||
-            localUpdatedAt == null ||
-            remoteUpdatedAt >= localUpdatedAt) {
+        // Winner selection: prefer the Hybrid Logical Clock when BOTH sides
+        // carry one (immune to wall-clock skew); otherwise fall back to the
+        // updatedAt comparison for rows written before HLC rollout.
+        final bool remoteWins;
+        if (localHlc != null && remoteHlc != null) {
+          remoteWins = remoteHlc.compareTo(localHlc) >= 0;
+        } else {
+          remoteWins =
+              remoteUpdatedAt == null ||
+              localUpdatedAt == null ||
+              remoteUpdatedAt >= localUpdatedAt;
+        }
+
+        if (remoteWins) {
           await _serializer.upsertRecord(entityType, record);
           applied += 1;
         }
@@ -859,6 +892,19 @@ class SyncService {
     final createdAt = data['createdAt'];
     if (createdAt is int) return createdAt;
     return null;
+  }
+
+  /// Parse a record's Hybrid Logical Clock, or null if absent/blank (rows
+  /// written before the HLC rollout). Malformed values are treated as absent
+  /// so a bad value can never crash the merge.
+  Hlc? _extractHlc(Map<String, dynamic>? data) {
+    final raw = data?['hlc'];
+    if (raw is! String || raw.isEmpty) return null;
+    try {
+      return Hlc.parse(raw);
+    } catch (_) {
+      return null;
+    }
   }
 
   String? _recordIdForEntity(String entityType, Map<String, dynamic> record) {
