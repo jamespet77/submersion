@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 
 import 'package:submersion/core/data/repositories/sync_repository.dart'
     show CloudProviderType;
+import 'package:submersion/features/divers/data/repositories/diver_merge_repository.dart';
+import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
 import 'package:submersion/features/settings/presentation/widgets/conflict_resolution_dialog.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
@@ -29,6 +31,8 @@ class CloudSyncPage extends ConsumerWidget {
         children: [
           // Show banner when custom folder mode is active
           if (isCustomFolderMode) _buildCustomFolderBanner(context),
+          // Surface apparent duplicate diver profiles created across devices.
+          _buildDuplicateDiversBanner(context, ref),
           _buildSyncStatusCard(context, ref, syncState),
           const Divider(),
           _buildProviderSection(context, ref, selectedProvider),
@@ -101,6 +105,169 @@ class CloudSyncPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  /// Banner shown when two or more diver profiles share a name -- the typical
+  /// result of each device auto-creating its own owner diver before the first
+  /// sync. Offers a one-tap merge per duplicate group.
+  Widget _buildDuplicateDiversBanner(BuildContext context, WidgetRef ref) {
+    final groupsAsync = ref.watch(duplicateDiverGroupsProvider);
+    final groups = groupsAsync.asData?.value ?? const [];
+    if (groups.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    final l10n = context.l10n;
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.merge_type, color: theme.colorScheme.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  l10n.settings_cloudSync_duplicateDivers_title,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            l10n.settings_cloudSync_duplicateDivers_description,
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          for (final group in groups)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l10n.settings_cloudSync_duplicateDivers_groupLabel(
+                        group.displayName,
+                        group.duplicates.length + 1,
+                      ),
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => _confirmAndMerge(context, ref, group),
+                    child: Text(
+                      l10n.settings_cloudSync_duplicateDivers_mergeButton,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmAndMerge(
+    BuildContext context,
+    WidgetRef ref,
+    DuplicateDiverGroup group,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final dialogL10n = context.l10n;
+        return AlertDialog(
+          title: Text(
+            dialogL10n.settings_cloudSync_duplicateDivers_confirmTitle,
+          ),
+          content: Text(
+            dialogL10n.settings_cloudSync_duplicateDivers_confirmBody(
+              group.duplicates.length,
+              group.displayName,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(
+                dialogL10n.settings_cloudSync_duplicateDivers_confirmCancel,
+              ),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                dialogL10n.settings_cloudSync_duplicateDivers_confirmAction,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+
+    final repo = ref.read(diverMergeRepositoryProvider);
+    try {
+      // Collect every snapshot so the whole group merge can be undone, not
+      // just the last duplicate.
+      final snapshots = <DiverMergeSnapshot>[];
+      for (final duplicate in group.duplicates) {
+        snapshots.add(
+          await repo.mergeDivers(
+            keeperId: group.keeper.id,
+            duplicateId: duplicate.id,
+          ),
+        );
+      }
+      ref.invalidate(allDiversProvider);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.settings_cloudSync_duplicateDivers_successSnack(
+              group.displayName,
+            ),
+          ),
+          action: SnackBarAction(
+            label: l10n.settings_cloudSync_duplicateDivers_undo,
+            onPressed: () => _undoMerge(ref, repo, snapshots),
+          ),
+        ),
+      );
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.settings_cloudSync_duplicateDivers_failureSnack(e.toString()),
+          ),
+        ),
+      );
+    }
+  }
+
+  /// Reverse every snapshot from a group merge, newest first (so a row touched
+  /// by two duplicates is restored to its true original).
+  Future<void> _undoMerge(
+    WidgetRef ref,
+    DiverMergeRepository repo,
+    List<DiverMergeSnapshot> snapshots,
+  ) async {
+    for (final snapshot in snapshots.reversed) {
+      await repo.undoMerge(snapshot);
+    }
+    ref.invalidate(allDiversProvider);
   }
 
   Widget _buildSyncStatusCard(

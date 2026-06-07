@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:submersion/core/providers/provider.dart';
 
+import 'package:submersion/features/divers/data/repositories/diver_merge_repository.dart';
 import 'package:submersion/features/divers/data/repositories/diver_repository.dart';
 import 'package:submersion/features/divers/domain/entities/diver.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
@@ -373,5 +374,47 @@ void main() {
       // The notifier should resolve to the id from the Settings table.
       expect(container.read(currentDiverIdProvider), equals(d.id));
     });
+  });
+
+  group('diverMergeRepositoryProvider & duplicateDiverGroupsProvider', () {
+    test('diverMergeRepositoryProvider exposes a repository instance', () {
+      final container = makeContainer();
+      addTearDown(container.dispose);
+
+      expect(
+        container.read(diverMergeRepositoryProvider),
+        isA<DiverMergeRepository>(),
+      );
+    });
+
+    test('duplicateDiverGroupsProvider groups same-named divers', () async {
+      await repo.createDiver(_makeDiver(name: 'Dup Name'));
+      await repo.createDiver(_makeDiver(name: 'Dup Name'));
+      await repo.createDiver(_makeDiver(name: 'Unique'));
+
+      final container = makeContainer();
+      addTearDown(container.dispose);
+
+      final groups = await container.read(duplicateDiverGroupsProvider.future);
+      expect(groups, hasLength(1));
+      expect(groups.first.displayName, equals('Dup Name'));
+      expect(groups.first.duplicates, hasLength(1));
+    });
+
+    test(
+      'duplicateDiverGroupsProvider is empty when all names are unique',
+      () async {
+        await repo.createDiver(_makeDiver(name: 'A'));
+        await repo.createDiver(_makeDiver(name: 'B'));
+
+        final container = makeContainer();
+        addTearDown(container.dispose);
+
+        expect(
+          await container.read(duplicateDiverGroupsProvider.future),
+          isEmpty,
+        );
+      },
+    );
   });
 }

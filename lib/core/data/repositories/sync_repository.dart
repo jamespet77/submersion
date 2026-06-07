@@ -4,6 +4,8 @@ import 'package:uuid/uuid.dart';
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/sync/hlc.dart';
+import 'package:submersion/core/services/sync/sync_clock.dart';
 
 /// Sync status for individual records
 enum SyncStatus { synced, pending, conflict }
@@ -18,6 +20,35 @@ class SyncRepository {
   final _log = LoggerService.forClass(SyncRepository);
 
   static const String _globalMetadataId = 'global';
+
+  /// Conflict-capable syncable entities that carry an `hlc` column, mapped to
+  /// their SQLite table name and primary-key column. markRecordPending stamps
+  /// a fresh Hybrid Logical Clock onto these rows so cross-device merges can
+  /// order edits correctly under wall-clock skew. Entities not listed here
+  /// (append-only tables) fall back to updatedAt ordering.
+  static const Map<String, ({String table, String pk})> _hlcTargets = {
+    'divers': (table: 'divers', pk: 'id'),
+    'diverSettings': (table: 'diver_settings', pk: 'id'),
+    'buddies': (table: 'buddies', pk: 'id'),
+    'diveCenters': (table: 'dive_centers', pk: 'id'),
+    'trips': (table: 'trips', pk: 'id'),
+    'liveaboardDetails': (table: 'liveaboard_detail_records', pk: 'id'),
+    'itineraryDays': (table: 'trip_itinerary_days', pk: 'id'),
+    'equipment': (table: 'equipment', pk: 'id'),
+    'equipmentSets': (table: 'equipment_sets', pk: 'id'),
+    'diveTypes': (table: 'dive_types', pk: 'id'),
+    'tankPresets': (table: 'tank_presets', pk: 'id'),
+    'diveComputers': (table: 'dive_computers', pk: 'id'),
+    'tags': (table: 'tags', pk: 'id'),
+    'courses': (table: 'courses', pk: 'id'),
+    'dives': (table: 'dives', pk: 'id'),
+    'diveSites': (table: 'dive_sites', pk: 'id'),
+    'certifications': (table: 'certifications', pk: 'id'),
+    'serviceRecords': (table: 'service_records', pk: 'id'),
+    'settings': (table: 'settings', pk: 'key'),
+    'csvPresets': (table: 'csv_presets', pk: 'id'),
+    'viewConfigs': (table: 'view_configs', pk: 'id'),
+  };
 
   // ============================================================================
   // Sync Metadata Operations
@@ -242,19 +273,26 @@ class SyncRepository {
       final now = DateTime.now().millisecondsSinceEpoch;
       final id = '${entityType}_$recordId';
 
-      await _db
-          .into(_db.syncRecords)
-          .insertOnConflictUpdate(
-            SyncRecordsCompanion(
-              id: Value(id),
-              entityType: Value(entityType),
-              recordId: Value(recordId),
-              localUpdatedAt: Value(localUpdatedAt),
-              syncStatus: const Value('pending'),
-              createdAt: Value(now),
-              updatedAt: Value(now),
-            ),
-          );
+      // Mark-pending and the HLC stamp on the entity row are one logical write;
+      // run them in a transaction so a crash can't leave the row pending with a
+      // stale/absent HLC, and concurrent calls can't interleave the two steps.
+      await _db.transaction(() async {
+        await _db
+            .into(_db.syncRecords)
+            .insertOnConflictUpdate(
+              SyncRecordsCompanion(
+                id: Value(id),
+                entityType: Value(entityType),
+                recordId: Value(recordId),
+                localUpdatedAt: Value(localUpdatedAt),
+                syncStatus: const Value('pending'),
+                createdAt: Value(now),
+                updatedAt: Value(now),
+              ),
+            );
+
+        await _stampHlc(entityType, recordId);
+      });
     } catch (e, stackTrace) {
       _log.error(
         'Failed to mark record pending: $entityType/$recordId',
@@ -262,6 +300,98 @@ class SyncRepository {
         stackTrace: stackTrace,
       );
       rethrow;
+    }
+  }
+
+  /// Stamp a fresh Hybrid Logical Clock onto the just-written entity row, if
+  /// the entity is conflict-capable and the clock is configured. Centralised
+  /// here (the write choke point) rather than in every repository companion.
+  /// The row is expected to already exist (repositories mark pending after the
+  /// insert/update); if it does not, the UPDATE is a harmless no-op.
+  Future<void> _stampHlc(String entityType, String recordId) async {
+    final target = _hlcTargets[entityType];
+    if (target == null) return;
+    await ensureSyncClockConfigured();
+    final hlc = SyncClock.instance.issue();
+    if (hlc == null) return;
+    await _db.customStatement(
+      'UPDATE "${target.table}" SET hlc = ? WHERE "${target.pk}" = ?',
+      [hlc, recordId],
+    );
+  }
+
+  /// Configure the process-wide [SyncClock] from this device's id and its
+  /// persisted clock value, once per process. Lazy so the first local write
+  /// stamps an HLC even before the first sync runs.
+  Future<void> ensureSyncClockConfigured() async {
+    if (SyncClock.instance.isConfigured) return;
+    final metadata = await getOrCreateMetadata();
+    // Seed from the greater of the persisted clock and the highest HLC already
+    // stamped on any entity row, then force our own node id. The persisted
+    // clock can lag the rows if the app was killed between syncs (it is only
+    // persisted at sync time but advanced in memory per write); seeding from
+    // the on-disk rows guarantees the next local write is never ordered behind
+    // data this device already wrote -- which would otherwise let a remote win
+    // a record the local device edited more recently.
+    final seed = _seedHlc(
+      metadata.deviceId,
+      _parseHlc(metadata.hlc),
+      _parseHlc(await _maxRowHlc()),
+    );
+    SyncClock.instance.configure(nodeId: metadata.deviceId, persisted: seed);
+  }
+
+  /// The highest `hlc` value across every conflict-capable table, or null if
+  /// none has one yet. Lexically comparable because the packed format zero-pads
+  /// physical time and counter.
+  Future<String?> _maxRowHlc() async {
+    final union = _hlcTargets.values
+        .map((t) => 'SELECT MAX(hlc) AS h FROM "${t.table}"')
+        .join(' UNION ALL ');
+    final row = await _db
+        .customSelect('SELECT MAX(h) AS m FROM ($union)')
+        .getSingleOrNull();
+    return row?.read<String?>('m');
+  }
+
+  /// Pick the greater of [a]/[b] by (physicalTime, counter) and rebuild it with
+  /// [nodeId] so the clock always issues under THIS device's identity.
+  Hlc? _seedHlc(String nodeId, Hlc? a, Hlc? b) {
+    Hlc? best;
+    for (final h in [a, b]) {
+      if (h == null) continue;
+      if (best == null ||
+          h.physicalTime > best.physicalTime ||
+          (h.physicalTime == best.physicalTime && h.counter > best.counter)) {
+        best = h;
+      }
+    }
+    if (best == null) return null;
+    return Hlc(best.physicalTime, best.counter, nodeId);
+  }
+
+  /// Persist the current [SyncClock] value so the logical counter survives an
+  /// app restart. Called by the sync flow after a sync completes.
+  Future<void> persistSyncClock() async {
+    final current = SyncClock.instance.current;
+    if (current == null) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await (_db.update(
+      _db.syncMetadata,
+    )..where((t) => t.id.equals(_globalMetadataId))).write(
+      SyncMetadataCompanion(
+        hlc: Value(current.toString()),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
+  Hlc? _parseHlc(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      return Hlc.parse(value);
+    } catch (_) {
+      return null;
     }
   }
 
