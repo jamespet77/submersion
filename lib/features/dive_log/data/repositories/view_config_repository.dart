@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import 'package:submersion/core/constants/list_view_mode.dart';
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart';
+import 'package:submersion/core/services/sync/sync_event_bus.dart';
 import 'package:submersion/features/dive_log/domain/entities/view_field_config.dart'
     as domain;
 
@@ -175,6 +176,7 @@ class ViewConfigRepository {
         entityType: 'fieldPresets',
         recordId: presetId,
       );
+      SyncEventBus.notifyLocalChange();
     }
   }
 
@@ -251,6 +253,7 @@ class ViewConfigRepository {
       recordId: rowId,
       localUpdatedAt: now,
     );
+    SyncEventBus.notifyLocalChange();
   }
 
   domain.CardViewConfig _defaultCardConfig(ListViewMode mode) {

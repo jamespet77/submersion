@@ -407,11 +407,12 @@ class SyncService {
       );
       _log.debug('Upload complete! fileId = ${result.fileId}');
 
-      // Update sync state
-      await _withStep(
-        'store remote file id',
-        () => _syncRepository.setRemoteFileId(result.fileId),
-      );
+      // Deliberately do NOT persist result.fileId as "the remote file id":
+      // under per-device files it is *our own* file, and the only consumer
+      // (SyncInitializer.checkSyncOnLaunch) now inspects every peer file's
+      // mtime directly. Persisting our own id made the launch check compare our
+      // own upload time and miss other devices' changes.
+
       // Only advance lastSyncTime when every record applied. A failed apply
       // leaves no per-record retry marker, so advancing lastSync would let the
       // conflict-detection window move past it and the record would never be
@@ -464,7 +465,12 @@ class SyncService {
             : null,
         recordsSynced: recordsSynced,
         conflictsFound: conflictsFound,
-        lastSyncTime: result.uploadTime,
+        // Mirror the persistence decision above: only report an advanced
+        // lastSyncTime when every record applied (and we actually wrote it to
+        // the DB). On a partial-apply failure lastSync is intentionally left
+        // unchanged, so returning it here would make the result disagree with
+        // stored state.
+        lastSyncTime: recordsFailed == 0 ? result.uploadTime : null,
       );
     } on TimeoutException {
       _log.warning('Sync timed out while uploading');

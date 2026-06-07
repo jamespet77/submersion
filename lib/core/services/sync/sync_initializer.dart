@@ -75,43 +75,51 @@ class SyncInitializer {
 
       // Get local last sync time
       final localLastSync = await _syncRepository.getLastSyncTime();
-      var remoteFileId = await _syncRepository.getRemoteFileId();
 
-      remoteFileId ??= await _discoverRemoteFile(provider);
+      // Per-device sync files: every device writes its own
+      // submersion_sync_<deviceId>.json. Whether a launch sync is worthwhile is
+      // decided from the newest *peer* file (all sync files except our own and
+      // any iCloud "conflicted copy" duplicates), not a single canonical remote
+      // file -- our own file's mtime tracks our own uploads and would never
+      // reveal another device's changes.
+      final peerFiles = await _peerSyncFiles(provider);
 
-      if (remoteFileId == null) {
-        // No remote file yet - first sync needed
+      if (peerFiles.isEmpty) {
+        // No other device has uploaded yet. Still surface unsynced local edits
+        // so the first push is recommended.
+        final pendingCount = await _syncRepository.getPendingCount();
+        if (pendingCount > 0) {
+          return SyncCheckResult(
+            status: SyncCheckStatus.localChanges,
+            message:
+                '$pendingCount local change${pendingCount == 1 ? '' : 's'} to upload',
+            localLastSync: localLastSync,
+            pendingChanges: pendingCount,
+          );
+        }
         return const SyncCheckResult(
           status: SyncCheckStatus.noRemoteData,
           message: 'No sync data found in cloud',
         );
       }
 
-      // Check remote file info
-      final remoteInfo = await provider.getFileInfo(remoteFileId);
-
-      if (remoteInfo == null) {
-        return const SyncCheckResult(
-          status: SyncCheckStatus.remoteFileDeleted,
-          message: 'Remote sync file was deleted',
-        );
-      }
+      final remoteModified = _newestModified(peerFiles);
 
       // Compare timestamps
       if (localLastSync == null) {
         return SyncCheckResult(
           status: SyncCheckStatus.updatesAvailable,
           message: 'Cloud data available',
-          remoteModified: remoteInfo.modifiedTime,
+          remoteModified: remoteModified,
         );
       }
 
-      if (remoteInfo.modifiedTime.isAfter(localLastSync)) {
+      if (remoteModified.isAfter(localLastSync)) {
         return SyncCheckResult(
           status: SyncCheckStatus.updatesAvailable,
           message: 'Updates available from cloud',
           localLastSync: localLastSync,
-          remoteModified: remoteInfo.modifiedTime,
+          remoteModified: remoteModified,
         );
       }
 
@@ -141,34 +149,34 @@ class SyncInitializer {
     }
   }
 
-  Future<String?> _discoverRemoteFile(CloudStorageProvider provider) async {
-    try {
-      final files = await provider.listFiles(
-        namePattern: CloudStorageProviderMixin.syncFileStem,
-      );
-      if (files.isEmpty) return null;
-
-      final canonical = files.firstWhere(
-        (f) => f.name == CloudStorageProviderMixin.canonicalSyncFileName,
-        orElse: () => files.first,
-      );
-
-      final candidates = files.where((f) => !_isConflictCopy(f.name)).toList();
-      final selected = candidates.isNotEmpty
-          ? _pickLatest(candidates)
-          : canonical;
-
-      await _syncRepository.setRemoteFileId(selected.id);
-      return selected.id;
-    } catch (e) {
-      _log.warning('Failed to discover remote sync file: $e');
-      return null;
-    }
+  /// Lists every *other* device's sync file. Excludes our own per-device file
+  /// and any iCloud "conflicted copy" duplicates. A legacy shared
+  /// `submersion_sync.json` (written by pre-per-device builds) still counts as
+  /// a peer file so its data is detected. Mirrors the resolution in
+  /// `SyncService._resolveRemoteSyncFiles`.
+  Future<List<CloudFileInfo>> _peerSyncFiles(
+    CloudStorageProvider provider,
+  ) async {
+    final deviceId = await _syncRepository.getDeviceId();
+    final ownFileName =
+        '${CloudStorageProviderMixin.syncFilePrefix}$deviceId'
+        '${CloudStorageProviderMixin.syncFileExtension}';
+    final files = await provider.listFiles(
+      namePattern: CloudStorageProviderMixin.syncFileStem,
+    );
+    return files
+        .where((f) => !_isConflictCopy(f.name))
+        .where((f) => f.name != ownFileName)
+        .toList();
   }
 
-  CloudFileInfo _pickLatest(List<CloudFileInfo> files) {
-    files.sort((a, b) => b.modifiedTime.compareTo(a.modifiedTime));
-    return files.first;
+  /// The most recent modifiedTime across [files], which must be non-empty.
+  DateTime _newestModified(List<CloudFileInfo> files) {
+    var newest = files.first.modifiedTime;
+    for (final f in files.skip(1)) {
+      if (f.modifiedTime.isAfter(newest)) newest = f.modifiedTime;
+    }
+    return newest;
   }
 
   bool _isConflictCopy(String filename) {

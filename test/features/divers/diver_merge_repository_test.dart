@@ -236,6 +236,30 @@ void main() {
     },
   );
 
+  group('merge guards and helpers', () {
+    test('rejects merging a diver into itself', () async {
+      expect(
+        () => repo.mergeDivers(keeperId: keeper, duplicateId: keeper),
+        throwsArgumentError,
+      );
+    });
+
+    test('throws when the duplicate diver does not exist', () async {
+      expect(
+        () => repo.mergeDivers(keeperId: keeper, duplicateId: 'ghost-diver'),
+        throwsStateError,
+      );
+    });
+
+    test('DuplicateDiverGroup.displayName is the keeper name', () {
+      final group = DuplicateDiverGroup(
+        keeper: makeDiver('k', 'Alex Diver', isDefault: true),
+        duplicates: [makeDiver('d', 'Alex Diver')],
+      );
+      expect(group.displayName, 'Alex Diver');
+    });
+  });
+
   group('undoMerge', () {
     /// Returns a snapshot of the entire DB state relevant to the merge:
     /// every row in every diver_id table, plus the divers themselves. Used

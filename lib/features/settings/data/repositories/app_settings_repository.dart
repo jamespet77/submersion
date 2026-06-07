@@ -6,6 +6,7 @@ import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/sync/sync_event_bus.dart';
 
 /// Read/write global (not per-diver) app settings stored in the
 /// key-value `settings` table.
@@ -59,6 +60,7 @@ class AppSettingsRepository {
         recordId: _navPrimaryIdsKey,
         localUpdatedAt: now,
       );
+      SyncEventBus.notifyLocalChange();
     } catch (e, stackTrace) {
       _log.error(
         'Failed to write $_navPrimaryIdsKey',
@@ -109,6 +111,7 @@ class AppSettingsRepository {
         recordId: _shareByDefaultKey,
         localUpdatedAt: now,
       );
+      SyncEventBus.notifyLocalChange();
     } catch (e, stackTrace) {
       _log.error(
         'Failed to write $_shareByDefaultKey',

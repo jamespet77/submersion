@@ -4,6 +4,7 @@ import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/sync/sync_event_bus.dart';
 import 'package:submersion/features/universal_import/data/csv/presets/csv_preset.dart'
     as domain;
 
@@ -68,6 +69,7 @@ class CsvPresetRepository {
         recordId: preset.id,
         localUpdatedAt: now,
       );
+      SyncEventBus.notifyLocalChange();
 
       _log.info('Saved CSV preset: ${preset.id}');
     } catch (e, stackTrace) {
@@ -86,6 +88,7 @@ class CsvPresetRepository {
       _log.info('Deleting CSV preset: $id');
       await (_db.delete(_db.csvPresets)..where((t) => t.id.equals(id))).go();
       await _syncRepository.logDeletion(entityType: 'csvPresets', recordId: id);
+      SyncEventBus.notifyLocalChange();
       _log.info('Deleted CSV preset: $id');
     } catch (e, stackTrace) {
       _log.error(
