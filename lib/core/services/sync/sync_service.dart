@@ -732,6 +732,39 @@ class SyncService {
           (type: 'media', records: data.media, hasUpdatedAt: false),
         ];
 
+    // Precompute the locally-tombstoned parents this payload will REVIVE (a
+    // remote edit strictly newer than our deletion). A child must not be
+    // dropped/cleared for a parent that is coming back. The merge order does
+    // not guarantee a parent is processed before its children, and a revival
+    // only clears the tombstone in the DB (not the in-memory snapshot used by
+    // the guard below), so this is computed up front to stay order-independent.
+    final recordsByType = {for (final e in mergeOrder) e.type: e};
+    final revivedParents = <String, Set<String>>{};
+    final parentTypes = <String>{
+      for (final refs in parentRefs.values)
+        for (final ref in refs) ref.parent,
+    };
+    for (final parentType in parentTypes) {
+      final tombs = tombstonesByEntity[parentType];
+      final entry = recordsByType[parentType];
+      if (tombs == null ||
+          tombs.isEmpty ||
+          entry == null ||
+          !entry.hasUpdatedAt) {
+        continue;
+      }
+      for (final rec in entry.records) {
+        final id = _recordIdForEntity(parentType, rec);
+        if (id == null) continue;
+        final deletedAt = tombs[id];
+        if (deletedAt == null) continue;
+        final remoteUpdatedAt = _extractUpdatedAtMillis(rec);
+        if (remoteUpdatedAt != null && remoteUpdatedAt > deletedAt) {
+          revivedParents.putIfAbsent(parentType, () => <String>{}).add(id);
+        }
+      }
+    }
+
     for (final entry in mergeOrder) {
       final result = await _mergeEntity(
         entityType: entry.type,
@@ -740,6 +773,7 @@ class SyncService {
         lastSyncMs: lastSyncMs,
         pendingRecordIds: pendingByEntity[entry.type] ?? const <String>{},
         allTombstones: tombstonesByEntity,
+        revivedParents: revivedParents,
       );
       recordsApplied += result.recordsApplied;
       conflictsFound += result.conflictsFound;
@@ -926,6 +960,7 @@ class SyncService {
     required int? lastSyncMs,
     required Set<String> pendingRecordIds,
     required Map<String, Map<String, int>> allTombstones,
+    required Map<String, Set<String>> revivedParents,
   }) async {
     if (records.isEmpty) {
       return const _MergeResult(recordsApplied: 0, conflictsFound: 0);
@@ -965,7 +1000,10 @@ class SyncService {
         for (final ref in entityParentRefs) {
           final parentId = record[ref.field];
           if (parentId is String &&
-              (allTombstones[ref.parent]?.containsKey(parentId) ?? false)) {
+              (allTombstones[ref.parent]?.containsKey(parentId) ?? false) &&
+              // A parent being revived in this same payload is NOT gone; keep
+              // the child's reference intact regardless of merge order.
+              (revivedParents[ref.parent]?.contains(parentId) != true)) {
             if (ref.nullable) {
               recordToApply = {...recordToApply, ref.field: null};
             } else {

@@ -554,5 +554,97 @@ void main() {
         );
       },
     );
+
+    test('a parent revived in the same payload keeps its children; the FK is '
+        'not cleared by the stale tombstone snapshot (any merge order)', () async {
+      final serializer = SyncDataSerializer();
+      final diveRepo = DiveRepository();
+
+      // Local: a site + a dive referencing it; capture the dive JSON.
+      await serializer.upsertRecord('diveSites', {
+        'id': 'site-r',
+        'name': 'Reef',
+        'description': '',
+        'notes': '',
+        'isShared': false,
+        'createdAt': 1000,
+        'updatedAt': 1000,
+      });
+      await diveRepo.createDive(
+        createTestDiveWithBottomTime(id: 'dive-r', diveNumber: 7),
+      );
+      final diveBase = await serializer.fetchRecord('dives', 'dive-r');
+      await serializer.upsertRecord('dives', {
+        ...diveBase!,
+        'siteId': 'site-r',
+      });
+      final diveJson = await serializer.fetchRecord('dives', 'dive-r');
+      await buildService().performSync(); // push, advance lastSync
+
+      // Locally delete (tombstone) the site. Remove the dive first so the
+      // non-cascading FK lets the site row go; the tombstone predates the peer
+      // edit below.
+      await serializer.deleteRecord('dives', 'dive-r');
+      await serializer.deleteRecord('diveSites', 'site-r');
+      await SyncRepository().logDeletion(
+        entityType: 'diveSites',
+        recordId: 'site-r',
+        deletedAt: 5000,
+      );
+
+      // Peer payload: the site is EDITED (updatedAt 9000 > deletion 5000, so it
+      // revives) AND a dive still references it. `dives` merges before
+      // `diveSites`, so the child is processed while the parent still looks
+      // tombstoned -- the precomputed revived set must keep the FK.
+      final peerData = SyncData(
+        diveSites: [
+          {
+            'id': 'site-r',
+            'name': 'Reef (renamed)',
+            'description': '',
+            'notes': '',
+            'isShared': false,
+            'createdAt': 1000,
+            'updatedAt': 9000,
+          },
+        ],
+        dives: [
+          {...diveJson!, 'siteId': 'site-r', 'updatedAt': 9000},
+        ],
+      );
+      final checksum = sha256
+          .convert(utf8.encode(jsonEncode(peerData.toJson())))
+          .toString();
+      final payload = SyncPayload(
+        version: syncFormatVersion,
+        exportedAt: 9000,
+        deviceId: 'peer-dev',
+        checksum: checksum,
+        data: peerData,
+        deletions: const {},
+      );
+      await cloud.uploadFile(
+        Uint8List.fromList(utf8.encode(serializer.serializePayload(payload))),
+        'submersion_sync_peer-dev.json',
+      );
+
+      final result = await buildService().performSync();
+
+      expect(result.status, isNot(SyncResultStatus.error));
+      expect(
+        await serializer.fetchRecord('diveSites', 'site-r'),
+        isNotNull,
+        reason: 'the site is revived by the newer remote edit',
+      );
+      final revivedDive = await serializer.fetchRecord('dives', 'dive-r');
+      expect(revivedDive, isNotNull);
+      expect(
+        revivedDive!['siteId'],
+        'site-r',
+        reason:
+            'the FK must be preserved when the parent is revived in the '
+            'same payload, regardless of merge order',
+      );
+    });
   });
 }

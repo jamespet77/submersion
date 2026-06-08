@@ -669,9 +669,11 @@ class SyncRepository {
     );
   }
 
-  /// Remove every tombstone for a single record (all entity types share the
-  /// deletion log). Called when a remote edit newer than the deletion revives
-  /// the record, so the obsolete tombstone stops re-deleting it on later syncs.
+  /// Remove the tombstone(s) for one record of [entityType]. The deletion log
+  /// is a single table shared across entity types and recordIds are only unique
+  /// within an entity type, so the delete matches BOTH [entityType] and
+  /// [recordId]. Called when a remote edit newer than the deletion revives the
+  /// record, so the obsolete tombstone stops re-deleting it on later syncs.
   Future<void> removeDeletion({
     required String entityType,
     required String recordId,
