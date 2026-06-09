@@ -2,10 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart' show SyncRecord;
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/sync/hlc.dart';
+import 'package:submersion/core/services/sync/sync_clock.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:uuid/uuid.dart';
 
@@ -110,6 +113,12 @@ class SyncConflict {
 
 /// Resolution choice for a conflict
 enum ConflictResolution { keepLocal, keepRemote, keepBoth }
+
+/// A foreign-key reference from a synced child record to a parent whose
+/// deletion is tracked in the deletion log. [nullable] distinguishes a cascade
+/// child (NOT NULL -> the row cannot exist without the parent) from a set-null
+/// reference (nullable -> the row survives with the reference cleared).
+typedef ParentRef = ({String field, String parent, bool nullable});
 
 /// Core sync service that orchestrates cloud sync operations
 class SyncService {
@@ -269,6 +278,12 @@ class SyncService {
         'load last sync time',
         () => _syncRepository.getLastSyncTime(),
       );
+      // Make sure the HLC clock is live before merging so receiving remote
+      // payloads advances it (and any writes during the sync get stamped).
+      await _withStep(
+        'configure sync clock',
+        () => _syncRepository.ensureSyncClockConfigured(),
+      );
 
       // Try to download existing remote file
       _reportProgress(
@@ -277,102 +292,78 @@ class SyncService {
         'Checking for remote data...',
       );
 
-      SyncPayload? remotePayload;
-      String? remoteFileId;
+      // Resolve every sync file we should apply: all OTHER devices'
+      // per-device files plus any legacy shared file. Our own per-device file
+      // is excluded (it is our data, already local). Listing all files (rather
+      // than a single canonical file) is what lets per-device files coexist
+      // without a write-write race.
+      List<CloudFileInfo> remoteFiles;
       try {
-        remoteFileId = await _resolveRemoteFileId(
+        remoteFiles = await _resolveRemoteSyncFiles(
           provider,
+          deviceId,
         ).timeout(const Duration(seconds: 8));
       } on TimeoutException {
-        _log.warning('Timed out checking for remote sync file');
-        remoteFileId = null;
+        _log.warning('Timed out listing remote sync files');
+        remoteFiles = const [];
       } catch (e, stackTrace) {
         _log.warning(
-          'Failed to check remote sync file: $e',
+          'Failed to list remote sync files: $e',
           stackTrace: stackTrace,
         );
-        remoteFileId = null;
-      }
-
-      if (remoteFileId != null) {
-        try {
-          if (lastSyncTime != null) {
-            final info = await provider.getFileInfo(remoteFileId);
-            if (info != null && !info.modifiedTime.isAfter(lastSyncTime)) {
-              _log.debug(
-                'Remote sync file not newer than last sync; skipping.',
-              );
-              remoteFileId = null;
-            }
-          }
-        } catch (e, stackTrace) {
-          _log.warning(
-            'Failed to check remote file info: $e',
-            stackTrace: stackTrace,
-          );
-        }
-      }
-
-      if (remoteFileId != null) {
-        try {
-          final remoteData = await provider
-              .downloadFile(remoteFileId)
-              .timeout(const Duration(seconds: 15));
-          final remoteJson = _decodePayloadBytes(remoteData);
-          try {
-            remotePayload = _serializer.deserializePayload(remoteJson);
-          } catch (e, stackTrace) {
-            _log.warning(
-              'Failed to parse remote sync payload: $e',
-              stackTrace: stackTrace,
-            );
-            remotePayload = null;
-          }
-
-          // Validate checksum
-          if (remotePayload != null &&
-              !_serializer.validateChecksum(remotePayload)) {
-            _log.warning('Remote sync file has invalid checksum');
-            remotePayload = null;
-          }
-          if (remotePayload != null &&
-              remotePayload.deviceId == deviceId &&
-              lastSyncTime != null) {
-            final lastSyncMs = lastSyncTime.millisecondsSinceEpoch;
-            if (remotePayload.exportedAt <= lastSyncMs) {
-              _log.debug(
-                'Remote payload from this device is not newer; skipping apply.',
-              );
-              remotePayload = null;
-            }
-          }
-        } on TimeoutException {
-          _log.warning('Timed out downloading remote sync file');
-        } catch (e) {
-          _log.warning('Failed to download remote sync file: $e');
-          // Continue with upload-only sync
-        }
+        remoteFiles = const [];
       }
 
       _reportProgress(SyncPhase.importing, 0.6, 'Processing changes...');
 
       var recordsSynced = 0;
       var conflictsFound = 0;
+      var recordsFailed = 0;
 
-      if (remotePayload != null && remotePayload.deviceId != deviceId) {
-        _log.info(
-          'Remote data from different device: ${remotePayload.deviceId}',
-        );
-      }
+      for (final file in remoteFiles) {
+        // NOTE: we intentionally do NOT skip files by their cloud
+        // modifiedTime. iCloud Drive can fail to advance that metadata after a
+        // conflict-copy merge, which would silently skip a file containing new
+        // records; and skipping a file whose record failed to apply once would
+        // drop it forever. Re-applying is idempotent (upsert + HLC), so we
+        // always download and merge every foreign file.
+        SyncPayload payload;
+        try {
+          final remoteData = await provider
+              .downloadFile(file.id)
+              .timeout(const Duration(seconds: 15));
+          final remoteJson = _decodePayloadBytes(remoteData);
+          final parsed = _serializer.deserializePayload(remoteJson);
+          if (!_serializer.validateChecksum(parsed)) {
+            _log.warning('Remote sync file ${file.name} has invalid checksum');
+            continue;
+          }
+          payload = parsed;
+        } on TimeoutException {
+          _log.warning('Timed out downloading ${file.name}');
+          continue;
+        } catch (e, stackTrace) {
+          _log.warning(
+            'Failed to download/parse ${file.name}: $e',
+            stackTrace: stackTrace,
+          );
+          continue;
+        }
 
-      if (remotePayload != null) {
-        final payload = remotePayload;
+        // Skip our own data by payload identity (covers a legacy shared file
+        // or an iCloud conflict-copy this device authored) -- applying it to
+        // ourselves is a no-op that only inflates counts.
+        if (payload.deviceId == deviceId) {
+          continue;
+        }
+
         final mergeResult = await _withStep(
           'apply remote data',
           () => _applyRemotePayload(payload, lastSyncTime),
         );
         recordsSynced += mergeResult.recordsApplied;
         conflictsFound += mergeResult.conflictsFound;
+        recordsFailed += mergeResult.recordsFailed;
       }
 
       _reportProgress(SyncPhase.exporting, 0.7, 'Exporting local data...');
@@ -407,7 +398,10 @@ class SyncService {
           const Duration(seconds: 10),
         ),
       );
-      const filename = CloudStorageProviderMixin.canonicalSyncFileName;
+      // Write to this device's own file so two devices never contend for the
+      // same file (the iCloud "conflicted copy" race). Other devices pick this
+      // up by listing the folder on their next sync.
+      final filename = _deviceSyncFileName(deviceId);
 
       _log.debug(
         'Uploading ${localData.length} bytes to $syncFolder/$filename...',
@@ -420,14 +414,28 @@ class SyncService {
       );
       _log.debug('Upload complete! fileId = ${result.fileId}');
 
-      // Update sync state
+      // Deliberately do NOT persist result.fileId as "the remote file id":
+      // under per-device files it is *our own* file, and the only consumer
+      // (SyncInitializer.checkSyncOnLaunch) now inspects every peer file's
+      // mtime directly. Persisting our own id made the launch check compare our
+      // own upload time and miss other devices' changes.
+
+      // Only advance lastSyncTime when every record applied. A failed apply
+      // leaves no per-record retry marker, so advancing lastSync would let the
+      // conflict-detection window move past it and the record would never be
+      // retried -- permanent loss. Leaving lastSync unchanged means the next
+      // sync re-pulls and re-applies (idempotent) so the failure is retried.
+      if (recordsFailed == 0) {
+        await _withStep(
+          'store last sync time',
+          () => _syncRepository.updateLastSyncTime(result.uploadTime),
+        );
+      }
+      // Persist the HLC so the logical counter survives an app restart (it
+      // was advanced by SyncClock.receive() while applying remote payloads).
       await _withStep(
-        'store remote file id',
-        () => _syncRepository.setRemoteFileId(result.fileId),
-      );
-      await _withStep(
-        'store last sync time',
-        () => _syncRepository.updateLastSyncTime(result.uploadTime),
+        'persist sync clock',
+        () => _syncRepository.persistSyncClock(),
       );
 
       // Keep deletions for propagation, but prune old entries
@@ -450,13 +458,26 @@ class SyncService {
 
       _log.info('Sync completed successfully');
 
+      if (recordsFailed > 0) {
+        _log.error('$recordsFailed record(s) failed to apply during sync');
+      }
       return SyncResult(
-        status: conflictsFound > 0
-            ? SyncResultStatus.hasConflicts
-            : SyncResultStatus.success,
+        status: recordsFailed > 0
+            ? SyncResultStatus.error
+            : (conflictsFound > 0
+                  ? SyncResultStatus.hasConflicts
+                  : SyncResultStatus.success),
+        message: recordsFailed > 0
+            ? '$recordsFailed record(s) failed to apply'
+            : null,
         recordsSynced: recordsSynced,
         conflictsFound: conflictsFound,
-        lastSyncTime: result.uploadTime,
+        // Mirror the persistence decision above: only report an advanced
+        // lastSyncTime when every record applied (and we actually wrote it to
+        // the DB). On a partial-apply failure lastSync is intentionally left
+        // unchanged, so returning it here would make the result disagree with
+        // stored state.
+        lastSyncTime: recordsFailed == 0 ? result.uploadTime : null,
       );
     } on TimeoutException {
       _log.warning('Sync timed out while uploading');
@@ -524,39 +545,31 @@ class SyncService {
     }
   }
 
-  Future<String?> _resolveRemoteFileId(CloudStorageProvider provider) async {
-    var remoteFileId = await _syncRepository.getRemoteFileId();
-    if (remoteFileId != null) {
-      final exists = await provider.fileExists(remoteFileId);
-      if (exists) {
-        return remoteFileId;
-      }
-      await _syncRepository.setRemoteFileId(null);
-      remoteFileId = null;
-    }
+  /// This device's own per-device sync filename.
+  String _deviceSyncFileName(String deviceId) =>
+      '${CloudStorageProviderMixin.syncFilePrefix}$deviceId'
+      '${CloudStorageProviderMixin.syncFileExtension}';
 
+  /// Resolve every remote sync file this device should apply: all other
+  /// devices' per-device files, plus a legacy shared `submersion_sync.json`
+  /// if one is still present. Excludes our own per-device file and any iCloud
+  /// "conflicted copy" duplicates. Returns [] on failure.
+  Future<List<CloudFileInfo>> _resolveRemoteSyncFiles(
+    CloudStorageProvider provider,
+    String deviceId,
+  ) async {
     try {
+      final ownFileName = _deviceSyncFileName(deviceId);
       final files = await provider.listFiles(
         namePattern: CloudStorageProviderMixin.syncFileStem,
       );
-      if (files.isEmpty) return null;
-
-      CloudFileInfo? selected = files.firstWhere(
-        (f) => f.name == CloudStorageProviderMixin.canonicalSyncFileName,
-        orElse: () => files.first,
-      );
-
-      final candidates = files.where((f) => !_isConflictCopy(f.name)).toList();
-      if (candidates.isNotEmpty) {
-        candidates.sort((a, b) => b.modifiedTime.compareTo(a.modifiedTime));
-        selected = candidates.first;
-      }
-
-      await _syncRepository.setRemoteFileId(selected.id);
-      return selected.id;
+      return files
+          .where((f) => !_isConflictCopy(f.name))
+          .where((f) => f.name != ownFileName)
+          .toList();
     } catch (e) {
-      _log.warning('Failed to resolve remote sync file: $e');
-      return null;
+      _log.warning('Failed to resolve remote sync files: $e');
+      return const [];
     }
   }
 
@@ -564,9 +577,25 @@ class SyncService {
     SyncPayload remotePayload,
     DateTime? localLastSync,
   ) async {
+    // Wrap deletions + merge in a single transaction with deferred FK checks.
+    // Without this, intra-payload references (e.g. a dive whose siteId points
+    // at a dive site appearing later in the apply order, or a dive whose
+    // courseId points at a course in the same payload) fail immediately and
+    // the affected rows never reach the receiving DB. See
+    // docs/superpowers/findings/2026-06-02-icloud-sync-diagnosis.md.
+    return _serializer.applyInDeferredFkTransaction(
+      () => _applyRemotePayloadInner(remotePayload, localLastSync),
+    );
+  }
+
+  Future<_MergeResult> _applyRemotePayloadInner(
+    SyncPayload remotePayload,
+    DateTime? localLastSync,
+  ) async {
     final lastSyncMs = localLastSync?.millisecondsSinceEpoch;
     var recordsApplied = 0;
     var conflictsFound = 0;
+    var recordsFailed = 0;
     final pendingByEntity = await _pendingRecordMap();
 
     final deletionResult = await _applyRemoteDeletions(
@@ -577,6 +606,15 @@ class SyncService {
     );
     recordsApplied += deletionResult.recordsApplied;
     conflictsFound += deletionResult.conflictsFound;
+    recordsFailed += deletionResult.recordsFailed;
+
+    // Local tombstones (including any just applied from this payload's
+    // deletions) guard the merge below: a remote LIVE record must not
+    // resurrect a record we have deleted unless the remote edit is newer than
+    // our deletion. Loaded after _applyRemoteDeletions so a tombstone arriving
+    // in the same payload also protects against a self-contradictory payload
+    // that carries both a delete and a stale live copy of the same record.
+    final tombstonesByEntity = await _deletionMap();
 
     final data = remotePayload.data;
 
@@ -623,6 +661,10 @@ class SyncService {
           ),
           (type: 'species', records: data.species, hasUpdatedAt: false),
           (type: 'tags', records: data.tags, hasUpdatedAt: true),
+          // Courses must apply before dives/certifications that reference them.
+          // (Deferred FK already covers ordering, but keep the logical sequence
+          // so a future read of this list still tells the dependency story.)
+          (type: 'courses', records: data.courses, hasUpdatedAt: true),
           (type: 'dives', records: data.dives, hasUpdatedAt: true),
           (type: 'diveSites', records: data.diveSites, hasUpdatedAt: true),
           (type: 'diveTanks', records: data.diveTanks, hasUpdatedAt: false),
@@ -645,6 +687,30 @@ class SyncService {
             hasUpdatedAt: false,
           ),
           (type: 'gasSwitches', records: data.gasSwitches, hasUpdatedAt: false),
+          // Extra entities added in the SyncData expansion. Four are
+          // append-only and use the blind-upsert merge path (no updatedAt
+          // column: diveCustomFields, diveDataSources, siteSpecies,
+          // fieldPresets). Two carry updatedAt and use the standard
+          // conflict-detection path (csvPresets, viewConfigs). FK ordering
+          // is handled by the deferred-FK transaction wrapping this loop.
+          (
+            type: 'diveCustomFields',
+            records: data.diveCustomFields,
+            hasUpdatedAt: false,
+          ),
+          (
+            type: 'diveDataSources',
+            records: data.diveDataSources,
+            hasUpdatedAt: false,
+          ),
+          (type: 'siteSpecies', records: data.siteSpecies, hasUpdatedAt: false),
+          (type: 'csvPresets', records: data.csvPresets, hasUpdatedAt: true),
+          (type: 'viewConfigs', records: data.viewConfigs, hasUpdatedAt: true),
+          (
+            type: 'fieldPresets',
+            records: data.fieldPresets,
+            hasUpdatedAt: false,
+          ),
           (
             type: 'tankPressureProfiles',
             records: data.tankPressureProfiles,
@@ -666,6 +732,39 @@ class SyncService {
           (type: 'media', records: data.media, hasUpdatedAt: false),
         ];
 
+    // Precompute the locally-tombstoned parents this payload will REVIVE (a
+    // remote edit strictly newer than our deletion). A child must not be
+    // dropped/cleared for a parent that is coming back. The merge order does
+    // not guarantee a parent is processed before its children, and a revival
+    // only clears the tombstone in the DB (not the in-memory snapshot used by
+    // the guard below), so this is computed up front to stay order-independent.
+    final recordsByType = {for (final e in mergeOrder) e.type: e};
+    final revivedParents = <String, Set<String>>{};
+    final parentTypes = <String>{
+      for (final refs in parentRefs.values)
+        for (final ref in refs) ref.parent,
+    };
+    for (final parentType in parentTypes) {
+      final tombs = tombstonesByEntity[parentType];
+      final entry = recordsByType[parentType];
+      if (tombs == null ||
+          tombs.isEmpty ||
+          entry == null ||
+          !entry.hasUpdatedAt) {
+        continue;
+      }
+      for (final rec in entry.records) {
+        final id = _recordIdForEntity(parentType, rec);
+        if (id == null) continue;
+        final deletedAt = tombs[id];
+        if (deletedAt == null) continue;
+        final remoteUpdatedAt = _extractUpdatedAtMillis(rec);
+        if (remoteUpdatedAt != null && remoteUpdatedAt > deletedAt) {
+          revivedParents.putIfAbsent(parentType, () => <String>{}).add(id);
+        }
+      }
+    }
+
     for (final entry in mergeOrder) {
       final result = await _mergeEntity(
         entityType: entry.type,
@@ -673,14 +772,25 @@ class SyncService {
         hasUpdatedAt: entry.hasUpdatedAt,
         lastSyncMs: lastSyncMs,
         pendingRecordIds: pendingByEntity[entry.type] ?? const <String>{},
+        allTombstones: tombstonesByEntity,
+        revivedParents: revivedParents,
       );
       recordsApplied += result.recordsApplied;
       conflictsFound += result.conflictsFound;
+      recordsFailed += result.recordsFailed;
     }
+
+    // Integrity backstop: applying a remote deletion of a parent can leave a
+    // local row pointing at it via a non-cascading FK, which would fail the
+    // deferred-FK COMMIT and abort the whole sync. Clear or delete any such
+    // dangling reference before the transaction commits. (The merge guard
+    // above stops a peer's orphan from being re-added, so this does not loop.)
+    await _serializer.repairDanglingForeignKeys();
 
     return _MergeResult(
       recordsApplied: recordsApplied,
       conflictsFound: conflictsFound,
+      recordsFailed: recordsFailed,
     );
   }
 
@@ -692,52 +802,156 @@ class SyncService {
   ) async {
     var applied = 0;
     var conflicts = 0;
+    var failed = 0;
 
     for (final entry in deletions.entries) {
       final entityType = entry.key;
       for (final deletion in entry.value) {
         final recordId = deletion.id;
-        if (pendingByEntity[entityType]?.contains(recordId) == true) {
-          continue;
-        }
-        final local = await _serializer.fetchRecord(entityType, recordId);
-        final localUpdatedAt = _extractUpdatedAtMillis(local);
-        final deletionTimestamp = deletion.deletedAt > 0
-            ? deletion.deletedAt
-            : remoteExportedAt;
+        try {
+          if (pendingByEntity[entityType]?.contains(recordId) == true) {
+            continue;
+          }
+          final local = await _serializer.fetchRecord(entityType, recordId);
+          // _extractUpdatedAtMillis falls back to createdAt, so a row that was
+          // created locally after our last sync is protected from a stale
+          // remote tombstone even on append-only child tables that have a
+          // createdAt. The handful of child tables with neither updatedAt nor
+          // createdAt (dive_profiles, dive_tanks, dive_equipment,
+          // tank_pressure_profiles, sightings) have no age signal; they are
+          // regenerated wholesale with fresh ids on re-import, so a stale
+          // tombstone won't match a current row.
+          final localUpdatedAt = _extractUpdatedAtMillis(local);
+          final deletionTimestamp = deletion.deletedAt > 0
+              ? deletion.deletedAt
+              : remoteExportedAt;
 
-        final hasConflict =
-            localUpdatedAt != null &&
-            lastSyncMs != null &&
-            localUpdatedAt > lastSyncMs;
+          final hasConflict =
+              localUpdatedAt != null &&
+              lastSyncMs != null &&
+              localUpdatedAt > lastSyncMs;
 
-        if (hasConflict) {
-          conflicts += 1;
-          await _syncRepository.markRecordConflict(
+          if (hasConflict) {
+            conflicts += 1;
+            await _syncRepository.markRecordConflict(
+              entityType: entityType,
+              recordId: recordId,
+              conflictDataJson: jsonEncode({
+                '_deleted': true,
+                'deletedAt': deletionTimestamp,
+                'recordId': recordId,
+              }),
+              localUpdatedAt: localUpdatedAt,
+            );
+            continue;
+          }
+
+          await _serializer.deleteRecord(entityType, recordId);
+          await _syncRepository.logDeletionIfMissing(
             entityType: entityType,
             recordId: recordId,
-            conflictDataJson: jsonEncode({
-              '_deleted': true,
-              'deletedAt': deletionTimestamp,
-              'recordId': recordId,
-            }),
-            localUpdatedAt: localUpdatedAt,
+            deletedAt: deletionTimestamp,
           );
-          continue;
+          applied += 1;
+        } catch (e, stackTrace) {
+          // A failed deletion is a real failure (surfaced via recordsFailed),
+          // not a conflict, and must not abort the rest of the batch.
+          _log.error(
+            'Failed to apply deletion $entityType/$recordId',
+            error: e,
+            stackTrace: stackTrace,
+          );
+          failed += 1;
         }
-
-        await _serializer.deleteRecord(entityType, recordId);
-        await _syncRepository.logDeletionIfMissing(
-          entityType: entityType,
-          recordId: recordId,
-          deletedAt: deletionTimestamp,
-        );
-        applied += 1;
       }
     }
 
-    return _MergeResult(recordsApplied: applied, conflictsFound: conflicts);
+    return _MergeResult(
+      recordsApplied: applied,
+      conflictsFound: conflicts,
+      recordsFailed: failed,
+    );
   }
+
+  /// Every synced child -> parent FK whose parent can be deleted (and thus
+  /// tombstoned in the deletion log). Used by [_mergeEntity] to keep a peer's
+  /// live child from dangling its FK against a parent we have deleted -- which
+  /// would otherwise fail the deferred-FK COMMIT and abort the whole sync.
+  /// NOT NULL (nullable: false) children are skipped; nullable references are
+  /// cleared so the row survives detached.
+  ///
+  /// Generated from every `references(<deletable parent>, ...)` in the schema;
+  /// completeness (and column nullability) is asserted against the live schema
+  /// by sync_parent_refs_completeness_test.dart, so a new FK to a deletable
+  /// parent fails that test until it is added here. (diverId is intentionally
+  /// absent: diver deletion goes through DiverMergeRepository, which repoints
+  /// FKs rather than orphaning them.)
+  @visibleForTesting
+  static const Map<String, List<ParentRef>> parentRefs = {
+    'dives': [
+      (field: 'siteId', parent: 'diveSites', nullable: true),
+      (field: 'tripId', parent: 'trips', nullable: true),
+      (field: 'courseId', parent: 'courses', nullable: true),
+      (field: 'computerId', parent: 'diveComputers', nullable: true),
+      (field: 'diveCenterId', parent: 'diveCenters', nullable: true),
+    ],
+    'diveProfiles': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'computerId', parent: 'diveComputers', nullable: true),
+    ],
+    'diveTanks': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'equipmentId', parent: 'equipment', nullable: true),
+    ],
+    'diveWeights': [(field: 'diveId', parent: 'dives', nullable: false)],
+    'diveEquipment': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'equipmentId', parent: 'equipment', nullable: false),
+    ],
+    'diveBuddies': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'buddyId', parent: 'buddies', nullable: false),
+    ],
+    'diveTags': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'tagId', parent: 'tags', nullable: false),
+    ],
+    'diveProfileEvents': [(field: 'diveId', parent: 'dives', nullable: false)],
+    'gasSwitches': [(field: 'diveId', parent: 'dives', nullable: false)],
+    'diveCustomFields': [(field: 'diveId', parent: 'dives', nullable: false)],
+    'tankPressureProfiles': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+    ],
+    'tideRecords': [(field: 'diveId', parent: 'dives', nullable: false)],
+    'diveDataSources': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'computerId', parent: 'diveComputers', nullable: true),
+    ],
+    'sightings': [
+      (field: 'diveId', parent: 'dives', nullable: false),
+      (field: 'speciesId', parent: 'species', nullable: false),
+    ],
+    'media': [
+      (field: 'diveId', parent: 'dives', nullable: true),
+      (field: 'siteId', parent: 'diveSites', nullable: true),
+      (field: 'signerId', parent: 'buddies', nullable: true),
+    ],
+    'siteSpecies': [
+      (field: 'siteId', parent: 'diveSites', nullable: false),
+      (field: 'speciesId', parent: 'species', nullable: false),
+    ],
+    'liveaboardDetails': [(field: 'tripId', parent: 'trips', nullable: false)],
+    'itineraryDays': [(field: 'tripId', parent: 'trips', nullable: false)],
+    'certifications': [(field: 'courseId', parent: 'courses', nullable: true)],
+    'courses': [(field: 'instructorId', parent: 'buddies', nullable: true)],
+    'equipmentSetItems': [
+      (field: 'setId', parent: 'equipmentSets', nullable: false),
+      (field: 'equipmentId', parent: 'equipment', nullable: false),
+    ],
+    'serviceRecords': [
+      (field: 'equipmentId', parent: 'equipment', nullable: false),
+    ],
+  };
 
   Future<_MergeResult> _mergeEntity({
     required String entityType,
@@ -745,6 +959,8 @@ class SyncService {
     required bool hasUpdatedAt,
     required int? lastSyncMs,
     required Set<String> pendingRecordIds,
+    required Map<String, Map<String, int>> allTombstones,
+    required Map<String, Set<String>> revivedParents,
   }) async {
     if (records.isEmpty) {
       return const _MergeResult(recordsApplied: 0, conflictsFound: 0);
@@ -752,6 +968,10 @@ class SyncService {
 
     var applied = 0;
     var conflicts = 0;
+    var failed = 0;
+
+    final selfTombstones = allTombstones[entityType] ?? const <String, int>{};
+    final entityParentRefs = parentRefs[entityType] ?? const <ParentRef>[];
 
     for (final record in records) {
       String? recordId;
@@ -759,7 +979,10 @@ class SyncService {
       try {
         recordId = _recordIdForEntity(entityType, record);
         if (recordId == null) {
-          conflicts += 1;
+          // A record with no resolvable id is malformed data, not a two-sided
+          // conflict -- count it as a failure so performSync surfaces an error.
+          _log.error('Skipping $entityType record with no resolvable id');
+          failed += 1;
           continue;
         }
 
@@ -767,8 +990,53 @@ class SyncService {
           continue;
         }
 
+        // Parent-deletion guard: a record pointing at a locally-tombstoned
+        // parent would otherwise dangle its FK (failing the deferred-FK commit)
+        // or resurrect an orphan. A NOT NULL (cascade) child is skipped; a
+        // nullable (set-null) reference is cleared so the row survives detached
+        // (e.g. a photo whose dive was deleted keeps the photo, sans dive link).
+        var recordToApply = record;
+        var droppedByParent = false;
+        for (final ref in entityParentRefs) {
+          final parentId = record[ref.field];
+          if (parentId is String &&
+              (allTombstones[ref.parent]?.containsKey(parentId) ?? false) &&
+              // A parent being revived in this same payload is NOT gone; keep
+              // the child's reference intact regardless of merge order.
+              (revivedParents[ref.parent]?.contains(parentId) != true)) {
+            if (ref.nullable) {
+              recordToApply = {...recordToApply, ref.field: null};
+            } else {
+              droppedByParent = true;
+              break;
+            }
+          }
+        }
+        if (droppedByParent) continue;
+
+        // Local-deletion guard: if we deleted this record, a remote LIVE copy
+        // must not resurrect it unless the remote edit is newer than our
+        // deletion (a genuine revival). Without this, a peer that has not yet
+        // seen our delete re-introduces the record on every sync.
+        final deletedAt = selfTombstones[recordId];
+        if (deletedAt != null) {
+          final remoteUpdatedAt = hasUpdatedAt
+              ? _extractUpdatedAtMillis(record)
+              : null;
+          if (remoteUpdatedAt == null || remoteUpdatedAt <= deletedAt) {
+            // No newer remote edit -- the deletion wins; stay deleted.
+            continue;
+          }
+          // Remote edit is newer than the deletion: revive the record and drop
+          // the now-obsolete tombstone so it stops re-deleting it.
+          await _syncRepository.removeDeletion(
+            entityType: entityType,
+            recordId: recordId,
+          );
+        }
+
         if (!hasUpdatedAt) {
-          await _serializer.upsertRecord(entityType, record);
+          await _serializer.upsertRecord(entityType, recordToApply);
           applied += 1;
           continue;
         }
@@ -777,6 +1045,29 @@ class SyncService {
         localUpdatedAt = _extractUpdatedAtMillis(local);
         final remoteUpdatedAt = _extractUpdatedAtMillis(record);
 
+        final localHlc = _extractHlc(local);
+        final remoteHlc = _extractHlc(record);
+        // Advance our clock past every remote HLC we observe, so this device's
+        // next local write is ordered after what it has seen (the skew fix).
+        if (remoteHlc != null) {
+          SyncClock.instance.receive(remoteHlc);
+        }
+
+        // When BOTH sides carry an HLC it is the authoritative, deterministic
+        // resolution -- it already encodes causal order across devices, so we
+        // do NOT raise a manual conflict (that would defeat the purpose of the
+        // clock for the common concurrent-edit case). A strictly-greater
+        // remote HLC wins; an exact tie or a local-newer HLC keeps local.
+        if (localHlc != null && remoteHlc != null) {
+          if (remoteHlc.compareTo(localHlc) > 0) {
+            await _serializer.upsertRecord(entityType, recordToApply);
+            applied += 1;
+          }
+          continue;
+        }
+
+        // Pre-HLC fallback (one or both sides lack an HLC): use updatedAt, and
+        // surface a true two-sided edit since the last sync as a conflict.
         if (localUpdatedAt != null &&
             remoteUpdatedAt != null &&
             lastSyncMs != null &&
@@ -796,7 +1087,7 @@ class SyncService {
         if (remoteUpdatedAt == null ||
             localUpdatedAt == null ||
             remoteUpdatedAt >= localUpdatedAt) {
-          await _serializer.upsertRecord(entityType, record);
+          await _serializer.upsertRecord(entityType, recordToApply);
           applied += 1;
         }
       } catch (e, stackTrace) {
@@ -805,20 +1096,18 @@ class SyncService {
           error: e,
           stackTrace: stackTrace,
         );
-        conflicts += 1;
-        if (recordId != null) {
-          await _syncRepository.markRecordConflict(
-            entityType: entityType,
-            recordId: recordId,
-            conflictDataJson: jsonEncode(record),
-            localUpdatedAt:
-                localUpdatedAt ?? DateTime.now().millisecondsSinceEpoch,
-          );
-        }
+        // An apply error is a real failure, not a "conflict" (which means both
+        // sides edited the same record). Masking apply errors as conflicts is
+        // what hid the cross-device no-op; count it so performSync surfaces it.
+        failed += 1;
       }
     }
 
-    return _MergeResult(recordsApplied: applied, conflictsFound: conflicts);
+    return _MergeResult(
+      recordsApplied: applied,
+      conflictsFound: conflicts,
+      recordsFailed: failed,
+    );
   }
 
   Future<Map<String, Set<String>>> _pendingRecordMap() async {
@@ -830,6 +1119,23 @@ class SyncService {
     return map;
   }
 
+  /// Local deletion tombstones as entityType -> (recordId -> latest deletedAt).
+  /// Used by [_mergeEntity] to keep a remote live copy from resurrecting a
+  /// record we have deleted.
+  Future<Map<String, Map<String, int>>> _deletionMap() async {
+    final deletions = await _syncRepository.getAllDeletions();
+    final map = <String, Map<String, int>>{};
+    for (final d in deletions) {
+      final byId = map.putIfAbsent(d.entityType, () => <String, int>{});
+      final existing = byId[d.recordId];
+      // Keep the most recent deletion if duplicate tombstones exist.
+      if (existing == null || d.deletedAt > existing) {
+        byId[d.recordId] = d.deletedAt;
+      }
+    }
+    return map;
+  }
+
   int? _extractUpdatedAtMillis(Map<String, dynamic>? data) {
     if (data == null) return null;
     final updatedAt = data['updatedAt'];
@@ -837,6 +1143,19 @@ class SyncService {
     final createdAt = data['createdAt'];
     if (createdAt is int) return createdAt;
     return null;
+  }
+
+  /// Parse a record's Hybrid Logical Clock, or null if absent/blank (rows
+  /// written before the HLC rollout). Malformed values are treated as absent
+  /// so a bad value can never crash the merge.
+  Hlc? _extractHlc(Map<String, dynamic>? data) {
+    final raw = data?['hlc'];
+    if (raw is! String || raw.isEmpty) return null;
+    try {
+      return Hlc.parse(raw);
+    } catch (_) {
+      return null;
+    }
   }
 
   String? _recordIdForEntity(String entityType, Map<String, dynamic> record) {
@@ -982,9 +1301,11 @@ class SyncService {
 class _MergeResult {
   final int recordsApplied;
   final int conflictsFound;
+  final int recordsFailed;
 
   const _MergeResult({
     required this.recordsApplied,
     required this.conflictsFound,
+    this.recordsFailed = 0,
   });
 }

@@ -2,18 +2,42 @@ import 'package:submersion/core/providers/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
+import 'package:submersion/features/divers/data/repositories/diver_merge_repository.dart';
 import 'package:submersion/features/divers/data/repositories/diver_repository.dart';
 import 'package:submersion/features/divers/domain/entities/diver.dart';
+import 'package:submersion/features/dive_log/presentation/providers/dive_repository_provider.dart';
 
 /// Repository provider
 final diverRepositoryProvider = Provider<DiverRepository>((ref) {
   return DiverRepository();
 });
 
-/// All divers provider
+/// Diver merge repository provider
+final diverMergeRepositoryProvider = Provider<DiverMergeRepository>((ref) {
+  return DiverMergeRepository();
+});
+
+/// All divers provider.
+///
+/// A [FutureProvider] that self-invalidates whenever the `divers` table is
+/// written (e.g. after a sync), so the list refreshes while imperative
+/// `ref.read(allDiversProvider.future)` reads still resolve.
 final allDiversProvider = FutureProvider<List<Diver>>((ref) async {
   final repository = ref.watch(diverRepositoryProvider);
+  final sub = repository.watchDiversChanges().listen(
+    (_) => ref.invalidateSelf(),
+  );
+  ref.onDispose(sub.cancel);
   return repository.getAllDivers();
+});
+
+/// Duplicate diver groups (same normalized name), surfaced after sync so the
+/// user can confirm a merge. Empty when there are no apparent duplicates.
+final duplicateDiverGroupsProvider = FutureProvider<List<DuplicateDiverGroup>>((
+  ref,
+) async {
+  final divers = await ref.watch(allDiversProvider.future);
+  return DiverMergeRepository.findDuplicateGroups(divers);
 });
 
 /// Check if any diver profiles exist
@@ -161,6 +185,12 @@ class DiverListNotifier extends StateNotifier<AsyncValue<List<Diver>>> {
   DiverListNotifier(this._repository, this._ref)
     : super(const AsyncValue.loading()) {
     _loadDivers();
+
+    // Refresh when the divers table changes (e.g. a sync writes rows directly).
+    final tableChangeSub = _repository.watchDiversChanges().listen(
+      (_) => _silentReloadDivers(),
+    );
+    _ref.onDispose(tableChangeSub.cancel);
   }
 
   Future<void> _loadDivers() async {
@@ -170,6 +200,17 @@ class DiverListNotifier extends StateNotifier<AsyncValue<List<Diver>>> {
       state = AsyncValue.data(divers);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
+    }
+  }
+
+  /// Reload without flipping to a loading state, so table-driven refreshes
+  /// (e.g. after a sync write) do not flash a spinner over existing data.
+  Future<void> _silentReloadDivers() async {
+    try {
+      final divers = await _repository.getAllDivers();
+      if (mounted) state = AsyncValue.data(divers);
+    } catch (e, st) {
+      if (mounted) state = AsyncValue.error(e, st);
     }
   }
 
@@ -258,6 +299,13 @@ final diverStatsProvider = FutureProvider.family<DiverStats, String>((
   diverId,
 ) async {
   final repository = ref.watch(diverRepositoryProvider);
+  // The stats read the `dives` table, so self-invalidate when dives change
+  // (e.g. after a sync) to keep the per-tile counts on the diver list fresh.
+  final diveSub = ref
+      .read(diveRepositoryProvider)
+      .watchDivesChanges()
+      .listen((_) => ref.invalidateSelf());
+  ref.onDispose(diveSub.cancel);
   final diveCount = await repository.getDiveCountForDiver(diverId);
   final totalTime = await repository.getTotalBottomTimeForDiver(diverId);
   return DiverStats(diveCount: diveCount, totalBottomTimeSeconds: totalTime);

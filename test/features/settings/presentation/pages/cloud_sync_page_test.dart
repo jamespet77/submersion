@@ -1,0 +1,765 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:submersion/core/data/repositories/sync_repository.dart'
+    show CloudProviderType;
+import 'package:submersion/core/providers/provider.dart';
+import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
+import 'package:submersion/core/services/sync/sync_service.dart'
+    show ConflictResolution;
+import 'package:submersion/features/divers/data/repositories/diver_merge_repository.dart';
+import 'package:submersion/features/divers/domain/entities/diver.dart';
+import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
+import 'package:submersion/features/settings/presentation/pages/cloud_sync_page.dart';
+import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
+import 'package:submersion/l10n/arb/app_localizations.dart';
+
+import '../../../../helpers/fake_cloud_storage_provider.dart';
+import '../../../../helpers/mock_providers.dart';
+
+/// Fake [SyncNotifier] that holds an arbitrary [SyncState] and records calls to
+/// the mutating methods the page invokes, without touching the database.
+class _FakeSyncNotifier extends StateNotifier<SyncState>
+    implements SyncNotifier {
+  _FakeSyncNotifier(super.state);
+
+  int performSyncCalls = 0;
+  int refreshStateCalls = 0;
+  int resetSyncStateCalls = 0;
+  int signOutCalls = 0;
+
+  @override
+  Future<void> performSync() async => performSyncCalls++;
+
+  @override
+  Future<void> refreshState() async => refreshStateCalls++;
+
+  @override
+  Future<void> resetSyncState() async => resetSyncStateCalls++;
+
+  @override
+  Future<void> signOut() async => signOutCalls++;
+
+  @override
+  Future<void> resolveConflict(
+    String entityType,
+    String recordId,
+    ConflictResolution resolution,
+  ) async {}
+}
+
+/// Cloud provider whose [authenticate] always throws, to exercise the
+/// connection-failure branch of `_selectProvider`.
+class _ThrowingCloudStorageProvider extends FakeCloudStorageProvider {
+  @override
+  Future<void> authenticate() async {
+    throw const CloudStorageException('auth denied');
+  }
+}
+
+/// Fake [SyncBehaviorNotifier] holding fixed settings and recording setter
+/// invocations, so the behavior switches can be rendered and toggled without
+/// SharedPreferences.
+class _FakeSyncBehaviorNotifier extends StateNotifier<SyncBehaviorSettings>
+    implements SyncBehaviorNotifier {
+  _FakeSyncBehaviorNotifier(super.state);
+
+  @override
+  Future<void> setAutoSyncEnabled(bool value) async =>
+      state = state.copyWith(autoSyncEnabled: value);
+
+  @override
+  Future<void> setSyncOnLaunch(bool value) async =>
+      state = state.copyWith(syncOnLaunch: value);
+
+  @override
+  Future<void> setSyncOnResume(bool value) async =>
+      state = state.copyWith(syncOnResume: value);
+}
+
+/// Fake [DiverMergeRepository] that records merge/undo calls and returns an
+/// empty snapshot, so the merge flow can run without a database.
+class _FakeDiverMergeRepository implements DiverMergeRepository {
+  int mergeCalls = 0;
+  int undoCalls = 0;
+  bool throwOnMerge = false;
+
+  @override
+  Future<DiverMergeSnapshot> mergeDivers({
+    required String keeperId,
+    required String duplicateId,
+  }) async {
+    mergeCalls++;
+    if (throwOnMerge) {
+      throw StateError('merge boom');
+    }
+    return DiverMergeSnapshot(
+      keeperId: keeperId,
+      duplicateId: duplicateId,
+      duplicateDiver: const {},
+      repointedRows: const [],
+      deletedSingletonRows: const [],
+    );
+  }
+
+  @override
+  Future<void> undoMerge(DiverMergeSnapshot snapshot) async => undoCalls++;
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+void main() {
+  final fixedNow = DateTime(2026, 6, 7, 12, 0);
+
+  Diver makeDiver({
+    required String id,
+    required String name,
+    bool isDefault = false,
+    DateTime? createdAt,
+  }) {
+    return Diver(
+      id: id,
+      name: name,
+      isDefault: isDefault,
+      createdAt: createdAt ?? fixedNow,
+      updatedAt: createdAt ?? fixedNow,
+    );
+  }
+
+  /// Build a [DuplicateDiverGroup] with one keeper and [duplicateCount]
+  /// duplicates that share [name].
+  DuplicateDiverGroup makeGroup({
+    String name = 'Alice',
+    int duplicateCount = 1,
+  }) {
+    final keeper = makeDiver(id: 'keeper', name: name, isDefault: true);
+    final duplicates = List.generate(
+      duplicateCount,
+      (i) => makeDiver(id: 'dup-$i', name: name),
+    );
+    return DuplicateDiverGroup(keeper: keeper, duplicates: duplicates);
+  }
+
+  /// Pump [CloudSyncPage] with controllable overrides. Returns the fake sync
+  /// notifier and fake merge repository so tests can assert on recorded calls.
+  Future<({_FakeSyncNotifier sync, _FakeDiverMergeRepository merge})> pumpPage(
+    WidgetTester tester, {
+    SyncState syncState = const SyncState(),
+    CloudProviderType? selectedProvider,
+    bool customFolderMode = false,
+    List<DuplicateDiverGroup> duplicateGroups = const [],
+    bool cloudProviderNull = false,
+    CloudStorageProvider? cloudProvider,
+    bool mergeThrows = false,
+    bool settle = true,
+    SyncBehaviorSettings behavior = const SyncBehaviorSettings(
+      autoSyncEnabled: false,
+      syncOnLaunch: false,
+      syncOnResume: false,
+    ),
+  }) async {
+    final base = await getBaseOverrides();
+    final fakeSync = _FakeSyncNotifier(syncState);
+    final fakeMerge = _FakeDiverMergeRepository()..throwOnMerge = mergeThrows;
+
+    await tester.binding.setSurfaceSize(const Size(500, 2400));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...base,
+          syncStateProvider.overrideWith((ref) => fakeSync),
+          syncBehaviorProvider.overrideWith(
+            (ref) => _FakeSyncBehaviorNotifier(behavior),
+          ),
+          selectedCloudProviderTypeProvider.overrideWith(
+            (ref) => selectedProvider,
+          ),
+          isCloudSyncDisabledByCustomFolderProvider.overrideWithValue(
+            customFolderMode,
+          ),
+          duplicateDiverGroupsProvider.overrideWith(
+            (ref) async => duplicateGroups,
+          ),
+          allDiversProvider.overrideWith((ref) async => const <Diver>[]),
+          diverMergeRepositoryProvider.overrideWithValue(fakeMerge),
+          cloudStorageProviderProvider.overrideWithValue(
+            cloudProviderNull
+                ? null
+                : (cloudProvider ?? FakeCloudStorageProvider()),
+          ),
+          conflictsProvider.overrideWith((ref) async => const []),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: CloudSyncPage(),
+        ),
+      ),
+    );
+    if (settle) {
+      await tester.pumpAndSettle();
+    } else {
+      // Indeterminate progress indicators never settle; pump fixed frames so
+      // the async overrides resolve without awaiting an infinite animation.
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    return (sync: fakeSync, merge: fakeMerge);
+  }
+
+  group('CloudSyncPage - base render', () {
+    testWidgets('renders app bar, provider tiles, and sections', (
+      tester,
+    ) async {
+      await pumpPage(tester);
+
+      expect(find.text('Cloud Sync'), findsOneWidget);
+      // Provider section header and both provider tiles.
+      expect(find.text('Cloud Provider'), findsOneWidget);
+      expect(find.text('iCloud'), findsOneWidget);
+      expect(find.text('Google Drive'), findsOneWidget);
+      // Behavior section.
+      expect(find.text('Sync Behavior'), findsOneWidget);
+      expect(find.text('Auto Sync'), findsOneWidget);
+      expect(find.text('Sync on Launch'), findsOneWidget);
+      expect(find.text('Sync on Resume'), findsOneWidget);
+      // Advanced section.
+      expect(find.text('Advanced'), findsOneWidget);
+      expect(find.text('Reset Sync State'), findsOneWidget);
+      expect(find.text('Sign Out'), findsOneWidget);
+      // Sync Now action present; no provider selected => hint shown + disabled.
+      expect(find.text('Sync Now'), findsOneWidget);
+      expect(
+        find.text('Select a cloud provider to enable sync'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('does not show custom folder banner when not custom mode', (
+      tester,
+    ) async {
+      await pumpPage(tester);
+      expect(find.text('Cloud Sync Disabled'), findsNothing);
+    });
+
+    testWidgets('does not show duplicate divers banner when no duplicates', (
+      tester,
+    ) async {
+      await pumpPage(tester);
+      expect(find.text('Duplicate diver profiles'), findsNothing);
+    });
+  });
+
+  group('CloudSyncPage - custom folder banner', () {
+    testWidgets('shows banner and disables behavior switches in custom mode', (
+      tester,
+    ) async {
+      await pumpPage(tester, customFolderMode: true);
+
+      expect(find.text('Cloud Sync Disabled'), findsOneWidget);
+      expect(find.byIcon(Icons.info_outline), findsOneWidget);
+      expect(find.text('Storage Settings'), findsOneWidget);
+
+      // All three behavior switches are disabled (onChanged null).
+      final switches = tester
+          .widgetList<SwitchListTile>(find.byType(SwitchListTile))
+          .toList();
+      expect(switches.length, 3);
+      for (final s in switches) {
+        expect(s.onChanged, isNull);
+      }
+    });
+
+    testWidgets('tapping Storage Settings pushes the storage route', (
+      tester,
+    ) async {
+      final base = await getBaseOverrides();
+      await tester.binding.setSurfaceSize(const Size(500, 2400));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      final router = GoRouter(
+        initialLocation: '/settings/cloud',
+        routes: [
+          GoRoute(
+            path: '/settings/cloud',
+            builder: (context, state) => const CloudSyncPage(),
+          ),
+          GoRoute(
+            path: '/settings/storage',
+            builder: (context, state) =>
+                const Scaffold(body: Text('STORAGE_PAGE')),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ...base,
+            syncStateProvider.overrideWith(
+              (ref) => _FakeSyncNotifier(const SyncState()),
+            ),
+            syncBehaviorProvider.overrideWith(
+              (ref) => _FakeSyncBehaviorNotifier(
+                const SyncBehaviorSettings(
+                  autoSyncEnabled: false,
+                  syncOnLaunch: false,
+                  syncOnResume: false,
+                ),
+              ),
+            ),
+            selectedCloudProviderTypeProvider.overrideWith((ref) => null),
+            isCloudSyncDisabledByCustomFolderProvider.overrideWithValue(true),
+            duplicateDiverGroupsProvider.overrideWith((ref) async => const []),
+            allDiversProvider.overrideWith((ref) async => const <Diver>[]),
+            cloudStorageProviderProvider.overrideWithValue(null),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Storage Settings'));
+      await tester.pumpAndSettle();
+      expect(find.text('STORAGE_PAGE'), findsOneWidget);
+    });
+  });
+
+  group('CloudSyncPage - status card states', () {
+    testWidgets('idle status shows ready title and cloud icon', (tester) async {
+      await pumpPage(tester, syncState: const SyncState());
+      expect(find.text('Ready to sync'), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_outlined), findsOneWidget);
+    });
+
+    testWidgets('syncing status with progress shows progress indicator', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        settle: false,
+        syncState: const SyncState(
+          status: SyncStatus.syncing,
+          progress: 0.5,
+          message: 'Working...',
+        ),
+      );
+      expect(find.text('Syncing...'), findsWidgets);
+      expect(find.text('Working...'), findsOneWidget);
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+    });
+
+    testWidgets('success status shows cloud_done icon', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: const SyncState(status: SyncStatus.success),
+      );
+      expect(find.text('Sync complete'), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_done), findsOneWidget);
+    });
+
+    testWidgets('error status shows cloud_off icon', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: const SyncState(status: SyncStatus.error),
+      );
+      expect(find.text('Sync error'), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_off), findsOneWidget);
+    });
+
+    testWidgets('hasConflicts status shows warning icon and title', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        syncState: const SyncState(status: SyncStatus.hasConflicts),
+      );
+      expect(find.text('Conflicts detected'), findsOneWidget);
+      // Warning icons appear both in the status card and the conflicts section
+      // header when conflicts > 0; here conflicts == 0 so only the status icon.
+      expect(find.byIcon(Icons.warning), findsOneWidget);
+    });
+
+    testWidgets('shows pending changes singular', (tester) async {
+      await pumpPage(tester, syncState: const SyncState(pendingChanges: 1));
+      expect(find.text('1 pending change'), findsOneWidget);
+    });
+
+    testWidgets('shows pending changes plural', (tester) async {
+      await pumpPage(tester, syncState: const SyncState(pendingChanges: 3));
+      expect(find.text('3 pending changes'), findsOneWidget);
+    });
+  });
+
+  group('CloudSyncPage - last synced formatting', () {
+    testWidgets('shows "Just now" for very recent sync', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: SyncState(
+          lastSync: DateTime.now().subtract(const Duration(seconds: 10)),
+        ),
+      );
+      expect(find.text('Last synced: Just now'), findsOneWidget);
+    });
+
+    testWidgets('shows minutes ago', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: SyncState(
+          lastSync: DateTime.now().subtract(const Duration(minutes: 5)),
+        ),
+      );
+      expect(find.text('Last synced: 5 minutes ago'), findsOneWidget);
+    });
+
+    testWidgets('shows singular minute ago', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: SyncState(
+          lastSync: DateTime.now().subtract(
+            const Duration(minutes: 1, seconds: 5),
+          ),
+        ),
+      );
+      expect(find.text('Last synced: 1 minute ago'), findsOneWidget);
+    });
+
+    testWidgets('shows hours ago', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: SyncState(
+          lastSync: DateTime.now().subtract(const Duration(hours: 3)),
+        ),
+      );
+      expect(find.text('Last synced: 3 hours ago'), findsOneWidget);
+    });
+
+    testWidgets('shows days ago', (tester) async {
+      await pumpPage(
+        tester,
+        syncState: SyncState(
+          lastSync: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+      );
+      expect(find.text('Last synced: 2 days ago'), findsOneWidget);
+    });
+
+    testWidgets('shows formatted date for >7 days', (tester) async {
+      final old = DateTime.now().subtract(const Duration(days: 30));
+      await pumpPage(tester, syncState: SyncState(lastSync: old));
+      // Formatted via DateFormat.yMMMd(); assert the prefix and that none of
+      // the relative phrasings are present.
+      expect(find.textContaining('Last synced:'), findsOneWidget);
+      expect(find.textContaining('ago'), findsNothing);
+    });
+  });
+
+  group('CloudSyncPage - provider selection', () {
+    testWidgets('selected provider shows connected check icon', (tester) async {
+      await pumpPage(tester, selectedProvider: CloudProviderType.googledrive);
+      // The trailing check_circle marks the selected provider.
+      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      // With a provider selected the hint disappears.
+      expect(find.text('Select a cloud provider to enable sync'), findsNothing);
+    });
+
+    testWidgets('tapping Google Drive tile authenticates and shows snackbar', (
+      tester,
+    ) async {
+      final handles = await pumpPage(tester);
+
+      await tester.tap(find.text('Google Drive'));
+      await tester.pumpAndSettle();
+
+      // Fake provider authenticates successfully -> success snackbar +
+      // refreshState() on the sync notifier.
+      expect(find.text('Connected to Fake'), findsOneWidget);
+      expect(handles.sync.refreshStateCalls, greaterThan(0));
+    });
+
+    testWidgets('null cloud provider shows initialize-failed snackbar', (
+      tester,
+    ) async {
+      await pumpPage(tester, cloudProviderNull: true);
+
+      await tester.tap(find.text('Google Drive'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Failed to initialize googledrive provider'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('authentication failure shows connection-failed snackbar', (
+      tester,
+    ) async {
+      await pumpPage(tester, cloudProvider: _ThrowingCloudStorageProvider());
+
+      await tester.tap(find.text('Google Drive'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Fake connection failed:'), findsOneWidget);
+    });
+  });
+
+  group('CloudSyncPage - sync actions', () {
+    testWidgets('Sync Now is enabled with provider and triggers performSync', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.icloud,
+      );
+
+      // Hint gone, button enabled.
+      expect(find.text('Select a cloud provider to enable sync'), findsNothing);
+      await tester.tap(find.widgetWithText(FilledButton, 'Sync Now'));
+      await tester.pumpAndSettle();
+      expect(handles.sync.performSyncCalls, 1);
+    });
+
+    testWidgets('Sync Now is disabled while syncing', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        settle: false,
+        selectedProvider: CloudProviderType.icloud,
+        syncState: const SyncState(status: SyncStatus.syncing),
+      );
+
+      // Button label reflects syncing state and tap is a no-op.
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Syncing...'),
+      );
+      expect(button.onPressed, isNull);
+      expect(handles.sync.performSyncCalls, 0);
+    });
+  });
+
+  group('CloudSyncPage - conflicts section', () {
+    testWidgets('shows conflicts section when conflicts > 0 (plural)', (
+      tester,
+    ) async {
+      await pumpPage(tester, syncState: const SyncState(conflicts: 3));
+      expect(find.text('Conflicts (3)'), findsOneWidget);
+      expect(find.text('Resolve Conflicts'), findsOneWidget);
+      expect(find.text('3 items need attention'), findsOneWidget);
+    });
+
+    testWidgets('shows singular wording when conflicts == 1', (tester) async {
+      await pumpPage(tester, syncState: const SyncState(conflicts: 1));
+      expect(find.text('Conflicts (1)'), findsOneWidget);
+      expect(find.text('1 item needs attention'), findsOneWidget);
+    });
+
+    testWidgets('tapping Resolve Conflicts opens dialog and refreshes', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        syncState: const SyncState(conflicts: 2),
+      );
+
+      await tester.tap(find.text('Resolve Conflicts'));
+      await tester.pumpAndSettle();
+
+      // The ConflictResolutionDialog renders (no conflicts -> "all resolved"
+      // content). Dismiss it via back to trigger the post-dialog refresh.
+      expect(find.byType(Dialog), findsOneWidget);
+      Navigator.of(tester.element(find.byType(Dialog))).pop();
+      await tester.pumpAndSettle();
+      expect(handles.sync.refreshStateCalls, greaterThan(0));
+    });
+  });
+
+  group('CloudSyncPage - behavior switches', () {
+    testWidgets('toggling Auto Sync flips its switch value', (tester) async {
+      await pumpPage(tester);
+      final autoSwitch = find.widgetWithText(SwitchListTile, 'Auto Sync');
+      expect(tester.widget<SwitchListTile>(autoSwitch).value, isFalse);
+
+      await tester.tap(autoSwitch);
+      await tester.pumpAndSettle();
+      expect(tester.widget<SwitchListTile>(autoSwitch).value, isTrue);
+    });
+
+    testWidgets('toggling Sync on Launch and Resume flips values', (
+      tester,
+    ) async {
+      await pumpPage(tester);
+
+      final launch = find.widgetWithText(SwitchListTile, 'Sync on Launch');
+      await tester.tap(launch);
+      await tester.pumpAndSettle();
+      expect(tester.widget<SwitchListTile>(launch).value, isTrue);
+
+      final resume = find.widgetWithText(SwitchListTile, 'Sync on Resume');
+      await tester.tap(resume);
+      await tester.pumpAndSettle();
+      expect(tester.widget<SwitchListTile>(resume).value, isTrue);
+    });
+  });
+
+  group('CloudSyncPage - reset sync state dialog', () {
+    testWidgets('cancel does not call resetSyncState', (tester) async {
+      final handles = await pumpPage(tester);
+
+      await tester.tap(find.text('Reset Sync State'));
+      await tester.pumpAndSettle();
+      expect(find.text('Reset Sync State?'), findsOneWidget);
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+      expect(handles.sync.resetSyncStateCalls, 0);
+    });
+
+    testWidgets('confirm calls resetSyncState and shows snackbar', (
+      tester,
+    ) async {
+      final handles = await pumpPage(tester);
+
+      await tester.tap(find.text('Reset Sync State'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(TextButton, 'Reset'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.resetSyncStateCalls, 1);
+      expect(find.text('Sync state reset'), findsOneWidget);
+    });
+  });
+
+  group('CloudSyncPage - sign out dialog', () {
+    testWidgets('cancel does not call signOut', (tester) async {
+      final handles = await pumpPage(tester);
+
+      await tester.tap(find.text('Sign Out'));
+      await tester.pumpAndSettle();
+      expect(find.text('Sign Out?'), findsOneWidget);
+
+      // Cancel button inside the dialog.
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(handles.sync.signOutCalls, 0);
+    });
+
+    testWidgets('confirm calls signOut and shows snackbar', (tester) async {
+      final handles = await pumpPage(tester);
+
+      await tester.tap(find.text('Sign Out'));
+      await tester.pumpAndSettle();
+      // The confirm action button (the second "Sign Out" text, inside dialog).
+      await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.signOutCalls, 1);
+      expect(find.text('Signed out from cloud provider'), findsOneWidget);
+    });
+  });
+
+  group('CloudSyncPage - duplicate divers banner', () {
+    testWidgets('shows banner with group label when duplicates exist', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        duplicateGroups: [makeGroup(name: 'Alice', duplicateCount: 1)],
+      );
+
+      expect(find.text('Duplicate diver profiles'), findsOneWidget);
+      expect(find.byIcon(Icons.merge_type), findsWidgets);
+      // groupLabel: "{name} ({count} profiles)" with count = duplicates + 1.
+      expect(find.text('Alice (2 profiles)'), findsOneWidget);
+      expect(find.text('Merge'), findsOneWidget);
+    });
+
+    testWidgets('merge confirm cancel does not merge', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        duplicateGroups: [makeGroup(name: 'Bob', duplicateCount: 1)],
+      );
+
+      await tester.tap(find.text('Merge'));
+      await tester.pumpAndSettle();
+      expect(find.text('Merge diver profiles?'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'Cancel'));
+      await tester.pumpAndSettle();
+      expect(handles.merge.mergeCalls, 0);
+    });
+
+    testWidgets('merge confirm runs merge and shows undo snackbar', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        duplicateGroups: [makeGroup(name: 'Carol', duplicateCount: 2)],
+      );
+
+      await tester.tap(find.text('Merge'));
+      await tester.pumpAndSettle();
+      // Confirm via the FilledButton labelled "Merge" inside the dialog (the
+      // banner button is a FilledButton.tonal, so scope to the AlertDialog).
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, 'Merge'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Two duplicates => two merge calls.
+      expect(handles.merge.mergeCalls, 2);
+      expect(find.text('Merged into Carol'), findsOneWidget);
+      expect(find.text('Undo'), findsOneWidget);
+    });
+
+    testWidgets('tapping Undo on snackbar runs undoMerge', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        duplicateGroups: [makeGroup(name: 'Dave', duplicateCount: 2)],
+      );
+
+      await tester.tap(find.text('Merge'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, 'Merge'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+      // undoMerge invoked once per snapshot (2 duplicates).
+      expect(handles.merge.undoCalls, 2);
+    });
+
+    testWidgets('merge failure shows failure snackbar', (tester) async {
+      await pumpPage(
+        tester,
+        duplicateGroups: [makeGroup(name: 'Eve', duplicateCount: 1)],
+        mergeThrows: true,
+      );
+
+      await tester.tap(find.text('Merge'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, 'Merge'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Merge failed:'), findsOneWidget);
+    });
+  });
+}
