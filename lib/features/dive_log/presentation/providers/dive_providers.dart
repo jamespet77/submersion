@@ -7,6 +7,7 @@ import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/features/dive_log/data/repositories/dive_custom_field_repository.dart';
 import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
 import 'package:submersion/features/dive_log/data/repositories/tank_pressure_repository.dart';
+import 'package:submersion/features/dive_log/presentation/providers/dive_repository_provider.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart'
     as domain;
 import 'package:submersion/features/dive_log/domain/entities/dive_data_source.dart';
@@ -18,6 +19,9 @@ import 'package:submersion/features/trips/presentation/providers/trip_providers.
 
 // Re-export DiveFilterState so existing imports continue to work
 export 'package:submersion/features/dive_log/domain/models/dive_filter_state.dart';
+// Re-export diveRepositoryProvider (declared in its own dependency-only module
+// to avoid import cycles) so existing consumers can keep importing it from here.
+export 'package:submersion/features/dive_log/presentation/providers/dive_repository_provider.dart';
 
 /// Dive filter state provider
 final diveFilterProvider = StateProvider<DiveFilterState>(
@@ -93,11 +97,6 @@ List<domain.Dive> _applySorting(
     return sorted;
   });
 }
-
-/// Repository provider
-final diveRepositoryProvider = Provider<DiveRepository>((ref) {
-  return DiveRepository();
-});
 
 /// Custom field repository singleton
 final diveCustomFieldRepositoryProvider = Provider<DiveCustomFieldRepository>((
