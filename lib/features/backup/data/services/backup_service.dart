@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart' as sqlite3;
 import 'package:uuid/uuid.dart';
 
+import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/database_service.dart';
@@ -54,6 +55,7 @@ class BackupService {
   final BackupDatabaseAdapter _dbAdapter;
   final BackupPreferences _preferences;
   final CloudStorageProvider? _cloudProvider;
+  final SyncRepository _syncRepository;
   final _log = LoggerService.forClass(BackupService);
   final _uuid = const Uuid();
 
@@ -64,9 +66,11 @@ class BackupService {
     required BackupDatabaseAdapter dbAdapter,
     required BackupPreferences preferences,
     CloudStorageProvider? cloudProvider,
+    SyncRepository? syncRepository,
   }) : _dbAdapter = dbAdapter,
        _preferences = preferences,
-       _cloudProvider = cloudProvider;
+       _cloudProvider = cloudProvider,
+       _syncRepository = syncRepository ?? SyncRepository();
 
   // ===========================================================================
   // Backup
@@ -278,8 +282,10 @@ class BackupService {
       throw const BackupException('Backup file not found locally or in cloud');
     }
 
-    // Restore using DatabaseService (handles close/copy/reinitialize)
-    await _dbAdapter.restore(sourcePath);
+    // Restore using DatabaseService (handles close/copy/reinitialize), then
+    // re-baseline sync so the restored data syncs cleanly instead of replaying
+    // the backup's stale sync position.
+    await _replaceDatabaseAndRebaselineSync(sourcePath);
 
     _log.info('Restore completed from: ${record.filename}');
   }
@@ -302,10 +308,50 @@ class BackupService {
     // in their configured backup location and in the history list.
     await performBackup();
 
-    // Restore using DatabaseService
-    await _dbAdapter.restore(filePath);
+    // Restore using DatabaseService, then re-baseline sync (see
+    // _replaceDatabaseAndRebaselineSync).
+    await _replaceDatabaseAndRebaselineSync(filePath);
 
     _log.info('Restore from file completed: ${p.basename(filePath)}');
+  }
+
+  /// Replace the database with [sourcePath], then re-baseline sync.
+  ///
+  /// A restore swaps in the backup's entire database — including its stale sync
+  /// metadata (device id, HLC clock, last-sync timestamp, cursors) and deletion
+  /// log. Without re-baselining, the rewound `lastSync` makes the merge treat
+  /// almost every restored row as a conflict, so sync stalls and deletes
+  /// resurrect from a peer's still-live copy. This preserves the live device
+  /// identity (captured before the swap) and clears the sync position so the
+  /// next sync cleanly reconciles the restored data.
+  Future<void> _replaceDatabaseAndRebaselineSync(String sourcePath) async {
+    String? liveDeviceId;
+    try {
+      liveDeviceId = await _syncRepository.getDeviceId();
+    } catch (e, st) {
+      _log.warning(
+        "Could not capture device id before restore; sync will adopt the "
+        "backup's device id",
+        error: e,
+        stackTrace: st,
+      );
+    }
+
+    await _dbAdapter.restore(sourcePath);
+
+    try {
+      await _syncRepository.rebaselineAfterRestore(
+        preserveDeviceId: liveDeviceId,
+      );
+    } catch (e, st) {
+      // Non-fatal: the data restore itself succeeded. If re-baselining failed,
+      // the user can recover by running "Reset Sync State" manually.
+      _log.error(
+        'Failed to re-baseline sync after restore',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   // ===========================================================================
