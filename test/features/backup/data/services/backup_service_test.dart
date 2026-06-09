@@ -65,6 +65,22 @@ class _SpySyncRepository extends SyncRepository {
   }
 }
 
+/// A spy whose [getDeviceId] throws, to exercise the restore path's fallback
+/// when the live device id cannot be captured before the swap.
+class _CaptureFailSyncRepository extends SyncRepository {
+  int rebaselineCalls = 0;
+  String? preservedDeviceId;
+
+  @override
+  Future<String> getDeviceId() async => throw StateError('cannot read id');
+
+  @override
+  Future<void> rebaselineAfterRestore({String? preserveDeviceId}) async {
+    rebaselineCalls++;
+    preservedDeviceId = preserveDeviceId;
+  }
+}
+
 /// Fake cloud storage provider for testing
 class FakeCloudStorageProvider implements CloudStorageProvider {
   final List<String> uploadedFiles = [];
@@ -228,6 +244,41 @@ void main() {
           reason:
               'the live device identity captured before the restore must be '
               "preserved, not overwritten by the backup's device id",
+        );
+      });
+
+      test('preserves a fresh device id when the live id cannot be captured '
+          '(never adopts the backup id)', () async {
+        final spy = _CaptureFailSyncRepository();
+        final service = BackupService(
+          dbAdapter: fakeDb,
+          preferences: preferences,
+          syncRepository: spy,
+        );
+
+        final src = File(
+          '${Directory.systemTemp.path}/restore_src_'
+          '${DateTime.now().microsecondsSinceEpoch}.db',
+        );
+        await src.writeAsString('db');
+        addTearDown(() async {
+          if (await src.exists()) await src.delete();
+        });
+
+        await service.restoreFromFile(src.path);
+
+        expect(spy.rebaselineCalls, 1);
+        expect(
+          spy.preservedDeviceId,
+          isNotNull,
+          reason:
+              'a capture failure must still preserve a device id, not pass '
+              'null (which would let the restore adopt the backup id)',
+        );
+        expect(
+          spy.preservedDeviceId,
+          isNotEmpty,
+          reason: 'the fallback must be a fresh, non-empty device id',
         );
       });
     });

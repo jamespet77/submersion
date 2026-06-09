@@ -286,16 +286,20 @@ class SyncInitializer {
 
 /// Outcome of [SyncInitializer.reconcileDeviceIdentity].
 enum DeviceIdentityStatus {
-  /// No sentinel existed yet; the current device id was recorded. First run, or
-  /// first launch after this detection shipped. A restore predating the
-  /// sentinel cannot be detected and needs a manual Reset Sync State.
+  /// No anchors existed yet; the instance token and device id were recorded.
+  /// First run, or first launch after this detection shipped. A restore
+  /// predating the anchors cannot be detected and needs a manual Reset Sync
+  /// State.
   seeded,
 
-  /// The sentinel already matched the in-DB device id. Normal launch, no-op.
+  /// The anchors still matched the on-disk database. Normal launch; the
+  /// instance token was rotated for next time.
   unchanged,
 
-  /// The in-DB device id no longer matched the sentinel: a restore replaced the
-  /// database. Sync was re-baselined and the live identity restored.
+  /// The on-disk database no longer matched the mirrored anchors -- a changed
+  /// instance token (the primary signal, which catches a same-device backup),
+  /// or a changed device id: a restore replaced the database. Sync was
+  /// re-baselined and the live identity restored.
   rebaselined,
 
   /// The reconcile could not run (e.g. the metadata lookup failed). Launch

@@ -71,4 +71,17 @@ void main() {
       },
     );
   });
+
+  group('setDeviceId validation', () {
+    test('rejects an empty or blank device id', () async {
+      // A blank id would corrupt the per-device sync file name and HLC node id.
+      await expectLater(repo.setDeviceId(''), throwsArgumentError);
+      await expectLater(repo.setDeviceId('   '), throwsArgumentError);
+    });
+
+    test('persists a valid device id', () async {
+      await repo.setDeviceId('device-XYZ');
+      expect(await repo.getDeviceId(), 'device-XYZ');
+    });
+  });
 }

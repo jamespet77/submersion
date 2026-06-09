@@ -325,13 +325,20 @@ class BackupService {
   /// identity (captured before the swap) and clears the sync position so the
   /// next sync cleanly reconciles the restored data.
   Future<void> _replaceDatabaseAndRebaselineSync(String sourcePath) async {
-    String? liveDeviceId;
+    String liveDeviceId;
     try {
       liveDeviceId = await _syncRepository.getDeviceId();
     } catch (e, st) {
+      // Fall back to a fresh device id rather than letting the restore adopt
+      // the backup's id. Adopting it would make this install impersonate the
+      // device that produced the backup (colliding per-device sync file and
+      // HLC node identity). A fresh id keeps this install distinct; the
+      // launch-time reconcile realigns it to the mirrored identity if one
+      // exists.
+      liveDeviceId = const Uuid().v4();
       _log.warning(
-        "Could not capture device id before restore; sync will adopt the "
-        "backup's device id",
+        "Could not capture device id before restore; preserving a fresh "
+        "device id instead of adopting the backup's",
         error: e,
         stackTrace: st,
       );

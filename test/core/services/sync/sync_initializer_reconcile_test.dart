@@ -1,9 +1,12 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/sync/sync_initializer.dart';
+import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
+import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
 
 import '../../../helpers/test_database.dart';
 
@@ -21,10 +24,12 @@ class _ThrowingSyncRepository extends SyncRepository {
 ///
 /// All sync bookkeeping (device id, HLC clock, last-sync timestamp, cursors,
 /// deletion log) lives inside the database, so a whole-DB restore silently
-/// rewinds it to the backup's snapshot. The device id mirrored in
-/// SharedPreferences (the "sentinel") survives the restore, so a launch-time
-/// mismatch between the sentinel and the restored in-DB device id is the signal
-/// that a restore happened -- and the cue to re-baseline sync.
+/// rewinds it to the backup's snapshot. Two anchors mirrored in
+/// SharedPreferences survive the restore and reveal it: a per-database instance
+/// token rotated each launch (the primary signal -- it catches a same-device
+/// backup, whose device id is unchanged) and the device id (a secondary signal
+/// that also names the identity to preserve). A launch-time mismatch on either
+/// is the cue to re-baseline sync.
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -236,6 +241,21 @@ void main() {
       final status = await throwingInitializer.reconcileDeviceIdentity();
 
       expect(status, DeviceIdentityStatus.error);
+    });
+  });
+
+  group('reconcileDeviceIdentityProvider', () {
+    test('runs the reconcile and seeds anchors on first run', () async {
+      final container = ProviderContainer(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      );
+      addTearDown(container.dispose);
+
+      final status = await container.read(
+        reconcileDeviceIdentityProvider.future,
+      );
+
+      expect(status, DeviceIdentityStatus.seeded);
     });
   });
 }

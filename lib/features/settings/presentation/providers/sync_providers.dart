@@ -415,10 +415,12 @@ final syncLaunchCheckProvider = FutureProvider<SyncCheckResult>((ref) async {
 
 /// Reconcile the sync device identity on app launch.
 ///
-/// Detects a database restore (the in-DB device id no longer matches the id
-/// mirrored outside the database) and re-baselines sync so a rewound baseline
-/// can't stall sync or resurrect deletes. Runs unconditionally at startup,
-/// independent of whether a cloud provider is configured.
+/// Detects a database restore -- the on-disk database no longer matches the
+/// anchors mirrored outside it: a rotated instance token (the primary signal,
+/// which catches a same-device backup) or the device id -- and re-baselines
+/// sync so a rewound baseline can't stall sync or resurrect deletes. Runs
+/// unconditionally at startup, independent of whether a cloud provider is
+/// configured. See [SyncInitializer.reconcileDeviceIdentity].
 final reconcileDeviceIdentityProvider = FutureProvider<DeviceIdentityStatus>((
   ref,
 ) async {

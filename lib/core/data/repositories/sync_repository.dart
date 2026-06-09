@@ -806,13 +806,27 @@ class SyncRepository {
   /// identity across a database restore, which would otherwise replace it with
   /// the (possibly stale, possibly foreign) device id captured in the backup.
   Future<void> setDeviceId(String deviceId) async {
-    await getOrCreateMetadata();
-    final now = DateTime.now().millisecondsSinceEpoch;
-    await (_db.update(
-      _db.syncMetadata,
-    )..where((t) => t.id.equals(_globalMetadataId))).write(
-      SyncMetadataCompanion(deviceId: Value(deviceId), updatedAt: Value(now)),
-    );
+    if (deviceId.trim().isEmpty) {
+      // A blank device id would corrupt sync identity (per-device file name and
+      // HLC node id), so reject it rather than persist it.
+      throw ArgumentError.value(
+        deviceId,
+        'deviceId',
+        'device id must not be empty',
+      );
+    }
+    try {
+      await getOrCreateMetadata();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(
+        _db.syncMetadata,
+      )..where((t) => t.id.equals(_globalMetadataId))).write(
+        SyncMetadataCompanion(deviceId: Value(deviceId), updatedAt: Value(now)),
+      );
+    } catch (e, stackTrace) {
+      _log.error('Failed to set device id', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
   }
 
   /// Re-baseline sync after a database restore.

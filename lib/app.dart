@@ -124,9 +124,21 @@ class _SubmersionAppState extends ConsumerState<SubmersionApp>
     }
   }
 
-  void _maybeSyncOnLaunch() {
+  Future<void> _maybeSyncOnLaunch() async {
     final settings = ref.read(syncBehaviorProvider);
     if (!settings.autoSyncEnabled || !settings.syncOnLaunch) return;
+    // Wait for the launch reconcile (watched in build) to finish before the
+    // first sync reads sync state. A restore-triggered rebaseline may still be
+    // in flight; syncing mid-rebaseline would read a rewound lastSync/tombstone
+    // set and defeat the "rebaseline before anything reads sync state"
+    // guarantee. Reconcile is launch-safe (resolves with a status, never
+    // throws), but guard anyway so a failure can't block launch sync forever.
+    try {
+      await ref.read(reconcileDeviceIdentityProvider.future);
+    } catch (_) {
+      // Already logged inside reconcileDeviceIdentity; proceed with the sync.
+    }
+    if (!mounted) return;
     ref.read(syncStateProvider.notifier).performSync();
   }
 
