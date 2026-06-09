@@ -160,6 +160,31 @@ class SyncRepository {
     return metadata.deviceId;
   }
 
+  /// Get this database's instance token, or null if none has been set yet
+  /// (rows predating the column, or a freshly created/restored database).
+  Future<String?> getInstanceToken() async {
+    final metadata = await getOrCreateMetadata();
+    return metadata.instanceToken;
+  }
+
+  /// Generate and persist a fresh instance token, returning it.
+  ///
+  /// Rotating the token on each launch is what lets a later restore of an older
+  /// backup be detected even when the device id is unchanged: the backup
+  /// carries a superseded token that no longer matches the copy mirrored
+  /// outside the database. See [SyncInitializer.reconcileDeviceIdentity].
+  Future<String> rotateInstanceToken() async {
+    await getOrCreateMetadata();
+    final token = _uuid.v4();
+    final now = DateTime.now().millisecondsSinceEpoch;
+    await (_db.update(
+      _db.syncMetadata,
+    )..where((t) => t.id.equals(_globalMetadataId))).write(
+      SyncMetadataCompanion(instanceToken: Value(token), updatedAt: Value(now)),
+    );
+    return token;
+  }
+
   /// Get the last sync timestamp
   Future<DateTime?> getLastSyncTime() async {
     final metadata = await getOrCreateMetadata();
@@ -775,5 +800,55 @@ class SyncRepository {
       );
       rethrow;
     }
+  }
+
+  /// Overwrite the stored device id. Used to preserve this installation's sync
+  /// identity across a database restore, which would otherwise replace it with
+  /// the (possibly stale, possibly foreign) device id captured in the backup.
+  Future<void> setDeviceId(String deviceId) async {
+    if (deviceId.trim().isEmpty) {
+      // A blank device id would corrupt sync identity (per-device file name and
+      // HLC node id), so reject it rather than persist it.
+      throw ArgumentError.value(
+        deviceId,
+        'deviceId',
+        'device id must not be empty',
+      );
+    }
+    try {
+      await getOrCreateMetadata();
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(
+        _db.syncMetadata,
+      )..where((t) => t.id.equals(_globalMetadataId))).write(
+        SyncMetadataCompanion(deviceId: Value(deviceId), updatedAt: Value(now)),
+      );
+    } catch (e, stackTrace) {
+      _log.error('Failed to set device id', error: e, stackTrace: stackTrace);
+      rethrow;
+    }
+  }
+
+  /// Re-baseline sync after a database restore.
+  ///
+  /// A restore replaces the entire database, so `sync_metadata` (device id,
+  /// HLC clock, last-sync timestamp, cursors) and the deletion log all revert
+  /// to the backup's stale snapshot. The merge gates on the persisted
+  /// `lastSync` (`localUpdatedAt > lastSyncMs` reads almost every restored row
+  /// as a conflict), so a rewound baseline stalls sync and lets a peer's
+  /// still-live copy keep resurrecting deletes.
+  ///
+  /// Preserve the live device identity (captured by the caller *before* the
+  /// restore) and clear the sync baseline so the next sync performs a clean
+  /// full reconcile of the restored data instead of replaying a stale position.
+  Future<void> rebaselineAfterRestore({String? preserveDeviceId}) async {
+    if (preserveDeviceId != null && preserveDeviceId.isNotEmpty) {
+      await setDeviceId(preserveDeviceId);
+    }
+    await resetSyncState();
+    // Drop the in-memory clock so it re-seeds from the restored rows under this
+    // device's id on the next write. (issue() advances physical time to now()
+    // regardless, so local writes are never ordered behind the restored data.)
+    SyncClock.instance.reset();
   }
 }

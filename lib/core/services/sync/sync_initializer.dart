@@ -10,6 +10,18 @@ class SyncInitializer {
 
   static const _lastProviderKey = 'sync_last_provider';
 
+  /// Mirrors the in-DB sync device id outside the database (which a restore
+  /// would otherwise rewind silently). A mismatch on launch is one signal that
+  /// the database was replaced by a restore. See [reconcileDeviceIdentity].
+  static const _deviceIdSentinelKey = 'sync_device_id_sentinel';
+
+  /// Mirrors the database instance token outside the database. The token is
+  /// rotated each launch, so a restored backup carries a stale token that no
+  /// longer matches this copy -- the primary restore signal, and the one that
+  /// catches a same-device backup (whose device id is unchanged). See
+  /// [reconcileDeviceIdentity].
+  static const _dbInstanceTokenKey = 'sync_db_instance_token';
+
   final SyncRepository _syncRepository;
   final SharedPreferences _prefs;
 
@@ -40,6 +52,93 @@ class SyncInitializer {
     } else {
       await _prefs.setString(_lastProviderKey, provider.name);
     }
+  }
+
+  /// Reconcile this installation's sync identity against the anchors mirrored
+  /// outside the database, detecting (and recovering from) a database restore.
+  ///
+  /// All sync bookkeeping (device id, HLC clock, last-sync timestamp, cursors,
+  /// deletion log) lives inside the database, so a whole-DB restore rewinds it
+  /// to the backup's snapshot -- which stalls sync and lets a peer's still-live
+  /// copy keep resurrecting deletes. Two values mirrored in SharedPreferences
+  /// survive the restore and reveal it:
+  ///
+  /// - the **instance token** (rotated each launch) -- the primary signal. A
+  ///   restored backup carries a stale token that no longer matches the mirror,
+  ///   so this catches even a same-device backup whose device id is unchanged.
+  /// - the **device id** -- a secondary signal; a restored foreign backup also
+  ///   changes the in-DB device id. It additionally names the identity to
+  ///   preserve through the re-baseline.
+  ///
+  /// Outcomes:
+  /// - No anchors yet: establish them ([DeviceIdentityStatus.seeded]). A restore
+  ///   predating the anchors cannot be detected and needs a one-time manual
+  ///   Reset Sync State to recover.
+  /// - On-disk DB is the one we last wrote: rotate the token and continue
+  ///   ([DeviceIdentityStatus.unchanged]).
+  /// - On-disk DB is not the one we last wrote: a restore swapped it.
+  ///   Re-baseline sync, preserving the live device identity
+  ///   ([DeviceIdentityStatus.rebaselined]).
+  ///
+  /// Never throws: a reconcile failure must not block app launch.
+  Future<DeviceIdentityStatus> reconcileDeviceIdentity() async {
+    try {
+      final deviceId = await _syncRepository.getDeviceId();
+      final dbToken = await _syncRepository.getInstanceToken();
+      final mirroredToken = _prefs.getString(_dbInstanceTokenKey);
+      final sentinelDeviceId = _prefs.getString(_deviceIdSentinelKey);
+
+      // First run (or first launch after this detection shipped): nothing to
+      // compare against. Establish the anchors. A restore that predates them
+      // cannot be detected and needs a manual Reset Sync State.
+      if (mirroredToken == null || sentinelDeviceId == null) {
+        await _establishAnchors(deviceId);
+        _log.info('Seeded sync restore-detection anchors');
+        return DeviceIdentityStatus.seeded;
+      }
+
+      // The on-disk DB must be the one we last wrote. The instance token is the
+      // primary signal (it catches a same-device backup, whose device id is
+      // unchanged); a device-id change is a secondary signal kept as a belt.
+      final restoreDetected =
+          dbToken == null ||
+          dbToken != mirroredToken ||
+          sentinelDeviceId != deviceId;
+
+      if (restoreDetected) {
+        _log.warning(
+          'On-disk database is not the one we last wrote (restore/overwrite '
+          'detected); re-baselining sync and restoring the live identity',
+        );
+        await _syncRepository.rebaselineAfterRestore(
+          preserveDeviceId: sentinelDeviceId,
+        );
+        // Re-establish anchors on the restored DB, mirroring the preserved id.
+        await _establishAnchors(sentinelDeviceId);
+        return DeviceIdentityStatus.rebaselined;
+      }
+
+      // Normal launch: rotate the token so a backup taken of this state becomes
+      // distinguishable from the live DB on a future restore.
+      await _establishAnchors(deviceId);
+      return DeviceIdentityStatus.unchanged;
+    } catch (e, stackTrace) {
+      _log.error(
+        'Device-identity reconcile failed; continuing launch',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return DeviceIdentityStatus.error;
+    }
+  }
+
+  /// Rotate the database instance token and mirror it -- plus [deviceId] --
+  /// into SharedPreferences, so the next launch can tell whether the on-disk DB
+  /// is still the one we last wrote.
+  Future<void> _establishAnchors(String deviceId) async {
+    final token = await _syncRepository.rotateInstanceToken();
+    await _prefs.setString(_dbInstanceTokenKey, token);
+    await _prefs.setString(_deviceIdSentinelKey, deviceId);
   }
 
   /// Check sync status on app launch
@@ -183,6 +282,29 @@ class SyncInitializer {
     final lower = filename.toLowerCase();
     return lower.contains('conflicted copy') || lower.contains('conflict');
   }
+}
+
+/// Outcome of [SyncInitializer.reconcileDeviceIdentity].
+enum DeviceIdentityStatus {
+  /// No anchors existed yet; the instance token and device id were recorded.
+  /// First run, or first launch after this detection shipped. A restore
+  /// predating the anchors cannot be detected and needs a manual Reset Sync
+  /// State.
+  seeded,
+
+  /// The anchors still matched the on-disk database. Normal launch; the
+  /// instance token was rotated for next time.
+  unchanged,
+
+  /// The on-disk database no longer matched the mirrored anchors -- a changed
+  /// instance token (the primary signal, which catches a same-device backup),
+  /// or a changed device id: a restore replaced the database. Sync was
+  /// re-baselined and the live identity restored.
+  rebaselined,
+
+  /// The reconcile could not run (e.g. the metadata lookup failed). Launch
+  /// continues regardless.
+  error,
 }
 
 /// Status of the sync check
