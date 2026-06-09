@@ -171,6 +171,10 @@ class _SubmersionAppState extends ConsumerState<SubmersionApp>
     final themePreset = ref.watch(themePresetProvider);
     final localeSetting = ref.watch(localeProvider);
 
+    // Detect a database restore and re-baseline sync before anything reads
+    // sync state, so a rewound baseline can't stall sync or resurrect deletes.
+    ref.watch(reconcileDeviceIdentityProvider);
+
     // Restore the last used cloud sync provider on app startup
     ref.watch(restoreLastProviderProvider);
 

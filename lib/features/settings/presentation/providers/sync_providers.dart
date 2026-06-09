@@ -413,6 +413,19 @@ final syncLaunchCheckProvider = FutureProvider<SyncCheckResult>((ref) async {
   return initializer.checkSyncOnLaunch(provider);
 });
 
+/// Reconcile the sync device identity on app launch.
+///
+/// Detects a database restore (the in-DB device id no longer matches the id
+/// mirrored outside the database) and re-baselines sync so a rewound baseline
+/// can't stall sync or resurrect deletes. Runs unconditionally at startup,
+/// independent of whether a cloud provider is configured.
+final reconcileDeviceIdentityProvider = FutureProvider<DeviceIdentityStatus>((
+  ref,
+) async {
+  final initializer = ref.watch(syncInitializerProvider);
+  return initializer.reconcileDeviceIdentity();
+});
+
 /// Restore last used provider on app launch
 final restoreLastProviderProvider = FutureProvider<void>((ref) async {
   final initializer = ref.watch(syncInitializerProvider);

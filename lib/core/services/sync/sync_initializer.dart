@@ -10,6 +10,11 @@ class SyncInitializer {
 
   static const _lastProviderKey = 'sync_last_provider';
 
+  /// Mirrors the in-DB sync device id outside the database (which a restore
+  /// would otherwise rewind silently). A mismatch on launch is the signal that
+  /// the database was replaced by a restore. See [reconcileDeviceIdentity].
+  static const _deviceIdSentinelKey = 'sync_device_id_sentinel';
+
   final SyncRepository _syncRepository;
   final SharedPreferences _prefs;
 
@@ -39,6 +44,61 @@ class SyncInitializer {
       await _prefs.remove(_lastProviderKey);
     } else {
       await _prefs.setString(_lastProviderKey, provider.name);
+    }
+  }
+
+  /// Reconcile this installation's sync identity against the device id mirrored
+  /// outside the database, detecting (and recovering from) a database restore.
+  ///
+  /// All sync bookkeeping (device id, HLC clock, last-sync timestamp, cursors,
+  /// deletion log) lives inside the database, so a whole-DB restore rewinds it
+  /// to the backup's snapshot -- which stalls sync and lets a peer's still-live
+  /// copy keep resurrecting deletes. The device id mirrored in SharedPreferences
+  /// survives the restore, so a mismatch between it and the restored in-DB
+  /// device id is the signal that a restore happened.
+  ///
+  /// - No sentinel yet: record the current id ([DeviceIdentityStatus.seeded]).
+  ///   A restore that predates the sentinel cannot be detected this way; such a
+  ///   device needs a one-time manual Reset Sync State to recover.
+  /// - Sentinel matches: nothing to do ([DeviceIdentityStatus.unchanged]).
+  /// - Sentinel differs: a restore swapped the database. Re-baseline sync,
+  ///   preserving the live identity from the sentinel
+  ///   ([DeviceIdentityStatus.rebaselined]).
+  ///
+  /// Never throws: a reconcile failure must not block app launch.
+  Future<DeviceIdentityStatus> reconcileDeviceIdentity() async {
+    try {
+      final deviceId = await _syncRepository.getDeviceId();
+      final sentinel = _prefs.getString(_deviceIdSentinelKey);
+
+      if (sentinel == null) {
+        await _prefs.setString(_deviceIdSentinelKey, deviceId);
+        _log.info('Seeded sync device-id sentinel');
+        return DeviceIdentityStatus.seeded;
+      }
+
+      if (sentinel == deviceId) {
+        return DeviceIdentityStatus.unchanged;
+      }
+
+      // The database carries a different device id than the one we persisted
+      // outside it: the DB was replaced by a restore. Restore the live identity
+      // and clear the rewound baseline so the next sync fully reconciles.
+      _log.warning(
+        'Sync device id changed under us (database restore detected); '
+        're-baselining sync and restoring the live identity',
+      );
+      await _syncRepository.rebaselineAfterRestore(preserveDeviceId: sentinel);
+      // The sentinel already holds the live id we just restored, so it stays
+      // authoritative; no rewrite is needed.
+      return DeviceIdentityStatus.rebaselined;
+    } catch (e, stackTrace) {
+      _log.error(
+        'Device-identity reconcile failed; continuing launch',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return DeviceIdentityStatus.error;
     }
   }
 
@@ -183,6 +243,25 @@ class SyncInitializer {
     final lower = filename.toLowerCase();
     return lower.contains('conflicted copy') || lower.contains('conflict');
   }
+}
+
+/// Outcome of [SyncInitializer.reconcileDeviceIdentity].
+enum DeviceIdentityStatus {
+  /// No sentinel existed yet; the current device id was recorded. First run, or
+  /// first launch after this detection shipped. A restore predating the
+  /// sentinel cannot be detected and needs a manual Reset Sync State.
+  seeded,
+
+  /// The sentinel already matched the in-DB device id. Normal launch, no-op.
+  unchanged,
+
+  /// The in-DB device id no longer matched the sentinel: a restore replaced the
+  /// database. Sync was re-baselined and the live identity restored.
+  rebaselined,
+
+  /// The reconcile could not run (e.g. the metadata lookup failed). Launch
+  /// continues regardless.
+  error,
 }
 
 /// Status of the sync check
