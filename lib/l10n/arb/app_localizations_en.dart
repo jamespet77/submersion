@@ -10899,6 +10899,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'S3-Compatible Storage';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'Could not access secure storage';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

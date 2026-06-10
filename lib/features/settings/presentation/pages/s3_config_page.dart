@@ -54,21 +54,36 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
   }
 
   Future<void> _loadExisting() async {
-    final existing = await ref
-        .read(s3StorageProviderInstanceProvider)
-        .loadConfig();
-    if (!mounted || existing == null) return;
-    setState(() {
-      _endpointController.text = existing.endpoint;
-      _regionController.text = existing.region;
-      _bucketController.text = existing.bucket;
-      _prefixController.text = existing.prefix;
-      _accessKeyController.text = existing.accessKeyId;
-      _secretKeyController.text = existing.secretAccessKey;
-      _pathStyle = existing.pathStyle;
-      _pathStyleTouched = true;
-      _hasExistingConfig = true;
-    });
+    try {
+      final existing = await ref
+          .read(s3StorageProviderInstanceProvider)
+          .loadConfig();
+      if (!mounted || existing == null) return;
+      // A slow keychain read must not overwrite typing.
+      if (_bucketController.text.isNotEmpty ||
+          _accessKeyController.text.isNotEmpty ||
+          _secretKeyController.text.isNotEmpty) {
+        return;
+      }
+      setState(() {
+        _endpointController.text = existing.endpoint;
+        _regionController.text = existing.region;
+        _bucketController.text = existing.bucket;
+        _prefixController.text = existing.prefix;
+        _accessKeyController.text = existing.accessKeyId;
+        _secretKeyController.text = existing.secretAccessKey;
+        _pathStyle = existing.pathStyle;
+        _pathStyleTouched = true;
+        // A stored choice (even an auto-derived one) must not silently flip.
+        _hasExistingConfig = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      _showSnack(
+        context.l10n.settings_s3Config_error_secureStorage,
+        isError: true,
+      );
+    }
   }
 
   void _onEndpointChanged() {
@@ -78,7 +93,6 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
     });
   }
 
-  // Amendment 1: case-insensitive http warning
   bool get _isInsecureEndpoint =>
       _endpointController.text.trim().toLowerCase().startsWith('http://');
 
@@ -108,6 +122,7 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
   Future<void> _testConnection() async {
     if (!_formKey.currentState!.validate()) return;
     final successMessage = context.l10n.settings_s3Config_test_success;
+    final storageMessage = context.l10n.settings_s3Config_error_secureStorage;
     setState(() => _busy = true);
     try {
       await ref
@@ -116,6 +131,8 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
       _showSnack(successMessage);
     } on CloudStorageException catch (e) {
       _showSnack(e.message, isError: true);
+    } catch (e) {
+      _showSnack('$storageMessage: $e', isError: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -123,6 +140,7 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
+    final storageMessage = context.l10n.settings_s3Config_error_secureStorage;
     setState(() => _busy = true);
     try {
       await ref
@@ -133,6 +151,7 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
       await ref
           .read(syncInitializerProvider)
           .saveProvider(CloudProviderType.s3);
+      ref.read(syncStateProvider.notifier).refreshState();
       ref.invalidate(s3ConfigProvider);
       if (!mounted) return;
       _showSnack(context.l10n.settings_s3Config_saved);
@@ -140,6 +159,8 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
       await Navigator.maybePop(context);
     } on CloudStorageException catch (e) {
       _showSnack(e.message, isError: true);
+    } catch (e) {
+      _showSnack('$storageMessage: $e', isError: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -147,6 +168,7 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
 
   Future<void> _remove() async {
     final l10n = context.l10n;
+    final storageMessage = l10n.settings_s3Config_error_secureStorage;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -171,13 +193,15 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
     try {
       await ref.read(s3StorageProviderInstanceProvider).signOut();
       if (ref.read(selectedCloudProviderTypeProvider) == CloudProviderType.s3) {
-        ref.read(selectedCloudProviderTypeProvider.notifier).state = null;
-        await ref.read(syncInitializerProvider).saveProvider(null);
+        // Resets selection, persisted provider, and sync state in one place.
+        await ref.read(syncStateProvider.notifier).signOut();
       }
       ref.invalidate(s3ConfigProvider);
       if (!mounted) return;
       _showSnack(context.l10n.settings_s3Config_removed);
       await Navigator.maybePop(context);
+    } catch (e) {
+      _showSnack('$storageMessage: $e', isError: true);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -223,7 +247,7 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
               ),
               keyboardType: TextInputType.url,
               autocorrect: false,
-              // Amendment 2b: endpoint sub-path rejection
+              // Sub-paths break SigV4 key addressing; host-only endpoints are accepted.
               validator: (value) {
                 final trimmed = (value ?? '').trim();
                 if (trimmed.isEmpty) return null;
@@ -279,6 +303,7 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
                 labelText: l10n.settings_s3Config_field_accessKeyId_label,
               ),
               autocorrect: false,
+              enableSuggestions: false,
               validator: (value) => (value ?? '').trim().isEmpty
                   ? l10n.settings_s3Config_validation_required
                   : null,
@@ -299,7 +324,8 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
               ),
               obscureText: !_secretVisible,
               autocorrect: false,
-              validator: (value) => (value ?? '').isEmpty
+              enableSuggestions: false,
+              validator: (value) => (value ?? '').trim().isEmpty
                   ? l10n.settings_s3Config_validation_required
                   : null,
             ),

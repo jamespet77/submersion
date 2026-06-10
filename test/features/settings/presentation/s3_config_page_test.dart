@@ -1,16 +1,18 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:submersion/core/data/repositories/sync_repository.dart'
     show CloudProviderType;
+import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_api_client.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_credentials_store.dart';
 import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
+import 'package:submersion/core/services/sync/sync_service.dart'
+    show ConflictResolution;
 import 'package:submersion/features/settings/presentation/pages/s3_config_page.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
@@ -18,12 +20,16 @@ import 'package:submersion/l10n/arb/app_localizations.dart';
 
 class _MemoryCredentialsStore implements S3CredentialsStore {
   S3Config? stored;
+  Object? failSaveWith;
 
   @override
   Future<S3Config?> load() async => stored;
 
   @override
-  Future<void> save(S3Config config) async => stored = config;
+  Future<void> save(S3Config config) async {
+    if (failSaveWith != null) throw failSaveWith!;
+    stored = config;
+  }
 
   @override
   Future<void> clear() async => stored = null;
@@ -35,6 +41,7 @@ class _MemoryCredentialsStore implements S3CredentialsStore {
 class _FakeS3ApiClient implements S3ApiClient {
   final List<String> calls = [];
   final Map<String, Uint8List> _objects = {};
+  CloudStorageException? failListWith;
 
   @override
   Future<void> putObject(String key, Uint8List bytes) async {
@@ -65,12 +72,44 @@ class _FakeS3ApiClient implements S3ApiClient {
     String prefix = '',
     int? maxKeys,
   }) async {
+    if (failListWith != null) throw failListWith!;
     calls.add('list:$prefix');
     return const [];
   }
 
   @override
   void close() {}
+}
+
+/// Minimal [SyncNotifier] stub that avoids touching the database.
+/// Accepts a [Ref] so [signOut] can mirror the real notifier's side-effect of
+/// clearing [selectedCloudProviderTypeProvider].
+class _FakeSyncNotifier extends StateNotifier<SyncState>
+    implements SyncNotifier {
+  final Ref _ref;
+  _FakeSyncNotifier(this._ref) : super(const SyncState());
+
+  @override
+  Future<void> performSync() async {}
+
+  @override
+  Future<void> refreshState() async {}
+
+  @override
+  Future<void> resetSyncState() async {}
+
+  @override
+  Future<void> signOut() async {
+    _ref.read(selectedCloudProviderTypeProvider.notifier).state = null;
+    state = const SyncState();
+  }
+
+  @override
+  Future<void> resolveConflict(
+    String entityType,
+    String recordId,
+    ConflictResolution resolution,
+  ) async {}
 }
 
 void main() {
@@ -87,7 +126,10 @@ void main() {
     );
   });
 
-  Future<void> pumpPage(WidgetTester tester) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    CloudProviderType? selected,
+  }) async {
     tester.view.physicalSize = const Size(1200, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {
@@ -101,6 +143,8 @@ void main() {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
           s3StorageProviderInstanceProvider.overrideWithValue(provider),
+          syncStateProvider.overrideWith((ref) => _FakeSyncNotifier(ref)),
+          selectedCloudProviderTypeProvider.overrideWith((ref) => selected),
         ],
         child: const MaterialApp(
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -257,5 +301,62 @@ void main() {
     );
     await tester.pump();
     expect(find.byKey(const Key('s3-http-warning')), findsOneWidget);
+  });
+
+  testWidgets('test connection failure shows the specific error', (
+    tester,
+  ) async {
+    apiClient.failListWith = const CloudStorageException(
+      'Access denied. Check the access key, secret key, and bucket '
+      'permissions.',
+    );
+    await pumpPage(tester);
+    await fillValidForm(tester);
+    await tester.ensureVisible(find.byKey(const Key('s3-test')));
+    await tester.tap(find.byKey(const Key('s3-test')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Access denied'), findsOneWidget);
+    expect(store.stored, isNull);
+  });
+
+  testWidgets('save failure surfaces an error and selects nothing', (
+    tester,
+  ) async {
+    store.failSaveWith = Exception('keychain locked');
+    await pumpPage(tester);
+    await fillValidForm(tester);
+    await tester.ensureVisible(find.byKey(const Key('s3-save')));
+    await tester.tap(find.byKey(const Key('s3-save')));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('Could not access secure storage'),
+      findsOneWidget,
+    );
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(S3ConfigPage)),
+    );
+    expect(container.read(selectedCloudProviderTypeProvider), isNull);
+  });
+
+  testWidgets('removing while S3 is selected deselects the provider', (
+    tester,
+  ) async {
+    store.stored = S3Config(
+      endpoint: 'http://nas.local:9000',
+      bucket: 'dive-sync',
+      accessKeyId: 'ak',
+      secretAccessKey: 'sk',
+    );
+    await pumpPage(tester, selected: CloudProviderType.s3);
+    await tester.ensureVisible(find.byKey(const Key('s3-remove')));
+    await tester.tap(find.byKey(const Key('s3-remove')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('s3-remove-confirm')));
+    await tester.pumpAndSettle();
+    expect(store.stored, isNull);
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(S3ConfigPage)),
+    );
+    expect(container.read(selectedCloudProviderTypeProvider), isNull);
   });
 }

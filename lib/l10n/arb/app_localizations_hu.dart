@@ -11053,6 +11053,10 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'S3-kompatibilis tároló';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'Nem sikerült hozzáférni a biztonságos tárolóhoz';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

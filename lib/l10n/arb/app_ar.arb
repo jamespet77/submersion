@@ -3383,6 +3383,7 @@
   "settings_s3Config_action_remove": "إزالة الإعدادات",
   "settings_s3Config_action_testConnection": "اختبار الاتصال",
   "settings_s3Config_appBar_title": "تخزين متوافق مع S3",
+  "settings_s3Config_error_secureStorage": "تعذر الوصول إلى التخزين الآمن",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "الحاوية (Bucket)",
   "settings_s3Config_field_endpoint_helper": "اتركه فارغًا لاستخدام Amazon S3",

@@ -11073,6 +11073,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Almacenamiento compatible con S3';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'No se pudo acceder al almacenamiento seguro';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

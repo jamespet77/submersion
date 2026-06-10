@@ -3383,6 +3383,7 @@
   "settings_s3Config_action_remove": "הסרת התצורה",
   "settings_s3Config_action_testConnection": "בדיקת חיבור",
   "settings_s3Config_appBar_title": "אחסון תואם S3",
+  "settings_s3Config_error_secureStorage": "לא ניתן לגשת לאחסון המאובטח",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
   "settings_s3Config_field_endpoint_helper": "השאירו ריק עבור Amazon S3",

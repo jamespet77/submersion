@@ -3383,6 +3383,7 @@
   "settings_s3Config_action_remove": "Remover configuração",
   "settings_s3Config_action_testConnection": "Testar conexão",
   "settings_s3Config_appBar_title": "Armazenamento compatível com S3",
+  "settings_s3Config_error_secureStorage": "Não foi possível acessar o armazenamento seguro",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
   "settings_s3Config_field_endpoint_helper": "Deixe em branco para Amazon S3",

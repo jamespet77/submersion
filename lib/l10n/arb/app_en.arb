@@ -5771,6 +5771,7 @@
   "settings_s3Config_action_remove": "Remove Configuration",
   "settings_s3Config_action_testConnection": "Test Connection",
   "settings_s3Config_appBar_title": "S3-Compatible Storage",
+  "settings_s3Config_error_secureStorage": "Could not access secure storage",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
   "settings_s3Config_field_endpoint_helper": "Leave blank for Amazon S3",

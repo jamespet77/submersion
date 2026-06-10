@@ -11083,6 +11083,10 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'Archiviazione compatibile S3';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'Impossibile accedere all\'archivio sicuro';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

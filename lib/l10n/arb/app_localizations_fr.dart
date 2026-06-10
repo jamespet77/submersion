@@ -11125,6 +11125,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'Stockage compatible S3';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'Impossible d\'accéder au stockage sécurisé';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

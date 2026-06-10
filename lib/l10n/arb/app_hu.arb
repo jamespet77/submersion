@@ -3349,6 +3349,7 @@
   "settings_s3Config_action_remove": "Konfiguráció eltávolítása",
   "settings_s3Config_action_testConnection": "Kapcsolat tesztelése",
   "settings_s3Config_appBar_title": "S3-kompatibilis tároló",
+  "settings_s3Config_error_secureStorage": "Nem sikerült hozzáférni a biztonságos tárolóhoz",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
   "settings_s3Config_field_endpoint_helper": "Amazon S3 esetén hagyja üresen",

@@ -3383,6 +3383,7 @@
   "settings_s3Config_action_remove": "Configuratie verwijderen",
   "settings_s3Config_action_testConnection": "Verbinding testen",
   "settings_s3Config_appBar_title": "S3-compatibele opslag",
+  "settings_s3Config_error_secureStorage": "Kon geen toegang krijgen tot de beveiligde opslag",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
   "settings_s3Config_field_endpoint_helper": "Laat leeg voor Amazon S3",

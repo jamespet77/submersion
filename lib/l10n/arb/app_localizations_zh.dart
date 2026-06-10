@@ -10559,6 +10559,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'S3 兼容存储';
 
   @override
+  String get settings_s3Config_error_secureStorage => '无法访问安全存储';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

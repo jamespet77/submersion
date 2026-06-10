@@ -10865,6 +10865,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'تخزين متوافق مع S3';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'تعذر الوصول إلى التخزين الآمن';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

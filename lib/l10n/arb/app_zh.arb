@@ -3549,6 +3549,7 @@
   "settings_s3Config_action_remove": "移除配置",
   "settings_s3Config_action_testConnection": "测试连接",
   "settings_s3Config_appBar_title": "S3 兼容存储",
+  "settings_s3Config_error_secureStorage": "无法访问安全存储",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "存储桶",
   "settings_s3Config_field_endpoint_helper": "使用 Amazon S3 时留空",

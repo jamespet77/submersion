@@ -10992,6 +10992,10 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_s3Config_appBar_title => 'S3-compatibele opslag';
 
   @override
+  String get settings_s3Config_error_secureStorage =>
+      'Kon geen toegang krijgen tot de beveiligde opslag';
+
+  @override
   String get settings_s3Config_field_accessKeyId_label => 'Access Key ID';
 
   @override

@@ -3383,6 +3383,7 @@
   "settings_s3Config_action_remove": "Konfiguration entfernen",
   "settings_s3Config_action_testConnection": "Verbindung testen",
   "settings_s3Config_appBar_title": "S3-kompatibler Speicher",
+  "settings_s3Config_error_secureStorage": "Auf den sicheren Speicher konnte nicht zugegriffen werden",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
   "settings_s3Config_field_endpoint_helper": "Für Amazon S3 leer lassen",

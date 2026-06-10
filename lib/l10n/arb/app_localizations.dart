@@ -18891,6 +18891,12 @@ abstract class AppLocalizations {
   /// **'S3-Compatible Storage'**
   String get settings_s3Config_appBar_title;
 
+  /// No description provided for @settings_s3Config_error_secureStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not access secure storage'**
+  String get settings_s3Config_error_secureStorage;
+
   /// No description provided for @settings_s3Config_field_accessKeyId_label.
   ///
   /// In en, this message translates to:
