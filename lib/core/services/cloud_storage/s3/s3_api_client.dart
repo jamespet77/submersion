@@ -62,11 +62,19 @@ class S3ApiClient {
     if (response.statusCode != 200) _throwFor('inspect', key, response);
     final lastModifiedHeader = response.headers['last-modified'];
     final contentLength = response.headers['content-length'];
+    DateTime lastModified;
+    if (lastModifiedHeader != null) {
+      try {
+        lastModified = HttpDate.parse(lastModifiedHeader);
+      } on HttpException {
+        lastModified = _now().toUtc();
+      }
+    } else {
+      lastModified = _now().toUtc();
+    }
     return S3ObjectInfo(
       key: key,
-      lastModified: lastModifiedHeader != null
-          ? HttpDate.parse(lastModifiedHeader)
-          : _now().toUtc(),
+      lastModified: lastModified,
       size: contentLength != null ? int.tryParse(contentLength) : null,
     );
   }
@@ -96,12 +104,27 @@ class S3ApiClient {
       );
       if (response.statusCode != 200) _throwFor('list', prefix, response);
 
-      final document = XmlDocument.parse(utf8.decode(response.bodyBytes));
+      final (pageObjects, nextToken) = _parseListPage(response.bodyBytes);
+      results.addAll(pageObjects);
+      continuationToken = nextToken;
+    } while (continuationToken != null);
+    return results;
+  }
+
+  /// Parses a single ListBucketResult XML page.
+  ///
+  /// Returns the objects found and the next continuation token (null if done).
+  /// Wraps any [FormatException] (including [XmlParserException]) in a
+  /// [CloudStorageException].
+  (List<S3ObjectInfo>, String?) _parseListPage(Uint8List bodyBytes) {
+    try {
+      final document = XmlDocument.parse(utf8.decode(bodyBytes));
+      final pageObjects = <S3ObjectInfo>[];
       for (final contents in document.findAllElements('Contents')) {
         final key = contents.getElement('Key')?.innerText;
         final lastModified = contents.getElement('LastModified')?.innerText;
         if (key == null || lastModified == null) continue;
-        results.add(
+        pageObjects.add(
           S3ObjectInfo(
             key: key,
             lastModified: DateTime.parse(lastModified),
@@ -112,14 +135,16 @@ class S3ApiClient {
       final truncated =
           document.findAllElements('IsTruncated').firstOrNull?.innerText ==
           'true';
-      continuationToken = truncated
+      final nextToken = truncated
           ? document
                 .findAllElements('NextContinuationToken')
                 .firstOrNull
                 ?.innerText
           : null;
-    } while (continuationToken != null);
-    return results;
+      return (pageObjects, nextToken);
+    } on FormatException catch (e) {
+      throw CloudStorageException('S3 returned an unreadable list response', e);
+    }
   }
 
   /// Closes the underlying HTTP client (including an injected one).
@@ -166,6 +191,11 @@ class S3ApiClient {
         body: body,
       );
       if (response.statusCode < 500) return response;
+    } on FormatException catch (e) {
+      throw CloudStorageException(
+        'Invalid S3 endpoint configuration: ${_config.endpoint}',
+        e,
+      );
     } on http.ClientException {
       // Transport failure; retry once below.
     } on IOException {

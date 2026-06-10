@@ -470,5 +470,52 @@ void main() {
       );
       expect(calls, 1);
     });
+
+    test(
+      'an unparseable stored endpoint maps to CloudStorageException',
+      () async {
+        final config = minioConfig().copyWith(endpoint: 'http://[bad');
+        final mock = MockClient((_) async => http.Response('', 200));
+        expect(
+          () => clientWith(config, mock).getObject('k'),
+          throwsA(isA<CloudStorageException>()),
+        );
+      },
+    );
+
+    test('garbage error bodies still map to CloudStorageException', () async {
+      final mock = MockClient(
+        (_) async => http.Response.bytes([0xC3, 0x28], 500),
+      );
+      expect(
+        () => clientWith(minioConfig(), mock).getObject('k'),
+        throwsA(isA<CloudStorageException>()),
+      );
+    });
+
+    test('unreadable list bodies map to CloudStorageException', () async {
+      final mock = MockClient(
+        (_) async => http.Response.bytes([0xC3, 0x28], 200),
+      );
+      expect(
+        () => clientWith(minioConfig(), mock).listObjects(prefix: 'p/'),
+        throwsA(isA<CloudStorageException>()),
+      );
+    });
+
+    test(
+      'malformed last-modified header falls back to the injected clock',
+      () async {
+        final mock = MockClient(
+          (_) async => http.Response(
+            '',
+            200,
+            headers: {'last-modified': 'not-a-date', 'content-length': '1'},
+          ),
+        );
+        final info = await clientWith(minioConfig(), mock).headObject('k');
+        expect(info!.lastModified, DateTime.utc(2026, 6, 9, 12));
+      },
+    );
   });
 }
