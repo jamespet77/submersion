@@ -55,6 +55,15 @@ void main() {
       final config = minio().copyWith(endpoint: ' http://nas.local:9000/ ');
       expect(config.endpoint, 'http://nas.local:9000');
     });
+
+    test('secretAccessKey is trimmed', () {
+      final config = minio().copyWith(secretAccessKey: ' sk\n');
+      expect(config.secretAccessKey, 'sk');
+    });
+
+    test('blank region falls back to us-east-1', () {
+      expect(minio().copyWith(region: '   ').region, 'us-east-1');
+    });
   });
 
   group('S3Config derived values', () {
@@ -82,6 +91,25 @@ void main() {
       );
       expect(minio().copyWith(endpoint: '').isInsecureEndpoint, isFalse);
     });
+
+    test(
+      'displayHost falls back to the raw string for unparseable endpoints',
+      () {
+        final config = minio().copyWith(endpoint: '192.168.1.10:9000');
+        expect(config.displayHost, '192.168.1.10:9000');
+      },
+    );
+
+    test('copyWith keeps an explicitly set pathStyle sticky', () {
+      final aws = S3Config(
+        endpoint: '',
+        bucket: 'b',
+        accessKeyId: 'a',
+        secretAccessKey: 's',
+        pathStyle: true,
+      );
+      expect(aws.copyWith(endpoint: 'http://nas.local:9000').pathStyle, isTrue);
+    });
   });
 
   group('S3Config.validate', () {
@@ -99,6 +127,17 @@ void main() {
       expect(minio().copyWith(endpoint: 'ftp://nas').validate(), isNotNull);
       expect(minio().copyWith(endpoint: 'not a url').validate(), isNotNull);
       expect(minio().copyWith(endpoint: '').validate(), isNull);
+    });
+
+    test('schemeless host:port and sub-path endpoints are rejected', () {
+      expect(
+        minio().copyWith(endpoint: '192.168.1.10:9000').validate(),
+        isNotNull,
+      );
+      expect(
+        minio().copyWith(endpoint: 'https://nas.example.com/s3-api').validate(),
+        isNotNull,
+      );
     });
   });
 

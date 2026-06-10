@@ -34,14 +34,15 @@ class S3Config {
     required String secretAccessKey,
   }) {
     final normalizedEndpoint = _normalizeEndpoint(endpoint);
+    final trimmedRegion = region.trim();
     return S3Config._(
       endpoint: normalizedEndpoint,
-      region: region.trim(),
+      region: trimmedRegion.isEmpty ? 'us-east-1' : trimmedRegion,
       bucket: bucket.trim(),
       prefix: _normalizePrefix(prefix),
       pathStyle: pathStyle ?? normalizedEndpoint.isNotEmpty,
       accessKeyId: accessKeyId.trim(),
-      secretAccessKey: secretAccessKey,
+      secretAccessKey: secretAccessKey.trim(),
     );
   }
 
@@ -66,9 +67,13 @@ class S3Config {
   /// AWS S3 proper (host derived from [region]) vs a custom endpoint.
   bool get isAws => endpoint.isEmpty;
 
-  /// Host shown in account labels and used as the AWS base host.
-  String get displayHost =>
-      isAws ? 's3.$region.amazonaws.com' : Uri.parse(endpoint).host;
+  /// Host shown in account labels and used as the AWS base host. Total:
+  /// falls back to the raw endpoint string when it does not parse as a URI.
+  String get displayHost {
+    if (isAws) return 's3.$region.amazonaws.com';
+    final host = Uri.tryParse(endpoint)?.host;
+    return (host == null || host.isEmpty) ? endpoint : host;
+  }
 
   /// Plain-HTTP custom endpoint (credentials travel unencrypted).
   bool get isInsecureEndpoint =>
@@ -86,6 +91,9 @@ class S3Config {
           !(uri.scheme == 'http' || uri.scheme == 'https') ||
           uri.host.isEmpty) {
         return 'Endpoint must be a valid http:// or https:// URL';
+      }
+      if (uri.path.isNotEmpty && uri.path != '/') {
+        return 'Endpoint must not include a path';
       }
     }
     return null;
@@ -111,6 +119,9 @@ class S3Config {
     );
   }
 
+  /// Contains the plaintext secret. Route the result only to
+  /// FlutterSecureStorage (see S3CredentialsStore); toString is the
+  /// redacted form for logs.
   Map<String, Object?> toJson() => {
     'endpoint': endpoint,
     'region': region,
