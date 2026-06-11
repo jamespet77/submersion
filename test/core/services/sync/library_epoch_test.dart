@@ -47,13 +47,13 @@ void main() {
 
   group('SyncPayload epoch stamp', () {
     test('serializes and parses epochId', () {
-      final payload = SyncPayload(
+      const payload = SyncPayload(
         version: 1,
         exportedAt: 1,
         deviceId: 'd1',
         checksum: 'c',
         data: SyncData(),
-        deletions: const {},
+        deletions: {},
         epochId: 'e1',
       );
       final parsed = SyncPayload.fromJson(
@@ -63,13 +63,13 @@ void main() {
     });
 
     test('legacy payload without epochId parses as null', () {
-      final payload = SyncPayload(
+      const payload = SyncPayload(
         version: 1,
         exportedAt: 1,
         deviceId: 'd1',
         checksum: 'c',
         data: SyncData(),
-        deletions: const {},
+        deletions: {},
       );
       final json = payload.toJson()..remove('epochId');
       final parsed = SyncPayload.fromJson(json);

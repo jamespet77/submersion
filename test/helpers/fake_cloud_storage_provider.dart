@@ -30,7 +30,7 @@ class FakeCloudStorageProvider extends CloudStorageProvider
 
   /// Ordered log of cloud operations, for asserting protocol order (e.g.
   /// "marker written before wipe"). File ids equal filenames in this fake.
-  /// Entries: 'upload:<name>', 'delete:<name>', 'list'.
+  /// Entries: `upload:<name>`, `delete:<name>`, `list`.
   final List<String> operationLog = [];
 
   /// Seed a file as though another device had uploaded it.
