@@ -234,5 +234,47 @@ void main() {
             'data sight-unseen',
       );
     });
+
+    test('keeps the legacy file when the upload fails', () async {
+      final dive = await validDiveMap('legacy-dive-5');
+      cloud.seedFile(
+        'submersion_sync.json',
+        craftLegacyFile('old-phone', [dive]),
+      );
+      cloud.failUploads = true;
+
+      final result = await buildService().performSync();
+
+      expect(result.isSuccess, isFalse);
+      expect(
+        await cloud.fileExists('submersion_sync.json'),
+        isTrue,
+        reason:
+            'retirement must only happen after the merged content was '
+            're-published in our per-device file; a failed upload means '
+            'the legacy file is still the only cloud copy of its data',
+      );
+    });
+
+    test('keeps the legacy file when a record fails to apply', () async {
+      // A dive map missing required columns makes Dive.fromJson throw during
+      // the merge, driving recordsFailed > 0. The next sync re-pulls the same
+      // file to retry, so it must not be deleted.
+      cloud.seedFile(
+        'submersion_sync.json',
+        craftLegacyFile('old-phone', [
+          {'id': 'broken-dive'},
+        ]),
+      );
+
+      final result = await buildService().performSync();
+
+      expect(result.status, SyncResultStatus.error);
+      expect(
+        await cloud.fileExists('submersion_sync.json'),
+        isTrue,
+        reason: 'a failed apply relies on re-pulling the same file next sync',
+      );
+    });
   });
 }

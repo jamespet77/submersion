@@ -13,6 +13,9 @@ class FakeCloudStorageProvider extends CloudStorageProvider
   int get fileCount => _files.length;
   Uint8List? bytesOf(String name) => _files[name]?.data;
 
+  /// When true, [uploadFile] throws, modelling an offline/denied provider.
+  bool failUploads = false;
+
   /// Seed a file as though another device had uploaded it.
   void seedFile(String name, Uint8List data) {
     _files[name] = _FakeFile(data, DateTime.now());
@@ -62,6 +65,9 @@ class FakeCloudStorageProvider extends CloudStorageProvider
     String filename, {
     String? folderId,
   }) async {
+    if (failUploads) {
+      throw const CloudStorageException('upload failed (test)');
+    }
     _files[filename] = _FakeFile(data, DateTime.now());
     return UploadResult(
       fileId: filename,
