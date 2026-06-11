@@ -7102,6 +7102,78 @@ abstract class AppLocalizations {
   /// **'Match Dives to Sites'**
   String get diveLog_listPage_menuMatchSites;
 
+  /// Hero stat label: maximum site depth
+  ///
+  /// In en, this message translates to:
+  /// **'Max depth'**
+  String get diveSites_edit_depth_heroMax;
+
+  /// Hero stat label: minimum site depth
+  ///
+  /// In en, this message translates to:
+  /// **'Min depth'**
+  String get diveSites_edit_depth_heroMin;
+
+  /// Site form group: access, mooring, parking, hazards
+  ///
+  /// In en, this message translates to:
+  /// **'Access & safety'**
+  String get diveSites_edit_group_accessSafety;
+
+  /// Site form group: depth, difficulty, rating
+  ///
+  /// In en, this message translates to:
+  /// **'Dive info'**
+  String get diveSites_edit_group_diveInfo;
+
+  /// Site form group: name, description, country, region
+  ///
+  /// In en, this message translates to:
+  /// **'Identity'**
+  String get diveSites_edit_group_identity;
+
+  /// Site form group: species, notes, sharing
+  ///
+  /// In en, this message translates to:
+  /// **'Life & notes'**
+  String get diveSites_edit_group_lifeNotes;
+
+  /// Site form group: GPS and altitude
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get diveSites_edit_group_location;
+
+  /// Empty-state invitation for the Access & safety group
+  ///
+  /// In en, this message translates to:
+  /// **'Add access, parking, mooring or hazards'**
+  String get diveSites_edit_invite_accessSafety;
+
+  /// Empty-state invitation for the Dive info group
+  ///
+  /// In en, this message translates to:
+  /// **'Add depth range, difficulty or rating'**
+  String get diveSites_edit_invite_diveInfo;
+
+  /// Empty-state invitation for the Life & notes group
+  ///
+  /// In en, this message translates to:
+  /// **'Add marine life, notes or sharing'**
+  String get diveSites_edit_invite_lifeNotes;
+
+  /// Empty-state invitation for the Location group
+  ///
+  /// In en, this message translates to:
+  /// **'Add GPS position or altitude'**
+  String get diveSites_edit_invite_location;
+
+  /// Collapsed summary fragment indicating the site is shared
+  ///
+  /// In en, this message translates to:
+  /// **'shared'**
+  String get diveSites_edit_summary_shared;
+
   /// Prefix of the trailing row listing unused optional form sections, e.g. '+ Add: Course / Custom fields'
   ///
   /// In en, this message translates to:

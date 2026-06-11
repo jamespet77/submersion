@@ -4113,6 +4113,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => 'Match Dives to Sites';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'Max depth';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'Min depth';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'Access & safety';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'Dive info';
+
+  @override
+  String get diveSites_edit_group_identity => 'Identity';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'Life & notes';
+
+  @override
+  String get diveSites_edit_group_location => 'Location';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'Add access, parking, mooring or hazards';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'Add depth range, difficulty or rating';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'Add marine life, notes or sharing';
+
+  @override
+  String get diveSites_edit_invite_location => 'Add GPS position or altitude';
+
+  @override
+  String get diveSites_edit_summary_shared => 'shared';
+
+  @override
   String get forms_addSection_prefix => 'Add:';
 
   @override

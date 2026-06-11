@@ -4087,6 +4087,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => 'مطابقة الغوصات بالمواقع';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'أقصى عمق';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'أدنى عمق';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'الوصول والسلامة';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'معلومات الغوص';
+
+  @override
+  String get diveSites_edit_group_identity => 'الهوية';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'الحياة البحرية والملاحظات';
+
+  @override
+  String get diveSites_edit_group_location => 'الموقع الجغرافي';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'إضافة الوصول أو المواقف أو المرساة أو المخاطر';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'إضافة نطاق العمق أو الصعوبة أو التقييم';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'إضافة الحياة البحرية أو الملاحظات أو المشاركة';
+
+  @override
+  String get diveSites_edit_invite_location => 'إضافة إحداثيات GPS أو الارتفاع';
+
+  @override
+  String get diveSites_edit_summary_shared => 'مشترك';
+
+  @override
   String get forms_addSection_prefix => 'إضافة:';
 
   @override

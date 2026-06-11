@@ -4188,6 +4188,46 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => 'Associar mergulhos a pontos';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'Prof. máx.';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'Prof. mín.';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'Acesso e segurança';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'Dados de mergulho';
+
+  @override
+  String get diveSites_edit_group_identity => 'Identidade';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'Vida marinha e notas';
+
+  @override
+  String get diveSites_edit_group_location => 'Localização';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'Adicionar acesso, estacionamento, poita ou perigos';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'Adicionar faixa de profundidade, dificuldade ou avaliação';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'Adicionar vida marinha, notas ou compartilhamento';
+
+  @override
+  String get diveSites_edit_invite_location =>
+      'Adicionar posição GPS ou altitude';
+
+  @override
+  String get diveSites_edit_summary_shared => 'compartilhado';
+
+  @override
   String get forms_addSection_prefix => 'Adicionar:';
 
   @override

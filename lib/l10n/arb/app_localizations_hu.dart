@@ -4174,6 +4174,46 @@ class AppLocalizationsHu extends AppLocalizations {
       'Merülések hozzárendelése helyekhez';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'Max. mélység';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'Min. mélység';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'Megközelítés és biztonság';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'Merülési adatok';
+
+  @override
+  String get diveSites_edit_group_identity => 'Azonosítás';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'Élővilág és jegyzetek';
+
+  @override
+  String get diveSites_edit_group_location => 'Helyzet';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'Megközelítés, parkolás, kikötés vagy veszélyek hozzáadása';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'Mélységtartomány, nehézség vagy értékelés hozzáadása';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'Élővilág, jegyzetek vagy megosztás hozzáadása';
+
+  @override
+  String get diveSites_edit_invite_location =>
+      'GPS-pozíció vagy magasság hozzáadása';
+
+  @override
+  String get diveSites_edit_summary_shared => 'megosztva';
+
+  @override
   String get forms_addSection_prefix => 'Hozzáadás:';
 
   @override

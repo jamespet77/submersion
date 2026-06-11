@@ -4157,6 +4157,46 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => 'Duiken aan stekken koppelen';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'Max. diepte';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'Min. diepte';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'Toegang & veiligheid';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'Duikinfo';
+
+  @override
+  String get diveSites_edit_group_identity => 'Identiteit';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'Leven & notities';
+
+  @override
+  String get diveSites_edit_group_location => 'Locatie';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'Toegang, parkeren, afmeren of gevaren toevoegen';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'Dieptebereik, moeilijkheid of beoordeling toevoegen';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'Zeeleven, notities of delen toevoegen';
+
+  @override
+  String get diveSites_edit_invite_location =>
+      'GPS-positie of hoogte toevoegen';
+
+  @override
+  String get diveSites_edit_summary_shared => 'gedeeld';
+
+  @override
   String get forms_addSection_prefix => 'Toevoegen:';
 
   @override

@@ -4187,6 +4187,46 @@ class AppLocalizationsDe extends AppLocalizations {
       'Tauchgänge Tauchplätzen zuordnen';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'Max. Tiefe';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'Min. Tiefe';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'Zugang & Sicherheit';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'Tauchinfo';
+
+  @override
+  String get diveSites_edit_group_identity => 'Identität';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'Leben & Notizen';
+
+  @override
+  String get diveSites_edit_group_location => 'Position';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'Zugang, Parken, Mooring oder Gefahren hinzufügen';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'Tiefenbereich, Schwierigkeit oder Bewertung hinzufügen';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'Meeresleben, Notizen oder Freigabe hinzufügen';
+
+  @override
+  String get diveSites_edit_invite_location =>
+      'GPS-Position oder Höhe hinzufügen';
+
+  @override
+  String get diveSites_edit_summary_shared => 'geteilt';
+
+  @override
   String get forms_addSection_prefix => 'Hinzufügen:';
 
   @override

@@ -4186,6 +4186,45 @@ class AppLocalizationsEs extends AppLocalizations {
       'Asociar inmersiones a puntos de buceo';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'Prof. máx.';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'Prof. mín.';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'Acceso y seguridad';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'Datos de buceo';
+
+  @override
+  String get diveSites_edit_group_identity => 'Identidad';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'Vida marina y notas';
+
+  @override
+  String get diveSites_edit_group_location => 'Ubicación';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'Añadir acceso, aparcamiento, amarre o peligros';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'Añadir rango de profundidad, dificultad o valoración';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'Añadir vida marina, notas o compartir';
+
+  @override
+  String get diveSites_edit_invite_location => 'Añadir posición GPS o altitud';
+
+  @override
+  String get diveSites_edit_summary_shared => 'compartido';
+
+  @override
   String get forms_addSection_prefix => 'Añadir:';
 
   @override

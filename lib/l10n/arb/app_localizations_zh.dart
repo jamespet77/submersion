@@ -3987,6 +3987,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => '将潜水匹配到潜水点';
 
   @override
+  String get diveSites_edit_depth_heroMax => '最大深度';
+
+  @override
+  String get diveSites_edit_depth_heroMin => '最小深度';
+
+  @override
+  String get diveSites_edit_group_accessSafety => '通行与安全';
+
+  @override
+  String get diveSites_edit_group_diveInfo => '潜水信息';
+
+  @override
+  String get diveSites_edit_group_identity => '基本信息';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => '生物与笔记';
+
+  @override
+  String get diveSites_edit_group_location => '位置';
+
+  @override
+  String get diveSites_edit_invite_accessSafety => '添加通行、停车、系泊或危险信息';
+
+  @override
+  String get diveSites_edit_invite_diveInfo => '添加深度范围、难度或评分';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes => '添加海洋生物、笔记或共享';
+
+  @override
+  String get diveSites_edit_invite_location => '添加 GPS 位置或海拔';
+
+  @override
+  String get diveSites_edit_summary_shared => '已共享';
+
+  @override
   String get forms_addSection_prefix => '添加：';
 
   @override

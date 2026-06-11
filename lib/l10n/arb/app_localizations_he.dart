@@ -4072,6 +4072,45 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_listPage_menuMatchSites => 'התאמת צלילות לאתרים';
 
   @override
+  String get diveSites_edit_depth_heroMax => 'עומק מקס\'';
+
+  @override
+  String get diveSites_edit_depth_heroMin => 'עומק מינ\'';
+
+  @override
+  String get diveSites_edit_group_accessSafety => 'גישה ובטיחות';
+
+  @override
+  String get diveSites_edit_group_diveInfo => 'פרטי צלילה';
+
+  @override
+  String get diveSites_edit_group_identity => 'זהות';
+
+  @override
+  String get diveSites_edit_group_lifeNotes => 'חיים ימיים והערות';
+
+  @override
+  String get diveSites_edit_group_location => 'מיקום';
+
+  @override
+  String get diveSites_edit_invite_accessSafety =>
+      'הוספת גישה, חניה, עגינה או סכנות';
+
+  @override
+  String get diveSites_edit_invite_diveInfo =>
+      'הוספת טווח עומק, רמת קושי או דירוג';
+
+  @override
+  String get diveSites_edit_invite_lifeNotes =>
+      'הוספת חיים ימיים, הערות או שיתוף';
+
+  @override
+  String get diveSites_edit_invite_location => 'הוספת מיקום GPS או גובה';
+
+  @override
+  String get diveSites_edit_summary_shared => 'משותף';
+
+  @override
   String get forms_addSection_prefix => 'הוספה:';
 
   @override
