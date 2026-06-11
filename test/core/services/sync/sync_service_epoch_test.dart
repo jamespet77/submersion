@@ -10,8 +10,10 @@ import 'package:submersion/core/services/sync/library_epoch.dart';
 import 'package:submersion/core/services/sync/library_epoch_store.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:submersion/core/services/sync/sync_service.dart';
+import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
 
 import '../../../helpers/fake_cloud_storage_provider.dart';
+import '../../../helpers/mock_providers.dart';
 import '../../../helpers/test_database.dart';
 
 /// Coverage for the library epoch protocol on SyncService (restore Replace
@@ -264,6 +266,80 @@ void main() {
       );
       final result = await buildService().performSync();
       expect(result.status, SyncResultStatus.error);
+    });
+  });
+
+  group('adoptReplacedLibrary', () {
+    const marker = LibraryEpochMarker(
+      epochId: 'e1',
+      replacedAt: 1,
+      deviceId: 'replacer',
+    );
+
+    test(
+      'aborts when the marker exists but no current-epoch file does',
+      () async {
+        final service = buildService();
+        await service.writeLibraryEpochMarker(cloud, marker);
+        // Replace still in flight: marker written, stamped upload not landed.
+        final result = await service.adoptReplacedLibrary();
+        expect(result.isSuccess, isFalse);
+        expect(await SyncRepository().getLastAcceptedEpochId(), isNull);
+      },
+    );
+
+    test(
+      'applies the restored library wholesale and commits the epoch',
+      () async {
+        final service = buildService();
+        final serializer = SyncDataSerializer();
+        final diveRepo = DiveRepository();
+
+        // Stage the restored library's content locally, snapshot it into the
+        // replacer's stamped cloud file, then mutate local state so it
+        // differs: the cloud has 'cloud-dive', local has 'local-only-dive'.
+        await diveRepo.createDive(
+          createTestDiveWithBottomTime(id: 'cloud-dive', maxDepth: 20),
+        );
+        await seedPeerFile(peerDeviceId: 'replacer', epochId: 'e1');
+        await serializer.deleteRecord('dives', 'cloud-dive');
+        await diveRepo.createDive(
+          createTestDiveWithBottomTime(id: 'local-only-dive', maxDepth: 30),
+        );
+        await service.writeLibraryEpochMarker(cloud, marker);
+
+        final result = await service.adoptReplacedLibrary();
+
+        expect(result.isSuccess, isTrue);
+        expect(await SyncRepository().getLastAcceptedEpochId(), 'e1');
+        expect(epochStore.lastAcceptedEpochId, 'e1');
+        // Local-only row is gone; cloud row is present.
+        expect(
+          await serializer.fetchRecord('dives', 'local-only-dive'),
+          isNull,
+        );
+        expect(await serializer.fetchRecord('dives', 'cloud-dive'), isNotNull);
+      },
+    );
+
+    test('adoption preserves device identity', () async {
+      final repo = SyncRepository();
+      final before = await repo.getDeviceId();
+      final service = buildService();
+      await service.writeLibraryEpochMarker(cloud, marker);
+      await seedPeerFile(peerDeviceId: 'replacer', epochId: 'e1');
+      await service.adoptReplacedLibrary();
+      expect(await repo.getDeviceId(), before);
+    });
+
+    test('adoption is idempotent', () async {
+      final service = buildService();
+      await service.writeLibraryEpochMarker(cloud, marker);
+      await seedPeerFile(peerDeviceId: 'replacer', epochId: 'e1');
+      final first = await service.adoptReplacedLibrary();
+      final second = await service.adoptReplacedLibrary();
+      expect(first.isSuccess, isTrue);
+      expect(second.isSuccess, isTrue);
     });
   });
 }

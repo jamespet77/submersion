@@ -1661,6 +1661,125 @@ class SyncService {
     }
   }
 
+  /// Adopt the replaced library: apply the current-epoch cloud files as
+  /// authoritative -- upsert every record they contain and delete every
+  /// local record (of synced entity types) they do not. Device identity is
+  /// deliberately untouched: adoption changes data, not identity. The caller
+  /// is responsible for the pre-adoption safety backup and any post-adoption
+  /// fix-ups (active diver, follow-up sync).
+  Future<SyncResult> adoptReplacedLibrary() async {
+    final provider = _cloudProvider;
+    final store = _epochStore;
+    if (provider == null || store == null) {
+      return const SyncResult(
+        status: SyncResultStatus.error,
+        message: 'No cloud provider configured',
+      );
+    }
+    try {
+      final marker = await readLibraryEpochMarker(provider);
+      if (marker == null) {
+        return const SyncResult(
+          status: SyncResultStatus.error,
+          message: 'No library replacement marker found',
+        );
+      }
+
+      final files = await _listSyncFiles(
+        provider,
+      ).timeout(const Duration(seconds: 8));
+      final payloads = <SyncPayload>[];
+      for (final file in files) {
+        final payload = await _downloadAndParsePayload(provider, file);
+        if (payload != null && payload.epochId == marker.epochId) {
+          payloads.add(payload);
+        }
+      }
+      if (payloads.isEmpty) {
+        // Replace still in flight (marker written, stamped upload pending).
+        // Applying an empty set would wipe this library to zero -- abort.
+        return const SyncResult(
+          status: SyncResultStatus.error,
+          message:
+              'The replaced library is still uploading. Try again shortly.',
+        );
+      }
+      payloads.sort((a, b) => a.exportedAt.compareTo(b.exportedAt));
+
+      final deviceId = await _syncRepository.getDeviceId();
+      final localSnapshot = await _serializer.exportData(
+        deviceId: deviceId,
+        since: null,
+        lastSyncTimestamp: null,
+        deletions: const [],
+        uploadNonce: null,
+      );
+
+      await _serializer.applyInDeferredFkTransaction(() async {
+        // Union the restored records; for ids present in several files the
+        // latest export wins (payloads are sorted ascending).
+        final cloudIds = <String, Set<String>>{};
+        final restored = <String, Map<String, Map<String, dynamic>>>{};
+        for (final payload in payloads) {
+          for (final entry in payload.data.toJson().entries) {
+            final entityType = entry.key;
+            final records = (entry.value as List).cast<Map<String, dynamic>>();
+            for (final record in records) {
+              final id = _recordIdForEntity(entityType, record);
+              if (id == null) continue;
+              (cloudIds[entityType] ??= <String>{}).add(id);
+              (restored[entityType] ??= {})[id] = record;
+            }
+          }
+        }
+
+        // Delete local rows the restored library does not contain.
+        for (final entry in localSnapshot.data.toJson().entries) {
+          final entityType = entry.key;
+          final records = (entry.value as List).cast<Map<String, dynamic>>();
+          for (final record in records) {
+            final id = _recordIdForEntity(entityType, record);
+            if (id == null) continue;
+            if (!(cloudIds[entityType]?.contains(id) ?? false)) {
+              await _serializer.deleteRecord(entityType, id);
+            }
+          }
+        }
+
+        // Upsert every restored record.
+        for (final entry in restored.entries) {
+          for (final record in entry.value.values) {
+            await _serializer.upsertRecord(entry.key, record);
+          }
+        }
+
+        await _serializer.repairDanglingForeignKeys();
+      });
+
+      // Re-baseline under the adopted epoch. Our tombstones are obsolete --
+      // the restored library is authoritative.
+      await _syncRepository.resetSyncState(clearDeletionLog: true);
+      await _syncRepository.setLastAcceptedEpochId(marker.epochId);
+      await store.setLastAccepted(marker);
+      SyncClock.instance.reset();
+      _log.info('Adopted replaced library (epoch ${marker.epochId})');
+      return const SyncResult(
+        status: SyncResultStatus.success,
+        message: 'Adopted the restored library',
+      );
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to adopt replaced library',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return SyncResult(
+        status: SyncResultStatus.error,
+        message: 'Failed to adopt the restored library: $e',
+      );
+    }
+  }
+
   /// Download and parse the cloud epoch marker. Returns null when absent.
   /// Throws on listing/parse failure: "unreadable" must be distinguishable
   /// from "absent" -- the caller fails the sync closed rather than guessing.
