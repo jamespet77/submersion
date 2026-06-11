@@ -2731,6 +2731,13 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
+  String get diveLog_computerSheet_description =>
+      'בחר מאיזה פרופיל מחשב לערוך.';
+
+  @override
+  String get diveLog_computerSheet_title => 'בחירת פרופיל התחלתי';
+
+  @override
   String diveLog_cylinderSac_avgDepth(Object depth) {
     return 'ממוצע: $depth';
   }
@@ -3719,6 +3726,17 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count פריטים',
+      one: 'פריט אחד',
+    );
+    return '$_temp0: $names';
+  }
+
+  @override
   String get diveLog_equipmentSetPicker_loading => 'טוען...';
 
   @override
@@ -4070,6 +4088,27 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get diveLog_listPage_menuMatchSites => 'התאמת צלילות לאתרים';
+
+  @override
+  String get diveLog_sighting_decreaseCount => 'הקטנת הכמות';
+
+  @override
+  String get diveLog_sighting_increaseCount => 'הגדלת הכמות';
+
+  @override
+  String diveLog_sitePicker_distanceKmAway(String distance) {
+    return 'במרחק $distance ק״מ';
+  }
+
+  @override
+  String diveLog_sitePicker_distanceMAway(String distance) {
+    return 'במרחק $distance מ׳';
+  }
+
+  @override
+  String diveLog_speciesPicker_errorLoading(String error) {
+    return 'שגיאה בטעינת מינים: $error';
+  }
 
   @override
   String get diveSites_edit_depth_heroMax => 'עומק מקס\'';

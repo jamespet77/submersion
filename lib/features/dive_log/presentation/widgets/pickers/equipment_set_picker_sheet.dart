@@ -128,7 +128,10 @@ class _EquipmentSetTile extends ConsumerWidget {
           subtitle: Text(
             items.isEmpty
                 ? context.l10n.diveLog_equipmentSetPicker_emptySet
-                : '${items.length} item${items.length == 1 ? '' : 's'}: ${items.map((e) => e.name).join(', ')}',
+                : context.l10n.diveLog_equipmentSetPicker_itemsSummary(
+                    items.length,
+                    items.map((e) => e.name).join(', '),
+                  ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),

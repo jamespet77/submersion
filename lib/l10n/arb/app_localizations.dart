@@ -4769,6 +4769,18 @@ abstract class AppLocalizations {
   /// **'Expand {title} section'**
   String diveLog_collapsible_semantics_expand(Object title);
 
+  /// Description of the computer profile selection sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Select which computer\'s profile to edit from.'**
+  String get diveLog_computerSheet_description;
+
+  /// Title of the sheet choosing which computer profile to edit from
+  ///
+  /// In en, this message translates to:
+  /// **'Choose starting profile'**
+  String get diveLog_computerSheet_title;
+
   /// No description provided for @diveLog_cylinderSac_avgDepth.
   ///
   /// In en, this message translates to:
@@ -6430,6 +6442,12 @@ abstract class AppLocalizations {
   /// **'Error loading equipment sets: {error}'**
   String diveLog_equipmentSetPicker_errorLoading(Object error);
 
+  /// Equipment set subtitle: item count and names
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 item} other{{count} items}}: {names}'**
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names);
+
   /// No description provided for @diveLog_equipmentSetPicker_loading.
   ///
   /// In en, this message translates to:
@@ -7101,6 +7119,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Match Dives to Sites'**
   String get diveLog_listPage_menuMatchSites;
+
+  /// Tooltip: decrease the sighting count
+  ///
+  /// In en, this message translates to:
+  /// **'Decrease count'**
+  String get diveLog_sighting_decreaseCount;
+
+  /// Tooltip: increase the sighting count
+  ///
+  /// In en, this message translates to:
+  /// **'Increase count'**
+  String get diveLog_sighting_increaseCount;
+
+  /// Distance to a dive site in kilometers
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} km away'**
+  String diveLog_sitePicker_distanceKmAway(String distance);
+
+  /// Distance to a dive site in meters
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} m away'**
+  String diveLog_sitePicker_distanceMAway(String distance);
+
+  /// Error shown when the species list fails to load
+  ///
+  /// In en, this message translates to:
+  /// **'Error loading species: {error}'**
+  String diveLog_speciesPicker_errorLoading(String error);
 
   /// Hero stat label: maximum site depth
   ///

@@ -2673,6 +2673,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get diveLog_computerSheet_description => '选择要从哪台电脑的轮廓开始编辑。';
+
+  @override
+  String get diveLog_computerSheet_title => '选择起始轮廓';
+
+  @override
   String diveLog_cylinderSac_avgDepth(Object depth) {
     return '平均：$depth';
   }
@@ -3639,6 +3645,17 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 件装备',
+      one: '1 件装备',
+    );
+    return '$_temp0：$names';
+  }
+
+  @override
   String get diveLog_equipmentSetPicker_loading => '加载中...';
 
   @override
@@ -3985,6 +4002,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_listPage_menuMatchSites => '将潜水匹配到潜水点';
+
+  @override
+  String get diveLog_sighting_decreaseCount => '减少数量';
+
+  @override
+  String get diveLog_sighting_increaseCount => '增加数量';
+
+  @override
+  String diveLog_sitePicker_distanceKmAway(String distance) {
+    return '距离 $distance 公里';
+  }
+
+  @override
+  String diveLog_sitePicker_distanceMAway(String distance) {
+    return '距离 $distance 米';
+  }
+
+  @override
+  String diveLog_speciesPicker_errorLoading(String error) {
+    return '加载物种时出错：$error';
+  }
 
   @override
   String get diveSites_edit_depth_heroMax => '最大深度';

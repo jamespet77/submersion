@@ -2790,6 +2790,13 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get diveLog_computerSheet_description =>
+      'Kies vanaf welk computerprofiel je wilt bewerken.';
+
+  @override
+  String get diveLog_computerSheet_title => 'Startprofiel kiezen';
+
+  @override
   String diveLog_cylinderSac_avgDepth(Object depth) {
     return 'Gem.: $depth';
   }
@@ -3800,6 +3807,17 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count items',
+      one: '1 item',
+    );
+    return '$_temp0: $names';
+  }
+
+  @override
   String get diveLog_equipmentSetPicker_loading => 'Laden...';
 
   @override
@@ -4155,6 +4173,27 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get diveLog_listPage_menuMatchSites => 'Duiken aan stekken koppelen';
+
+  @override
+  String get diveLog_sighting_decreaseCount => 'Aantal verlagen';
+
+  @override
+  String get diveLog_sighting_increaseCount => 'Aantal verhogen';
+
+  @override
+  String diveLog_sitePicker_distanceKmAway(String distance) {
+    return '$distance km verderop';
+  }
+
+  @override
+  String diveLog_sitePicker_distanceMAway(String distance) {
+    return '$distance m verderop';
+  }
+
+  @override
+  String diveLog_speciesPicker_errorLoading(String error) {
+    return 'Fout bij laden van soorten: $error';
+  }
 
   @override
   String get diveSites_edit_depth_heroMax => 'Max. diepte';

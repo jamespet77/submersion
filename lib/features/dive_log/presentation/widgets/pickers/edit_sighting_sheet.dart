@@ -58,7 +58,10 @@ class _EditSightingSheetState extends State<EditSightingSheet> {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: Theme.of(context).colorScheme.error,
+                ),
                 tooltip: context.l10n.diveLog_editSighting_remove,
                 onPressed: () {
                   showDialog(

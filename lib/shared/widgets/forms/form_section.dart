@@ -173,7 +173,11 @@ class FormSection extends StatelessWidget {
                 )
               : null,
           padding: FormStyle.rowPadding,
-          child: Semantics(button: true, label: label, child: content),
+          child: Semantics(
+            button: onToggle != null,
+            label: label,
+            child: content,
+          ),
         ),
       ),
     );

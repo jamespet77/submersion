@@ -2744,6 +2744,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get diveLog_computerSheet_description =>
+      'اختر ملف أي كمبيوتر تريد التحرير منه.';
+
+  @override
+  String get diveLog_computerSheet_title => 'اختيار الملف الأولي';
+
+  @override
   String diveLog_cylinderSac_avgDepth(Object depth) {
     return 'متوسط: $depth';
   }
@@ -3735,6 +3742,17 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count عناصر',
+      one: 'عنصر واحد',
+    );
+    return '$_temp0: $names';
+  }
+
+  @override
   String get diveLog_equipmentSetPicker_loading => 'جارٍ التحميل...';
 
   @override
@@ -4085,6 +4103,27 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diveLog_listPage_menuMatchSites => 'مطابقة الغوصات بالمواقع';
+
+  @override
+  String get diveLog_sighting_decreaseCount => 'تقليل العدد';
+
+  @override
+  String get diveLog_sighting_increaseCount => 'زيادة العدد';
+
+  @override
+  String diveLog_sitePicker_distanceKmAway(String distance) {
+    return 'على بعد $distance كم';
+  }
+
+  @override
+  String diveLog_sitePicker_distanceMAway(String distance) {
+    return 'على بعد $distance م';
+  }
+
+  @override
+  String diveLog_speciesPicker_errorLoading(String error) {
+    return 'خطأ في تحميل الأنواع: $error';
+  }
 
   @override
   String get diveSites_edit_depth_heroMax => 'أقصى عمق';

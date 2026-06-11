@@ -53,14 +53,14 @@ class _SitePickerSheetState extends ConsumerState<SitePickerSheet> {
   }
 
   /// Format distance for display
-  String _formatDistance(double km) {
+  String _formatDistance(BuildContext context, double km) {
     if (km < 1) {
-      return '${(km * 1000).round()} m away';
-    } else if (km < 10) {
-      return '${km.toStringAsFixed(1)} km away';
-    } else {
-      return '${km.round()} km away';
+      return context.l10n.diveLog_sitePicker_distanceMAway(
+        (km * 1000).round().toString(),
+      );
     }
+    final text = km < 10 ? km.toStringAsFixed(1) : km.round().toString();
+    return context.l10n.diveLog_sitePicker_distanceKmAway(text);
   }
 
   @override
@@ -119,9 +119,8 @@ class _SitePickerSheetState extends ConsumerState<SitePickerSheet> {
               suffixIcon: normalizedQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear),
-                      tooltip: context
-                          .l10n
-                          .diveLog_speciesPicker_tooltip_clearSearch,
+                      tooltip:
+                          context.l10n.diveLog_listPage_tooltip_clearSearch,
                       onPressed: () {
                         _searchController.clear();
                         setState(() => _searchQuery = '');
@@ -195,7 +194,7 @@ class _SitePickerSheetState extends ConsumerState<SitePickerSheet> {
                 sortedSites.sort((a, b) {
                   if (a.distance == null && b.distance == null) return 0;
                   if (a.distance == null) return 1;
-                  if (b.distance == null) return 1;
+                  if (b.distance == null) return -1;
                   return a.distance!.compareTo(b.distance!);
                 });
               } else {
@@ -260,7 +259,7 @@ class _SitePickerSheetState extends ConsumerState<SitePickerSheet> {
                           Text(site.locationString),
                         if (distance != null)
                           Text(
-                            _formatDistance(distance),
+                            _formatDistance(context, distance),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(
                                   color: isNearby

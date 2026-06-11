@@ -5,6 +5,7 @@ import 'package:submersion/core/providers/provider.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:submersion/core/constants/enums.dart';
+import 'package:submersion/features/marine_life/presentation/utils/species_category_color.dart';
 import 'package:submersion/features/marine_life/presentation/utils/species_category_icon.dart';
 import 'package:submersion/core/deco/altitude_calculator.dart';
 import 'package:submersion/core/services/location_service.dart';
@@ -2879,7 +2880,10 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: CircleAvatar(
-                  backgroundColor: _getCategoryColor(sighting.speciesCategory),
+                  backgroundColor: colorForSpeciesCategory(
+                    sighting.speciesCategory,
+                    Theme.of(context).brightness,
+                  ),
                   child: Icon(
                     iconForSpeciesCategory(
                       sighting.speciesCategory ?? SpeciesCategory.other,
@@ -2938,30 +2942,6 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
         ],
       ),
     );
-  }
-
-  Color _getCategoryColor(SpeciesCategory? category) {
-    switch (category) {
-      case SpeciesCategory.fish:
-        return Colors.blue;
-      case SpeciesCategory.shark:
-        return Colors.grey.shade700;
-      case SpeciesCategory.ray:
-        return Colors.indigo;
-      case SpeciesCategory.mammal:
-        return Colors.brown;
-      case SpeciesCategory.turtle:
-        return Colors.green.shade700;
-      case SpeciesCategory.invertebrate:
-        return Colors.purple;
-      case SpeciesCategory.coral:
-        return Colors.pink;
-      case SpeciesCategory.plant:
-        return Colors.green;
-      case SpeciesCategory.other:
-      case null:
-        return Colors.grey;
-    }
   }
 
   void _showSpeciesPicker() {

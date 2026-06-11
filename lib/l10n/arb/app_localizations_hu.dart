@@ -2800,6 +2800,13 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get diveLog_computerSheet_description =>
+      'Válaszd ki, melyik számítógép profiljából szerkesztesz.';
+
+  @override
+  String get diveLog_computerSheet_title => 'Kiindulási profil kiválasztása';
+
+  @override
   String diveLog_cylinderSac_avgDepth(Object depth) {
     return 'Atlag: $depth';
   }
@@ -3810,6 +3817,17 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count elem',
+      one: '1 elem',
+    );
+    return '$_temp0: $names';
+  }
+
+  @override
   String get diveLog_equipmentSetPicker_loading => 'Betoltes...';
 
   @override
@@ -4172,6 +4190,27 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get diveLog_listPage_menuMatchSites =>
       'Merülések hozzárendelése helyekhez';
+
+  @override
+  String get diveLog_sighting_decreaseCount => 'Darabszám csökkentése';
+
+  @override
+  String get diveLog_sighting_increaseCount => 'Darabszám növelése';
+
+  @override
+  String diveLog_sitePicker_distanceKmAway(String distance) {
+    return '$distance km-re';
+  }
+
+  @override
+  String diveLog_sitePicker_distanceMAway(String distance) {
+    return '$distance m-re';
+  }
+
+  @override
+  String diveLog_speciesPicker_errorLoading(String error) {
+    return 'Hiba a fajok betöltésekor: $error';
+  }
 
   @override
   String get diveSites_edit_depth_heroMax => 'Max. mélység';

@@ -5,10 +5,13 @@ import 'package:submersion/shared/widgets/forms/form_style.dart';
 
 /// Shared shell for every edit form.
 ///
-/// Full-page mode: Scaffold + AppBar with a Save action.
-/// Embedded mode (master-detail): compact header with icon, title,
-/// Cancel and Save - replaces the per-page hand-rolled headers.
-/// Both modes: PopScope unsaved-changes guard and max-width centering.
+/// Full-page mode: Scaffold + AppBar with a Save action, wrapped in a
+/// PopScope unsaved-changes guard.
+/// Embedded mode (master-detail): compact header with icon, title, Cancel
+/// and Save - replaces the per-page hand-rolled headers. Embedded panes are
+/// not routes of their own, so the discard guard runs on the Cancel action
+/// instead of a PopScope.
+/// Both modes center content at the form max width.
 class EditFormScaffold extends StatelessWidget {
   const EditFormScaffold({
     super.key,

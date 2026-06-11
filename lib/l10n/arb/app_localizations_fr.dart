@@ -2828,6 +2828,13 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get diveLog_computerSheet_description =>
+      'Sélectionnez le profil d\'ordinateur à partir duquel modifier.';
+
+  @override
+  String get diveLog_computerSheet_title => 'Choisir le profil de départ';
+
+  @override
   String diveLog_cylinderSac_avgDepth(Object depth) {
     return 'Moy : $depth';
   }
@@ -3844,6 +3851,17 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String diveLog_equipmentSetPicker_itemsSummary(int count, String names) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count éléments',
+      one: '1 élément',
+    );
+    return '$_temp0 : $names';
+  }
+
+  @override
   String get diveLog_equipmentSetPicker_loading => 'Chargement...';
 
   @override
@@ -4209,6 +4227,27 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get diveLog_listPage_menuMatchSites =>
       'Associer les plongées aux sites';
+
+  @override
+  String get diveLog_sighting_decreaseCount => 'Diminuer le nombre';
+
+  @override
+  String get diveLog_sighting_increaseCount => 'Augmenter le nombre';
+
+  @override
+  String diveLog_sitePicker_distanceKmAway(String distance) {
+    return 'à $distance km';
+  }
+
+  @override
+  String diveLog_sitePicker_distanceMAway(String distance) {
+    return 'à $distance m';
+  }
+
+  @override
+  String diveLog_speciesPicker_errorLoading(String error) {
+    return 'Erreur de chargement des espèces : $error';
+  }
 
   @override
   String get diveSites_edit_depth_heroMax => 'Prof. max';

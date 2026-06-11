@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:submersion/features/dive_log/domain/entities/dive_data_source.dart';
+import 'package:submersion/l10n/l10n_extension.dart';
 
 /// Bottom sheet that lets the user choose which computer's profile to use
 /// as the starting point when opening the profile editor on a multi-computer
@@ -22,10 +23,13 @@ class ComputerSourceSelectionSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Choose starting profile', style: textTheme.titleMedium),
+            Text(
+              context.l10n.diveLog_computerSheet_title,
+              style: textTheme.titleMedium,
+            ),
             const SizedBox(height: 4),
             Text(
-              'Select which computer\'s profile to edit from.',
+              context.l10n.diveLog_computerSheet_description,
               style: textTheme.bodySmall?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -42,7 +46,7 @@ class ComputerSourceSelectionSheet extends StatelessWidget {
                 title: Text(reading.displayName),
                 subtitle: reading.isPrimary
                     ? Text(
-                        'Primary',
+                        context.l10n.diveLog_profileSelector_badge_primary,
                         style: textTheme.bodySmall?.copyWith(
                           color: colorScheme.primary,
                         ),

@@ -4,6 +4,7 @@ import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/features/marine_life/domain/entities/species.dart';
 import 'package:submersion/features/marine_life/presentation/providers/species_providers.dart';
+import 'package:submersion/features/marine_life/presentation/utils/species_category_color.dart';
 import 'package:submersion/features/marine_life/presentation/utils/species_category_icon.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
@@ -99,7 +100,10 @@ class _SpeciesPickerSheetState extends ConsumerState<SpeciesPickerSheet> {
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [
-              _buildCategoryChip(null, 'All'),
+              _buildCategoryChip(
+                null,
+                context.l10n.marineLife_speciesPicker_allFilter,
+              ),
               ...SpeciesCategory.values.map(
                 (category) =>
                     _buildCategoryChip(category, category.displayName),
@@ -151,7 +155,10 @@ class _SpeciesPickerSheetState extends ConsumerState<SpeciesPickerSheet> {
                   final species = speciesList[index];
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: _getCategoryColor(species.category),
+                      backgroundColor: colorForSpeciesCategory(
+                        species.category,
+                        Theme.of(context).brightness,
+                      ),
                       child: Icon(
                         iconForSpeciesCategory(species.category),
                         color: Colors.white,
@@ -175,8 +182,13 @@ class _SpeciesPickerSheetState extends ConsumerState<SpeciesPickerSheet> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, _) =>
-                Center(child: Text('Error loading species: $error')),
+            error: (error, _) => Center(
+              child: Text(
+                context.l10n.diveLog_speciesPicker_errorLoading(
+                  error.toString(),
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -203,29 +215,6 @@ class _SpeciesPickerSheetState extends ConsumerState<SpeciesPickerSheet> {
     );
   }
 
-  Color _getCategoryColor(SpeciesCategory category) {
-    switch (category) {
-      case SpeciesCategory.fish:
-        return Colors.blue;
-      case SpeciesCategory.shark:
-        return Colors.grey.shade700;
-      case SpeciesCategory.ray:
-        return Colors.indigo;
-      case SpeciesCategory.mammal:
-        return Colors.brown;
-      case SpeciesCategory.turtle:
-        return Colors.green.shade700;
-      case SpeciesCategory.invertebrate:
-        return Colors.purple;
-      case SpeciesCategory.coral:
-        return Colors.pink;
-      case SpeciesCategory.plant:
-        return Colors.green;
-      case SpeciesCategory.other:
-        return Colors.grey;
-    }
-  }
-
   void _showSightingDetails(Species species) {
     int count = 1;
     final notesController = TextEditingController();
@@ -243,7 +232,7 @@ class _SpeciesPickerSheetState extends ConsumerState<SpeciesPickerSheet> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.remove_circle_outline),
-                    tooltip: 'Decrease count',
+                    tooltip: context.l10n.diveLog_sighting_decreaseCount,
                     onPressed: count > 1
                         ? () => setDialogState(() => count--)
                         : null,
@@ -266,7 +255,7 @@ class _SpeciesPickerSheetState extends ConsumerState<SpeciesPickerSheet> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.add_circle_outline),
-                    tooltip: 'Increase count',
+                    tooltip: context.l10n.diveLog_sighting_increaseCount,
                     onPressed: () => setDialogState(() => count++),
                   ),
                 ],
