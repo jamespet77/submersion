@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/sync/library_epoch.dart';
+import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 
 void main() {
   test('marker filename must not match the sync-file stem', () {
@@ -40,5 +43,37 @@ void main() {
       () => LibraryEpochMarker.fromJson({'replacedAt': 5, 'deviceId': 'd'}),
       throwsFormatException,
     );
+  });
+
+  group('SyncPayload epoch stamp', () {
+    test('serializes and parses epochId', () {
+      final payload = SyncPayload(
+        version: 1,
+        exportedAt: 1,
+        deviceId: 'd1',
+        checksum: 'c',
+        data: SyncData(),
+        deletions: const {},
+        epochId: 'e1',
+      );
+      final parsed = SyncPayload.fromJson(
+        jsonDecode(jsonEncode(payload.toJson())) as Map<String, dynamic>,
+      );
+      expect(parsed.epochId, 'e1');
+    });
+
+    test('legacy payload without epochId parses as null', () {
+      final payload = SyncPayload(
+        version: 1,
+        exportedAt: 1,
+        deviceId: 'd1',
+        checksum: 'c',
+        data: SyncData(),
+        deletions: const {},
+      );
+      final json = payload.toJson()..remove('epochId');
+      final parsed = SyncPayload.fromJson(json);
+      expect(parsed.epochId, isNull);
+    });
   });
 }
