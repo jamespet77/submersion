@@ -85,13 +85,13 @@ void main() {
   group('uploadNonce envelope round trip', () {
     test('serializes and parses the nonce; absent key reads as null', () {
       final serializer = SyncDataSerializer();
-      final payload = SyncPayload(
+      const payload = SyncPayload(
         version: syncFormatVersion,
         exportedAt: 1,
         deviceId: 'd',
         checksum: 'c',
-        data: const SyncData(),
-        deletions: const {},
+        data: SyncData(),
+        deletions: {},
         uploadNonce: 'nonce-1',
       );
 
@@ -159,7 +159,7 @@ void main() {
 
     test('leaves identity alone when the nonce is one we minted', () async {
       final deviceId = await repository.getDeviceId();
-      await initializer.recordUploadNonce('our-own-nonce');
+      await initializer.recordUploadNonce('our-own-nonce', cloud.providerId);
       cloud.seedFile(
         'submersion_sync_$deviceId.json',
         craftFile(deviceId, uploadNonce: 'our-own-nonce'),
@@ -201,9 +201,72 @@ void main() {
       );
       expect(payload.uploadNonce, isNotNull);
       expect(
-        initializer.isForeignUploadNonce(payload.uploadNonce),
+        initializer.isForeignUploadNonce(payload.uploadNonce, cloud.providerId),
         isFalse,
         reason: 'our own upload must never read as foreign on the next sync',
+      );
+    });
+
+    test(
+      'does not adopt when an own-named file embeds a different device id',
+      () async {
+        final deviceId = await repository.getDeviceId();
+        cloud.seedFile(
+          'submersion_sync_$deviceId.json',
+          craftFile('someone-else-entirely', uploadNonce: 'foreign-nonce'),
+        );
+
+        final result = await buildService().performSync();
+
+        expect(
+          result.adoptedFreshIdentity,
+          isFalse,
+          reason:
+              'a mislabeled file is not evidence that someone is using OUR '
+              'identity; adoption requires the embedded id to match ours',
+        );
+        expect(await repository.getDeviceId(), deviceId);
+      },
+    );
+
+    test('a failed upload does not poison the nonce ring', () async {
+      // Sync 1 succeeds and records nonce N1 (embedded in the own file).
+      final service = buildService();
+      final first = await service.performSync();
+      expect(first.isSuccess, isTrue);
+
+      // Sync 2's upload fails outright: its speculative nonce must be
+      // removed again, leaving N1 in the ring.
+      cloud.failUploads = true;
+      final second = await service.performSync();
+      expect(second.isSuccess, isFalse);
+
+      // Sync 3 sees the own file still carrying N1 (the failed upload never
+      // replaced it). N1 must still be recognized as ours.
+      cloud.failUploads = false;
+      final deviceIdBefore = await repository.getDeviceId();
+      final third = await service.performSync();
+
+      expect(third.adoptedFreshIdentity, isFalse);
+      expect(await repository.getDeviceId(), deviceIdBefore);
+    });
+
+    test('the nonce ring keeps the newest entries per provider', () async {
+      for (var i = 0; i < 9; i++) {
+        await initializer.recordUploadNonce('nonce-$i', 'fake');
+      }
+
+      expect(
+        initializer.isForeignUploadNonce('nonce-0', 'fake'),
+        isTrue,
+        reason: 'the oldest entry is evicted once the ring is full',
+      );
+      expect(initializer.isForeignUploadNonce('nonce-8', 'fake'), isFalse);
+      expect(initializer.isForeignUploadNonce('nonce-1', 'fake'), isFalse);
+      expect(
+        initializer.isForeignUploadNonce('nonce-8', 'other-provider'),
+        isTrue,
+        reason: 'rings are isolated per provider',
       );
     });
   });

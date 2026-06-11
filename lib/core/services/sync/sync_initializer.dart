@@ -26,11 +26,17 @@ class SyncInitializer {
   /// [reconcileDeviceIdentity].
   static const _dbInstanceTokenKey = 'sync_db_instance_token';
 
-  /// Recent nonces this install has stamped into its uploads. A small ring
+  /// Recent nonces this install has stamped into its uploads, keyed per
+  /// provider (each provider holds its own copy of our per-device file, so
+  /// each needs its own ring -- a single flat ring would let heavy syncing
+  /// on one provider evict the nonce last written to another). A small ring
   /// (not just the latest) so an eventually-consistent provider showing a
   /// slightly stale copy of our own file does not read as foreign.
-  static const _uploadNoncesKey = 'sync_upload_nonces';
+  static const _uploadNoncesKeyPrefix = 'sync_upload_nonces_';
   static const _maxRecordedNonces = 8;
+
+  String _uploadNoncesKey(String providerId) =>
+      '$_uploadNoncesKeyPrefix$providerId';
 
   final SyncRepository _syncRepository;
   final SharedPreferences _prefs;
@@ -173,26 +179,39 @@ class SyncInitializer {
     return newId;
   }
 
-  List<String> get _recordedUploadNonces =>
-      _prefs.getStringList(_uploadNoncesKey) ?? const [];
+  List<String> _recordedUploadNonces(String providerId) =>
+      _prefs.getStringList(_uploadNoncesKey(providerId)) ?? const [];
 
-  /// Record a nonce this install just stamped into an upload.
-  Future<void> recordUploadNonce(String nonce) async {
-    final nonces = [nonce, ..._recordedUploadNonces];
+  /// Record a nonce this install is stamping into an upload to [providerId].
+  Future<void> recordUploadNonce(String nonce, String providerId) async {
+    final nonces = [nonce, ..._recordedUploadNonces(providerId)];
     await _prefs.setStringList(
-      _uploadNoncesKey,
+      _uploadNoncesKey(providerId),
       nonces.take(_maxRecordedNonces).toList(),
     );
   }
 
+  /// Best-effort removal of a speculatively recorded nonce after its upload
+  /// failed outright. Never throws.
+  Future<void> removeUploadNonce(String nonce, String providerId) async {
+    try {
+      final nonces = _recordedUploadNonces(
+        providerId,
+      ).where((n) => n != nonce).toList();
+      await _prefs.setStringList(_uploadNoncesKey(providerId), nonces);
+    } catch (_) {
+      // Losing this cleanup only costs a ring slot.
+    }
+  }
+
   /// Whether [nonce], read back from this install's OWN per-device cloud
-  /// file, was minted by someone else. True means another install is
-  /// uploading under this device id (a twin). A null nonce is never foreign:
-  /// it was written by a pre-nonce build of this same device, and flagging
-  /// it would false-positive every upgrader's first sync.
-  bool isForeignUploadNonce(String? nonce) {
+  /// file on [providerId], was minted by someone else. True means another
+  /// install is uploading under this device id (a twin). A null nonce is
+  /// never foreign: it was written by a pre-nonce build of this same device,
+  /// and flagging it would false-positive every upgrader's first sync.
+  bool isForeignUploadNonce(String? nonce, String providerId) {
     if (nonce == null) return false;
-    return !_recordedUploadNonces.contains(nonce);
+    return !_recordedUploadNonces(providerId).contains(nonce);
   }
 
   /// Check sync status on app launch

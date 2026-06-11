@@ -328,12 +328,20 @@ class SyncService {
       // DBs), so this in-band signal is the only detection point. Recovery:
       // adopt a fresh identity NOW and keep going -- the shared file then
       // counts as a peer below and the twins converge in this same sync.
+      //
+      // Accepted trade-off: a SharedPreferences wipe with the database kept
+      // (rare outside dev machines) is indistinguishable from a DB clone and
+      // reads as a twin. The design errs toward detection -- an identity
+      // change is cheap and converges, silent twinning corrupts both sides.
       final initializer = _syncInitializer;
       if (ownFile != null && initializer != null) {
-        final ownPayload = await _downloadAndParsePayload(provider, ownFile);
-        if (ownPayload != null &&
-            ownPayload.deviceId == deviceId &&
-            initializer.isForeignUploadNonce(ownPayload.uploadNonce)) {
+        final ownIdentity = await _peekPayloadIdentity(provider, ownFile);
+        if (ownIdentity != null &&
+            ownIdentity.deviceId == deviceId &&
+            initializer.isForeignUploadNonce(
+              ownIdentity.uploadNonce,
+              provider.providerId,
+            )) {
           _log.warning(
             'Another install is uploading as this device id; adopting a '
             'fresh sync identity to split the twins',
@@ -344,6 +352,13 @@ class SyncService {
           );
           ownFileName = _deviceSyncFileName(deviceId);
           adoptedFreshIdentity = true;
+          // Re-seed the HLC clock under the new node id now, so remote HLCs
+          // received while merging the converging files below advance it
+          // instead of no-opping against an unconfigured clock.
+          await _withStep(
+            'configure sync clock',
+            () => _syncRepository.ensureSyncClockConfigured(),
+          );
         }
       }
 
@@ -439,17 +454,32 @@ class SyncService {
       _log.debug(
         'Uploading ${localData.length} bytes to $syncFolder/$filename...',
       );
-      final result = await _withStep(
-        'upload sync file',
-        () => provider
-            .uploadFile(localData, filename, folderId: syncFolder)
-            .timeout(const Duration(seconds: 180)),
+      // Record the nonce BEFORE uploading: if the upload succeeds but the
+      // response is lost (timeout, app death), the cloud file carries this
+      // nonce -- an unrecorded copy of it would read as a twin on the next
+      // sync and force a needless identity change. The failure branch removes
+      // the speculative entry so repeated failed uploads cannot evict the
+      // nonce of the last successful upload from the ring.
+      await _syncInitializer?.recordUploadNonce(
+        uploadNonce,
+        provider.providerId,
       );
+      UploadResult result;
+      try {
+        result = await _withStep(
+          'upload sync file',
+          () => provider
+              .uploadFile(localData, filename, folderId: syncFolder)
+              .timeout(const Duration(seconds: 180)),
+        );
+      } catch (_) {
+        await _syncInitializer?.removeUploadNonce(
+          uploadNonce,
+          provider.providerId,
+        );
+        rethrow;
+      }
       _log.debug('Upload complete! fileId = ${result.fileId}');
-
-      // Record the nonce we just stamped so the next sync can recognise it
-      // as our own (and not flag it as a foreign twin's nonce).
-      await _syncInitializer?.recordUploadNonce(uploadNonce);
 
       // Deliberately do NOT persist result.fileId as "the remote file id":
       // under per-device files it is *our own* file, and the only consumer
@@ -600,6 +630,33 @@ class SyncService {
       return utf8.decode(data);
     } catch (_) {
       return String.fromCharCodes(data);
+    }
+  }
+
+  /// Read just the envelope identity of a sync file: who wrote it and with
+  /// which upload nonce. Used by the twin check on our OWN file, where the
+  /// full parse (checksum over the whole data section, SyncData
+  /// construction) would be pure overhead -- integrity is irrelevant to the
+  /// question "did another install write this?", and after an adoption the
+  /// file is re-downloaded and fully validated as a peer anyway. Returns
+  /// null on any failure.
+  Future<({String deviceId, String? uploadNonce})?> _peekPayloadIdentity(
+    CloudStorageProvider provider,
+    CloudFileInfo file,
+  ) async {
+    try {
+      final bytes = await provider
+          .downloadFile(file.id)
+          .timeout(const Duration(seconds: 15));
+      final decoded = jsonDecode(_decodePayloadBytes(bytes));
+      if (decoded is! Map<String, dynamic>) return null;
+      final deviceId = decoded['deviceId'];
+      if (deviceId is! String) return null;
+      final nonce = decoded['uploadNonce'];
+      return (deviceId: deviceId, uploadNonce: nonce is String ? nonce : null);
+    } catch (e) {
+      _log.warning('Could not inspect own sync file ${file.name}: $e');
+      return null;
     }
   }
 
