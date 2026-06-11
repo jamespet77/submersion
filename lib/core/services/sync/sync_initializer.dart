@@ -26,6 +26,12 @@ class SyncInitializer {
   /// [reconcileDeviceIdentity].
   static const _dbInstanceTokenKey = 'sync_db_instance_token';
 
+  /// Recent nonces this install has stamped into its uploads. A small ring
+  /// (not just the latest) so an eventually-consistent provider showing a
+  /// slightly stale copy of our own file does not read as foreign.
+  static const _uploadNoncesKey = 'sync_upload_nonces';
+  static const _maxRecordedNonces = 8;
+
   final SyncRepository _syncRepository;
   final SharedPreferences _prefs;
 
@@ -165,6 +171,28 @@ class SyncInitializer {
     SyncClock.instance.reset();
     _log.info('Adopted a fresh sync identity');
     return newId;
+  }
+
+  List<String> get _recordedUploadNonces =>
+      _prefs.getStringList(_uploadNoncesKey) ?? const [];
+
+  /// Record a nonce this install just stamped into an upload.
+  Future<void> recordUploadNonce(String nonce) async {
+    final nonces = [nonce, ..._recordedUploadNonces];
+    await _prefs.setStringList(
+      _uploadNoncesKey,
+      nonces.take(_maxRecordedNonces).toList(),
+    );
+  }
+
+  /// Whether [nonce], read back from this install's OWN per-device cloud
+  /// file, was minted by someone else. True means another install is
+  /// uploading under this device id (a twin). A null nonce is never foreign:
+  /// it was written by a pre-nonce build of this same device, and flagging
+  /// it would false-positive every upgrader's first sync.
+  bool isForeignUploadNonce(String? nonce) {
+    if (nonce == null) return false;
+    return !_recordedUploadNonces.contains(nonce);
   }
 
   /// Check sync status on app launch

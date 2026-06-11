@@ -10,6 +10,7 @@ import 'package:submersion/core/services/logger_service.dart';
 import 'package:submersion/core/services/sync/hlc.dart';
 import 'package:submersion/core/services/sync/sync_clock.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
+import 'package:submersion/core/services/sync/sync_initializer.dart';
 import 'package:uuid/uuid.dart';
 
 /// Sync operation result
@@ -29,6 +30,7 @@ class SyncResult {
   final int recordsSynced;
   final int conflictsFound;
   final DateTime? lastSyncTime;
+  final bool adoptedFreshIdentity;
 
   const SyncResult({
     required this.status,
@@ -36,6 +38,7 @@ class SyncResult {
     this.recordsSynced = 0,
     this.conflictsFound = 0,
     this.lastSyncTime,
+    this.adoptedFreshIdentity = false,
   });
 
   bool get isSuccess =>
@@ -125,6 +128,7 @@ class SyncService {
   final SyncRepository _syncRepository;
   final SyncDataSerializer _serializer;
   final CloudStorageProvider? _cloudProvider;
+  final SyncInitializer? _syncInitializer;
   final _log = LoggerService.forClass(SyncService);
   final _uuid = const Uuid();
 
@@ -134,9 +138,11 @@ class SyncService {
     required SyncRepository syncRepository,
     required SyncDataSerializer serializer,
     CloudStorageProvider? cloudProvider,
+    SyncInitializer? syncInitializer,
   }) : _syncRepository = syncRepository,
        _serializer = serializer,
-       _cloudProvider = cloudProvider;
+       _cloudProvider = cloudProvider,
+       _syncInitializer = syncInitializer;
 
   /// Set a callback to receive progress updates during sync
   void setProgressCallback(SyncProgressCallback? callback) {
@@ -270,7 +276,7 @@ class SyncService {
       }
 
       // Get device ID and last sync time
-      final deviceId = await _withStep(
+      var deviceId = await _withStep(
         'load device id',
         () => _syncRepository.getDeviceId(),
       );
@@ -292,27 +298,61 @@ class SyncService {
         'Checking for remote data...',
       );
 
-      // Resolve every sync file we should apply: all OTHER devices'
-      // per-device files plus any legacy shared file. Our own per-device file
-      // is excluded (it is our data, already local). Listing all files (rather
-      // than a single canonical file) is what lets per-device files coexist
-      // without a write-write race.
-      List<CloudFileInfo> remoteFiles;
+      // List every sync file in the folder. We need the full list (not just
+      // peers) so we can inspect our OWN file for a twin-identity signal
+      // before deciding which files to merge.
+      List<CloudFileInfo> allFiles;
       try {
-        remoteFiles = await _resolveRemoteSyncFiles(
+        allFiles = await _listSyncFiles(
           provider,
-          deviceId,
         ).timeout(const Duration(seconds: 8));
       } on TimeoutException {
         _log.warning('Timed out listing remote sync files');
-        remoteFiles = const [];
+        allFiles = const [];
       } catch (e, stackTrace) {
         _log.warning(
           'Failed to list remote sync files: $e',
           stackTrace: stackTrace,
         );
-        remoteFiles = const [];
+        allFiles = const [];
       }
+
+      var adoptedFreshIdentity = false;
+      var ownFileName = _deviceSyncFileName(deviceId);
+      final ownFile = allFiles.where((f) => f.name == ownFileName).firstOrNull;
+
+      // Twin-identity check: our own cloud file carrying a nonce we never
+      // minted means another install is syncing as this device (a clone from
+      // whole-container OS migration). The launch-time anchor reconcile is
+      // structurally blind to that (both installs' anchors match their own
+      // DBs), so this in-band signal is the only detection point. Recovery:
+      // adopt a fresh identity NOW and keep going -- the shared file then
+      // counts as a peer below and the twins converge in this same sync.
+      final initializer = _syncInitializer;
+      if (ownFile != null && initializer != null) {
+        final ownPayload = await _downloadAndParsePayload(provider, ownFile);
+        if (ownPayload != null &&
+            ownPayload.deviceId == deviceId &&
+            initializer.isForeignUploadNonce(ownPayload.uploadNonce)) {
+          _log.warning(
+            'Another install is uploading as this device id; adopting a '
+            'fresh sync identity to split the twins',
+          );
+          deviceId = await _withStep(
+            'adopt fresh identity',
+            () => initializer.adoptFreshIdentity(),
+          );
+          ownFileName = _deviceSyncFileName(deviceId);
+          adoptedFreshIdentity = true;
+        }
+      }
+
+      // Resolve every sync file we should apply: all OTHER devices'
+      // per-device files plus any legacy shared file. Our own per-device file
+      // is excluded (it is our data, already local). Listing all files (rather
+      // than a single canonical file) is what lets per-device files coexist
+      // without a write-write race.
+      final remoteFiles = allFiles.where((f) => f.name != ownFileName).toList();
 
       _reportProgress(SyncPhase.importing, 0.6, 'Processing changes...');
 
@@ -363,6 +403,7 @@ class SyncService {
         'load deletions',
         () => _syncRepository.getAllDeletions(),
       );
+      final uploadNonce = _uuid.v4();
       final localPayload = await _withStep(
         'export local data',
         () => _serializer.exportData(
@@ -370,6 +411,7 @@ class SyncService {
           since: null, // Full export for now
           lastSyncTimestamp: lastSyncTime?.millisecondsSinceEpoch,
           deletions: deletions,
+          uploadNonce: uploadNonce,
         ),
       );
 
@@ -404,6 +446,10 @@ class SyncService {
             .timeout(const Duration(seconds: 180)),
       );
       _log.debug('Upload complete! fileId = ${result.fileId}');
+
+      // Record the nonce we just stamped so the next sync can recognise it
+      // as our own (and not flag it as a foreign twin's nonce).
+      await _syncInitializer?.recordUploadNonce(uploadNonce);
 
       // Deliberately do NOT persist result.fileId as "the remote file id":
       // under per-device files it is *our own* file, and the only consumer
@@ -476,7 +522,11 @@ class SyncService {
                   : SyncResultStatus.success),
         message: recordsFailed > 0
             ? '$recordsFailed record(s) failed to apply'
-            : null,
+            : (adoptedFreshIdentity
+                  ? 'Another device was syncing with this device\'s '
+                        'identity. This device adopted a new identity and '
+                        'merged the cloud data.'
+                  : null),
         recordsSynced: recordsSynced,
         conflictsFound: conflictsFound,
         // Mirror the persistence decision above: only report an advanced
@@ -485,6 +535,7 @@ class SyncService {
         // unchanged, so returning it here would make the result disagree with
         // stored state.
         lastSyncTime: recordsFailed == 0 ? result.uploadTime : null,
+        adoptedFreshIdentity: adoptedFreshIdentity,
       );
     } on TimeoutException {
       _log.warning('Sync timed out while uploading');
@@ -597,27 +648,16 @@ class SyncService {
       '${CloudStorageProviderMixin.syncFilePrefix}$deviceId'
       '${CloudStorageProviderMixin.syncFileExtension}';
 
-  /// Resolve every remote sync file this device should apply: all other
-  /// devices' per-device files, plus a legacy shared `submersion_sync.json`
-  /// if one is still present. Excludes our own per-device file and any iCloud
-  /// "conflicted copy" duplicates. Returns [] on failure.
-  Future<List<CloudFileInfo>> _resolveRemoteSyncFiles(
+  /// List every sync file in the folder (excluding iCloud conflict copies).
+  /// Returns the full list including this device's own file so callers can
+  /// inspect it before deciding which files to merge.
+  Future<List<CloudFileInfo>> _listSyncFiles(
     CloudStorageProvider provider,
-    String deviceId,
   ) async {
-    try {
-      final ownFileName = _deviceSyncFileName(deviceId);
-      final files = await provider.listFiles(
-        namePattern: CloudStorageProviderMixin.syncFileStem,
-      );
-      return files
-          .where((f) => !_isConflictCopy(f.name))
-          .where((f) => f.name != ownFileName)
-          .toList();
-    } catch (e) {
-      _log.warning('Failed to resolve remote sync files: $e');
-      return const [];
-    }
+    final files = await provider.listFiles(
+      namePattern: CloudStorageProviderMixin.syncFileStem,
+    );
+    return files.where((f) => !_isConflictCopy(f.name)).toList();
   }
 
   Future<_MergeResult> _applyRemotePayload(
@@ -1344,7 +1384,7 @@ class SyncService {
   /// cloud. Used when this install retires an identity (Reset Sync State):
   /// once the device id changes, its old file would otherwise be merged
   /// back as a "peer" forever. Never throws; if the provider is offline the
-  /// file simply lingers until a future cleanup.
+  /// file lingers indefinitely as a stale peer.
   Future<void> deleteDeviceSyncFile(String deviceId) async {
     final provider = _cloudProvider;
     if (provider == null) return;

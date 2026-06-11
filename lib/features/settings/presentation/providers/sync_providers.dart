@@ -132,6 +132,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     syncRepository: ref.watch(syncRepositoryProvider),
     serializer: ref.watch(syncDataSerializerProvider),
     cloudProvider: ref.watch(cloudStorageProviderProvider),
+    syncInitializer: ref.watch(syncInitializerProvider),
   );
 });
 

@@ -94,6 +94,13 @@ class SyncPayload {
   /// Null for locally constructed payloads (export path).
   final String? rawDataJson;
 
+  /// Random nonce minted for each upload. An install records its own recent
+  /// nonces (SharedPreferences); finding a nonce it never minted in its OWN
+  /// per-device cloud file means another install is syncing with this
+  /// device's identity (a "twin", typically created by whole-container OS
+  /// migration). Null in payloads written by older builds.
+  final String? uploadNonce;
+
   const SyncPayload({
     required this.version,
     required this.exportedAt,
@@ -103,6 +110,7 @@ class SyncPayload {
     required this.data,
     required this.deletions,
     this.rawDataJson,
+    this.uploadNonce,
   });
 
   Map<String, dynamic> toJson() => {
@@ -115,6 +123,7 @@ class SyncPayload {
     'deletions': deletions.map(
       (key, value) => MapEntry(key, value.map((d) => d.toJson()).toList()),
     ),
+    'uploadNonce': uploadNonce,
   };
 
   factory SyncPayload.fromJson(Map<String, dynamic> json) {
@@ -128,6 +137,7 @@ class SyncPayload {
       checksum: json['checksum'] as String,
       data: SyncData.fromJson(json['data'] as Map<String, dynamic>),
       rawDataJson: jsonEncode(json['data']),
+      uploadNonce: json['uploadNonce'] as String?,
       deletions: rawDeletions.map((key, value) {
         final list = value as List? ?? [];
         final deletions = list
@@ -352,6 +362,7 @@ class SyncDataSerializer {
     DateTime? since,
     int? lastSyncTimestamp,
     required List<DeletionLogData> deletions,
+    String? uploadNonce,
   }) async {
     try {
       final sinceMs = since?.millisecondsSinceEpoch;
@@ -505,6 +516,7 @@ class SyncDataSerializer {
         checksum: checksum,
         data: data,
         deletions: deletionMap,
+        uploadNonce: uploadNonce,
       );
     } catch (e, stackTrace) {
       _log.error(
