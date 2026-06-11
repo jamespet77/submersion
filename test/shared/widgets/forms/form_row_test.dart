@@ -146,5 +146,66 @@ void main() {
       expect(find.text('Mode'), findsOneWidget);
       expect(find.text('SEGMENTED'), findsOneWidget);
     });
+
+    testWidgets('picker clear affordance fires onClear', (tester) async {
+      var cleared = 0;
+      await tester.pumpWidget(
+        _wrap(
+          FormRow.picker(
+            label: 'Site',
+            value: 'Blue Hole',
+            onTap: () {},
+            onClear: () => cleared++,
+          ),
+        ),
+      );
+      await tester.tap(find.byIcon(Icons.clear));
+      expect(cleared, 1);
+    });
+  });
+
+  group('validation hardening', () {
+    testWidgets('row with validator renders persistent field and validates', (
+      tester,
+    ) async {
+      final controller = TextEditingController();
+      addTearDown(controller.dispose);
+      final formKey = GlobalKey<FormState>();
+      await tester.pumpWidget(
+        _wrap(
+          Form(
+            key: formKey,
+            child: FormRow.text(
+              label: 'Name',
+              controller: controller,
+              validator: (v) => (v == null || v.isEmpty) ? 'Required' : null,
+            ),
+          ),
+        ),
+      );
+      expect(find.byType(TextFormField), findsOneWidget);
+      expect(formKey.currentState!.validate(), isFalse);
+      await tester.pumpAndSettle();
+      expect(find.text('Required'), findsOneWidget);
+    });
+
+    testWidgets('decoration override is honored', (tester) async {
+      final controller = TextEditingController(text: 'x');
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(
+        _wrap(
+          FormRow.text(
+            label: 'Country',
+            controller: controller,
+            alwaysEditing: true,
+            decoration: const InputDecoration(
+              labelText: 'Country',
+              helperText: 'From Site A (1/2)',
+            ),
+          ),
+        ),
+      );
+      expect(find.text('From Site A (1/2)'), findsOneWidget);
+    });
   });
 }

@@ -26,6 +26,7 @@ class FormRow extends StatefulWidget {
     this.alwaysEditing = false,
     this.validator,
     this.onChanged,
+    this.decoration,
   }) : _kind = _RowKind.text,
        value = null,
        onTap = null,
@@ -44,6 +45,7 @@ class FormRow extends StatefulWidget {
     this.placeholder,
     this.onClear,
   }) : _kind = _RowKind.picker,
+       decoration = null,
        controller = null,
        suffixText = null,
        keyboardType = null,
@@ -60,6 +62,7 @@ class FormRow extends StatefulWidget {
 
   const FormRow.display({super.key, required this.label, required this.value})
     : _kind = _RowKind.display,
+      decoration = null,
       controller = null,
       inputFormatters = null,
       onClear = null,
@@ -83,6 +86,7 @@ class FormRow extends StatefulWidget {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) : _kind = _RowKind.toggle,
+       decoration = null,
        inputFormatters = null,
        onClear = null,
        boolValue = value,
@@ -107,6 +111,7 @@ class FormRow extends StatefulWidget {
     required int value,
     required ValueChanged<int> onChanged,
   }) : _kind = _RowKind.rating,
+       decoration = null,
        inputFormatters = null,
        onClear = null,
        intValue = value,
@@ -127,6 +132,7 @@ class FormRow extends StatefulWidget {
 
   const FormRow.custom({super.key, required this.label, required this.child})
     : _kind = _RowKind.custom,
+      decoration = null,
       controller = null,
       inputFormatters = null,
       onClear = null,
@@ -156,6 +162,7 @@ class FormRow extends StatefulWidget {
   final bool alwaysEditing;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
+  final InputDecoration? decoration;
   final VoidCallback? onTap;
   final VoidCallback? onClear;
   final bool? boolValue;
@@ -170,6 +177,10 @@ class FormRow extends StatefulWidget {
 
 class _FormRowState extends State<FormRow> {
   bool _editing = false;
+
+  /// A row with a validator must keep its field mounted, or Form.validate()
+  /// cannot see it.
+  bool get _persistent => widget.alwaysEditing || widget.validator != null;
   final _focusNode = FocusNode();
 
   @override
@@ -226,23 +237,25 @@ class _FormRowState extends State<FormRow> {
     final theme = Theme.of(context);
     switch (widget._kind) {
       case _RowKind.text:
-        if (widget.alwaysEditing || _editing) {
+        if (_persistent || _editing) {
           return Padding(
             padding: FormStyle.rowPadding,
             child: TextFormField(
               controller: widget.controller,
-              focusNode: widget.alwaysEditing ? null : _focusNode,
-              autofocus: !widget.alwaysEditing,
+              focusNode: _persistent ? null : _focusNode,
+              autofocus: !_persistent,
               maxLines: widget.maxLines,
               keyboardType: widget.keyboardType,
               inputFormatters: widget.inputFormatters,
               validator: widget.validator,
               onChanged: widget.onChanged,
-              decoration: InputDecoration(
-                labelText: widget.label,
-                suffixText: widget.suffixText,
-              ),
-              onFieldSubmitted: widget.alwaysEditing
+              decoration:
+                  widget.decoration ??
+                  InputDecoration(
+                    labelText: widget.label,
+                    suffixText: widget.suffixText,
+                  ),
+              onFieldSubmitted: _persistent
                   ? null
                   : (_) => setState(() => _editing = false),
             ),
