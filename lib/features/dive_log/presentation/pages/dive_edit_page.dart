@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart' hide Visibility;
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:submersion/core/providers/provider.dart';
@@ -37,6 +36,7 @@ import 'package:submersion/features/dive_log/domain/entities/dive_data_source.da
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_log/presentation/providers/outlier_suggestion_provider.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/custom_field_input_row.dart';
+import 'package:submersion/features/dive_log/presentation/widgets/edit_sections/the_dive_section.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/pickers/computer_source_sheet.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/pickers/edit_sighting_sheet.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/pickers/equipment_picker_sheet.dart';
@@ -57,6 +57,8 @@ import 'package:submersion/features/media/presentation/providers/media_providers
 import 'package:submersion/features/media/presentation/widgets/photo_gps_suggestion_banner.dart';
 import 'package:submersion/features/media/presentation/widgets/quick_site_from_gps_dialog.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
+import 'package:submersion/shared/widgets/forms/form_row.dart';
+import 'package:submersion/shared/widgets/forms/form_style.dart';
 import 'package:submersion/core/constants/tank_presets.dart';
 import 'package:submersion/features/tank_presets/domain/entities/tank_preset_entity.dart';
 import 'package:submersion/features/tank_presets/domain/services/default_tank_preset_resolver.dart';
@@ -549,18 +551,11 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildDiveNumberField(),
-          _buildDateTimeSection(),
-          const SizedBox(height: 16),
-          _buildSiteSection(),
-          const SizedBox(height: 16),
+          _buildTheDiveSection(units),
+          const SizedBox(height: FormStyle.sectionGap),
           _buildTripSection(),
           const SizedBox(height: 16),
           _buildDiveCenterSection(),
-          const SizedBox(height: 16),
-          _buildDepthDurationSection(units),
-          const SizedBox(height: 16),
-          _buildProfileSection(),
           const SizedBox(height: 16),
           _buildDiveModeSection(),
           const SizedBox(height: 16),
@@ -787,297 +782,183 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     );
   }
 
-  Widget _buildDiveNumberField() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: SizedBox(
-        width: 160,
-        child: TextFormField(
-          controller: _diveNumberController,
-          decoration: InputDecoration(
-            labelText: context.l10n.diveLog_edit_label_diveNumber,
-            hintText: context.l10n.diveLog_edit_hint_diveNumber,
-          ),
-          keyboardType: TextInputType.number,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        ),
-      ),
+  Widget _buildTheDiveSection(UnitFormatter units) {
+    final hasProfile = _existingDive?.profile.isNotEmpty == true;
+    return TheDiveSection(
+      depthSymbol: units.depthSymbol,
+      maxDepthController: _maxDepthController,
+      avgDepthController: _avgDepthController,
+      bottomTimeController: _durationController,
+      runtimeController: _runtimeController,
+      diveNumberController: _diveNumberController,
+      entryText: _formatEntryText(units),
+      onEditEntry: _editEntry,
+      exitText: _formatExitText(units),
+      onEditExit: _editExit,
+      siteName: _selectedSite?.name,
+      onPickSite: _showSitePicker,
+      onClearSite: () => setState(() => _selectedSite = null),
+      maxDepthSuggestion: hasProfile
+          ? _depthSuggestion(
+              units,
+              _existingDive!.calculateMaxDepthFromProfile(),
+              () => _calculateMaxDepthFromProfile(units),
+            )
+          : null,
+      avgDepthSuggestion: hasProfile
+          ? _depthSuggestion(
+              units,
+              _existingDive!.calculateAvgDepthFromProfile(),
+              () => _calculateAvgDepthFromProfile(units),
+            )
+          : null,
+      bottomTimeSuggestion: hasProfile
+          ? _minutesSuggestion(
+              _existingDive!.calculateBottomTimeFromProfile(),
+              _calculateBottomTimeFromProfile,
+            )
+          : null,
+      runtimeSuggestion: hasProfile
+          ? _minutesSuggestion(
+              _existingDive!.calculateRuntimeFromProfile(),
+              _calculateRuntimeFromProfile,
+            )
+          : null,
+      surfaceIntervalRow: _surfaceIntervalRow(),
+      siteExtras: _siteExtras(),
+      profileChild: _profileChild(),
     );
   }
 
-  Widget _buildDateTimeSection() {
-    final settings = ref.watch(settingsProvider);
-    final units = UnitFormatter(settings);
-
-    // Calculate runtime from entry/exit times
-    Duration? calculatedRuntime;
-    if (_exitDate != null && _exitTime != null) {
-      final entryDateTime = DateTime(
-        _entryDate.year,
-        _entryDate.month,
-        _entryDate.day,
-        _entryTime.hour,
-        _entryTime.minute,
-      );
-      final exitDateTime = DateTime(
-        _exitDate!.year,
-        _exitDate!.month,
-        _exitDate!.day,
-        _exitTime!.hour,
-        _exitTime!.minute,
-      );
-      calculatedRuntime = exitDateTime.difference(entryDateTime);
-      if (calculatedRuntime.isNegative) calculatedRuntime = null;
-    }
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.diveLog_edit_section_entryTime,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _selectEntryDate,
-                    icon: const Icon(Icons.calendar_today, size: 18),
-                    label: Text(units.formatDate(_entryDate)),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _selectEntryTime,
-                    icon: const Icon(Icons.login, size: 18),
-                    label: Text(_entryTime.format(context)),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.l10n.diveLog_edit_section_exitTime,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _selectExitDate,
-                    icon: const Icon(Icons.calendar_today, size: 18),
-                    label: Text(
-                      _exitDate != null
-                          ? units.formatDate(_exitDate)
-                          : context.l10n.diveLog_edit_select,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _selectExitTime,
-                    icon: const Icon(Icons.logout, size: 18),
-                    label: Text(
-                      _exitTime?.format(context) ??
-                          context.l10n.diveLog_edit_select,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            if (calculatedRuntime != null) ...[
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.timer,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      context.l10n.diveLog_edit_durationMinutes(
-                        calculatedRuntime.inMinutes,
-                      ),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-            // Show surface interval for existing dives
-            if (widget.isEditing && widget.diveId != null)
-              _buildSurfaceIntervalDisplay(),
-          ],
-        ),
-      ),
+  ProfileSuggestion? _depthSuggestion(
+    UnitFormatter units,
+    double? meters,
+    VoidCallback onUse,
+  ) {
+    if (meters == null) return null;
+    return ProfileSuggestion(
+      value: units.convertDepth(meters).toStringAsFixed(1),
+      onUse: onUse,
     );
   }
 
-  Widget _buildSurfaceIntervalDisplay() {
-    final surfaceIntervalAsync = ref.watch(
-      surfaceIntervalProvider(widget.diveId!),
-    );
-
-    return surfaceIntervalAsync.when(
-      data: (interval) {
-        if (interval == null) return const SizedBox.shrink();
-
-        final hours = interval.inHours;
-        final minutes = interval.inMinutes % 60;
-        final intervalText = hours > 0
-            ? '${hours}h ${minutes}m'
-            : '${minutes}m';
-
-        return Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.secondaryContainer,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.waves,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.onSecondaryContainer,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  context.l10n.diveLog_edit_surfaceInterval(intervalText),
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSecondaryContainer,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+  ProfileSuggestion? _minutesSuggestion(
+    Duration? duration,
+    VoidCallback onUse,
+  ) {
+    if (duration == null) return null;
+    return ProfileSuggestion(
+      value: duration.inMinutes.toString(),
+      onUse: onUse,
     );
   }
 
-  Widget _buildSiteSection() {
+  String _formatEntryText(UnitFormatter units) =>
+      '${units.formatDate(_entryDate)}, ${_entryTime.format(context)}';
+
+  String? _formatExitText(UnitFormatter units) {
+    if (_exitDate == null || _exitTime == null) return null;
+    return '${units.formatDate(_exitDate!)}, ${_exitTime!.format(context)}';
+  }
+
+  Future<void> _editEntry() async {
+    await _selectEntryDate();
+    if (!mounted) return;
+    await _selectEntryTime();
+  }
+
+  Future<void> _editExit() async {
+    await _selectExitDate();
+    if (!mounted) return;
+    await _selectExitTime();
+  }
+
+  Widget? _surfaceIntervalRow() {
+    if (!widget.isEditing || widget.diveId == null) return null;
+    final interval = ref
+        .watch(surfaceIntervalProvider(widget.diveId!))
+        .valueOrNull;
+    if (interval == null) return null;
+    final hours = interval.inHours;
+    final minutes = interval.inMinutes % 60;
+    final text = hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
+    return FormRow.display(
+      label: context.l10n.diveLog_edit_row_surfaceInterval,
+      value: text,
+    );
+  }
+
+  Widget? _siteExtras() {
     final colorScheme = Theme.of(context).colorScheme;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final children = <Widget>[];
+    if (_isCapturingLocation) {
+      children.add(
+        Row(
           children: [
-            Row(
-              children: [
-                Text(
-                  context.l10n.diveLog_edit_section_diveSite,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                if (_isCapturingLocation) ...[
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    context.l10n.diveLog_edit_gettingLocation,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: colorScheme.primary),
-                  ),
-                ] else if (_currentLocation != null && !widget.isEditing) ...[
-                  const SizedBox(width: 8),
-                  Icon(Icons.my_location, size: 14, color: colorScheme.primary),
-                  const SizedBox(width: 4),
-                  Text(
-                    context.l10n.diveLog_edit_nearbySitesFirst,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: colorScheme.primary),
-                  ),
-                ],
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _showSitePicker,
-                    icon: const Icon(Icons.location_on),
-                    label: Text(
-                      _selectedSite?.name ??
-                          context.l10n.diveLog_edit_selectDiveSite,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 48),
-                    ),
-                  ),
-                ),
-                if (_selectedSite != null) ...[
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () => setState(() => _selectedSite = null),
-                    tooltip: context.l10n.diveLog_edit_tooltip_clearSite,
-                  ),
-                ],
-              ],
-            ),
-            if (_selectedSite != null &&
-                _selectedSite!.locationString.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  _selectedSite!.locationString,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: colorScheme.primary,
               ),
-            // GPS suggestion from photos - only show when editing existing dive
-            // and site has no coordinates
-            if (widget.diveId != null && !_gpsSuggestionDismissed)
-              PhotoGpsSuggestionBanner(
-                diveId: widget.diveId!,
-                currentSite: _selectedSite,
-                onCreateSite: () => _createSiteFromPhotoGps(),
-                onUpdateSite: (gps) => _updateSiteWithPhotoGps(gps),
-                onDismiss: () => setState(() => _gpsSuggestionDismissed = true),
-              ),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              context.l10n.diveLog_edit_gettingLocation,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorScheme.primary),
+            ),
           ],
         ),
+      );
+    } else if (_currentLocation != null && !widget.isEditing) {
+      children.add(
+        Row(
+          children: [
+            Icon(Icons.my_location, size: 14, color: colorScheme.primary),
+            const SizedBox(width: 4),
+            Text(
+              context.l10n.diveLog_edit_nearbySitesFirst,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: colorScheme.primary),
+            ),
+          ],
+        ),
+      );
+    }
+    if (_selectedSite != null && _selectedSite!.locationString.isNotEmpty) {
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            _selectedSite!.locationString,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      );
+    }
+    if (widget.diveId != null && !_gpsSuggestionDismissed) {
+      children.add(
+        PhotoGpsSuggestionBanner(
+          diveId: widget.diveId!,
+          currentSite: _selectedSite,
+          onCreateSite: () => _createSiteFromPhotoGps(),
+          onUpdateSite: (gps) => _updateSiteWithPhotoGps(gps),
+          onDismiss: () => setState(() => _gpsSuggestionDismissed = true),
+        ),
+      );
+    }
+    if (children.isEmpty) return null;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
       ),
     );
   }
@@ -1448,117 +1329,6 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     );
   }
 
-  Widget _buildDepthDurationSection(UnitFormatter units) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.diveLog_edit_section_depthDuration,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _maxDepthController,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.diveLog_edit_label_maxDepth,
-                      suffixText: units.depthSymbol,
-                      suffixIcon: _existingDive?.profile.isNotEmpty == true
-                          ? IconButton(
-                              icon: const Icon(Icons.calculate_outlined),
-                              tooltip: context
-                                  .l10n
-                                  .diveLog_edit_tooltip_calculateFromProfile,
-                              onPressed: () =>
-                                  _calculateMaxDepthFromProfile(units),
-                            )
-                          : null,
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _avgDepthController,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.diveLog_edit_label_avgDepth,
-                      suffixText: units.depthSymbol,
-                      suffixIcon: _existingDive?.profile.isNotEmpty == true
-                          ? IconButton(
-                              icon: const Icon(Icons.calculate_outlined),
-                              tooltip: context
-                                  .l10n
-                                  .diveLog_edit_tooltip_calculateFromProfile,
-                              onPressed: () =>
-                                  _calculateAvgDepthFromProfile(units),
-                            )
-                          : null,
-                    ),
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _durationController,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.diveLog_edit_label_bottomTime,
-                      suffixText: 'min',
-                      suffixIcon: _existingDive?.profile.isNotEmpty == true
-                          ? IconButton(
-                              icon: const Icon(Icons.calculate_outlined),
-                              tooltip: context
-                                  .l10n
-                                  .diveLog_edit_tooltip_calculateFromProfile,
-                              onPressed: _calculateBottomTimeFromProfile,
-                            )
-                          : null,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _runtimeController,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.diveLog_edit_label_runtime,
-                      suffixText: 'min',
-                      suffixIcon: _existingDive?.profile.isNotEmpty == true
-                          ? IconButton(
-                              icon: const Icon(Icons.calculate_outlined),
-                              tooltip: context
-                                  .l10n
-                                  .diveLog_edit_tooltip_calculateFromProfile,
-                              onPressed: _calculateRuntimeFromProfile,
-                            )
-                          : null,
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   /// Opens the profile editor, optionally prompting the user to choose which
   /// computer's profile to start from when the dive has multiple computers.
   Future<void> _openProfileEditor(String diveId, {String? initialMode}) async {
@@ -1601,89 +1371,87 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     }
   }
 
-  Widget _buildProfileSection() {
+  Widget _profileChild() {
     final hasProfile = _existingDive?.profile.isNotEmpty == true;
     final profileLength = _existingDive?.profile.length ?? 0;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Dive Profile',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                if (hasProfile)
-                  Text(
-                    '$profileLength points',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (hasProfile) ...[
-              // Outlier suggestion
-              Consumer(
-                builder: (context, ref, _) {
-                  final outliersAsync = ref.watch(
-                    outlierSuggestionProvider(_existingDive!.id),
-                  );
-                  return outliersAsync.when(
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, _) => const SizedBox.shrink(),
-                    data: (outliers) {
-                      if (outliers.isEmpty) return const SizedBox.shrink();
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ActionChip(
-                          avatar: const Icon(Icons.warning_amber, size: 18),
-                          label: Text(
-                            '${outliers.length} potential '
-                            'outlier${outliers.length == 1 ? '' : 's'} detected',
-                          ),
-                          onPressed: () => _openProfileEditor(
-                            _existingDive!.id,
-                            initialMode: 'outlier',
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.edit),
-                label: const Text('Edit Profile'),
-                onPressed: () => _openProfileEditor(_existingDive!.id),
-              ),
-            ] else ...[
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Text(
-                'No profile data recorded. You can draw a profile manually.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+                'Dive Profile',
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              const SizedBox(height: 12),
-              if (widget.isEditing)
-                FilledButton.tonalIcon(
-                  icon: const Icon(Icons.draw),
-                  label: const Text('Draw Profile'),
-                  onPressed: () => context.pushNamed(
-                    'editProfile',
-                    pathParameters: {'diveId': widget.diveId!},
-                    queryParameters: {'mode': 'draw'},
+              if (hasProfile)
+                Text(
+                  '$profileLength points',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
             ],
+          ),
+          const SizedBox(height: 12),
+          if (hasProfile) ...[
+            // Outlier suggestion
+            Consumer(
+              builder: (context, ref, _) {
+                final outliersAsync = ref.watch(
+                  outlierSuggestionProvider(_existingDive!.id),
+                );
+                return outliersAsync.when(
+                  loading: () => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
+                  data: (outliers) {
+                    if (outliers.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ActionChip(
+                        avatar: const Icon(Icons.warning_amber, size: 18),
+                        label: Text(
+                          '${outliers.length} potential '
+                          'outlier${outliers.length == 1 ? '' : 's'} detected',
+                        ),
+                        onPressed: () => _openProfileEditor(
+                          _existingDive!.id,
+                          initialMode: 'outlier',
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+            FilledButton.tonalIcon(
+              icon: const Icon(Icons.edit),
+              label: const Text('Edit Profile'),
+              onPressed: () => _openProfileEditor(_existingDive!.id),
+            ),
+          ] else ...[
+            Text(
+              'No profile data recorded. You can draw a profile manually.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (widget.isEditing)
+              FilledButton.tonalIcon(
+                icon: const Icon(Icons.draw),
+                label: const Text('Draw Profile'),
+                onPressed: () => context.pushNamed(
+                  'editProfile',
+                  pathParameters: {'diveId': widget.diveId!},
+                  queryParameters: {'mode': 'draw'},
+                ),
+              ),
           ],
-        ),
+        ],
       ),
     );
   }

@@ -3299,6 +3299,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'Getting location...';
 
   @override
+  String get diveLog_edit_group_theDive => 'The Dive';
+
+  @override
   String get diveLog_edit_headerNew => 'Log New Dive';
 
   @override
@@ -3375,6 +3378,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveLog_edit_notesHint => 'Add notes about this dive...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'Add site';
+
+  @override
+  String get diveLog_edit_row_entry => 'Entry';
+
+  @override
+  String get diveLog_edit_row_exit => 'Exit';
+
+  @override
+  String get diveLog_edit_row_notSet => 'Not set';
+
+  @override
+  String get diveLog_edit_row_site => 'Site';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'Surface interval';
 
   @override
   String get diveLog_edit_save => 'Save';

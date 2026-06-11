@@ -3362,6 +3362,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'Standort wird ermittelt...';
 
   @override
+  String get diveLog_edit_group_theDive => 'Der Tauchgang';
+
+  @override
   String get diveLog_edit_headerNew => 'Neuen Tauchgang erfassen';
 
   @override
@@ -3441,6 +3444,24 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get diveLog_edit_notesHint =>
       'Notizen zu diesem Tauchgang hinzufügen...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'Tauchplatz hinzufügen';
+
+  @override
+  String get diveLog_edit_row_entry => 'Einstieg';
+
+  @override
+  String get diveLog_edit_row_exit => 'Ausstieg';
+
+  @override
+  String get diveLog_edit_row_notSet => 'Nicht gesetzt';
+
+  @override
+  String get diveLog_edit_row_site => 'Tauchplatz';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'Oberflächenpause';
 
   @override
   String get diveLog_edit_save => 'Speichern';

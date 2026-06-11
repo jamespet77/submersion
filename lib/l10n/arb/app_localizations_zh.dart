@@ -3198,6 +3198,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_edit_gettingLocation => '正在获取位置...';
 
   @override
+  String get diveLog_edit_group_theDive => '本次潜水';
+
+  @override
   String get diveLog_edit_headerNew => '记录新潜水';
 
   @override
@@ -3274,6 +3277,24 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_edit_notesHint => '添加关于此次潜水的备注...';
+
+  @override
+  String get diveLog_edit_row_addSite => '添加潜点';
+
+  @override
+  String get diveLog_edit_row_entry => '入水';
+
+  @override
+  String get diveLog_edit_row_exit => '出水';
+
+  @override
+  String get diveLog_edit_row_notSet => '未设置';
+
+  @override
+  String get diveLog_edit_row_site => '潜点';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => '水面间隔';
 
   @override
   String get diveLog_edit_save => '保存';

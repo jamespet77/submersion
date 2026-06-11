@@ -3335,6 +3335,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'Locatie ophalen...';
 
   @override
+  String get diveLog_edit_group_theDive => 'De duik';
+
+  @override
   String get diveLog_edit_headerNew => 'Nieuwe duik loggen';
 
   @override
@@ -3413,6 +3416,24 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get diveLog_edit_notesHint => 'Voeg notities toe over deze duik...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'Duikstek toevoegen';
+
+  @override
+  String get diveLog_edit_row_entry => 'Te water';
+
+  @override
+  String get diveLog_edit_row_exit => 'Uit het water';
+
+  @override
+  String get diveLog_edit_row_notSet => 'Niet ingesteld';
+
+  @override
+  String get diveLog_edit_row_site => 'Duikstek';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'Oppervlakte-interval';
 
   @override
   String get diveLog_edit_save => 'Opslaan';

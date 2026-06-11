@@ -3280,6 +3280,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'جارٍ تحديد الموقع...';
 
   @override
+  String get diveLog_edit_group_theDive => 'الغوصة';
+
+  @override
   String get diveLog_edit_headerNew => 'تسجيل غوصة جديدة';
 
   @override
@@ -3356,6 +3359,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diveLog_edit_notesHint => 'أضف ملاحظات حول هذه الغوصة...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'إضافة موقع';
+
+  @override
+  String get diveLog_edit_row_entry => 'الدخول';
+
+  @override
+  String get diveLog_edit_row_exit => 'الخروج';
+
+  @override
+  String get diveLog_edit_row_notSet => 'غير محدد';
+
+  @override
+  String get diveLog_edit_row_site => 'الموقع';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'فترة السطح';
 
   @override
   String get diveLog_edit_save => 'حفظ';

@@ -3343,6 +3343,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'Helymeghatározás...';
 
   @override
+  String get diveLog_edit_group_theDive => 'A merülés';
+
+  @override
   String get diveLog_edit_headerNew => 'Uj merules rogzitese';
 
   @override
@@ -3423,6 +3426,24 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get diveLog_edit_notesHint =>
       'Jegyzetek hozzaadasa ehhez a meruleshez...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'Merülőhely hozzáadása';
+
+  @override
+  String get diveLog_edit_row_entry => 'Beszállás';
+
+  @override
+  String get diveLog_edit_row_exit => 'Kiszállás';
+
+  @override
+  String get diveLog_edit_row_notSet => 'Nincs megadva';
+
+  @override
+  String get diveLog_edit_row_site => 'Merülőhely';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'Felszíni idő';
 
   @override
   String get diveLog_edit_save => 'Mentes';

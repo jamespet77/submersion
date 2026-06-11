@@ -3360,6 +3360,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'Acquisizione posizione...';
 
   @override
+  String get diveLog_edit_group_theDive => 'L\'immersione';
+
+  @override
   String get diveLog_edit_headerNew => 'Registra nuova immersione';
 
   @override
@@ -3439,6 +3442,24 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get diveLog_edit_notesHint => 'Aggiungi note su questa immersione...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'Aggiungi sito';
+
+  @override
+  String get diveLog_edit_row_entry => 'Entrata';
+
+  @override
+  String get diveLog_edit_row_exit => 'Uscita';
+
+  @override
+  String get diveLog_edit_row_notSet => 'Non impostato';
+
+  @override
+  String get diveLog_edit_row_site => 'Sito';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'Intervallo di superficie';
 
   @override
   String get diveLog_edit_save => 'Salva';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:submersion/shared/widgets/forms/form_style.dart';
 
@@ -20,6 +21,7 @@ class FormRow extends StatefulWidget {
     this.placeholder,
     this.suffixText,
     this.keyboardType,
+    this.inputFormatters,
     this.maxLines = 1,
     this.alwaysEditing = false,
     this.validator,
@@ -27,6 +29,7 @@ class FormRow extends StatefulWidget {
   }) : _kind = _RowKind.text,
        value = null,
        onTap = null,
+       onClear = null,
        boolValue = null,
        onBoolChanged = null,
        intValue = null,
@@ -39,10 +42,12 @@ class FormRow extends StatefulWidget {
     required this.value,
     required this.onTap,
     this.placeholder,
+    this.onClear,
   }) : _kind = _RowKind.picker,
        controller = null,
        suffixText = null,
        keyboardType = null,
+       inputFormatters = null,
        maxLines = 1,
        alwaysEditing = false,
        validator = null,
@@ -56,6 +61,8 @@ class FormRow extends StatefulWidget {
   const FormRow.display({super.key, required this.label, required this.value})
     : _kind = _RowKind.display,
       controller = null,
+      inputFormatters = null,
+      onClear = null,
       placeholder = null,
       suffixText = null,
       keyboardType = null,
@@ -76,6 +83,8 @@ class FormRow extends StatefulWidget {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) : _kind = _RowKind.toggle,
+       inputFormatters = null,
+       onClear = null,
        boolValue = value,
        onBoolChanged = onChanged,
        controller = null,
@@ -98,6 +107,8 @@ class FormRow extends StatefulWidget {
     required int value,
     required ValueChanged<int> onChanged,
   }) : _kind = _RowKind.rating,
+       inputFormatters = null,
+       onClear = null,
        intValue = value,
        onIntChanged = onChanged,
        controller = null,
@@ -117,6 +128,8 @@ class FormRow extends StatefulWidget {
   const FormRow.custom({super.key, required this.label, required this.child})
     : _kind = _RowKind.custom,
       controller = null,
+      inputFormatters = null,
+      onClear = null,
       value = null,
       placeholder = null,
       suffixText = null,
@@ -138,11 +151,13 @@ class FormRow extends StatefulWidget {
   final String? placeholder;
   final String? suffixText;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   final bool alwaysEditing;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onTap;
+  final VoidCallback? onClear;
   final bool? boolValue;
   final ValueChanged<bool>? onBoolChanged;
   final int? intValue;
@@ -220,6 +235,7 @@ class _FormRowState extends State<FormRow> {
               autofocus: !widget.alwaysEditing,
               maxLines: widget.maxLines,
               keyboardType: widget.keyboardType,
+              inputFormatters: widget.inputFormatters,
               validator: widget.validator,
               onChanged: widget.onChanged,
               decoration: InputDecoration(
@@ -272,6 +288,21 @@ class _FormRowState extends State<FormRow> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
+              if (widget.onClear != null && !empty) ...[
+                const SizedBox(width: 4),
+                InkWell(
+                  onTap: widget.onClear,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Icon(
+                      Icons.clear,
+                      size: 16,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
               Icon(
                 Icons.chevron_right,
                 size: 18,

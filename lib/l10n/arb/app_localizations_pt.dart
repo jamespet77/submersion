@@ -3354,6 +3354,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'Obtendo localizacao...';
 
   @override
+  String get diveLog_edit_group_theDive => 'O mergulho';
+
+  @override
   String get diveLog_edit_headerNew => 'Registrar Novo Mergulho';
 
   @override
@@ -3434,6 +3437,24 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get diveLog_edit_notesHint =>
       'Adicione anotacoes sobre este mergulho...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'Adicionar ponto';
+
+  @override
+  String get diveLog_edit_row_entry => 'Entrada';
+
+  @override
+  String get diveLog_edit_row_exit => 'Saída';
+
+  @override
+  String get diveLog_edit_row_notSet => 'Não definido';
+
+  @override
+  String get diveLog_edit_row_site => 'Ponto de mergulho';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'Intervalo de superfície';
 
   @override
   String get diveLog_edit_save => 'Salvar';

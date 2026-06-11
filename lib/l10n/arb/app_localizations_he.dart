@@ -3266,6 +3266,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_edit_gettingLocation => 'מקבל מיקום...';
 
   @override
+  String get diveLog_edit_group_theDive => 'הצלילה';
+
+  @override
   String get diveLog_edit_headerNew => 'רישום צלילה חדשה';
 
   @override
@@ -3342,6 +3345,24 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get diveLog_edit_notesHint => 'הוסף הערות לצלילה זו...';
+
+  @override
+  String get diveLog_edit_row_addSite => 'הוספת אתר';
+
+  @override
+  String get diveLog_edit_row_entry => 'כניסה';
+
+  @override
+  String get diveLog_edit_row_exit => 'יציאה';
+
+  @override
+  String get diveLog_edit_row_notSet => 'לא הוגדר';
+
+  @override
+  String get diveLog_edit_row_site => 'אתר';
+
+  @override
+  String get diveLog_edit_row_surfaceInterval => 'זמן פני השטח';
 
   @override
   String get diveLog_edit_save => 'שמירה';

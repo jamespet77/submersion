@@ -5668,6 +5668,12 @@ abstract class AppLocalizations {
   /// **'Getting location...'**
   String get diveLog_edit_gettingLocation;
 
+  /// Form group: core dive facts
+  ///
+  /// In en, this message translates to:
+  /// **'The Dive'**
+  String get diveLog_edit_group_theDive;
+
   /// No description provided for @diveLog_edit_headerNew.
   ///
   /// In en, this message translates to:
@@ -5823,6 +5829,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add notes about this dive...'**
   String get diveLog_edit_notesHint;
+
+  /// Placeholder when no site selected
+  ///
+  /// In en, this message translates to:
+  /// **'Add site'**
+  String get diveLog_edit_row_addSite;
+
+  /// Row label: entry date and time
+  ///
+  /// In en, this message translates to:
+  /// **'Entry'**
+  String get diveLog_edit_row_entry;
+
+  /// Row label: exit date and time
+  ///
+  /// In en, this message translates to:
+  /// **'Exit'**
+  String get diveLog_edit_row_exit;
+
+  /// Placeholder for unset picker rows
+  ///
+  /// In en, this message translates to:
+  /// **'Not set'**
+  String get diveLog_edit_row_notSet;
+
+  /// Row label: dive site picker
+  ///
+  /// In en, this message translates to:
+  /// **'Site'**
+  String get diveLog_edit_row_site;
+
+  /// Row label: surface interval since previous dive
+  ///
+  /// In en, this message translates to:
+  /// **'Surface interval'**
+  String get diveLog_edit_row_surfaceInterval;
 
   /// No description provided for @diveLog_edit_save.
   ///
