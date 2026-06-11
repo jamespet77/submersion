@@ -28,9 +28,6 @@ abstract final class FormStyle {
   /// Horizontal page padding around the whole form.
   static const EdgeInsets pagePadding = EdgeInsets.all(16);
 
-  /// Forms never stretch wider than this on desktop windows.
-  static const double maxContentWidth = 640;
-
   /// Uppercase section label, rendered outside the group surface.
   static TextStyle labelStyle(BuildContext context) {
     final theme = Theme.of(context);

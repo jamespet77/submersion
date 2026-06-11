@@ -122,7 +122,9 @@ void main() {
     expect(find.text('BODY'), findsNothing);
   });
 
-  testWidgets('content is width-constrained', (tester) async {
+  testWidgets('does not impose a fixed content width', (tester) async {
+    // Width handling moved to ResponsiveFormColumns; the scaffold passes the
+    // body through so it can fill the available pane.
     tester.view.physicalSize = const Size(1600, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -134,13 +136,15 @@ void main() {
           isSaving: false,
           hasUnsavedChanges: false,
           onSave: () {},
-          child: const SizedBox(height: 10, width: double.infinity),
+          child: const SizedBox(
+            key: Key('body'),
+            height: 10,
+            width: double.infinity,
+          ),
         ),
       ),
     );
-    final constrained = tester.widget<ConstrainedBox>(
-      find.byKey(const Key('editFormMaxWidth')),
-    );
-    expect(constrained.constraints.maxWidth, 640);
+    expect(find.byKey(const Key('editFormMaxWidth')), findsNothing);
+    expect(tester.getSize(find.byKey(const Key('body'))).width, 1600);
   });
 }

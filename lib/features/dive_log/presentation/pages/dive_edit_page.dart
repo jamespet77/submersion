@@ -67,7 +67,7 @@ import 'package:submersion/l10n/l10n_extension.dart';
 import 'package:submersion/shared/widgets/forms/add_section_row.dart';
 import 'package:submersion/shared/widgets/forms/edit_form_scaffold.dart';
 import 'package:submersion/shared/widgets/forms/form_row.dart';
-import 'package:submersion/shared/widgets/forms/form_style.dart';
+import 'package:submersion/shared/widgets/forms/responsive_form_columns.dart';
 import 'package:submersion/core/constants/tank_presets.dart';
 import 'package:submersion/features/tank_presets/domain/entities/tank_preset_entity.dart';
 import 'package:submersion/features/tank_presets/domain/services/default_tank_preset_resolver.dart';
@@ -628,29 +628,19 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     final formBody = Form(
       key: _formKey,
       onChanged: _markDirty,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
+      // Split after Gas & Gear so the two always-relevant groups lead the
+      // left column and the contextual ones fill the right on wide windows.
+      child: ResponsiveFormColumns(
+        splitIndex: 2,
         children: [
           _buildTheDiveSection(units),
-          const SizedBox(height: FormStyle.sectionGap),
           _buildGasGearSection(units),
-          const SizedBox(height: FormStyle.sectionGap),
           _buildConditionsSection(units),
-          const SizedBox(height: FormStyle.sectionGap),
           _buildTripGroupSection(units),
-          const SizedBox(height: FormStyle.sectionGap),
           _buildBuddiesSection(),
-          const SizedBox(height: FormStyle.sectionGap),
           _buildExperienceSection(),
-          const SizedBox(height: FormStyle.sectionGap),
-          if (_showCourseSection) ...[
-            _buildCourseGroupSection(),
-            const SizedBox(height: FormStyle.sectionGap),
-          ],
-          if (_showCustomFieldsSection) ...[
-            _buildCustomFieldsGroupSection(),
-            const SizedBox(height: FormStyle.sectionGap),
-          ],
+          if (_showCourseSection) _buildCourseGroupSection(),
+          if (_showCustomFieldsSection) _buildCustomFieldsGroupSection(),
           AddSectionRow(
             entries: [
               if (!_showCourseSection)
@@ -665,7 +655,6 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
                 ),
             ],
           ),
-          const SizedBox(height: 32),
         ],
       ),
     );

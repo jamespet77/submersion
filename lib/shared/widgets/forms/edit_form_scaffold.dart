@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:submersion/l10n/l10n_extension.dart';
-import 'package:submersion/shared/widgets/forms/form_style.dart';
 
 /// Shared shell for every edit form.
 ///
@@ -90,14 +89,6 @@ class EditFormScaffold extends StatelessWidget {
         : TextButton(onPressed: onSave, child: label);
   }
 
-  Widget _constrained(Widget body) => Center(
-    child: ConstrainedBox(
-      key: const Key('editFormMaxWidth'),
-      constraints: const BoxConstraints(maxWidth: FormStyle.maxContentWidth),
-      child: body,
-    ),
-  );
-
   @override
   Widget build(BuildContext context) {
     if (embedded) {
@@ -135,7 +126,7 @@ class EditFormScaffold extends StatelessWidget {
               ],
             ),
           ),
-          Expanded(child: _constrained(child)),
+          Expanded(child: child),
         ],
       );
     }
@@ -148,7 +139,7 @@ class EditFormScaffold extends StatelessWidget {
           title: Text(title),
           actions: [...?actions, _saveButton(context, filled: false)],
         ),
-        body: _constrained(child),
+        body: child,
       ),
     );
   }

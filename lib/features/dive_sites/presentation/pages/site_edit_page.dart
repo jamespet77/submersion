@@ -26,7 +26,7 @@ import 'package:submersion/l10n/l10n_extension.dart';
 import 'package:submersion/shared/widgets/forms/edit_form_scaffold.dart';
 import 'package:submersion/shared/widgets/forms/form_row.dart';
 import 'package:submersion/shared/widgets/forms/form_section.dart';
-import 'package:submersion/shared/widgets/forms/form_style.dart';
+import 'package:submersion/shared/widgets/forms/responsive_form_columns.dart';
 import 'package:submersion/shared/widgets/forms/stat_strip.dart';
 
 class SiteEditPage extends ConsumerStatefulWidget {
@@ -594,8 +594,10 @@ class _SiteEditPageState extends ConsumerState<SiteEditPage> {
     final allSites = ref.watch(sitesProvider).value ?? const <DiveSite>[];
     final body = Form(
       key: _formKey,
-      child: ListView(
-        padding: const EdgeInsets.all(16),
+      // Split after Location so Identity + Location lead the left column and
+      // Dive info / Access / Life fill the right on wide windows.
+      child: ResponsiveFormColumns(
+        splitIndex: 2,
         children: [
           FormSection(
             label: context.l10n.diveSites_edit_group_identity,
@@ -710,7 +712,6 @@ class _SiteEditPageState extends ConsumerState<SiteEditPage> {
               ),
             ],
           ),
-          const SizedBox(height: FormStyle.sectionGap),
           FormSection(
             label: context.l10n.diveSites_edit_group_location,
             expanded: _siteSectionExpanded('location'),
@@ -726,7 +727,6 @@ class _SiteEditPageState extends ConsumerState<SiteEditPage> {
               _buildAltitudeSection(context, units),
             ],
           ),
-          const SizedBox(height: FormStyle.sectionGap),
           FormSection(
             label: context.l10n.diveSites_edit_group_diveInfo,
             expanded: _siteSectionExpanded('diveInfo'),
@@ -758,7 +758,6 @@ class _SiteEditPageState extends ConsumerState<SiteEditPage> {
               _buildRatingSection(context),
             ],
           ),
-          const SizedBox(height: FormStyle.sectionGap),
           FormSection(
             label: context.l10n.diveSites_edit_group_accessSafety,
             expanded: _siteSectionExpanded('access'),
@@ -773,7 +772,6 @@ class _SiteEditPageState extends ConsumerState<SiteEditPage> {
               _buildSafetySection(context),
             ],
           ),
-          const SizedBox(height: FormStyle.sectionGap),
           FormSection(
             label: context.l10n.diveSites_edit_group_lifeNotes,
             expanded: _siteSectionExpanded('life'),
@@ -815,26 +813,6 @@ class _SiteEditPageState extends ConsumerState<SiteEditPage> {
                   ),
             ],
           ),
-          if (!widget.embedded) ...[
-            const SizedBox(height: 32),
-            // Save Button
-            FilledButton(
-              onPressed: _isLoading ? null : _saveSite,
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(
-                      widget.isMerging
-                          ? context.l10n.diveSites_edit_button_mergeSites
-                          : widget.isEditing
-                          ? context.l10n.diveSites_edit_button_saveChanges
-                          : context.l10n.diveSites_edit_button_addSite,
-                    ),
-            ),
-          ],
         ],
       ),
     );

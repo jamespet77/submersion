@@ -186,8 +186,9 @@ void main() {
     WidgetTester tester,
     String? diveId, {
     void Function(String)? onSaved,
+    Size surfaceSize = const Size(950, 8000),
   }) async {
-    tester.view.physicalSize = const Size(950, 8000);
+    tester.view.physicalSize = surfaceSize;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final overrides = await getBaseOverrides();
@@ -236,6 +237,22 @@ void main() {
     await tester.tap(find.textContaining('★'));
     await tester.pumpAndSettle();
   }
+
+  testWidgets('wide window lays the groups out in two columns', (tester) async {
+    final dive = await seedRichDive();
+    await pumpEditor(tester, dive.id, surfaceSize: const Size(1400, 1600));
+
+    final theDive = tester.getTopLeft(find.text('THE DIVE'));
+    final gasGear = tester.getTopLeft(find.text('GAS & GEAR'));
+    final conditions = tester.getTopLeft(find.text('CONDITIONS'));
+
+    // Left column (split after Gas & Gear): The Dive then Gas & Gear stacked.
+    expect(gasGear.dx, closeTo(theDive.dx, 1));
+    expect(gasGear.dy, greaterThan(theDive.dy));
+    // Right column: Conditions sits beside The Dive, not below Gas & Gear.
+    expect(conditions.dx, greaterThan(theDive.dx + 100));
+    expect(conditions.dy, lessThan(gasGear.dy));
+  });
 
   testWidgets('rich dive renders every expanded group interior', (
     tester,
