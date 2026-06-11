@@ -1330,6 +1330,7 @@
   "diveLog_listPage_menuDiveNumbering": "Numerazione immersioni",
   "diveLog_listPage_menuMatchSites": "Associa le immersioni ai siti",
   "forms_section_issues": "{count, plural, one{1 problema} other{{count} problemi}}",
+  "forms_statCell_useProfileValue": "Usa {value} dal profilo immersione",
   "siteMatchReview_title": "Associa siti",
   "siteMatchReview_diveNumber": "Immersione #{number}",
   "siteMatchReview_empty": "Niente da associare.",

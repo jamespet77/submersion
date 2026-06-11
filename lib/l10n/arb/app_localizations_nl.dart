@@ -4052,6 +4052,11 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String forms_statCell_useProfileValue(String value) {
+    return '$value uit duikprofiel overnemen';
+  }
+
+  @override
   String get siteMatchReview_title => 'Stekken koppelen';
 
   @override

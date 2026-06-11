@@ -3885,6 +3885,11 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String forms_statCell_useProfileValue(String value) {
+    return '使用潜水轮廓中的 $value';
+  }
+
+  @override
   String get siteMatchReview_title => '匹配潜水点';
 
   @override

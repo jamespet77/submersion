@@ -1330,6 +1330,7 @@
   "diveLog_listPage_menuDiveNumbering": "Numerotation des plongees",
   "diveLog_listPage_menuMatchSites": "Associer les plongées aux sites",
   "forms_section_issues": "{count, plural, one{1 problème} other{{count} problèmes}}",
+  "forms_statCell_useProfileValue": "Utiliser {value} du profil de plongée",
   "siteMatchReview_title": "Associer les sites",
   "siteMatchReview_diveNumber": "Plongee n°{number}",
   "siteMatchReview_empty": "Rien à associer.",
