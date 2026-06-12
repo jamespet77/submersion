@@ -523,6 +523,21 @@ void main() {
       expect(find.text('Test Cloud'), findsNothing);
     });
 
+    testWidgets('location row sits between retention and cloud backup', (
+      tester,
+    ) async {
+      await pumpApp(tester, initialPrefs: {'backup_enabled': true});
+
+      final frequencyY = tester.getTopLeft(find.text('Frequency')).dy;
+      final retentionY = tester.getTopLeft(find.text('Keep backups')).dy;
+      final locationY = tester.getTopLeft(find.text('Backup Location')).dy;
+      final cloudY = tester.getTopLeft(find.text('Cloud backup')).dy;
+
+      expect(frequencyY, lessThan(retentionY));
+      expect(retentionY, lessThan(locationY));
+      expect(locationY, lessThan(cloudY));
+    });
+
     testWidgets('enabling cloud backup clears a custom location', (
       tester,
     ) async {

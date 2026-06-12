@@ -435,30 +435,6 @@ class BackupSettingsPage extends ConsumerWidget {
           onChanged: (value) =>
               ref.read(backupSettingsProvider.notifier).setEnabled(value),
         ),
-        // Backup location
-        ListTile(
-          title: Text(context.l10n.backup_location_title),
-          subtitle: Text(
-            cloudDestination ??
-                settings.backupLocation ??
-                context.l10n.backup_location_default,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          trailing: TextButton(
-            onPressed: () async {
-              final path = await FilePicker.getDirectoryPath(
-                dialogTitle: context.l10n.backup_location_title,
-              );
-              if (path != null) {
-                ref
-                    .read(backupSettingsProvider.notifier)
-                    .setBackupLocation(path);
-              }
-            },
-            child: Text(context.l10n.backup_location_change),
-          ),
-        ),
         // Frequency
         if (settings.enabled)
           ListTile(
@@ -499,6 +475,31 @@ class BackupSettingsPage extends ConsumerWidget {
               }).toList(),
             ),
           ),
+        // Backup location: the destination row sits directly above the
+        // Cloud backup switch it is mutually exclusive with.
+        ListTile(
+          title: Text(context.l10n.backup_location_title),
+          subtitle: Text(
+            cloudDestination ??
+                settings.backupLocation ??
+                context.l10n.backup_location_default,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: TextButton(
+            onPressed: () async {
+              final path = await FilePicker.getDirectoryPath(
+                dialogTitle: context.l10n.backup_location_title,
+              );
+              if (path != null) {
+                ref
+                    .read(backupSettingsProvider.notifier)
+                    .setBackupLocation(path);
+              }
+            },
+            child: Text(context.l10n.backup_location_change),
+          ),
+        ),
         // Cloud sync
         if (cloudProvider != null)
           SwitchListTile(
