@@ -3,7 +3,7 @@
 All notable changes to Submersion are documented in this file.
 
 
-## 1.4.9 (2026-06-11)
+## 1.4.9+96 (2026-06-11)
 
 ### Features
 
