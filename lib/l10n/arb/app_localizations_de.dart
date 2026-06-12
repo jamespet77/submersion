@@ -11361,6 +11361,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'Verbindung testen';
 
   @override
+  String get settings_s3Config_advanced_title => 'Erweitert';
+
+  @override
   String get settings_s3Config_appBar_title => 'S3-kompatibler Speicher';
 
   @override
@@ -11392,6 +11395,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_s3Config_field_prefix_label => 'Schlüssel-Präfix';
 
   @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'Automatisch erkannt: $region';
+  }
+
+  @override
   String get settings_s3Config_field_region_label => 'Region';
 
   @override
@@ -11414,6 +11422,11 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'S3-Konfiguration gespeichert';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'Region erkannt: $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'Verbindung erfolgreich';

@@ -10837,6 +10837,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_s3Config_action_testConnection => '测试连接';
 
   @override
+  String get settings_s3Config_advanced_title => '高级';
+
+  @override
   String get settings_s3Config_appBar_title => 'S3 兼容存储';
 
   @override
@@ -10865,6 +10868,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_s3Config_field_prefix_label => '键前缀';
 
   @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return '自动检测：$region';
+  }
+
+  @override
   String get settings_s3Config_field_region_label => '区域';
 
   @override
@@ -10886,6 +10894,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'S3 配置已保存';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return '检测到区域：$region';
+  }
 
   @override
   String get settings_s3Config_test_success => '连接成功';

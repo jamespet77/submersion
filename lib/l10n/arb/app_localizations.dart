@@ -19326,6 +19326,12 @@ abstract class AppLocalizations {
   /// **'Test Connection'**
   String get settings_s3Config_action_testConnection;
 
+  /// No description provided for @settings_s3Config_advanced_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get settings_s3Config_advanced_title;
+
   /// No description provided for @settings_s3Config_appBar_title.
   ///
   /// In en, this message translates to:
@@ -19380,6 +19386,12 @@ abstract class AppLocalizations {
   /// **'Key prefix'**
   String get settings_s3Config_field_prefix_label;
 
+  /// No description provided for @settings_s3Config_field_region_helperAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detected: {region}'**
+  String settings_s3Config_field_region_helperAuto(String region);
+
   /// No description provided for @settings_s3Config_field_region_label.
   ///
   /// In en, this message translates to:
@@ -19421,6 +19433,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'S3 configuration saved'**
   String get settings_s3Config_saved;
+
+  /// No description provided for @settings_s3Config_test_regionDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Region detected: {region}'**
+  String settings_s3Config_test_regionDetected(String region);
 
   /// No description provided for @settings_s3Config_test_success.
   ///

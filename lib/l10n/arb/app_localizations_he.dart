@@ -11073,6 +11073,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'בדיקת חיבור';
 
   @override
+  String get settings_s3Config_advanced_title => 'מתקדם';
+
+  @override
   String get settings_s3Config_appBar_title => 'אחסון תואם S3';
 
   @override
@@ -11105,6 +11108,11 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_s3Config_field_prefix_label => 'קידומת מפתחות';
 
   @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'זוהה אוטומטית: $region';
+  }
+
+  @override
   String get settings_s3Config_field_region_label => 'אזור';
 
   @override
@@ -11126,6 +11134,11 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'תצורת S3 נשמרה';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'זוהה אזור: $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'החיבור הצליח';

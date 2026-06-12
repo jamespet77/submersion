@@ -11154,6 +11154,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'اختبار الاتصال';
 
   @override
+  String get settings_s3Config_advanced_title => 'متقدم';
+
+  @override
   String get settings_s3Config_appBar_title => 'تخزين متوافق مع S3';
 
   @override
@@ -11186,6 +11189,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_s3Config_field_prefix_label => 'بادئة المفاتيح';
 
   @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'تم الاكتشاف تلقائيًا: $region';
+  }
+
+  @override
   String get settings_s3Config_field_region_label => 'المنطقة';
 
   @override
@@ -11208,6 +11216,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'تم حفظ إعدادات S3';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'تم اكتشاف المنطقة: $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'نجح الاتصال';

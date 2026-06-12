@@ -11346,6 +11346,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'Kapcsolat tesztelése';
 
   @override
+  String get settings_s3Config_advanced_title => 'Speciális';
+
+  @override
   String get settings_s3Config_appBar_title => 'S3-kompatibilis tároló';
 
   @override
@@ -11377,6 +11380,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_s3Config_field_prefix_label => 'Kulcs-előtag';
 
   @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'Automatikusan észlelve: $region';
+  }
+
+  @override
   String get settings_s3Config_field_region_label => 'Régió';
 
   @override
@@ -11399,6 +11407,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'S3-konfiguráció mentve';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'Észlelt régió: $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'Sikeres kapcsolat';

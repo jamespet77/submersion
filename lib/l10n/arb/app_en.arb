@@ -5926,6 +5926,7 @@
   "settings_profileHub_switchDiver": "Switch Diver",
   "settings_s3Config_action_remove": "Remove Configuration",
   "settings_s3Config_action_testConnection": "Test Connection",
+  "settings_s3Config_advanced_title": "Advanced",
   "settings_s3Config_appBar_title": "S3-Compatible Storage",
   "settings_s3Config_error_secureStorage": "Could not access secure storage",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
@@ -5935,6 +5936,14 @@
   "settings_s3Config_field_pathStyle_label": "Use path-style addressing",
   "settings_s3Config_field_pathStyle_subtitle": "Required by most MinIO and NAS servers",
   "settings_s3Config_field_prefix_label": "Key prefix",
+  "settings_s3Config_field_region_helperAuto": "Auto-detected: {region}",
+  "@settings_s3Config_field_region_helperAuto": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "settings_s3Config_field_region_label": "Region",
   "settings_s3Config_field_secretAccessKey_label": "Secret Access Key",
   "settings_s3Config_remove_confirm_action": "Remove",
@@ -5942,6 +5951,14 @@
   "settings_s3Config_remove_confirm_title": "Remove S3 configuration?",
   "settings_s3Config_removed": "S3 configuration removed",
   "settings_s3Config_saved": "S3 configuration saved",
+  "settings_s3Config_test_regionDetected": "Region detected: {region}",
+  "@settings_s3Config_test_regionDetected": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "settings_s3Config_test_success": "Connection successful",
   "settings_s3Config_validation_endpointInvalid": "Enter a valid http:// or https:// URL",
   "settings_s3Config_validation_endpointPath": "Endpoint URL must not include a path",
