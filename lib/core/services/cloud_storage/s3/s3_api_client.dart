@@ -199,7 +199,7 @@ class S3ApiClient {
     Uint8List? body,
   }) async {
     try {
-      final response = await _send(
+      var response = await _send(
         method,
         key,
         queryParams: queryParams,
@@ -213,7 +213,9 @@ class S3ApiClient {
           queryParams,
           body,
         );
-        if (corrected != null) return corrected;
+        // The replay flows through the normal 5xx retry below, which now
+        // signs with the corrected region.
+        if (corrected != null) response = corrected;
       }
       if (response.statusCode < 500) return response;
     } on FormatException catch (e) {

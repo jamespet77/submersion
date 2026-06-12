@@ -683,6 +683,39 @@ void main() {
       expect(requests, 3); // 1 hinted failure + replay, then 1 clean send
     });
 
+    test('a 5xx replay still falls through to the normal retry', () async {
+      var requests = 0;
+      final mock = MockClient((request) async {
+        requests++;
+        if (requests == 1) {
+          return http.Response(
+            '',
+            301,
+            headers: {'x-amz-bucket-region': 'us-west-2'},
+          );
+        }
+        expect(
+          request.headers['authorization'],
+          contains('/us-west-2/s3/aws4_request'),
+        );
+        if (requests == 2) return http.Response('oops', 500);
+        return http.Response('', 200);
+      });
+      String? corrected;
+      final client = S3ApiClient(
+        awsConfig(),
+        httpClient: mock,
+        now: () => DateTime.utc(2026, 6, 12),
+        retryDelay: Duration.zero,
+        onRegionCorrected: (region) => corrected = region,
+      );
+
+      await client.putObject('k.json', Uint8List.fromList([1]));
+
+      expect(requests, 3); // hinted 301, 5xx replay, successful retry
+      expect(corrected, isNull); // the replay itself did not succeed
+    });
+
     test('AuthorizationHeaderMalformed without a usable hint explains the '
         'region problem', () async {
       final mock = MockClient(
