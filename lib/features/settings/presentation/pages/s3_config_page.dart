@@ -5,12 +5,15 @@ import 'package:submersion/core/data/repositories/sync_repository.dart'
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
+import 'package:submersion/core/services/cloud_storage/s3/s3_region.dart';
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
-/// Configuration form for the S3-compatible sync backend: endpoint, region,
-/// bucket, key prefix, credentials, and addressing style, with a live
-/// read+write Test Connection probe against the unsaved form values.
+/// Configuration form for the S3-compatible sync backend. Endpoint,
+/// bucket, and credentials up front; region, key prefix, and addressing
+/// style live in a collapsed Advanced section with auto-derived defaults,
+/// and a live read+write Test Connection probe (which also adopts
+/// server-detected regions) runs against the unsaved form values.
 class S3ConfigPage extends ConsumerStatefulWidget {
   const S3ConfigPage({super.key});
 
@@ -21,7 +24,7 @@ class S3ConfigPage extends ConsumerStatefulWidget {
 class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
   final _formKey = GlobalKey<FormState>();
   final _endpointController = TextEditingController();
-  final _regionController = TextEditingController(text: 'us-east-1');
+  final _regionController = TextEditingController();
   final _bucketController = TextEditingController();
   final _prefixController = TextEditingController(text: 'submersion-sync/');
   final _accessKeyController = TextEditingController();
@@ -39,8 +42,12 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
   void initState() {
     super.initState();
     _endpointController.addListener(_onEndpointChanged);
+    _regionController.addListener(_onRegionChanged);
     _loadExisting();
   }
+
+  // The auto-detected helper hides while the field holds a manual value.
+  void _onRegionChanged() => setState(() {});
 
   @override
   void dispose() {
@@ -97,10 +104,12 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
       _endpointController.text.trim().toLowerCase().startsWith('http://');
 
   S3Config _buildConfig() {
-    final region = _regionController.text.trim();
+    final manualRegion = _regionController.text.trim();
     return S3Config(
       endpoint: _endpointController.text,
-      region: region.isEmpty ? 'us-east-1' : region,
+      region: manualRegion.isEmpty
+          ? deriveRegion(_endpointController.text)
+          : manualRegion,
       bucket: _bucketController.text,
       prefix: _prefixController.text,
       pathStyle: _pathStyle,
@@ -121,18 +130,33 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
 
   Future<void> _testConnection() async {
     if (!_formKey.currentState!.validate()) return;
-    final successMessage = context.l10n.settings_s3Config_test_success;
-    final storageMessage = context.l10n.settings_s3Config_error_secureStorage;
+    // The detected-region message is only known after the await, so the
+    // l10n object itself is captured before the async gap (same pattern
+    // as _remove).
+    final l10n = context.l10n;
     setState(() => _busy = true);
+    String? detectedRegion;
     try {
       await ref
           .read(s3StorageProviderInstanceProvider)
-          .testConnection(_buildConfig());
-      _showSnack(successMessage);
+          .testConnection(
+            _buildConfig(),
+            onRegionCorrected: (region) => detectedRegion = region,
+          );
+      final detected = detectedRegion;
+      if (detected != null) {
+        _regionController.text = detected;
+        _showSnack(l10n.settings_s3Config_test_regionDetected(detected));
+      } else {
+        _showSnack(l10n.settings_s3Config_test_success);
+      }
     } on CloudStorageException catch (e) {
       _showSnack(e.message, isError: true);
     } catch (e) {
-      _showSnack('$storageMessage: $e', isError: true);
+      _showSnack(
+        '${l10n.settings_s3Config_error_secureStorage}: $e',
+        isError: true,
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -267,15 +291,6 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
             ),
             const SizedBox(height: 12),
             TextFormField(
-              key: const Key('s3-region'),
-              controller: _regionController,
-              decoration: InputDecoration(
-                labelText: l10n.settings_s3Config_field_region_label,
-              ),
-              autocorrect: false,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
               key: const Key('s3-bucket'),
               controller: _bucketController,
               decoration: InputDecoration(
@@ -285,15 +300,6 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
               validator: (value) => (value ?? '').trim().isEmpty
                   ? l10n.settings_s3Config_validation_required
                   : null,
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              key: const Key('s3-prefix'),
-              controller: _prefixController,
-              decoration: InputDecoration(
-                labelText: l10n.settings_s3Config_field_prefix_label,
-              ),
-              autocorrect: false,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -329,15 +335,50 @@ class _S3ConfigPageState extends ConsumerState<S3ConfigPage> {
                   ? l10n.settings_s3Config_validation_required
                   : null,
             ),
-            SwitchListTile(
-              key: const Key('s3-path-style'),
-              title: Text(l10n.settings_s3Config_field_pathStyle_label),
-              subtitle: Text(l10n.settings_s3Config_field_pathStyle_subtitle),
-              value: _pathStyle,
-              onChanged: (value) => setState(() {
-                _pathStyle = value;
-                _pathStyleTouched = true;
-              }),
+            ExpansionTile(
+              key: const Key('s3-advanced'),
+              title: Text(l10n.settings_s3Config_advanced_title),
+              tilePadding: EdgeInsets.zero,
+              childrenPadding: const EdgeInsets.only(bottom: 8),
+              // Suppress the M3 outline the tile draws when expanded.
+              shape: const Border(),
+              collapsedShape: const Border(),
+              children: [
+                TextFormField(
+                  key: const Key('s3-region'),
+                  controller: _regionController,
+                  decoration: InputDecoration(
+                    labelText: l10n.settings_s3Config_field_region_label,
+                    helperText: _regionController.text.trim().isEmpty
+                        ? l10n.settings_s3Config_field_region_helperAuto(
+                            deriveRegion(_endpointController.text),
+                          )
+                        : null,
+                  ),
+                  autocorrect: false,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('s3-prefix'),
+                  controller: _prefixController,
+                  decoration: InputDecoration(
+                    labelText: l10n.settings_s3Config_field_prefix_label,
+                  ),
+                  autocorrect: false,
+                ),
+                SwitchListTile(
+                  key: const Key('s3-path-style'),
+                  title: Text(l10n.settings_s3Config_field_pathStyle_label),
+                  subtitle: Text(
+                    l10n.settings_s3Config_field_pathStyle_subtitle,
+                  ),
+                  value: _pathStyle,
+                  onChanged: (value) => setState(() {
+                    _pathStyle = value;
+                    _pathStyleTouched = true;
+                  }),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Row(

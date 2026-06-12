@@ -71,12 +71,21 @@ class _FakeS3ApiClient implements S3ApiClient {
     _objects.remove(key);
   }
 
+  /// When set, the next listObjects reports this region as a server
+  /// correction, mirroring the real client's replay behavior.
+  String? correctRegionTo;
+
   @override
   Future<List<S3ObjectInfo>> listObjects({
     String prefix = '',
     int? maxKeys,
   }) async {
     if (failListWith != null) throw failListWith!;
+    final correction = correctRegionTo;
+    if (correction != null) {
+      correctRegionTo = null;
+      onRegionCorrected?.call(correction);
+    }
     calls.add('list:$prefix');
     return const [];
   }
@@ -181,6 +190,12 @@ void main() {
     await tester.pump();
   }
 
+  Future<void> expandAdvanced(WidgetTester tester) async {
+    await tester.ensureVisible(find.byKey(const Key('s3-advanced')));
+    await tester.tap(find.byKey(const Key('s3-advanced')));
+    await tester.pumpAndSettle();
+  }
+
   testWidgets('empty form shows required errors and saves nothing', (
     tester,
   ) async {
@@ -218,6 +233,7 @@ void main() {
     tester,
   ) async {
     await pumpPage(tester);
+    await expandAdvanced(tester);
     Switch pathStyleSwitch() => tester.widget<Switch>(
       find.descendant(
         of: find.byKey(const Key('s3-path-style')),
@@ -372,5 +388,88 @@ void main() {
       tester.element(find.byType(S3ConfigPage)),
     );
     expect(container.read(selectedCloudProviderTypeProvider), isNull);
+  });
+
+  testWidgets('advanced section is collapsed by default', (tester) async {
+    await pumpPage(tester);
+    expect(find.byKey(const Key('s3-region')), findsNothing);
+    expect(find.byKey(const Key('s3-prefix')), findsNothing);
+    expect(find.byKey(const Key('s3-path-style')), findsNothing);
+
+    await expandAdvanced(tester);
+    expect(find.byKey(const Key('s3-region')), findsOneWidget);
+    expect(find.byKey(const Key('s3-prefix')), findsOneWidget);
+    expect(find.byKey(const Key('s3-path-style')), findsOneWidget);
+  });
+
+  testWidgets('region helper live-derives from the endpoint', (tester) async {
+    await pumpPage(tester);
+    await expandAdvanced(tester);
+    expect(find.text('Auto-detected: us-east-1'), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const Key('s3-endpoint')),
+      'https://s3.us-west-004.backblazeb2.com',
+    );
+    await tester.pump();
+    expect(find.text('Auto-detected: us-west-004'), findsOneWidget);
+  });
+
+  testWidgets('empty region saves the derived value', (tester) async {
+    await pumpPage(tester);
+    await fillValidForm(tester);
+    await tester.enterText(
+      find.byKey(const Key('s3-endpoint')),
+      'https://s3.eu-central-2.amazonaws.com',
+    );
+    await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('s3-save')));
+    await tester.tap(find.byKey(const Key('s3-save')));
+    await tester.pumpAndSettle();
+
+    expect(store.stored!.region, 'eu-central-2');
+  });
+
+  testWidgets('manual region overrides derivation', (tester) async {
+    await pumpPage(tester);
+    await fillValidForm(tester);
+    await expandAdvanced(tester);
+    await tester.enterText(find.byKey(const Key('s3-region')), 'eu-west-2');
+    await tester.ensureVisible(find.byKey(const Key('s3-save')));
+    await tester.tap(find.byKey(const Key('s3-save')));
+    await tester.pumpAndSettle();
+
+    expect(store.stored!.region, 'eu-west-2');
+  });
+
+  testWidgets('test connection adopts and announces a detected region', (
+    tester,
+  ) async {
+    apiClient.correctRegionTo = 'eu-west-1';
+    await pumpPage(tester);
+    await fillValidForm(tester);
+    await tester.ensureVisible(find.byKey(const Key('s3-test')));
+    await tester.tap(find.byKey(const Key('s3-test')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Region detected: eu-west-1'), findsOneWidget);
+    await expandAdvanced(tester);
+    expect(find.text('eu-west-1'), findsOneWidget); // field adopted it
+  });
+
+  testWidgets('existing config populates the region field on load', (
+    tester,
+  ) async {
+    store.stored = S3Config(
+      endpoint: 'https://s3.example.com',
+      region: 'auto',
+      bucket: 'dive-sync',
+      accessKeyId: 'ak',
+      secretAccessKey: 'sk',
+    );
+    await pumpPage(tester);
+    await expandAdvanced(tester);
+    expect(find.text('auto'), findsOneWidget);
+    expect(find.textContaining('Auto-detected'), findsNothing);
   });
 }
