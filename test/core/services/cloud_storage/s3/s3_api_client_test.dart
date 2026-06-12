@@ -682,5 +682,29 @@ void main() {
       await client.putObject('b.json', Uint8List.fromList([2]));
       expect(requests, 3); // 1 hinted failure + replay, then 1 clean send
     });
+
+    test('AuthorizationHeaderMalformed without a usable hint explains the '
+        'region problem', () async {
+      final mock = MockClient(
+        (_) async => http.Response(
+          '<?xml version="1.0" encoding="UTF-8"?>'
+          '<Error><Code>AuthorizationHeaderMalformed</Code>'
+          '<Message>the region is wrong</Message></Error>',
+          400,
+        ),
+      );
+      final client = clientWith(minioConfig(), mock);
+
+      await expectLater(
+        client.putObject('k.json', Uint8List.fromList([1])),
+        throwsA(
+          isA<CloudStorageException>().having(
+            (e) => e.message,
+            'message',
+            contains('signature region'),
+          ),
+        ),
+      );
+    });
   });
 }

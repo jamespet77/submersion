@@ -329,6 +329,14 @@ class S3ApiClient {
       utf8.decode(response.bodyBytes, allowMalformed: true),
       'Code',
     );
+    // Matched by error code regardless of HTTP status: AWS uses 400, some
+    // compatible servers 403.
+    if (errorCode == 'AuthorizationHeaderMalformed') {
+      throw const CloudStorageException(
+        "S3 rejected the request's signature region. Open Advanced and "
+        'set Region to the value your provider expects.',
+      );
+    }
     if (response.statusCode == 403) {
       if (errorCode == 'RequestTimeTooSkewed') {
         throw const CloudStorageException(
