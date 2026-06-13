@@ -40,6 +40,10 @@ class Divers extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -59,6 +63,10 @@ class Trips extends Table {
   BoolColumn get isShared => boolean().withDefault(const Constant(false))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -82,6 +90,10 @@ class LiveaboardDetailRecords extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -99,6 +111,10 @@ class TripItineraryDays extends Table {
   TextColumn get notes => text().withDefault(const Constant(''))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -253,6 +269,10 @@ class Dives extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -332,6 +352,10 @@ class DiveSites extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -392,6 +416,10 @@ class Equipment extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -430,6 +458,10 @@ class EquipmentSets extends Table {
   TextColumn get description => text().withDefault(const Constant(''))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -692,6 +724,10 @@ class Settings extends Table {
   TextColumn get value => text().nullable()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {key};
 }
@@ -875,6 +911,10 @@ class DiverSettings extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -892,6 +932,10 @@ class Buddies extends Table {
   TextColumn get notes => text().withDefault(const Constant(''))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -936,6 +980,10 @@ class Certifications extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -954,6 +1002,10 @@ class ServiceRecords extends Table {
   TextColumn get notes => text().withDefault(const Constant(''))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -982,6 +1034,10 @@ class DiveCenters extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -994,6 +1050,10 @@ class Tags extends Table {
   TextColumn get color => text().nullable()(); // Hex color code for UI
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1010,6 +1070,10 @@ class DiveTypes extends Table {
   IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1044,6 +1108,10 @@ class TankPresets extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -1068,6 +1136,10 @@ class DiveComputers extends Table {
   TextColumn get notes => text().withDefault(const Constant(''))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1231,13 +1303,28 @@ class SyncMetadata extends Table {
       integer().nullable()(); // Unix timestamp ms of last successful sync
   TextColumn get deviceId => text()(); // This device's unique UUID
   TextColumn get syncProvider =>
-      text().nullable()(); // 'icloud' or 'googledrive'
+      text().nullable()(); // 'icloud', 'googledrive', or 's3'
   TextColumn get remoteFileId =>
       text().nullable()(); // Provider-specific file reference
   IntColumn get syncVersion =>
       integer().withDefault(const Constant(1))(); // Sync format version
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
+  /// Opaque per-database token, rotated on each launch and mirrored outside the
+  /// database. A mismatch between this and the mirrored copy means the on-disk
+  /// database was replaced (restore/overwrite), even when the device id is
+  /// unchanged. Nullable: rows predating this column read as "no token yet".
+  TextColumn get instanceToken => text().nullable()();
+
+  /// The library epoch this device last accepted (see library_epoch.dart).
+  /// Dual-anchored: mirrored in SharedPreferences so a database restore
+  /// cannot silently rewind it. Null means the pre-epoch world.
+  TextColumn get lastAcceptedEpochId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1314,6 +1401,10 @@ class Courses extends Table {
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
 
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -1346,13 +1437,17 @@ class ScheduledNotifications extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-/// User-saved CSV import presets (local-only, not synced)
+/// User-saved CSV import presets (synced across devices; carries an hlc column)
 class CsvPresets extends Table {
   TextColumn get id => text()();
   TextColumn get name => text()();
   TextColumn get presetJson => text()();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1366,6 +1461,10 @@ class ViewConfigs extends Table {
   TextColumn get viewMode => text()();
   TextColumn get configJson => text()();
   IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1462,7 +1561,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 76;
+  static const int currentSchemaVersion = 80;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1542,6 +1641,9 @@ class AppDatabase extends _$AppDatabase {
     74,
     75,
     76,
+    77,
+    78,
+    79,
   ];
 
   /// Returns the number of migration steps that will execute when upgrading
@@ -3669,6 +3771,99 @@ class AppDatabase extends _$AppDatabase {
           }
         }
         if (from < 76) await reportProgress();
+        if (from < 77) {
+          // Add nullable Hybrid Logical Clock column to every conflict-capable
+          // syncable table (and sync_metadata for the device clock). Nullable
+          // so existing rows fall back to updatedAt ordering until rewritten.
+          const hlcTables = [
+            'divers',
+            'diver_settings',
+            'buddies',
+            'dive_centers',
+            'trips',
+            'liveaboard_detail_records',
+            'trip_itinerary_days',
+            'equipment',
+            'equipment_sets',
+            'dive_types',
+            'tank_presets',
+            'dive_computers',
+            'tags',
+            'courses',
+            'dives',
+            'dive_sites',
+            'certifications',
+            'service_records',
+            'settings',
+            'csv_presets',
+            'view_configs',
+            'sync_metadata',
+          ];
+          for (final table in hlcTables) {
+            final cols = await customSelect(
+              "PRAGMA table_info('$table')",
+            ).get();
+            final existing = cols.map((c) => c.read<String>('name')).toSet();
+            if (cols.isNotEmpty && !existing.contains('hlc')) {
+              await customStatement('ALTER TABLE $table ADD COLUMN hlc TEXT');
+            }
+          }
+        }
+        if (from < 77) await reportProgress();
+        if (from < 78) {
+          // Add the nullable per-database instance token to sync_metadata. Used
+          // to detect a database restore/overwrite that leaves the device id
+          // unchanged (a same-device backup). Nullable so existing rows read as
+          // "no token yet" and are treated like a first-run seed.
+          final cols = await customSelect(
+            "PRAGMA table_info('sync_metadata')",
+          ).get();
+          final existing = cols.map((c) => c.read<String>('name')).toSet();
+          if (cols.isNotEmpty && !existing.contains('instance_token')) {
+            await customStatement(
+              'ALTER TABLE sync_metadata ADD COLUMN instance_token TEXT',
+            );
+          }
+        }
+        if (from < 78) await reportProgress();
+        if (from < 79) {
+          // Support surface-interval derivation from timestamps (issue #235):
+          // the correlated subquery SELECT MAX(exit_time) WHERE diver_id AND
+          // exit_time < entry_time needs this index to stay fast at scale.
+          // Guard with PRAGMA in case partial-schema migration fixtures are
+          // used in tests where dives may not yet have these columns.
+          final divesCols = await customSelect(
+            "PRAGMA table_info('dives')",
+          ).get();
+          if (divesCols.isNotEmpty) {
+            final colNames = divesCols
+                .map((c) => c.read<String>('name'))
+                .toSet();
+            if (colNames.contains('diver_id') &&
+                colNames.contains('exit_time')) {
+              await customStatement('''
+                CREATE INDEX IF NOT EXISTS idx_dives_diver_exittime
+                ON dives(diver_id, exit_time DESC)
+              ''');
+            }
+          }
+        }
+        if (from < 79) await reportProgress();
+        if (from < 80) {
+          // Library epoch anchor for restore Replace mode: the epoch this
+          // device last accepted, dual-anchored with a SharedPreferences
+          // mirror (see library_epoch_store.dart).
+          final cols = await customSelect(
+            "PRAGMA table_info('sync_metadata')",
+          ).get();
+          final existing = cols.map((c) => c.read<String>('name')).toSet();
+          if (cols.isNotEmpty && !existing.contains('last_accepted_epoch_id')) {
+            await customStatement(
+              'ALTER TABLE sync_metadata ADD COLUMN last_accepted_epoch_id TEXT',
+            );
+          }
+        }
+        if (from < 80) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys

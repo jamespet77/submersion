@@ -8,11 +8,17 @@ import 'package:submersion/core/services/logger_service.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/google_drive_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/icloud_storage_provider.dart';
+import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
+import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
+import 'package:submersion/core/services/sync/library_epoch.dart';
+import 'package:submersion/core/services/sync/library_epoch_store.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:submersion/core/services/sync/sync_event_bus.dart';
 import 'package:submersion/core/services/sync/sync_initializer.dart';
 import 'package:submersion/core/services/sync/sync_preferences.dart';
 import 'package:submersion/core/services/sync/sync_service.dart';
+import 'package:submersion/features/dive_log/presentation/providers/dive_repository_provider.dart';
+import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/storage_providers.dart';
 
@@ -30,6 +36,11 @@ final syncDataSerializerProvider = Provider<SyncDataSerializer>((ref) {
 final syncPreferencesProvider = Provider<SyncPreferences>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return SyncPreferences(prefs);
+});
+
+/// Library epoch persistence (mirror + pending replace intent).
+final libraryEpochStoreProvider = Provider<LibraryEpochStore>((ref) {
+  return LibraryEpochStore(ref.watch(sharedPreferencesProvider));
 });
 
 /// Behavior settings for auto-sync
@@ -98,6 +109,7 @@ final selectedCloudProviderTypeProvider = StateProvider<CloudProviderType?>(
 /// Cloud storage provider singletons
 final _googleDriveProvider = GoogleDriveStorageProvider();
 final _icloudProvider = ICloudStorageProvider();
+final _s3Provider = S3StorageProvider();
 
 /// Cloud storage provider instance (null if none selected or custom folder mode)
 ///
@@ -118,6 +130,8 @@ final cloudStorageProviderProvider = Provider<CloudStorageProvider?>((ref) {
       return _icloudProvider;
     case CloudProviderType.googledrive:
       return _googleDriveProvider;
+    case CloudProviderType.s3:
+      return _s3Provider;
   }
 });
 
@@ -127,6 +141,8 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     syncRepository: ref.watch(syncRepositoryProvider),
     serializer: ref.watch(syncDataSerializerProvider),
     cloudProvider: ref.watch(cloudStorageProviderProvider),
+    syncInitializer: ref.watch(syncInitializerProvider),
+    epochStore: ref.watch(libraryEpochStoreProvider),
   );
 });
 
@@ -142,7 +158,16 @@ class SyncState {
   final int pendingChanges;
   final int conflicts;
   final bool isAuthenticated;
+  final bool firstSyncAwaitingConfirmation;
+
+  /// True when the cloud library was replaced from a backup under an epoch
+  /// this device has not accepted; sync is paused until the user adopts.
+  final bool replaceAwaitingAdoption;
+
+  /// The replacement marker behind [replaceAwaitingAdoption] (who/when).
+  final LibraryEpochMarker? replaceMarker;
   static const Object _messageSentinel = Object();
+  static const Object _markerSentinel = Object();
 
   const SyncState({
     this.status = SyncStatus.idle,
@@ -152,6 +177,9 @@ class SyncState {
     this.pendingChanges = 0,
     this.conflicts = 0,
     this.isAuthenticated = false,
+    this.firstSyncAwaitingConfirmation = false,
+    this.replaceAwaitingAdoption = false,
+    this.replaceMarker,
   });
 
   SyncState copyWith({
@@ -162,6 +190,9 @@ class SyncState {
     int? pendingChanges,
     int? conflicts,
     bool? isAuthenticated,
+    bool? firstSyncAwaitingConfirmation,
+    bool? replaceAwaitingAdoption,
+    Object? replaceMarker = _markerSentinel,
   }) {
     return SyncState(
       status: status ?? this.status,
@@ -173,8 +204,27 @@ class SyncState {
       pendingChanges: pendingChanges ?? this.pendingChanges,
       conflicts: conflicts ?? this.conflicts,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      firstSyncAwaitingConfirmation:
+          firstSyncAwaitingConfirmation ?? this.firstSyncAwaitingConfirmation,
+      replaceAwaitingAdoption:
+          replaceAwaitingAdoption ?? this.replaceAwaitingAdoption,
+      replaceMarker: identical(replaceMarker, _markerSentinel)
+          ? this.replaceMarker
+          : replaceMarker as LibraryEpochMarker?,
     );
   }
+}
+
+/// What the first sync would combine: shown to the user before the first
+/// library-merging sync is allowed to run.
+class FirstSyncMergeInfo {
+  final int peerFileCount;
+  final int localDiveCount;
+
+  const FirstSyncMergeInfo({
+    required this.peerFileCount,
+    required this.localDiveCount,
+  });
 }
 
 /// Sync state notifier
@@ -184,6 +234,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
   final _log = LoggerService.forClass(SyncNotifier);
   StreamSubscription<void>? _changeSubscription;
   Timer? _autoSyncTimer;
+  bool _syncInFlight = false;
 
   SyncNotifier(this._syncRepository, this._ref) : super(const SyncState()) {
     _initialize();
@@ -195,7 +246,14 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
   Future<void> _initialize() async {
     // Load initial state
+    if (!mounted) return;
     await refreshState();
+    // A Replace restore persists its cloud side as a pending intent; execute
+    // it as soon as the app is back up, regardless of auto-sync settings.
+    if (mounted &&
+        _ref.read(libraryEpochStoreProvider).pendingReplace != null) {
+      unawaited(performSync());
+    }
   }
 
   void _listenForChanges() {
@@ -211,12 +269,15 @@ class SyncNotifier extends StateNotifier<SyncState> {
 
     _autoSyncTimer?.cancel();
     _autoSyncTimer = Timer(const Duration(seconds: 5), () {
-      performSync();
+      performSync(auto: true);
     });
   }
 
   void _setupProgressCallback() {
     _syncService.setProgressCallback((progress) {
+      // A launch-triggered sync can outlive this notifier (container torn
+      // down mid-upload); progress ticks must not touch a disposed notifier.
+      if (!mounted) return;
       state = state.copyWith(
         progress: progress.progress,
         message: progress.message,
@@ -232,6 +293,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
       final conflictCount = await _syncRepository.getConflictCount();
       final isAvailable = await _syncService.isSyncAvailable();
 
+      if (!mounted) return;
       state = state.copyWith(
         lastSync: lastSync,
         pendingChanges: pendingCount,
@@ -241,6 +303,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
         message: null,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(
         status: SyncStatus.error,
         message: 'Failed to load sync state: $e',
@@ -248,62 +311,210 @@ class SyncNotifier extends StateNotifier<SyncState> {
     }
   }
 
-  /// Perform a sync operation
-  Future<void> performSync() async {
+  /// Non-null when the NEXT sync would be this device's first contact with
+  /// existing cloud data while this device already holds dives -- the case
+  /// where a sync irreversibly combines two libraries (and duplicates any
+  /// dives that were imported separately on each device). The UI must
+  /// confirm before running that sync; auto-sync defers it entirely.
+  Future<FirstSyncMergeInfo?> firstSyncMergeInfo() async {
+    try {
+      final provider = _ref.read(cloudStorageProviderProvider);
+      if (provider == null) return null;
+      final lastSync = await _syncRepository.getLastSyncTime();
+      if (lastSync != null) return null;
+      final localDives = await _ref.read(diveRepositoryProvider).getDiveCount();
+      if (localDives == 0) return null;
+      final peers = await _ref
+          .read(syncInitializerProvider)
+          .peerSyncFiles(provider)
+          .timeout(const Duration(seconds: 8));
+      if (peers.isEmpty) return null;
+      return FirstSyncMergeInfo(
+        peerFileCount: peers.length,
+        localDiveCount: localDives,
+      );
+    } catch (e) {
+      // The guard must never block sync outright; on failure fall through
+      // to normal behavior.
+      _log.warning('First-contact check failed: $e');
+      return null;
+    }
+  }
+
+  /// Non-null when the cloud library was replaced under an epoch this device
+  /// has not accepted -- the next sync would halt for adoption. Mirrors the
+  /// [firstSyncMergeInfo] pre-check pattern for the Sync Now button.
+  Future<LibraryEpochMarker?> libraryReplaceInfo() async {
+    try {
+      final provider = _ref.read(cloudStorageProviderProvider);
+      if (provider == null) return null;
+      final store = _ref.read(libraryEpochStoreProvider);
+      if (store.pendingReplace != null) return null; // we ARE the replacer
+      final marker = await _syncService
+          .readLibraryEpochMarker(provider)
+          .timeout(const Duration(seconds: 8));
+      if (marker == null) return null;
+      final accepted =
+          await _syncRepository.getLastAcceptedEpochId() ??
+          store.lastAcceptedEpochId;
+      if (marker.epochId == accepted) return null;
+      return marker;
+    } catch (e) {
+      // Never block the button on this pre-check; performSync gates anyway.
+      _log.warning('Library replace pre-check failed: $e');
+      return null;
+    }
+  }
+
+  /// Adopt the replaced cloud library. The CALLER is responsible for the
+  /// safety backup (cloud_sync_page runs it via backupServiceProvider to
+  /// avoid a provider import cycle). Ends with a follow-up sync that uploads
+  /// this device's freshly stamped file.
+  Future<void> adoptReplacedLibrary() async {
+    if (_syncInFlight || state.status == SyncStatus.syncing) return;
+    state = state.copyWith(
+      status: SyncStatus.syncing,
+      message: 'Adopting the restored library...',
+    );
+    final result = await _syncService.adoptReplacedLibrary();
+    if (!result.isSuccess) {
+      state = state.copyWith(
+        status: SyncStatus.error,
+        message: result.message ?? 'Failed to adopt the restored library',
+      );
+      return;
+    }
+    await realignActiveDiverAfterDataReplace(
+      _ref.read(sharedPreferencesProvider),
+    );
+    state = state.copyWith(
+      status: SyncStatus.idle,
+      replaceAwaitingAdoption: false,
+      replaceMarker: null,
+      message: null,
+    );
+    await performSync();
+  }
+
+  /// Perform a sync operation.
+  ///
+  /// [auto] marks unattended triggers (launch, resume, post-write debounce).
+  /// An auto sync defers this device's FIRST library-combining contact to a
+  /// manual, user-confirmed Sync Now instead of merging unannounced.
+  Future<void> performSync({bool auto = false}) async {
     _log.debug('performSync() called');
-    if (state.status == SyncStatus.syncing) {
+    if (_syncInFlight || state.status == SyncStatus.syncing) {
       _log.debug('Already syncing, returning early');
       return;
     }
-
-    state = state.copyWith(
-      status: SyncStatus.syncing,
-      message: 'Starting sync...',
-      progress: 0.0,
-    );
-
-    // Set up progress callback on the current sync service
-    _setupProgressCallback();
-
-    _log.debug('Calling _syncService.performSync()...');
+    _syncInFlight = true;
     try {
-      final result = await _syncService.performSync();
-      _log.debug('Result: ${result.status}, message: ${result.message}');
+      if (auto) {
+        final info = await firstSyncMergeInfo();
+        if (info != null) {
+          _log.info(
+            'Deferring auto sync: first contact with existing cloud data '
+            'needs user confirmation',
+          );
+          state = state.copyWith(
+            firstSyncAwaitingConfirmation: true,
+            message: 'First sync needs confirmation. Tap Sync Now to review.',
+          );
+          return;
+        }
+      }
 
-      if (result.isSuccess) {
-        final defaultMessage = result.conflictsFound > 0
-            ? 'Sync completed with conflicts'
-            : 'Sync completed successfully';
-        state = state.copyWith(
-          status: result.conflictsFound > 0
-              ? SyncStatus.hasConflicts
-              : SyncStatus.success,
-          message: result.message ?? defaultMessage,
-          lastSync: result.lastSyncTime,
-          conflicts: result.conflictsFound,
-          progress: 1.0,
-        );
-      } else {
+      state = state.copyWith(
+        status: SyncStatus.syncing,
+        message: 'Starting sync...',
+        progress: 0.0,
+        firstSyncAwaitingConfirmation: false,
+        replaceAwaitingAdoption: false,
+        replaceMarker: null,
+      );
+
+      // Set up progress callback on the current sync service
+      _setupProgressCallback();
+
+      _log.debug('Calling _syncService.performSync()...');
+      try {
+        var result = await _syncService.performSync();
+        _log.debug('Result: ${result.status}, message: ${result.message}');
+        // This notifier can be disposed while a launch-triggered sync is in
+        // flight; never touch state after an await without re-checking.
+        if (!mounted) return;
+
+        if (result.status == SyncResultStatus.awaitingAdoption) {
+          final diveCount = await _ref
+              .read(diveRepositoryProvider)
+              .getDiveCount();
+          if (!mounted) return;
+          if (diveCount == 0) {
+            // Nothing local to lose: adopt silently, like an empty device
+            // joining sync, then run the normal sync to upload our file.
+            final adopt = await _syncService.adoptReplacedLibrary();
+            if (adopt.isSuccess) {
+              await realignActiveDiverAfterDataReplace(
+                _ref.read(sharedPreferencesProvider),
+              );
+              result = await _syncService.performSync();
+            } else {
+              result = adopt;
+            }
+            if (!mounted) return;
+          } else {
+            state = state.copyWith(
+              status: SyncStatus.idle,
+              replaceAwaitingAdoption: true,
+              replaceMarker: result.replaceMarker,
+              message:
+                  'Sync paused: the library was replaced from a backup. '
+                  'Tap Sync Now to review.',
+              progress: null,
+            );
+            return;
+          }
+        }
+
+        if (result.isSuccess) {
+          final defaultMessage = result.conflictsFound > 0
+              ? 'Sync completed with conflicts'
+              : 'Sync completed successfully';
+          state = state.copyWith(
+            status: result.conflictsFound > 0
+                ? SyncStatus.hasConflicts
+                : SyncStatus.success,
+            message: result.message ?? defaultMessage,
+            lastSync: result.lastSyncTime,
+            conflicts: result.conflictsFound,
+            progress: 1.0,
+          );
+        } else {
+          state = state.copyWith(
+            status: SyncStatus.error,
+            message: result.message ?? 'Sync failed',
+            progress: null,
+          );
+        }
+      } catch (e) {
+        if (!mounted) return;
+        final phase = state.message ?? 'sync';
         state = state.copyWith(
           status: SyncStatus.error,
-          message: result.message ?? 'Sync failed',
+          message: 'Sync error during $phase: $e',
           progress: null,
         );
       }
-    } catch (e) {
-      final phase = state.message ?? 'sync';
-      state = state.copyWith(
-        status: SyncStatus.error,
-        message: 'Sync error during $phase: $e',
-        progress: null,
-      );
-    }
 
-    // Refresh state after a brief delay so status is readable.
-    if (state.status == SyncStatus.success ||
-        state.status == SyncStatus.hasConflicts) {
-      await Future.delayed(const Duration(seconds: 2));
-      await refreshState();
+      // Refresh state after a brief delay so status is readable.
+      if (state.status == SyncStatus.success ||
+          state.status == SyncStatus.hasConflicts) {
+        await Future.delayed(const Duration(seconds: 2));
+        if (!mounted) return;
+        await refreshState();
+      }
+    } finally {
+      _syncInFlight = false;
     }
   }
 
@@ -318,17 +529,48 @@ class SyncNotifier extends StateNotifier<SyncState> {
   }
 
   /// Sign out from the cloud provider
+  ///
+  /// For S3 the credentials are hand-entered, so disconnecting only
+  /// deselects the provider; the stored configuration survives and the
+  /// S3 settings page offers the explicit, destructive
+  /// "Remove Configuration" instead.
   Future<void> signOut() async {
-    await _syncService.signOut();
+    final selected = _ref.read(selectedCloudProviderTypeProvider);
+    if (selected != CloudProviderType.s3) {
+      await _syncService.signOut();
+    } else {
+      // Match SyncService.signOut()'s metadata clearing without the
+      // provider sign-out, so the hand-entered credentials survive.
+      await _syncRepository.setCloudProvider(null);
+      await _syncRepository.setRemoteFileId(null);
+    }
     _ref.read(selectedCloudProviderTypeProvider.notifier).state = null;
     // Clear the saved provider from SharedPreferences
     await _ref.read(syncInitializerProvider).saveProvider(null);
+    // The S3 tile watches this; a sign-out (or future config change) must
+    // not leave it showing stale state.
+    _ref.invalidate(s3ConfigProvider);
     state = const SyncState();
   }
 
   /// Reset sync state
+  ///
+  /// Also adopts a brand-new device identity. Reset is the user-facing
+  /// recovery for sync gone wrong, and the worst such state -- two installs
+  /// syncing as the same device after cross-device restores -- is only
+  /// fixable with a fresh identity. Restore detection deliberately preserves
+  /// the anchored identity, so a clone survives everything short of this.
+  /// The retired identity's cloud file is removed best-effort: after the id
+  /// changes it would otherwise be merged back as a stale "peer" forever.
   Future<void> resetSyncState() async {
+    final oldDeviceId = await _syncRepository.getDeviceId();
     await _syncService.resetSyncState();
+    await _ref.read(syncInitializerProvider).adoptFreshIdentity();
+    await _syncService.deleteDeviceSyncFile(oldDeviceId);
+    // Reset is the manual escape hatch: drop any stuck replace intent and
+    // un-pause an awaiting-adoption state.
+    await _ref.read(libraryEpochStoreProvider).clearPendingReplace();
+    state = state.copyWith(replaceAwaitingAdoption: false, replaceMarker: null);
     await refreshState();
   }
 
@@ -413,6 +655,21 @@ final syncLaunchCheckProvider = FutureProvider<SyncCheckResult>((ref) async {
   return initializer.checkSyncOnLaunch(provider);
 });
 
+/// Reconcile the sync device identity on app launch.
+///
+/// Detects a database restore -- the on-disk database no longer matches the
+/// anchors mirrored outside it: a rotated instance token (the primary signal,
+/// which catches a same-device backup) or the device id -- and re-baselines
+/// sync so a rewound baseline can't stall sync or resurrect deletes. Runs
+/// unconditionally at startup, independent of whether a cloud provider is
+/// configured. See [SyncInitializer.reconcileDeviceIdentity].
+final reconcileDeviceIdentityProvider = FutureProvider<DeviceIdentityStatus>((
+  ref,
+) async {
+  final initializer = ref.watch(syncInitializerProvider);
+  return initializer.reconcileDeviceIdentity();
+});
+
 /// Restore last used provider on app launch
 final restoreLastProviderProvider = FutureProvider<void>((ref) async {
   final initializer = ref.watch(syncInitializerProvider);
@@ -423,4 +680,16 @@ final restoreLastProviderProvider = FutureProvider<void>((ref) async {
       ref.read(selectedCloudProviderTypeProvider.notifier).state = lastProvider;
     });
   }
+});
+
+/// Direct access to the S3 provider singleton for the configuration UI
+/// (load/save config, test connection).
+final s3StorageProviderInstanceProvider = Provider<S3StorageProvider>(
+  (ref) => _s3Provider,
+);
+
+/// The stored S3 configuration, or null when S3 has not been set up.
+/// Invalidate after saving or removing the configuration.
+final s3ConfigProvider = FutureProvider<S3Config?>((ref) async {
+  return ref.watch(s3StorageProviderInstanceProvider).loadConfig();
 });
