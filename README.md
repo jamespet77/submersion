@@ -377,7 +377,7 @@ lib/
 - **flutter_map** — OpenStreetMap integration
 - **libdivecomputer** — FFI bindings for dive computer communication
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation.
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed documentation.
 
 </details>
 
