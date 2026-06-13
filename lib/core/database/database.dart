@@ -1567,7 +1567,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 82;
+  static const int currentSchemaVersion = 83;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1653,13 +1653,16 @@ class AppDatabase extends _$AppDatabase {
     80,
     81,
     82,
+    83,
   ];
 
   /// Tables that carry a per-row Hybrid Logical Clock for cross-device conflict
   /// resolution (plus sync_metadata for the device clock). Shared between the
-  /// v77 backfill (original add) and the v82 backfill (recovery for databases
-  /// that landed at user_version = 77 via the schema-version collision with
-  /// PR #302's surface-interval index migration — see the v82 block below).
+  /// v77 backfill (original add), the v82 backfill (recovery for databases that
+  /// landed at user_version = 77 via the schema-version collision with PR #302's
+  /// surface-interval index migration) and the v83 backfill (comprehensive
+  /// recovery for databases stranded past v77 by the wider set of sync-branch
+  /// version collisions — see the v82 and v83 blocks below).
   static const List<String> _hlcTables = [
     'divers',
     'diver_settings',
@@ -3918,6 +3921,59 @@ class AppDatabase extends _$AppDatabase {
           }
         }
         if (from < 82) await reportProgress();
+        if (from < 83) {
+          // Comprehensive recovery for databases stranded past v77 by the wider
+          // set of sync-branch schema-version collisions. The v77 HLC / PR #302
+          // index collision (healed by the v82 block above) was only the first:
+          // the abandoned encrypted-sync and iCloud-diagnostic lineages also
+          // reused v78-v81 for unrelated migrations. A database that reached
+          // user_version >= 78 via one of those branches skipped the canonical
+          // sync_metadata ALTERs — instance_token (v78), last_accepted_epoch_id
+          // (v80), last_sync_provider (v81) — because their `from < N` guards
+          // are false once `from` already passed N. The v82 block re-added only
+          // hlc, so the three text columns stayed missing once the database sat
+          // at the current version and stopped running onUpgrade. Every identity
+          // write then failed at prepare time with "no such column:
+          // instance_token" (launch-time reconcile and the twin-split
+          // adopt-fresh-identity path), so sync could never start.
+          //
+          // Re-assert every post-v76 sync_metadata column with PRAGMA-guarded
+          // ALTERs: healthy databases no-op, stranded databases are healed. The
+          // columns are all nullable, so existing rows read as "not yet set"
+          // exactly as they did on the original add.
+          const syncMetadataColumns = <String, String>{
+            'instance_token': 'TEXT',
+            'last_accepted_epoch_id': 'TEXT',
+            'last_sync_provider': 'TEXT',
+          };
+          final smCols = await customSelect(
+            "PRAGMA table_info('sync_metadata')",
+          ).get();
+          if (smCols.isNotEmpty) {
+            final existing = smCols.map((c) => c.read<String>('name')).toSet();
+            for (final entry in syncMetadataColumns.entries) {
+              if (!existing.contains(entry.key)) {
+                await customStatement(
+                  'ALTER TABLE sync_metadata '
+                  'ADD COLUMN ${entry.key} ${entry.value}',
+                );
+              }
+            }
+          }
+          // Re-run the hlc backfill as well, covering any database that reached
+          // user_version 82 (so the v82 block no longer fires) while still
+          // missing hlc on some table via a collision that also claimed v82.
+          for (final table in _hlcTables) {
+            final cols = await customSelect(
+              "PRAGMA table_info('$table')",
+            ).get();
+            final existing = cols.map((c) => c.read<String>('name')).toSet();
+            if (cols.isNotEmpty && !existing.contains('hlc')) {
+              await customStatement('ALTER TABLE $table ADD COLUMN hlc TEXT');
+            }
+          }
+        }
+        if (from < 83) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
