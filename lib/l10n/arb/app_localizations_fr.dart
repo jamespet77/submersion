@@ -10503,6 +10503,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Synchronisation cloud desactivee';
 
   @override
+  String get settings_cloudSync_entry_subtitle =>
+      'Synchronisation via le stockage cloud';
+
+  @override
   String get settings_cloudSync_adopt_confirm =>
       'Adopter la bibliothèque restaurée';
 
@@ -10547,7 +10551,49 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get settings_cloudSync_switch_dialogTitle =>
+      'Changer de service de synchronisation ?';
+
+  @override
+  String settings_cloudSync_switch_dialogContent(
+    String fromName,
+    String toName,
+  ) {
+    return 'Vos données ne seront pas retirées de $fromName : elles y restent jusqu\'à ce que vous les supprimiez. Après le changement, la prochaine synchronisation de cet appareil combine ses données avec ce qui existe déjà sur $toName. Vos autres appareils continuent d\'utiliser $fromName jusqu\'à ce que vous changiez chacun d\'eux également.';
+  }
+
+  @override
+  String get settings_cloudSync_switch_confirm => 'Changer';
+
+  @override
+  String settings_cloudSync_moved_banner(
+    String deviceName,
+    String destination,
+  ) {
+    return '$deviceName a déplacé cette bibliothèque vers $destination. Ce service n\'est plus mis à jour par celui-ci. Sélectionnez $destination ci-dessous pour suivre le déplacement.';
+  }
+
+  @override
+  String get settings_cloudSync_moved_dismiss => 'Ignorer';
+
+  @override
+  String settings_cloudSync_cleanup_banner(String backend) {
+    return 'D\'anciennes données de synchronisation, datant d\'avant votre changement de service, sont toujours stockées sur $backend. Elles ne sont plus utilisées.';
+  }
+
+  @override
+  String get settings_cloudSync_cleanup_delete =>
+      'Supprimer les anciennes données';
+
+  @override
+  String get settings_cloudSync_cleanup_keep => 'Conserver';
+
+  @override
   String get settings_cloudSync_header_advanced => 'Avance';
+
+  @override
+  String get settings_cloudSync_signOut_backupWarning =>
+      'La sauvegarde cloud sera désactivée et les sauvegardes seront enregistrées à l\'emplacement par défaut.';
 
   @override
   String get settings_cloudSync_header_cloudProvider => 'Fournisseur cloud';
@@ -10604,10 +10650,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_cloudSync_provider_icloud => 'iCloud';
 
   @override
-  String get settings_cloudSync_provider_icloud_subtitle =>
-      'Synchroniser via Apple iCloud';
-
-  @override
   String settings_cloudSync_provider_initFailed(Object providerName) {
     return 'Echec de l\'initialisation du fournisseur $providerName';
   }
@@ -10622,7 +10664,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_cloudSync_provider_s3_subtitle =>
-      'Amazon S3, MinIO, Cloudflare R2, Backblaze B2 et plus';
+      'Fonctionne avec tout service de stockage compatible S3';
 
   @override
   String get settings_cloudSync_provider_s3_title => 'Stockage compatible S3';
@@ -11420,6 +11462,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'Tester la connexion';
 
   @override
+  String get settings_s3Config_advanced_title => 'Avancé';
+
+  @override
   String get settings_s3Config_appBar_title => 'Stockage compatible S3';
 
   @override
@@ -11434,7 +11479,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_s3Config_field_endpoint_helper =>
-      'Laisser vide pour Amazon S3';
+      'Par exemple : https://s3.example.com';
 
   @override
   String get settings_s3Config_field_endpoint_label =>
@@ -11446,10 +11491,15 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_s3Config_field_pathStyle_subtitle =>
-      'Requis par la plupart des serveurs MinIO et NAS';
+      'Requis par la plupart des serveurs auto-hébergés';
 
   @override
   String get settings_s3Config_field_prefix_label => 'Préfixe de clés';
+
+  @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'Détection automatique : $region';
+  }
 
   @override
   String get settings_s3Config_field_region_label => 'Région';
@@ -11474,6 +11524,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'Configuration S3 enregistrée';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'Région détectée : $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'Connexion réussie';

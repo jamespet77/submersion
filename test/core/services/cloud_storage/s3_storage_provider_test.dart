@@ -31,6 +31,9 @@ class _FakeS3ApiClient implements S3ApiClient {
   List<S3ObjectInfo> listing = [];
   bool closed = false;
 
+  @override
+  void Function(String region)? onRegionCorrected;
+
   void _assertOpen() {
     if (closed) throw const CloudStorageException('client closed');
   }
@@ -109,6 +112,46 @@ class _GatedCredentialsStore implements S3CredentialsStore {
   Future<void> clear() async => stored = null;
 }
 
+/// Records call order and parks each `save` until [release] is called, so
+/// tests can drive signOut/saveConfig + region-correction save into the
+/// race window that previously caused credentials to reappear.
+class _GatedSaveCredentialsStore implements S3CredentialsStore {
+  S3Config? stored;
+  final List<String> events = [];
+  Completer<void>? _saveGate;
+
+  /// Park the next [save] call.
+  void arm() => _saveGate = Completer<void>();
+
+  /// Release a parked save. The gate completer is held until release runs,
+  /// so this is safe to call after the save has begun and consumed it.
+  void release() {
+    final gate = _saveGate;
+    _saveGate = null;
+    gate?.complete();
+  }
+
+  @override
+  Future<S3Config?> load() async => stored;
+
+  @override
+  Future<void> save(S3Config config) async {
+    events.add('save-begin:${config.region}');
+    final gate = _saveGate;
+    if (gate != null && !gate.isCompleted) {
+      await gate.future;
+    }
+    stored = config;
+    events.add('save-end:${config.region}');
+  }
+
+  @override
+  Future<void> clear() async {
+    events.add('clear');
+    stored = null;
+  }
+}
+
 void main() {
   late _MemoryCredentialsStore store;
   late List<_FakeS3ApiClient> builtClients;
@@ -126,7 +169,7 @@ void main() {
     builtClients = [];
     provider = S3StorageProvider(
       store: store,
-      apiClientFactory: (config) {
+      apiClientFactory: (config, {onRegionCorrected}) {
         final client = _FakeS3ApiClient(config);
         builtClients.add(client);
         return client;
@@ -250,7 +293,7 @@ void main() {
         final client = _FakeS3ApiClient(config());
         provider = S3StorageProvider(
           store: store,
-          apiClientFactory: (_) => client,
+          apiClientFactory: (_, {onRegionCorrected}) => client,
         );
         client.listing = [
           S3ObjectInfo(
@@ -309,7 +352,7 @@ void main() {
       final client = _FakeS3ApiClient(config());
       provider = S3StorageProvider(
         store: store,
-        apiClientFactory: (_) => client,
+        apiClientFactory: (_, {onRegionCorrected}) => client,
       );
       client.listing = [
         S3ObjectInfo(
@@ -368,7 +411,7 @@ void main() {
         final gatedStore = _GatedCredentialsStore(gate)..stored = config();
         provider = S3StorageProvider(
           store: gatedStore,
-          apiClientFactory: (c) {
+          apiClientFactory: (c, {onRegionCorrected}) {
             final client = _FakeS3ApiClient(c);
             builtClients.add(client);
             return client;
@@ -382,5 +425,115 @@ void main() {
         expect(await provider.getUserEmail(), 'new-bucket @ nas.local');
       },
     );
+  });
+
+  group('region correction persistence', () {
+    test(
+      'persists a server-corrected region without dropping the client',
+      () async {
+        store.stored = config(); // region defaults to us-east-1
+        void Function(String region)? captured;
+        final client = _FakeS3ApiClient(config());
+        final correcting = S3StorageProvider(
+          store: store,
+          apiClientFactory: (_, {onRegionCorrected}) {
+            captured = onRegionCorrected;
+            return client;
+          },
+        );
+
+        await correcting.listFiles(); // builds the session client
+        expect(captured, isNotNull);
+        captured!('eu-west-1');
+        await pumpEventQueue();
+
+        expect(store.stored!.region, 'eu-west-1');
+        expect(client.closed, isFalse); // live client keeps its connection
+        expect(await correcting.listFiles(), isEmpty); // still usable
+      },
+    );
+
+    test(
+      'signOut awaits an in-flight region save so credentials cannot reappear',
+      () async {
+        // The region-correction save is fire-and-forget (unawaited at the
+        // callback). Without coordination, signOut's `_store.clear()` can
+        // be sequenced before the in-flight save completes, resurrecting
+        // credentials after sign-out. signOut must hold off until the save
+        // settles AND the post-save cache write must be cancelled.
+        final gatedStore = _GatedSaveCredentialsStore();
+        gatedStore.stored = config(); // region defaults to us-east-1
+        void Function(String region)? captured;
+        final racing = S3StorageProvider(
+          store: gatedStore,
+          apiClientFactory: (_, {onRegionCorrected}) {
+            captured = onRegionCorrected;
+            return _FakeS3ApiClient(config());
+          },
+        );
+
+        await racing.listFiles(); // builds the session client, captures cb
+        expect(captured, isNotNull);
+
+        // Arm the gate so the next save hangs, then trigger persist.
+        gatedStore.arm();
+        captured!('eu-west-1');
+        await pumpEventQueue();
+        // Save is parked at the gate but signOut should serialize past it.
+        expect(gatedStore.events, [
+          'save-begin:eu-west-1',
+        ], reason: 'persist save is parked at the gate');
+
+        // Start signOut while the save is still parked. It must block.
+        bool signedOut = false;
+        final signOutFuture = racing.signOut().then((_) => signedOut = true);
+        await pumpEventQueue();
+        expect(
+          signedOut,
+          isFalse,
+          reason: 'signOut must wait for the in-flight save to settle',
+        );
+        expect(
+          gatedStore.events.contains('clear'),
+          isFalse,
+          reason: 'signOut must not clear before the save finishes',
+        );
+
+        // Release the save, then drain.
+        gatedStore.release();
+        await signOutFuture;
+
+        // save-end fires before clear; final state has no credentials.
+        expect(gatedStore.events, [
+          'save-begin:eu-west-1',
+          'save-end:eu-west-1',
+          'clear',
+        ]);
+        expect(gatedStore.stored, isNull);
+        // The persist's post-save cache write must also have been skipped
+        // (generation guard), so a subsequent loadConfig sees no config.
+        expect(await racing.loadConfig(), isNull);
+      },
+    );
+
+    test('testConnection forwards corrections to the caller and does not '
+        'persist', () async {
+      void Function(String region)? captured;
+      final probing = S3StorageProvider(
+        store: store,
+        apiClientFactory: (c, {onRegionCorrected}) {
+          captured = onRegionCorrected;
+          return _FakeS3ApiClient(c);
+        },
+      );
+      final reported = <String>[];
+
+      await probing.testConnection(config(), onRegionCorrected: reported.add);
+      captured!('auto');
+      await pumpEventQueue();
+
+      expect(reported, ['auto']);
+      expect(store.stored, isNull); // unsaved probe never writes the store
+    });
   });
 }

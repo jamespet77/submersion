@@ -7,6 +7,18 @@ import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.da
 /// canonical sync file maps to a single stable id across uploads.
 class FakeCloudStorageProvider extends CloudStorageProvider
     with CloudStorageProviderMixin {
+  /// Overridable so tests can model two distinct backends (e.g. an old 's3'
+  /// and a new 'icloud') for backend-switch scenarios. Defaults preserve the
+  /// long-standing 'fake' identity for existing callers.
+  FakeCloudStorageProvider({
+    String providerId = 'fake',
+    String providerName = 'Fake',
+  }) : _providerId = providerId,
+       _providerName = providerName;
+
+  final String _providerId;
+  final String _providerName;
+
   final Map<String, _FakeFile> _files = {};
   bool authenticated = true;
   bool available = true;
@@ -27,6 +39,9 @@ class FakeCloudStorageProvider extends CloudStorageProvider
 
   /// When true, [deleteFile] throws, modelling an offline/denied provider.
   bool failDeletes = false;
+
+  /// When true, [downloadFile] throws, modelling a transient read failure.
+  bool failDownloads = false;
 
   /// Ordered log of cloud operations, for asserting protocol order (e.g.
   /// "marker written before wipe"). File ids equal filenames in this fake.
@@ -52,10 +67,10 @@ class FakeCloudStorageProvider extends CloudStorageProvider
   }
 
   @override
-  String get providerName => 'Fake';
+  String get providerName => _providerName;
 
   @override
-  String get providerId => 'fake';
+  String get providerId => _providerId;
 
   @override
   Future<bool> isAvailable() async => available;
@@ -99,6 +114,9 @@ class FakeCloudStorageProvider extends CloudStorageProvider
 
   @override
   Future<Uint8List> downloadFile(String fileId) async {
+    if (failDownloads) {
+      throw const CloudStorageException('download failed (test)');
+    }
     final f = _files[fileId];
     if (f == null) {
       throw CloudStorageException('File not found: $fileId');

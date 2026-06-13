@@ -9983,6 +9983,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_cloudSync_disabledBanner_title => '云同步已禁用';
 
   @override
+  String get settings_cloudSync_entry_subtitle => '通过云存储同步';
+
+  @override
   String get settings_cloudSync_adopt_confirm => '采用恢复的资料库';
 
   @override
@@ -10023,7 +10026,46 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get settings_cloudSync_switch_dialogTitle => '切换同步后端？';
+
+  @override
+  String settings_cloudSync_switch_dialogContent(
+    String fromName,
+    String toName,
+  ) {
+    return '您的数据不会从 $fromName 移走：在您删除之前它会一直保留在那里。切换后，此设备的下次同步会将其数据与 $toName 上已有的内容合并。您的其他设备会继续使用 $fromName，直到您也逐一切换它们。';
+  }
+
+  @override
+  String get settings_cloudSync_switch_confirm => '切换';
+
+  @override
+  String settings_cloudSync_moved_banner(
+    String deviceName,
+    String destination,
+  ) {
+    return '$deviceName 已将此资料库移至 $destination。该后端不再由它更新。请在下方选择 $destination 以跟随此次移动。';
+  }
+
+  @override
+  String get settings_cloudSync_moved_dismiss => '忽略';
+
+  @override
+  String settings_cloudSync_cleanup_banner(String backend) {
+    return '$backend 上仍存有您切换后端之前的旧同步数据。这些数据已不再使用。';
+  }
+
+  @override
+  String get settings_cloudSync_cleanup_delete => '删除旧数据';
+
+  @override
+  String get settings_cloudSync_cleanup_keep => '保留';
+
+  @override
   String get settings_cloudSync_header_advanced => '高级';
+
+  @override
+  String get settings_cloudSync_signOut_backupWarning => '云备份将被关闭，备份将保存到默认位置。';
 
   @override
   String get settings_cloudSync_header_cloudProvider => '云服务提供商';
@@ -10079,10 +10121,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_cloudSync_provider_icloud => 'iCloud';
 
   @override
-  String get settings_cloudSync_provider_icloud_subtitle =>
-      '通过 Apple iCloud 同步';
-
-  @override
   String settings_cloudSync_provider_initFailed(Object providerName) {
     return '无法初始化 $providerName 提供商';
   }
@@ -10094,8 +10132,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_cloudSync_provider_s3_edit => '编辑 S3 配置';
 
   @override
-  String get settings_cloudSync_provider_s3_subtitle =>
-      'Amazon S3、MinIO、Cloudflare R2、Backblaze B2 等';
+  String get settings_cloudSync_provider_s3_subtitle => '适用于任何兼容 S3 的存储服务';
 
   @override
   String get settings_cloudSync_provider_s3_title => 'S3 兼容存储';
@@ -10837,6 +10874,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_s3Config_action_testConnection => '测试连接';
 
   @override
+  String get settings_s3Config_advanced_title => '高级';
+
+  @override
   String get settings_s3Config_appBar_title => 'S3 兼容存储';
 
   @override
@@ -10849,7 +10889,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_s3Config_field_bucket_label => '存储桶';
 
   @override
-  String get settings_s3Config_field_endpoint_helper => '使用 Amazon S3 时留空';
+  String get settings_s3Config_field_endpoint_helper =>
+      '例如：https://s3.example.com';
 
   @override
   String get settings_s3Config_field_endpoint_label => '终端节点 URL';
@@ -10858,11 +10899,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_s3Config_field_pathStyle_label => '使用路径样式寻址';
 
   @override
-  String get settings_s3Config_field_pathStyle_subtitle =>
-      '大多数 MinIO 和 NAS 服务器需要此项';
+  String get settings_s3Config_field_pathStyle_subtitle => '大多数自托管服务器需要此选项';
 
   @override
   String get settings_s3Config_field_prefix_label => '键前缀';
+
+  @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return '自动检测：$region';
+  }
 
   @override
   String get settings_s3Config_field_region_label => '区域';
@@ -10886,6 +10931,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'S3 配置已保存';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return '检测到区域：$region';
+  }
 
   @override
   String get settings_s3Config_test_success => '连接成功';

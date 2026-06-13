@@ -17864,6 +17864,12 @@ abstract class AppLocalizations {
   /// **'Cloud Sync Disabled'**
   String get settings_cloudSync_disabledBanner_title;
 
+  /// No description provided for @settings_cloudSync_entry_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync via cloud storage'**
+  String get settings_cloudSync_entry_subtitle;
+
   /// No description provided for @settings_cloudSync_adopt_confirm.
   ///
   /// In en, this message translates to:
@@ -17921,11 +17927,68 @@ abstract class AppLocalizations {
   /// **'Sync is paused: the library was replaced from a backup on \"{deviceName}\". Tap Sync Now to review.'**
   String settings_cloudSync_replace_banner(String deviceName);
 
+  /// No description provided for @settings_cloudSync_switch_dialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch sync backend?'**
+  String get settings_cloudSync_switch_dialogTitle;
+
+  /// No description provided for @settings_cloudSync_switch_dialogContent.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data will not be moved off {fromName} -- it stays there until you delete it. After switching, this device\'s next sync combines its data with whatever already exists on {toName}. Your other devices keep using {fromName} until you switch each of them too.'**
+  String settings_cloudSync_switch_dialogContent(
+    String fromName,
+    String toName,
+  );
+
+  /// No description provided for @settings_cloudSync_switch_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch'**
+  String get settings_cloudSync_switch_confirm;
+
+  /// No description provided for @settings_cloudSync_moved_banner.
+  ///
+  /// In en, this message translates to:
+  /// **'{deviceName} moved this library to {destination}. This backend is no longer being updated by it. Select {destination} below to follow the move.'**
+  String settings_cloudSync_moved_banner(String deviceName, String destination);
+
+  /// No description provided for @settings_cloudSync_moved_dismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismiss'**
+  String get settings_cloudSync_moved_dismiss;
+
+  /// No description provided for @settings_cloudSync_cleanup_banner.
+  ///
+  /// In en, this message translates to:
+  /// **'Old sync data is still stored on {backend} from before you switched backends. It is no longer used.'**
+  String settings_cloudSync_cleanup_banner(String backend);
+
+  /// No description provided for @settings_cloudSync_cleanup_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete old data'**
+  String get settings_cloudSync_cleanup_delete;
+
+  /// No description provided for @settings_cloudSync_cleanup_keep.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep'**
+  String get settings_cloudSync_cleanup_keep;
+
   /// No description provided for @settings_cloudSync_header_advanced.
   ///
   /// In en, this message translates to:
   /// **'Advanced'**
   String get settings_cloudSync_header_advanced;
+
+  /// No description provided for @settings_cloudSync_signOut_backupWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud backup will be turned off and backups will be saved to the default location.'**
+  String get settings_cloudSync_signOut_backupWarning;
 
   /// No description provided for @settings_cloudSync_header_cloudProvider.
   ///
@@ -17996,12 +18059,6 @@ abstract class AppLocalizations {
   /// **'iCloud'**
   String get settings_cloudSync_provider_icloud;
 
-  /// No description provided for @settings_cloudSync_provider_icloud_subtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Sync via Apple iCloud'**
-  String get settings_cloudSync_provider_icloud_subtitle;
-
   /// No description provided for @settings_cloudSync_provider_initFailed.
   ///
   /// In en, this message translates to:
@@ -18023,7 +18080,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_cloudSync_provider_s3_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Amazon S3, MinIO, Cloudflare R2, Backblaze B2, and more'**
+  /// **'Works with any S3-compatible storage service'**
   String get settings_cloudSync_provider_s3_subtitle;
 
   /// No description provided for @settings_cloudSync_provider_s3_title.
@@ -19326,6 +19383,12 @@ abstract class AppLocalizations {
   /// **'Test Connection'**
   String get settings_s3Config_action_testConnection;
 
+  /// No description provided for @settings_s3Config_advanced_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get settings_s3Config_advanced_title;
+
   /// No description provided for @settings_s3Config_appBar_title.
   ///
   /// In en, this message translates to:
@@ -19353,7 +19416,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_s3Config_field_endpoint_helper.
   ///
   /// In en, this message translates to:
-  /// **'Leave blank for Amazon S3'**
+  /// **'For example: https://s3.example.com'**
   String get settings_s3Config_field_endpoint_helper;
 
   /// No description provided for @settings_s3Config_field_endpoint_label.
@@ -19371,7 +19434,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_s3Config_field_pathStyle_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Required by most MinIO and NAS servers'**
+  /// **'Required by most self-hosted servers'**
   String get settings_s3Config_field_pathStyle_subtitle;
 
   /// No description provided for @settings_s3Config_field_prefix_label.
@@ -19379,6 +19442,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Key prefix'**
   String get settings_s3Config_field_prefix_label;
+
+  /// No description provided for @settings_s3Config_field_region_helperAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-detected: {region}'**
+  String settings_s3Config_field_region_helperAuto(String region);
 
   /// No description provided for @settings_s3Config_field_region_label.
   ///
@@ -19421,6 +19490,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'S3 configuration saved'**
   String get settings_s3Config_saved;
+
+  /// No description provided for @settings_s3Config_test_regionDetected.
+  ///
+  /// In en, this message translates to:
+  /// **'Region detected: {region}'**
+  String settings_s3Config_test_regionDetected(String region);
 
   /// No description provided for @settings_s3Config_test_success.
   ///

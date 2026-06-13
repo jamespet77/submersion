@@ -10432,6 +10432,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Felho szinkronizalas letiltva';
 
   @override
+  String get settings_cloudSync_entry_subtitle =>
+      'Szinkronizálás felhőtárhelyen keresztül';
+
+  @override
   String get settings_cloudSync_adopt_confirm =>
       'Visszaállított könyvtár átvétele';
 
@@ -10476,7 +10480,48 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get settings_cloudSync_switch_dialogTitle =>
+      'Vált a szinkronizálási szolgáltatón?';
+
+  @override
+  String settings_cloudSync_switch_dialogContent(
+    String fromName,
+    String toName,
+  ) {
+    return 'Az adatai nem kerülnek el a(z) $fromName szolgáltatóról – ott maradnak, amíg nem törli őket. A váltás után ennek az eszköznek a következő szinkronizálása összevonja az adatait azzal, ami már a(z) $toName szolgáltatón található. A többi eszköze továbbra is a(z) $fromName szolgáltatót használja, amíg azokon is át nem vált.';
+  }
+
+  @override
+  String get settings_cloudSync_switch_confirm => 'Váltás';
+
+  @override
+  String settings_cloudSync_moved_banner(
+    String deviceName,
+    String destination,
+  ) {
+    return 'A(z) $deviceName áthelyezte ezt a könyvtárat ide: $destination. Ezt a szolgáltatót már nem frissíti. Válassza a(z) $destination lehetőséget alább a költözés követéséhez.';
+  }
+
+  @override
+  String get settings_cloudSync_moved_dismiss => 'Elvetés';
+
+  @override
+  String settings_cloudSync_cleanup_banner(String backend) {
+    return 'Régi szinkronizálási adatok vannak még tárolva a(z) $backend szolgáltatón a szolgáltatóváltás előttről. Ezeket már nem használja a rendszer.';
+  }
+
+  @override
+  String get settings_cloudSync_cleanup_delete => 'Régi adatok törlése';
+
+  @override
+  String get settings_cloudSync_cleanup_keep => 'Megtartás';
+
+  @override
   String get settings_cloudSync_header_advanced => 'Halado';
+
+  @override
+  String get settings_cloudSync_signOut_backupWarning =>
+      'A felhőalapú biztonsági mentés kikapcsol, és a mentések az alapértelmezett helyre kerülnek.';
 
   @override
   String get settings_cloudSync_header_cloudProvider => 'Felho szolgaltato';
@@ -10533,10 +10578,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_cloudSync_provider_icloud => 'iCloud';
 
   @override
-  String get settings_cloudSync_provider_icloud_subtitle =>
-      'Szinkronizalas Apple iCloud-on keresztül';
-
-  @override
   String settings_cloudSync_provider_initFailed(Object providerName) {
     return 'Nem sikerült a(z) $providerName szolgaltato inicializalasa';
   }
@@ -10551,7 +10592,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_cloudSync_provider_s3_subtitle =>
-      'Amazon S3, MinIO, Cloudflare R2, Backblaze B2 és továbbiak';
+      'Bármely S3-kompatibilis tárolószolgáltatással működik';
 
   @override
   String get settings_cloudSync_provider_s3_title => 'S3-kompatibilis tároló';
@@ -11346,6 +11387,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'Kapcsolat tesztelése';
 
   @override
+  String get settings_s3Config_advanced_title => 'Speciális';
+
+  @override
   String get settings_s3Config_appBar_title => 'S3-kompatibilis tároló';
 
   @override
@@ -11360,7 +11404,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_s3Config_field_endpoint_helper =>
-      'Amazon S3 esetén hagyja üresen';
+      'Például: https://s3.example.com';
 
   @override
   String get settings_s3Config_field_endpoint_label => 'Végpont URL';
@@ -11371,10 +11415,15 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_s3Config_field_pathStyle_subtitle =>
-      'A legtöbb MinIO- és NAS-kiszolgálóhoz szükséges';
+      'A legtöbb saját üzemeltetésű kiszolgálóhoz szükséges';
 
   @override
   String get settings_s3Config_field_prefix_label => 'Kulcs-előtag';
+
+  @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'Automatikusan észlelve: $region';
+  }
 
   @override
   String get settings_s3Config_field_region_label => 'Régió';
@@ -11399,6 +11448,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'S3-konfiguráció mentve';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'Észlelt régió: $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'Sikeres kapcsolat';

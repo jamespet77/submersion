@@ -10193,6 +10193,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_cloudSync_disabledBanner_title => 'סנכרון ענן מושבת';
 
   @override
+  String get settings_cloudSync_entry_subtitle => 'סנכרון באמצעות אחסון ענן';
+
+  @override
   String get settings_cloudSync_adopt_confirm => 'אימוץ הספרייה המשוחזרת';
 
   @override
@@ -10234,7 +10237,47 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
+  String get settings_cloudSync_switch_dialogTitle => 'להחליף שירות סנכרון?';
+
+  @override
+  String settings_cloudSync_switch_dialogContent(
+    String fromName,
+    String toName,
+  ) {
+    return 'הנתונים שלך לא יועברו מ-$fromName -- הם יישארו שם עד שתמחק אותם. לאחר ההחלפה, הסנכרון הבא של מכשיר זה ישלב את הנתונים שלו עם מה שכבר קיים ב-$toName. המכשירים האחרים שלך ימשיכו להשתמש ב-$fromName עד שתחליף גם כל אחד מהם.';
+  }
+
+  @override
+  String get settings_cloudSync_switch_confirm => 'החלף';
+
+  @override
+  String settings_cloudSync_moved_banner(
+    String deviceName,
+    String destination,
+  ) {
+    return '$deviceName העביר ספרייה זו אל $destination. שירות זה כבר אינו מתעדכן על ידיו. בחר $destination למטה כדי לעקוב אחר ההעברה.';
+  }
+
+  @override
+  String get settings_cloudSync_moved_dismiss => 'התעלם';
+
+  @override
+  String settings_cloudSync_cleanup_banner(String backend) {
+    return 'נתוני סנכרון ישנים עדיין מאוחסנים ב-$backend מהזמן שלפני שהחלפת שירותים. הם כבר אינם בשימוש.';
+  }
+
+  @override
+  String get settings_cloudSync_cleanup_delete => 'מחק נתונים ישנים';
+
+  @override
+  String get settings_cloudSync_cleanup_keep => 'שמור';
+
+  @override
   String get settings_cloudSync_header_advanced => 'מתקדם';
+
+  @override
+  String get settings_cloudSync_signOut_backupWarning =>
+      'גיבוי הענן יכובה והגיבויים יישמרו במיקום ברירת המחדל.';
 
   @override
   String get settings_cloudSync_header_cloudProvider => 'ספק ענן';
@@ -10290,10 +10333,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_cloudSync_provider_icloud => 'iCloud';
 
   @override
-  String get settings_cloudSync_provider_icloud_subtitle =>
-      'סנכרון באמצעות Apple iCloud';
-
-  @override
   String settings_cloudSync_provider_initFailed(Object providerName) {
     return 'אתחול ספק $providerName נכשל';
   }
@@ -10306,7 +10345,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_cloudSync_provider_s3_subtitle =>
-      'Amazon S3, MinIO, Cloudflare R2, Backblaze B2 ועוד';
+      'עובד עם כל שירות אחסון תואם S3';
 
   @override
   String get settings_cloudSync_provider_s3_title => 'אחסון תואם S3';
@@ -11073,6 +11112,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_s3Config_action_testConnection => 'בדיקת חיבור';
 
   @override
+  String get settings_s3Config_advanced_title => 'מתקדם';
+
+  @override
   String get settings_s3Config_appBar_title => 'אחסון תואם S3';
 
   @override
@@ -11087,7 +11129,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_s3Config_field_endpoint_helper =>
-      'השאירו ריק עבור Amazon S3';
+      'לדוגמה: https://s3.example.com';
 
   @override
   String get settings_s3Config_field_endpoint_label =>
@@ -11099,10 +11141,15 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_s3Config_field_pathStyle_subtitle =>
-      'נדרש על ידי רוב שרתי MinIO ו-NAS';
+      'נדרש על ידי רוב השרתים באירוח עצמי';
 
   @override
   String get settings_s3Config_field_prefix_label => 'קידומת מפתחות';
+
+  @override
+  String settings_s3Config_field_region_helperAuto(String region) {
+    return 'זוהה אוטומטית: $region';
+  }
 
   @override
   String get settings_s3Config_field_region_label => 'אזור';
@@ -11126,6 +11173,11 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_s3Config_saved => 'תצורת S3 נשמרה';
+
+  @override
+  String settings_s3Config_test_regionDetected(String region) {
+    return 'זוהה אזור: $region';
+  }
 
   @override
   String get settings_s3Config_test_success => 'החיבור הצליח';

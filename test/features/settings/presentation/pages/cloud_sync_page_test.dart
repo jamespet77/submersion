@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -11,6 +13,7 @@ import 'package:submersion/core/services/cloud_storage/s3/s3_credentials_store.d
 import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
 import 'package:submersion/core/database/database.dart' show AppDatabase;
 import 'package:submersion/core/services/sync/library_epoch.dart';
+import 'package:submersion/core/services/sync/library_moved.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:submersion/features/backup/data/repositories/backup_preferences.dart';
 import 'package:submersion/features/backup/data/services/backup_service.dart';
@@ -51,7 +54,7 @@ class _FakeSyncRepository extends SyncRepository {
   int signOutCalls = 0;
 
   @override
-  Future<DateTime?> getLastSyncTime() async => null;
+  Future<DateTime?> getLastSyncTime({String? forProvider}) async => null;
 
   @override
   Future<int> getPendingCount() async => 0;
@@ -134,6 +137,11 @@ class _FakeSyncNotifier extends StateNotifier<SyncState>
   int resetSyncStateCalls = 0;
   int signOutCalls = 0;
   int adoptCalls = 0;
+  int acknowledgeMovedCalls = 0;
+  int checkLibraryMovedCalls = 0;
+  int cleanupOldBackendDataCalls = 0;
+  int dismissOldBackendCleanupCalls = 0;
+  int recordBackendDepartureCalls = 0;
 
   /// Set to non-null to simulate first-contact conditions in widget tests.
   FirstSyncMergeInfo? firstSyncInfo;
@@ -154,6 +162,26 @@ class _FakeSyncNotifier extends StateNotifier<SyncState>
   Future<void> adoptReplacedLibrary() async {
     adoptCalls++;
   }
+
+  @override
+  Future<void> acknowledgeMoved() async => acknowledgeMovedCalls++;
+
+  @override
+  Future<void> checkLibraryMoved() async => checkLibraryMovedCalls++;
+
+  @override
+  Future<void> cleanupOldBackendData() async => cleanupOldBackendDataCalls++;
+
+  @override
+  Future<void> dismissOldBackendCleanup() async =>
+      dismissOldBackendCleanupCalls++;
+
+  @override
+  Future<void> recordBackendDeparture({
+    required CloudStorageProvider oldProvider,
+    required String toProviderId,
+    String? toProviderName,
+  }) async => recordBackendDepartureCalls++;
 
   @override
   Future<void> refreshState() async => refreshStateCalls++;
@@ -362,10 +390,11 @@ void main() {
       await pumpPage(tester);
 
       expect(find.text('Cloud Sync'), findsOneWidget);
-      // Provider section header and both provider tiles.
+      // Provider section header and provider tiles. Google Drive is hidden
+      // until its integration is fully implemented.
       expect(find.text('Cloud Provider'), findsOneWidget);
       expect(find.text('iCloud'), findsOneWidget);
-      expect(find.text('Google Drive'), findsOneWidget);
+      expect(find.text('Google Drive'), findsNothing);
       // Behavior section.
       expect(find.text('Sync Behavior'), findsOneWidget);
       expect(find.text('Auto Sync'), findsOneWidget);
@@ -607,55 +636,92 @@ void main() {
   });
 
   group('CloudSyncPage - provider selection', () {
+    // The tap-to-select flow now only runs through the iCloud tile, which
+    // is disabled off-Apple, so the tap tests are skipped on the Linux CI
+    // runner. They still run on macOS (developer machines + pre-push).
+    final tapUnavailable = !(Platform.isIOS || Platform.isMacOS);
+
     testWidgets('selected provider shows connected check icon', (tester) async {
-      await pumpPage(tester, selectedProvider: CloudProviderType.googledrive);
+      await pumpPage(tester, selectedProvider: CloudProviderType.icloud);
       // The trailing check_circle marks the selected provider.
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
       // With a provider selected the hint disappears.
       expect(find.text('Select a cloud provider to enable sync'), findsNothing);
     });
 
-    testWidgets('tapping Google Drive tile authenticates and shows snackbar', (
-      tester,
-    ) async {
-      final handles = await pumpPage(tester);
+    testWidgets(
+      'persisted googledrive selection reads as no provider since the tile is hidden',
+      (tester) async {
+        // SyncRepository.getCloudProvider() falls back to googledrive when
+        // the stored enum name does not match, and getLastProvider() returns
+        // a previously persisted googledrive choice verbatim. With the tile
+        // removed, the UI must treat that as "no provider" so Sync Now is
+        // disabled and the select-provider hint stays visible. Otherwise the
+        // user sees no selected tile but a green Sync Now -- inconsistent.
+        await pumpPage(tester, selectedProvider: CloudProviderType.googledrive);
 
-      await tester.tap(find.text('Google Drive'));
-      await tester.pumpAndSettle();
+        // No tile shows the connected check icon (googledrive tile is hidden).
+        expect(find.byIcon(Icons.check_circle), findsNothing);
+        // Sync Now is disabled and the hint is shown.
+        final button = tester.widget<FilledButton>(
+          find.widgetWithText(FilledButton, 'Sync Now'),
+        );
+        expect(button.onPressed, isNull);
+        expect(
+          find.text('Select a cloud provider to enable sync'),
+          findsOneWidget,
+        );
+      },
+    );
 
-      // Fake provider authenticates successfully -> success snackbar +
-      // refreshState() on the sync notifier.
-      expect(find.text('Connected to Fake'), findsOneWidget);
-      expect(handles.sync.refreshStateCalls, greaterThan(0));
-    });
+    testWidgets(
+      'tapping the iCloud tile authenticates and shows snackbar',
+      (tester) async {
+        final handles = await pumpPage(tester);
+
+        await tester.tap(find.text('iCloud'));
+        await tester.pumpAndSettle();
+
+        // Fake provider authenticates successfully -> success snackbar +
+        // refreshState() on the sync notifier.
+        expect(find.text('Connected to Fake'), findsOneWidget);
+        expect(handles.sync.refreshStateCalls, greaterThan(0));
+      },
+      skip: tapUnavailable,
+    );
 
     testWidgets('null cloud provider shows initialize-failed snackbar', (
       tester,
     ) async {
       await pumpPage(tester, cloudProviderNull: true);
 
-      await tester.tap(find.text('Google Drive'));
+      await tester.tap(find.text('iCloud'));
       await tester.pumpAndSettle();
 
-      expect(
-        find.text('Failed to initialize googledrive provider'),
-        findsOneWidget,
-      );
-    });
+      expect(find.text('Failed to initialize icloud provider'), findsOneWidget);
+    }, skip: tapUnavailable);
 
-    testWidgets('authentication failure shows connection-failed snackbar', (
-      tester,
-    ) async {
-      await pumpPage(tester, cloudProvider: _ThrowingCloudStorageProvider());
+    testWidgets(
+      'authentication failure shows connection-failed snackbar',
+      (tester) async {
+        await pumpPage(tester, cloudProvider: _ThrowingCloudStorageProvider());
 
-      await tester.tap(find.text('Google Drive'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.text('iCloud'));
+        await tester.pumpAndSettle();
 
-      expect(find.textContaining('Fake connection failed:'), findsOneWidget);
-    });
+        expect(find.textContaining('Fake connection failed:'), findsOneWidget);
+      },
+      skip: tapUnavailable,
+    );
   });
 
   group('CloudSyncPage - sync actions', () {
+    // The iCloud provider tile is only actionable on Apple platforms
+    // (isAvailable: Platform.isIOS || Platform.isMacOS), so tests that switch
+    // backends by tapping it cannot run on the Linux test runner, where its
+    // ListTile is disabled and tapping it never opens the switch dialog.
+    final tapUnavailable = !(Platform.isIOS || Platform.isMacOS);
+
     testWidgets('Sync Now is enabled with provider and triggers performSync', (
       tester,
     ) async {
@@ -770,6 +836,108 @@ void main() {
       );
       expect(find.textContaining('Eric Mac'), findsOneWidget);
     });
+
+    testWidgets('shows the library-moved banner and Dismiss acknowledges it', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.s3,
+        syncState: const SyncState(
+          movedMarker: LibraryMovedMarker(
+            movedAt: 1,
+            toProviderId: 'icloud',
+            toProviderName: 'iCloud',
+            deviceId: 'd1',
+            deviceName: 'Eric Mac',
+          ),
+        ),
+      );
+
+      expect(find.textContaining('moved this library to'), findsOneWidget);
+      expect(find.textContaining('Eric Mac'), findsOneWidget);
+      expect(handles.sync.acknowledgeMovedCalls, 0);
+
+      await tester.tap(find.text('Dismiss'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.acknowledgeMovedCalls, 1);
+    });
+
+    testWidgets('shows the old-backend cleanup offer; Delete and Keep call '
+        'the matching notifier actions', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.icloud,
+        syncState: const SyncState(cleanupOldBackendProviderId: 's3'),
+      );
+
+      expect(
+        find.textContaining('Old sync data is still stored'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Delete old data'));
+      await tester.pumpAndSettle();
+      expect(handles.sync.cleanupOldBackendDataCalls, 1);
+      expect(handles.sync.dismissOldBackendCleanupCalls, 0);
+    });
+
+    testWidgets('Keep dismisses the cleanup offer without deleting', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.icloud,
+        syncState: const SyncState(cleanupOldBackendProviderId: 's3'),
+      );
+
+      await tester.tap(find.text('Keep'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.dismissOldBackendCleanupCalls, 1);
+      expect(handles.sync.cleanupOldBackendDataCalls, 0);
+    });
+
+    testWidgets('switching backends with sync history confirms and records '
+        'the departure', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.s3,
+        // A prior sync against the current (S3) backend -> has history.
+        syncState: SyncState(lastSync: DateTime(2026, 1, 1)),
+      );
+
+      // Tap the iCloud tile (available on macOS host) to switch away from S3.
+      await tester.tap(find.text('iCloud'));
+      await tester.pumpAndSettle();
+
+      // The confirmation dialog explains the consequences.
+      expect(find.text('Switch sync backend?'), findsOneWidget);
+      expect(handles.sync.recordBackendDepartureCalls, 0);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Switch'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.recordBackendDepartureCalls, 1);
+    }, skip: tapUnavailable);
+
+    testWidgets('cancelling the backend-switch dialog records nothing', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.s3,
+        syncState: SyncState(lastSync: DateTime(2026, 1, 1)),
+      );
+
+      await tester.tap(find.text('iCloud'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.recordBackendDepartureCalls, 0);
+    }, skip: tapUnavailable);
 
     testWidgets(
       'Sync Now offers the adopt dialog; adopting backs up then adopts',
@@ -946,6 +1114,42 @@ void main() {
       expect(handles.sync.signOutCalls, 1);
       expect(find.text('Signed out from cloud provider'), findsOneWidget);
     });
+
+    testWidgets('warns about cloud backup and disables it on confirm', (
+      tester,
+    ) async {
+      final handles = await pumpPage(tester);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('backup_cloud_enabled', true);
+
+      await tester.tap(find.text('Sign Out'));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Cloud backup will be turned off'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.widgetWithText(TextButton, 'Sign Out'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.signOutCalls, 1);
+      expect(prefs.getBool('backup_cloud_enabled'), isFalse);
+    });
+
+    testWidgets('no cloud backup warning when it was already off', (
+      tester,
+    ) async {
+      await pumpPage(tester);
+
+      await tester.tap(find.text('Sign Out'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Sign Out?'), findsOneWidget);
+      expect(
+        find.textContaining('Cloud backup will be turned off'),
+        findsNothing,
+      );
+    });
   });
 
   group('CloudSyncPage - duplicate divers banner', () {
@@ -1060,7 +1264,7 @@ void main() {
 
       expect(find.text('S3-Compatible Storage'), findsOneWidget);
       expect(
-        find.text('Amazon S3, MinIO, Cloudflare R2, Backblaze B2, and more'),
+        find.text('Works with any S3-compatible storage service'),
         findsOneWidget,
       );
     });
@@ -1081,9 +1285,9 @@ void main() {
       tester,
     ) async {
       // Not selected: no checkmark on the S3 tile (one checkmark only appears
-      // when a provider is selected, and here we select googledrive instead).
-      await pumpPage(tester, selectedProvider: CloudProviderType.googledrive);
-      // Only one check_circle -- for Google Drive, not S3.
+      // when a provider is selected, and here we select iCloud instead).
+      await pumpPage(tester, selectedProvider: CloudProviderType.icloud);
+      // Only one check_circle -- for iCloud, not S3.
       expect(find.byIcon(Icons.check_circle), findsOneWidget);
 
       // Now select S3: the checkmark moves to the S3 tile.  With no other

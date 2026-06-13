@@ -5657,6 +5657,7 @@
   "settings_cloudSync_conflictItems": "{count, plural, =1{1 item needs attention} other{{count} items need attention}}",
   "settings_cloudSync_disabledBanner_content": "App-managed cloud sync is disabled because you're using a custom storage folder. Your folder's sync service (Dropbox, Google Drive, OneDrive, etc.) handles synchronization.",
   "settings_cloudSync_disabledBanner_title": "Cloud Sync Disabled",
+  "settings_cloudSync_entry_subtitle": "Sync via cloud storage",
   "settings_cloudSync_adopt_confirm": "Adopt Restored Library",
   "settings_cloudSync_adopt_dialogContent": "The library was replaced from a backup on \"{deviceName}\" ({date}). Adopting replaces this device's data with the restored library. A safety backup of this device's current data will be created first.",
   "@settings_cloudSync_adopt_dialogContent": {
@@ -5693,7 +5694,43 @@
       }
     }
   },
+  "settings_cloudSync_switch_dialogTitle": "Switch sync backend?",
+  "settings_cloudSync_switch_dialogContent": "Your data will not be moved off {fromName} -- it stays there until you delete it. After switching, this device's next sync combines its data with whatever already exists on {toName}. Your other devices keep using {fromName} until you switch each of them too.",
+  "@settings_cloudSync_switch_dialogContent": {
+    "placeholders": {
+      "fromName": {
+        "type": "String"
+      },
+      "toName": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_cloudSync_switch_confirm": "Switch",
+  "settings_cloudSync_moved_banner": "{deviceName} moved this library to {destination}. This backend is no longer being updated by it. Select {destination} below to follow the move.",
+  "@settings_cloudSync_moved_banner": {
+    "placeholders": {
+      "deviceName": {
+        "type": "String"
+      },
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_cloudSync_moved_dismiss": "Dismiss",
+  "settings_cloudSync_cleanup_banner": "Old sync data is still stored on {backend} from before you switched backends. It is no longer used.",
+  "@settings_cloudSync_cleanup_banner": {
+    "placeholders": {
+      "backend": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_cloudSync_cleanup_delete": "Delete old data",
+  "settings_cloudSync_cleanup_keep": "Keep",
   "settings_cloudSync_header_advanced": "Advanced",
+  "settings_cloudSync_signOut_backupWarning": "Cloud backup will be turned off and backups will be saved to the default location.",
   "settings_cloudSync_header_cloudProvider": "Cloud Provider",
   "settings_cloudSync_header_conflicts": "Conflicts ({count})",
   "settings_cloudSync_header_syncBehavior": "Sync Behavior",
@@ -5705,11 +5742,10 @@
   "settings_cloudSync_provider_googleDrive": "Google Drive",
   "settings_cloudSync_provider_googleDrive_subtitle": "Sync via Google Drive",
   "settings_cloudSync_provider_icloud": "iCloud",
-  "settings_cloudSync_provider_icloud_subtitle": "Sync via Apple iCloud",
   "settings_cloudSync_provider_initFailed": "Failed to initialize {providerName} provider",
   "settings_cloudSync_provider_notAvailable": "Not available on this platform",
   "settings_cloudSync_provider_s3_edit": "Edit S3 configuration",
-  "settings_cloudSync_provider_s3_subtitle": "Amazon S3, MinIO, Cloudflare R2, Backblaze B2, and more",
+  "settings_cloudSync_provider_s3_subtitle": "Works with any S3-compatible storage service",
   "settings_cloudSync_provider_s3_title": "S3-Compatible Storage",
   "settings_cloudSync_resetDialog_cancel": "Cancel",
   "settings_cloudSync_resetDialog_content": "This will clear all sync history and start fresh. Your data will not be deleted, but you may need to resolve conflicts on the next sync.",
@@ -5926,15 +5962,24 @@
   "settings_profileHub_switchDiver": "Switch Diver",
   "settings_s3Config_action_remove": "Remove Configuration",
   "settings_s3Config_action_testConnection": "Test Connection",
+  "settings_s3Config_advanced_title": "Advanced",
   "settings_s3Config_appBar_title": "S3-Compatible Storage",
   "settings_s3Config_error_secureStorage": "Could not access secure storage",
   "settings_s3Config_field_accessKeyId_label": "Access Key ID",
   "settings_s3Config_field_bucket_label": "Bucket",
-  "settings_s3Config_field_endpoint_helper": "Leave blank for Amazon S3",
+  "settings_s3Config_field_endpoint_helper": "For example: https://s3.example.com",
   "settings_s3Config_field_endpoint_label": "Endpoint URL",
   "settings_s3Config_field_pathStyle_label": "Use path-style addressing",
-  "settings_s3Config_field_pathStyle_subtitle": "Required by most MinIO and NAS servers",
+  "settings_s3Config_field_pathStyle_subtitle": "Required by most self-hosted servers",
   "settings_s3Config_field_prefix_label": "Key prefix",
+  "settings_s3Config_field_region_helperAuto": "Auto-detected: {region}",
+  "@settings_s3Config_field_region_helperAuto": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "settings_s3Config_field_region_label": "Region",
   "settings_s3Config_field_secretAccessKey_label": "Secret Access Key",
   "settings_s3Config_remove_confirm_action": "Remove",
@@ -5942,6 +5987,14 @@
   "settings_s3Config_remove_confirm_title": "Remove S3 configuration?",
   "settings_s3Config_removed": "S3 configuration removed",
   "settings_s3Config_saved": "S3 configuration saved",
+  "settings_s3Config_test_regionDetected": "Region detected: {region}",
+  "@settings_s3Config_test_regionDetected": {
+    "placeholders": {
+      "region": {
+        "type": "String"
+      }
+    }
+  },
   "settings_s3Config_test_success": "Connection successful",
   "settings_s3Config_validation_endpointInvalid": "Enter a valid http:// or https:// URL",
   "settings_s3Config_validation_endpointPath": "Endpoint URL must not include a path",

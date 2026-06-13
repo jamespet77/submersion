@@ -29,11 +29,14 @@ class S3ObjectInfo {
 /// header are never logged or embedded in error messages.
 class S3ApiClient {
   S3ApiClient(
-    this._config, {
+    S3Config config, {
     http.Client? httpClient,
     DateTime Function()? now,
     Duration retryDelay = const Duration(milliseconds: 500),
-  }) : _http = httpClient ?? http.Client(),
+    this.onRegionCorrected,
+  }) : _config = config,
+       _region = config.region,
+       _http = httpClient ?? http.Client(),
        _now = now ?? DateTime.now,
        _retryDelay = retryDelay;
 
@@ -41,6 +44,14 @@ class S3ApiClient {
   final http.Client _http;
   final DateTime Function() _now;
   final Duration _retryDelay;
+
+  /// Called after a server region hint led to a successful replay, so the
+  /// owner can persist the corrected region.
+  final void Function(String region)? onRegionCorrected;
+
+  /// Effective signing/addressing region: starts as the configured region
+  /// and is updated for the client's lifetime when the server corrects it.
+  String _region;
 
   Future<void> putObject(String key, Uint8List bytes) async {
     final response = await _sendWithRetry('PUT', key, body: bytes);
@@ -164,14 +175,15 @@ class S3ApiClient {
     if (_config.isAws) {
       scheme = 'https';
       host = _config.pathStyle
-          ? 's3.${_config.region}.amazonaws.com'
-          : '${_config.bucket}.s3.${_config.region}.amazonaws.com';
+          ? 's3.$_region.amazonaws.com'
+          : '${_config.bucket}.s3.$_region.amazonaws.com';
     } else {
       final endpointUri = Uri.parse(_config.endpoint);
+      final endpointHost = _effectiveCustomHost(endpointUri.host);
       scheme = endpointUri.scheme;
       host = _config.pathStyle
-          ? endpointUri.host
-          : '${_config.bucket}.${endpointUri.host}';
+          ? endpointHost
+          : '${_config.bucket}.$endpointHost';
       if (endpointUri.hasPort) port = endpointUri.port;
     }
     final encodedKey = SigV4Signer.uriEncode(key, encodeSlash: false);
@@ -188,12 +200,24 @@ class S3ApiClient {
     Uint8List? body,
   }) async {
     try {
-      final response = await _send(
+      var response = await _send(
         method,
         key,
         queryParams: queryParams,
         body: body,
       );
+      if (response.statusCode >= 300) {
+        final corrected = await _replayWithRegionHint(
+          response,
+          method,
+          key,
+          queryParams,
+          body,
+        );
+        // The replay flows through the normal 5xx retry below, which now
+        // signs with the corrected region.
+        if (corrected != null) response = corrected;
+      }
       if (response.statusCode < 500) return response;
     } on FormatException catch (e) {
       throw CloudStorageException(
@@ -227,6 +251,66 @@ class S3ApiClient {
     }
   }
 
+  /// If [response] carries a region hint that differs from the effective
+  /// region, adopts it, replays the request once, and reports the
+  /// correction when the replay succeeds. Returns null when no correction
+  /// applies. A transport exception from the replay propagates to
+  /// _sendWithRetry's catch clauses, whose retry then signs with the
+  /// already-corrected region.
+  Future<http.Response?> _replayWithRegionHint(
+    http.Response response,
+    String method,
+    String key,
+    Map<String, String> queryParams,
+    Uint8List? body,
+  ) async {
+    final hint = _regionHint(response);
+    if (hint == null || hint == _region) return null;
+    _region = hint;
+    final replay = await _send(
+      method,
+      key,
+      queryParams: queryParams,
+      body: body,
+    );
+    if (replay.statusCode < 300) onRegionCorrected?.call(hint);
+    return replay;
+  }
+
+  /// AWS regional hosts are region-templated: a regional endpoint never
+  /// serves another region's buckets, so when a server hint moves the
+  /// effective region the request must move to the matching regional host.
+  /// Every other custom endpoint (and the global s3.amazonaws.com, which
+  /// routes cross-region via DNS) is opaque and passes through unchanged.
+  String _effectiveCustomHost(String endpointHost) {
+    final match = _awsRegionalHostPattern.firstMatch(
+      endpointHost.toLowerCase(),
+    );
+    if (match == null || match.group(2) == _region) return endpointHost;
+    // Preserve the dualstack variant: rebuilding to a plain host would
+    // silently regress IPv6/dualstack connectivity after a correction.
+    final dualstack = match.group(1) ?? '';
+    return 's3.$dualstack$_region.amazonaws.com';
+  }
+
+  static final _awsRegionalHostPattern = RegExp(
+    r'^s3[.-](dualstack\.)?([a-z0-9-]+)\.amazonaws\.com$',
+  );
+
+  /// The region the server says it expects: the x-amz-bucket-region
+  /// header (301 and most 403 responses), or the Region element of an
+  /// AuthorizationHeaderMalformed error body.
+  String? _regionHint(http.Response response) {
+    final header = response.headers['x-amz-bucket-region'];
+    if (header != null && header.isNotEmpty) return header;
+    final body = utf8.decode(response.bodyBytes, allowMalformed: true);
+    if (_xmlElementText(body, 'Code') != 'AuthorizationHeaderMalformed') {
+      return null;
+    }
+    final region = _xmlElementText(body, 'Region');
+    return (region == null || region.isEmpty) ? null : region;
+  }
+
   Future<http.Response> _send(
     String method,
     String key, {
@@ -252,7 +336,7 @@ class S3ApiClient {
       payload: payload,
       accessKeyId: _config.accessKeyId,
       secretAccessKey: _config.secretAccessKey,
-      region: _config.region,
+      region: _region,
       requestTime: _now(),
     );
     // The http client derives Host from the URL; it must not be set manually.
@@ -264,9 +348,18 @@ class S3ApiClient {
   }
 
   Never _throwFor(String operation, String key, http.Response response) {
-    final errorCode = _xmlErrorCode(
+    final errorCode = _xmlElementText(
       utf8.decode(response.bodyBytes, allowMalformed: true),
+      'Code',
     );
+    // Matched by error code regardless of HTTP status: AWS uses 400, some
+    // compatible servers 403.
+    if (errorCode == 'AuthorizationHeaderMalformed') {
+      throw const CloudStorageException(
+        "S3 rejected the request's signature region. Open Advanced and "
+        'set Region to the value your provider expects.',
+      );
+    }
     if (response.statusCode == 403) {
       if (errorCode == 'RequestTimeTooSkewed') {
         throw const CloudStorageException(
@@ -287,12 +380,12 @@ class S3ApiClient {
     );
   }
 
-  String? _xmlErrorCode(String body) {
+  String? _xmlElementText(String body, String element) {
     if (body.isEmpty) return null;
     try {
       return XmlDocument.parse(
         body,
-      ).findAllElements('Code').firstOrNull?.innerText;
+      ).findAllElements(element).firstOrNull?.innerText;
     } on XmlException {
       return null;
     }
