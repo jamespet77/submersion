@@ -68,6 +68,32 @@ void main() {
             'would be parsed as a payload and merged',
       );
     });
+
+    test(
+      'read is fail-open: a download error yields null, not an exception',
+      () async {
+        // Advisory marker -> an unreadable one must never fail a sync closed.
+        cloud.seedFile(libraryMovedFileName, Uint8List.fromList([1, 2, 3]));
+        cloud.failDownloads = true;
+        expect(await buildService().readLibraryMovedMarker(cloud), isNull);
+      },
+    );
+
+    test('read returns null on a corrupt (non-JSON) marker', () async {
+      cloud.seedFile(
+        libraryMovedFileName,
+        Uint8List.fromList(utf8.encode('not json at all')),
+      );
+      expect(await buildService().readLibraryMovedMarker(cloud), isNull);
+    });
+
+    test('write is best-effort: an upload failure does not throw', () async {
+      cloud.failUploads = true;
+      await expectLater(
+        buildService().writeLibraryMovedMarker(cloud, marker),
+        completes,
+      );
+    });
   });
 
   group('cleanupOldBackend', () {

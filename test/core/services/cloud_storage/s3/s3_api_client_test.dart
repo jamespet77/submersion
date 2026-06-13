@@ -764,6 +764,49 @@ void main() {
       expect(corrected, 'us-west-2');
     });
 
+    test(
+      'region correction preserves the dualstack variant of the host',
+      () async {
+        final urls = <String>[];
+        final mock = MockClient((request) async {
+          urls.add(request.url.toString());
+          if (urls.length == 1) {
+            return http.Response(
+              '',
+              301,
+              headers: {'x-amz-bucket-region': 'us-west-2'},
+            );
+          }
+          return http.Response('', 200);
+        });
+        final config = S3Config(
+          endpoint: 'https://s3.dualstack.eu-west-1.amazonaws.com',
+          region: 'eu-west-1',
+          bucket: 'dive-sync',
+          pathStyle: false,
+          accessKeyId: 'ak',
+          secretAccessKey: 'sk',
+        );
+        final client = S3ApiClient(
+          config,
+          httpClient: mock,
+          now: () => DateTime.utc(2026, 6, 12),
+          retryDelay: Duration.zero,
+        );
+
+        await client.putObject('k.json', Uint8List.fromList([1]));
+
+        expect(urls, hasLength(2));
+        expect(
+          urls[1],
+          startsWith('https://dive-sync.s3.dualstack.us-west-2.amazonaws.com/'),
+          reason:
+              'rebuilding the corrected host must keep dualstack, or the replay '
+              'silently regresses IPv6/dualstack connectivity',
+        );
+      },
+    );
+
     test('non-AWS custom endpoint hosts never get rewritten', () async {
       var requests = 0;
       final mock = MockClient((request) async {

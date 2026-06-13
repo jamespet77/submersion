@@ -40,6 +40,9 @@ class FakeCloudStorageProvider extends CloudStorageProvider
   /// When true, [deleteFile] throws, modelling an offline/denied provider.
   bool failDeletes = false;
 
+  /// When true, [downloadFile] throws, modelling a transient read failure.
+  bool failDownloads = false;
+
   /// Ordered log of cloud operations, for asserting protocol order (e.g.
   /// "marker written before wipe"). File ids equal filenames in this fake.
   /// Entries: `upload:<name>`, `delete:<name>`, `list`.
@@ -111,6 +114,9 @@ class FakeCloudStorageProvider extends CloudStorageProvider
 
   @override
   Future<Uint8List> downloadFile(String fileId) async {
+    if (failDownloads) {
+      throw const CloudStorageException('download failed (test)');
+    }
     final f = _files[fileId];
     if (f == null) {
       throw CloudStorageException('File not found: $fileId');

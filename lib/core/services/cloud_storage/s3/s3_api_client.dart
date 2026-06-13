@@ -286,12 +286,15 @@ class S3ApiClient {
     final match = _awsRegionalHostPattern.firstMatch(
       endpointHost.toLowerCase(),
     );
-    if (match == null || match.group(1) == _region) return endpointHost;
-    return 's3.$_region.amazonaws.com';
+    if (match == null || match.group(2) == _region) return endpointHost;
+    // Preserve the dualstack variant: rebuilding to a plain host would
+    // silently regress IPv6/dualstack connectivity after a correction.
+    final dualstack = match.group(1) ?? '';
+    return 's3.$dualstack$_region.amazonaws.com';
   }
 
   static final _awsRegionalHostPattern = RegExp(
-    r'^s3[.-](?:dualstack\.)?([a-z0-9-]+)\.amazonaws\.com$',
+    r'^s3[.-](dualstack\.)?([a-z0-9-]+)\.amazonaws\.com$',
   );
 
   /// The region the server says it expects: the x-amz-bucket-region

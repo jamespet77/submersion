@@ -13,6 +13,7 @@ import 'package:submersion/core/services/cloud_storage/s3/s3_credentials_store.d
 import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
 import 'package:submersion/core/database/database.dart' show AppDatabase;
 import 'package:submersion/core/services/sync/library_epoch.dart';
+import 'package:submersion/core/services/sync/library_moved.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:submersion/features/backup/data/repositories/backup_preferences.dart';
 import 'package:submersion/features/backup/data/services/backup_service.dart';
@@ -828,6 +829,108 @@ void main() {
         findsOneWidget,
       );
       expect(find.textContaining('Eric Mac'), findsOneWidget);
+    });
+
+    testWidgets('shows the library-moved banner and Dismiss acknowledges it', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.s3,
+        syncState: const SyncState(
+          movedMarker: LibraryMovedMarker(
+            movedAt: 1,
+            toProviderId: 'icloud',
+            toProviderName: 'iCloud',
+            deviceId: 'd1',
+            deviceName: 'Eric Mac',
+          ),
+        ),
+      );
+
+      expect(find.textContaining('moved this library to'), findsOneWidget);
+      expect(find.textContaining('Eric Mac'), findsOneWidget);
+      expect(handles.sync.acknowledgeMovedCalls, 0);
+
+      await tester.tap(find.text('Dismiss'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.acknowledgeMovedCalls, 1);
+    });
+
+    testWidgets('shows the old-backend cleanup offer; Delete and Keep call '
+        'the matching notifier actions', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.icloud,
+        syncState: const SyncState(cleanupOldBackendProviderId: 's3'),
+      );
+
+      expect(
+        find.textContaining('Old sync data is still stored'),
+        findsOneWidget,
+      );
+
+      await tester.tap(find.text('Delete old data'));
+      await tester.pumpAndSettle();
+      expect(handles.sync.cleanupOldBackendDataCalls, 1);
+      expect(handles.sync.dismissOldBackendCleanupCalls, 0);
+    });
+
+    testWidgets('Keep dismisses the cleanup offer without deleting', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.icloud,
+        syncState: const SyncState(cleanupOldBackendProviderId: 's3'),
+      );
+
+      await tester.tap(find.text('Keep'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.dismissOldBackendCleanupCalls, 1);
+      expect(handles.sync.cleanupOldBackendDataCalls, 0);
+    });
+
+    testWidgets('switching backends with sync history confirms and records '
+        'the departure', (tester) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.s3,
+        // A prior sync against the current (S3) backend -> has history.
+        syncState: SyncState(lastSync: DateTime(2026, 1, 1)),
+      );
+
+      // Tap the iCloud tile (available on macOS host) to switch away from S3.
+      await tester.tap(find.text('iCloud'));
+      await tester.pumpAndSettle();
+
+      // The confirmation dialog explains the consequences.
+      expect(find.text('Switch sync backend?'), findsOneWidget);
+      expect(handles.sync.recordBackendDepartureCalls, 0);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'Switch'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.recordBackendDepartureCalls, 1);
+    });
+
+    testWidgets('cancelling the backend-switch dialog records nothing', (
+      tester,
+    ) async {
+      final handles = await pumpPage(
+        tester,
+        selectedProvider: CloudProviderType.s3,
+        syncState: SyncState(lastSync: DateTime(2026, 1, 1)),
+      );
+
+      await tester.tap(find.text('iCloud'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(handles.sync.recordBackendDepartureCalls, 0);
     });
 
     testWidgets(

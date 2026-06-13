@@ -60,15 +60,20 @@ class BackupSettingsNotifier extends StateNotifier<BackupSettings> {
   /// Cloud backup and a custom backup location are mutually exclusive
   /// destinations: enabling cloud backup reverts the location to the
   /// default, and choosing a custom location turns cloud backup off.
+  ///
+  /// The two keys are persisted in separate awaited steps, so the conflicting
+  /// key is always cleared BEFORE the new one is set. That way a crash between
+  /// the writes can only leave a "both off" state, never the invalid "cloud
+  /// backup on + custom location set" combination.
   Future<void> setCloudBackupEnabled(bool value) async {
-    await _prefs.setCloudBackupEnabled(value);
     if (value) await _prefs.setBackupLocation(null);
+    await _prefs.setCloudBackupEnabled(value);
     state = _prefs.getSettings();
   }
 
   Future<void> setBackupLocation(String? path) async {
-    await _prefs.setBackupLocation(path);
     if (path != null) await _prefs.setCloudBackupEnabled(false);
+    await _prefs.setBackupLocation(path);
     state = _prefs.getSettings();
   }
 

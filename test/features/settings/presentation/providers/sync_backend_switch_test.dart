@@ -149,6 +149,40 @@ void main() {
       },
     );
 
+    test('clears an already-shown banner when a later check finds the marker '
+        'now points to the backend we are on', () async {
+      final cloud = FakeCloudStorageProvider(); // providerId 'fake'
+      final container = await makeContainer(cloud);
+      final notifier = container.read(syncStateProvider.notifier);
+      final service = container.read(syncServiceProvider);
+
+      // First, a foreign marker surfaces the banner.
+      await service.writeLibraryMovedMarker(
+        cloud,
+        const LibraryMovedMarker(
+          movedAt: 1,
+          toProviderId: 'icloud',
+          deviceId: 'device-A',
+        ),
+      );
+      await notifier.checkLibraryMoved();
+      expect(container.read(syncStateProvider).movedMarker, isNotNull);
+
+      // Then the marker is rewritten to point at THIS backend (e.g. the fleet
+      // converged back). The next check must clear the stale banner.
+      await service.writeLibraryMovedMarker(
+        cloud,
+        const LibraryMovedMarker(
+          movedAt: 2,
+          toProviderId: 'fake',
+          deviceId: 'device-A',
+        ),
+      );
+      await notifier.checkLibraryMoved();
+
+      expect(container.read(syncStateProvider).movedMarker, isNull);
+    });
+
     test('does not resurface a moved marker after acknowledgement when the '
         'check runs again', () async {
       final cloud = FakeCloudStorageProvider();
@@ -235,6 +269,33 @@ void main() {
         isNull,
         reason: 'dismissing the offer must disarm it so it stops reappearing',
       );
+    });
+
+    test('cleanupOldBackendData runs the cleanup and disarms it', () async {
+      // Active backend 'fake'; arm an 's3' backend for cleanup, then surface
+      // and accept the offer. The old-backend cleanup resolves the real S3
+      // singleton (unconfigured -> fails fast and is swallowed), so this
+      // exercises the resolve + best-effort cleanup + disarm path.
+      final cloud = FakeCloudStorageProvider();
+      final container = await makeContainer(cloud);
+      final notifier = container.read(syncStateProvider.notifier);
+      final store = LibraryMovedStore(
+        container.read(sharedPreferencesProvider),
+      );
+      await store.setPendingCleanup('s3');
+      await notifier.performSync();
+      expect(
+        container.read(syncStateProvider).cleanupOldBackendProviderId,
+        's3',
+      );
+
+      await notifier.cleanupOldBackendData();
+
+      expect(
+        container.read(syncStateProvider).cleanupOldBackendProviderId,
+        isNull,
+      );
+      expect(store.pendingCleanup, isNull);
     });
 
     test('no offer when the active backend IS the armed one (no real switch '
