@@ -6,7 +6,14 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart' show SyncRecord;
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
+import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/sync/changeset_log/changeset_codec.dart';
+import 'package:submersion/core/services/sync/changeset_log/changeset_reader.dart';
+import 'package:submersion/core/services/sync/changeset_log/changeset_writer.dart';
+import 'package:submersion/core/services/sync/changeset_log/peer_cursor_store.dart';
+import 'package:submersion/core/services/sync/changeset_log/publish_state_store.dart';
+import 'package:submersion/core/services/sync/changeset_log/stale_restore_detector.dart';
 import 'package:submersion/core/services/sync/hlc.dart';
 import 'package:submersion/core/services/sync/library_epoch.dart';
 import 'package:submersion/core/services/sync/library_epoch_store.dart';
@@ -145,6 +152,21 @@ class SyncService {
   final LibraryEpochStore? _epochStore;
   final _log = LoggerService.forClass(SyncService);
   final _uuid = const Uuid();
+
+  // Changeset-log transport (Phases 1-6), lazily bound to the active database.
+  late final ChangesetCodec _changesetCodec = ChangesetCodec(_serializer);
+  late final ChangesetWriter _changesetWriter = ChangesetWriter(
+    _serializer,
+    _changesetCodec,
+    PublishStateStore(DatabaseService.instance.database),
+  );
+  late final ChangesetReader _changesetReader = ChangesetReader(
+    _changesetCodec,
+    PeerCursorStore(DatabaseService.instance.database),
+  );
+  late final StaleRestoreDetector _staleRestoreDetector = StaleRestoreDetector(
+    _syncRepository,
+  );
 
   SyncProgressCallback? _progressCallback;
 
@@ -690,6 +712,123 @@ class SyncService {
       );
     } catch (e, stackTrace) {
       _log.error('Sync failed', error: e, stackTrace: stackTrace);
+      return SyncResult(
+        status: SyncResultStatus.error,
+        message: _formatSyncError(e, stackTrace),
+      );
+    }
+  }
+
+  /// Incremental changeset-log sync (Phases 1-6 transport): pull peers' deltas
+  /// through the existing merge, then publish our own delta.
+  ///
+  /// This is the new sync path. The live [performSync] entry point is NOT yet
+  /// switched to it: the cutover requires migrating the legacy full-file
+  /// integration tests and real multi-device verification (see
+  /// docs/superpowers/plans/2026-06-14-incremental-sync-phase-6-restore-coexistence.md).
+  /// Epoch-gating and twin-detection (present in [performSync]) are folded in at
+  /// that cutover.
+  Future<SyncResult> performChangesetSync() async {
+    final provider = _cloudProvider;
+    if (provider == null) {
+      return const SyncResult(
+        status: SyncResultStatus.error,
+        message: 'No cloud provider configured',
+      );
+    }
+    try {
+      _reportProgress(SyncPhase.preparing, 0.0, 'Preparing sync...');
+      if (!await provider.isAuthenticated()) {
+        return const SyncResult(
+          status: SyncResultStatus.authError,
+          message: 'Not authenticated with cloud provider',
+        );
+      }
+      final deviceId = await _syncRepository.getDeviceId();
+      final lastSyncTime = await _syncRepository.getLastSyncTime(
+        forProvider: provider.providerId,
+      );
+      await _syncRepository.ensureSyncClockConfigured();
+      final folderId = await provider.getOrCreateSyncFolder();
+
+      // Stale-restore: re-pull the authoritative library by cold-starting.
+      if (await _staleRestoreDetector.isStaleRestore(
+        provider: provider,
+        deviceId: deviceId,
+        folderId: folderId,
+      )) {
+        _log.warning('Stale restore detected; resetting changeset cursors');
+        final db = DatabaseService.instance.database;
+        await PeerCursorStore(db).resetForProvider(provider.providerId);
+        await PublishStateStore(db).resetForProvider(provider.providerId);
+      }
+
+      // Download: pull peers, applying through the existing merge.
+      _reportProgress(SyncPhase.downloading, 0.4, 'Pulling changes...');
+      var recordsSynced = 0;
+      var conflictsFound = 0;
+      var recordsFailed = 0;
+      await _changesetReader.pull(
+        provider: provider,
+        selfDeviceId: deviceId,
+        folderId: folderId,
+        apply: (payload) async {
+          final r = await _applyRemotePayload(payload, lastSyncTime);
+          recordsSynced += r.recordsApplied;
+          conflictsFound += r.conflictsFound;
+          recordsFailed += r.recordsFailed;
+        },
+      );
+
+      // Upload: publish our delta.
+      _reportProgress(SyncPhase.uploading, 0.8, 'Publishing changes...');
+      final deletions = await _syncRepository.getAllDeletions();
+      final uploadNonce = _uuid.v4();
+      await _syncInitializer?.recordUploadNonce(
+        uploadNonce,
+        provider.providerId,
+      );
+      await _changesetWriter.publish(
+        provider: provider,
+        deviceId: deviceId,
+        folderId: folderId,
+        deletions: deletions,
+        uploadNonce: uploadNonce,
+      );
+
+      // Advance state only on a clean apply (idempotent re-pull otherwise).
+      final now = DateTime.now();
+      if (recordsFailed == 0) {
+        await _syncRepository.updateLastSyncTime(
+          now,
+          providerId: provider.providerId,
+        );
+      }
+      await _syncRepository.persistSyncClock();
+      await _syncRepository.clearOldDeletions();
+      await _syncRepository.clearPendingRecords();
+      if (conflictsFound == 0) {
+        await _syncRepository.clearAllSyncRecords();
+      }
+
+      _reportProgress(SyncPhase.complete, 1.0, 'Sync complete');
+      return SyncResult(
+        status: recordsFailed > 0
+            ? SyncResultStatus.error
+            : (conflictsFound > 0
+                  ? SyncResultStatus.hasConflicts
+                  : SyncResultStatus.success),
+        recordsSynced: recordsSynced,
+        conflictsFound: conflictsFound,
+        lastSyncTime: recordsFailed == 0 ? now : null,
+      );
+    } on CloudStorageException catch (e) {
+      return SyncResult(
+        status: SyncResultStatus.networkError,
+        message: e.message,
+      );
+    } catch (e, stackTrace) {
+      _log.error('Changeset sync failed', error: e, stackTrace: stackTrace);
       return SyncResult(
         status: SyncResultStatus.error,
         message: _formatSyncError(e, stackTrace),
