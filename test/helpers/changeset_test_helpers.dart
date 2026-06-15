@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/database_service.dart';
@@ -86,31 +88,32 @@ Future<void> publishOwnLog(
   );
 }
 
-/// Write a minimal manifest for [peerId] directly, modelling a peer whose log
-/// merely EXISTS without publishing real data. Use when a test only needs a
-/// peer to be discoverable (e.g. first-contact peer counting), not applied.
+/// Seed [peerId] as a peer with a real but EMPTY base -- a valid, fetchable
+/// library with no rows, rather than an impossible "base with zero parts". Use
+/// when a test needs the peer merely to exist (first-contact peer counting) or
+/// to count as a readable library (epoch gating). A reader that pulls it
+/// applies an empty payload (a no-op) and advances its cursor.
 Future<void> seedPeerManifest(
   CloudStorageProvider cloud,
   String peerId, {
   String? epochId,
   String? uploadNonce,
 }) async {
-  final folder = await cloud.getOrCreateSyncFolder();
-  final manifest = SyncManifest(
+  const data = SyncData();
+  final payload = SyncPayload(
+    version: syncFormatVersion,
+    exportedAt: 0,
     deviceId: peerId,
-    provider: cloud.providerId,
-    baseSeq: 1,
-    basePartCount: 0,
-    baseBytes: 0,
-    headSeq: 1,
+    checksum: sha256.convert(utf8.encode(jsonEncode(data.toJson()))).toString(),
+    data: data,
+    deletions: const {},
+  );
+  await seedPeerBaseFromPayload(
+    cloud,
+    peerId,
+    payload,
     epochId: epochId,
     uploadNonce: uploadNonce,
-    updatedAt: 0,
-  );
-  await cloud.uploadFile(
-    manifest.toBytes(),
-    ChangesetLogLayout.manifestName(peerId),
-    folderId: folder,
   );
 }
 

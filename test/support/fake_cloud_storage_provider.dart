@@ -58,7 +58,12 @@ class FakeCloudStorageProvider implements CloudStorageProvider {
     final key = _key(folderId, filename);
     _files[key] = Uint8List.fromList(data);
     _modified[key] = ++_clock;
-    if (listLagCalls > 0) _visibleAfterCall[key] = _listCalls + listLagCalls;
+    // Hidden for exactly the next `listLagCalls` list calls, then visible. The
+    // +1 avoids an off-by-one: with lag=1 the key must be invisible to the very
+    // next listFiles (visibility check is `call < visibleAt`).
+    if (listLagCalls > 0) {
+      _visibleAfterCall[key] = _listCalls + listLagCalls + 1;
+    }
     return UploadResult(
       fileId: key,
       uploadTime: DateTime.fromMillisecondsSinceEpoch(_clock),
@@ -85,7 +90,9 @@ class FakeCloudStorageProvider implements CloudStorageProvider {
     for (final entry in _files.entries) {
       final visibleAt = _visibleAfterCall[entry.key];
       if (visibleAt != null && call < visibleAt) continue;
-      final slash = entry.key.indexOf('/');
+      // Split on the LAST '/': a folderId may itself contain '/' (nested
+      // folders from createFolder), so the name is only the final segment.
+      final slash = entry.key.lastIndexOf('/');
       final f = entry.key.substring(0, slash);
       final name = entry.key.substring(slash + 1);
       if (f != folder) continue;
@@ -118,7 +125,9 @@ class FakeCloudStorageProvider implements CloudStorageProvider {
   Future<CloudFileInfo?> getFileInfo(String fileId) async {
     final data = _files[fileId];
     if (data == null) return null;
-    final slash = fileId.indexOf('/');
+    // Split on the LAST '/' so a nested folderId in the key isn't mistaken for
+    // part of the file name.
+    final slash = fileId.lastIndexOf('/');
     return CloudFileInfo(
       id: fileId,
       name: fileId.substring(slash + 1),
