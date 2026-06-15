@@ -99,6 +99,26 @@ Decisions made with the owner during design:
 
 ## 4. On-storage layout
 
+> **Implemented layout (supersedes the subfolder illustration below).** Discovery
+> via subfolders differs across backends (S3 prefix vs iCloud/Drive directory),
+> so the implementation uses a **flat, filename-encoded layout** in the single
+> existing sync folder, reusing the portable `listFiles({folderId, namePattern})`
+> path. Names are `ssv1.` + deviceId + a kind suffix, with zero-padded seqs so
+> lexical order matches numeric order. `lib/.../changeset_log/changeset_log_layout.dart`
+> (`ChangesetLogLayout`) is the source of truth:
+>
+> ```
+> <sync-folder>/
+>   submersion_library_epoch.json            # UNCHANGED epoch / "replace everywhere" marker
+>   ssv1.<deviceId>.manifest.json            # commit point; the only file ever rewritten
+>   ssv1.<deviceId>.base.<baseSeq>.p0000     # full snapshot, byte-sliced into resumable parts
+>   ssv1.<deviceId>.cs.<seq>.json            # immutable changesets, seq strictly increasing
+> ```
+>
+> The single-writer, monotonic-seq, base-plus-changeset semantics in the rest of
+> this section (and §§5-11) are exactly as designed; only the path spelling
+> changed from `submersion-sync/v1/<deviceId>/<file>` to `ssv1.<deviceId>.<file>`.
+
 Each device is the **sole writer** of a private subtree, which removes any need
 for the conditional-write / compare-and-swap primitives the backends lack.
 
