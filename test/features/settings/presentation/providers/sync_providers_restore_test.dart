@@ -147,4 +147,25 @@ void main() {
       },
     );
   });
+
+  test(
+    'resetSyncState clears the anchor and the post-restore intent',
+    () async {
+      final container = await makeContainer();
+      // Let _initialize settle; it is inert with no pending intent at
+      // construction, so the stores are set here without racing a forced sync.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await EstablishedProviderStore(prefs).add(cloud.providerId);
+      await PostRestoreSyncStore(prefs).setPending();
+
+      await container.read(syncStateProvider.notifier).resetSyncState();
+
+      expect(
+        EstablishedProviderStore(prefs).contains(cloud.providerId),
+        isFalse,
+        reason: 'an explicit reset is a true fresh start, so re-arm the gate',
+      );
+      expect(PostRestoreSyncStore(prefs).pending, isFalse);
+    },
+  );
 }

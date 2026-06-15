@@ -845,6 +845,8 @@ class SyncNotifier extends StateNotifier<SyncState> {
     // Reset is the manual escape hatch: drop any stuck replace intent and
     // un-pause an awaiting-adoption state.
     await _ref.read(libraryEpochStoreProvider).clearPendingReplace();
+    await _ref.read(postRestoreSyncStoreProvider).clear();
+    await _ref.read(establishedProviderStoreProvider).clear();
     state = state.copyWith(replaceAwaitingAdoption: false, replaceMarker: null);
     await refreshState();
   }
