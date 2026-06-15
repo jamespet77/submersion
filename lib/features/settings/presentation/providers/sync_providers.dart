@@ -13,10 +13,12 @@ import 'package:submersion/core/services/cloud_storage/google_drive_storage_prov
 import 'package:submersion/core/services/cloud_storage/icloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
 import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
+import 'package:submersion/core/services/sync/established_provider_store.dart';
 import 'package:submersion/core/services/sync/library_epoch.dart';
 import 'package:submersion/core/services/sync/library_epoch_store.dart';
 import 'package:submersion/core/services/sync/library_moved.dart';
 import 'package:submersion/core/services/sync/library_moved_store.dart';
+import 'package:submersion/core/services/sync/post_restore_sync_store.dart';
 import 'package:submersion/core/services/sync/sync_data_serializer.dart';
 import 'package:submersion/core/services/sync/sync_event_bus.dart';
 import 'package:submersion/core/services/sync/sync_initializer.dart';
@@ -52,6 +54,18 @@ final libraryEpochStoreProvider = Provider<LibraryEpochStore>((ref) {
 /// old-backend cleanup target) for backend switches.
 final libraryMovedStoreProvider = Provider<LibraryMovedStore>((ref) {
   return LibraryMovedStore(ref.watch(sharedPreferencesProvider));
+});
+
+/// Merge-restore "sync once on next launch" intent.
+final postRestoreSyncStoreProvider = Provider<PostRestoreSyncStore>((ref) {
+  return PostRestoreSyncStore(ref.watch(sharedPreferencesProvider));
+});
+
+/// Providers this install has successfully synced to (survives restore).
+final establishedProviderStoreProvider = Provider<EstablishedProviderStore>((
+  ref,
+) {
+  return EstablishedProviderStore(ref.watch(sharedPreferencesProvider));
 });
 
 /// Behavior settings for auto-sync
