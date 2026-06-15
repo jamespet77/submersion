@@ -53,8 +53,9 @@ void main() {
       await seedLocalDive('d1');
       await seedPeerManifest(cloud, 'peer-device');
 
-      final info =
-          await container.read(syncStateProvider.notifier).firstSyncMergeInfo();
+      final info = await container
+          .read(syncStateProvider.notifier)
+          .firstSyncMergeInfo();
       expect(
         info,
         isNotNull,
@@ -62,28 +63,32 @@ void main() {
       );
     });
 
-    test('established provider short-circuits the gate (restore case)',
-        () async {
-      await EstablishedProviderStore(prefs).add(cloud.providerId);
-      final container = await makeContainer();
-      await seedLocalDive('d1');
-      await seedPeerManifest(cloud, 'peer-device');
+    test(
+      'established provider short-circuits the gate (restore case)',
+      () async {
+        await EstablishedProviderStore(prefs).add(cloud.providerId);
+        final container = await makeContainer();
+        await seedLocalDive('d1');
+        await seedPeerManifest(cloud, 'peer-device');
 
-      final info =
-          await container.read(syncStateProvider.notifier).firstSyncMergeInfo();
-      expect(
-        info,
-        isNull,
-        reason:
-            'a device that already synced here is not first-contact, even '
-            'after a restore wiped its in-DB cursor',
-      );
-    });
+        final info = await container
+            .read(syncStateProvider.notifier)
+            .firstSyncMergeInfo();
+        expect(
+          info,
+          isNull,
+          reason:
+              'a device that already synced here is not first-contact, even '
+              'after a restore wiped its in-DB cursor',
+        );
+      },
+    );
   });
 
-  test('a successful sync anchors the provider and clears the intent',
-      () async {
-    await PostRestoreSyncStore(prefs).setPending();
+  test('a successful sync anchors the provider', () async {
+    // No pending intent here, so _initialize stays inert and the explicit
+    // performSync is the only sync (deterministic). The intent-clear behavior
+    // is covered by the launch test below.
     final container = await makeContainer();
     await seedLocalDive('d1');
 
@@ -94,10 +99,52 @@ void main() {
       isTrue,
       reason: 'a clean sync marks this provider established',
     );
-    expect(
-      PostRestoreSyncStore(prefs).pending,
-      isFalse,
-      reason: 'the post-restore intent is consumed once a sync succeeds',
+  });
+
+  group('post-restore launch sync', () {
+    test(
+      'a pending intent forces a sync that bypasses the first-contact gate',
+      () async {
+        // Arrange the EXACT condition that used to defer: peers + local dives +
+        // null cursor + a pending post-restore intent.
+        await PostRestoreSyncStore(prefs).setPending();
+        await seedPeerManifest(cloud, 'peer-device');
+
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            cloudStorageProviderProvider.overrideWithValue(cloud),
+          ],
+        );
+        addTearDown(container.dispose);
+        await DiveRepository().createDive(
+          createTestDiveWithBottomTime(id: 'd1'),
+        );
+
+        // Construct the notifier (runs _initialize) and let it finish.
+        container.read(syncStateProvider);
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        // Allow the forced sync (and its internal post-success refresh delay) to
+        // complete.
+        await Future<void>.delayed(const Duration(seconds: 3));
+
+        final state = container.read(syncStateProvider);
+        expect(
+          state.firstSyncAwaitingConfirmation,
+          isFalse,
+          reason: 'THE BUG: the forced post-restore sync must not defer',
+        );
+        expect(
+          PostRestoreSyncStore(prefs).pending,
+          isFalse,
+          reason: 'a successful forced sync consumes the intent',
+        );
+        expect(
+          state.postRestoreSyncing,
+          isFalse,
+          reason: 'the syncing flag is lowered when the forced sync finishes',
+        );
+      },
     );
   });
 }

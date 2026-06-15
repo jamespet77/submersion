@@ -313,12 +313,45 @@ class SyncNotifier extends StateNotifier<SyncState> {
     // Load initial state
     if (!mounted) return;
     await refreshState();
+    if (!mounted) return;
+
     // A Replace restore persists its cloud side as a pending intent; execute
     // it as soon as the app is back up, regardless of auto-sync settings.
-    if (mounted &&
-        _ref.read(libraryEpochStoreProvider).pendingReplace != null) {
+    if (_ref.read(libraryEpochStoreProvider).pendingReplace != null) {
       unawaited(performSync());
+      return;
     }
+
+    final provider = _ref.read(cloudStorageProviderProvider);
+    if (provider == null) return;
+
+    // A Merge restore persists a post-restore intent: the restore dialog's
+    // Merge choice is the consent, so force one sync that bypasses the
+    // first-contact gate (auto:false) regardless of the auto-sync toggles.
+    if (_ref.read(postRestoreSyncStoreProvider).pending) {
+      unawaited(_runPostRestoreSync());
+      return;
+    }
+
+    // On the other devices, surface a Replace-everywhere adoption proactively
+    // (even with auto-sync off) so a paused device is never hidden behind a
+    // manual Sync Now.
+    unawaited(_detectReplacedLibraryForSurfacing());
+  }
+
+  /// Force the one consented post-restore sync. `performSync(auto:false)` skips
+  /// the first-contact gate; the success path clears the intent.
+  Future<void> _runPostRestoreSync() async {
+    if (!mounted) return;
+    state = state.copyWith(postRestoreSyncing: true);
+    await performSync();
+    if (mounted) state = state.copyWith(postRestoreSyncing: false);
+  }
+
+  /// Surface a replaced cloud library on launch. Full body added in a later
+  /// step; the launch path already calls it so the wiring is exercised.
+  Future<void> _detectReplacedLibraryForSurfacing() async {
+    // Implemented in Task 12.
   }
 
   void _listenForChanges() {
