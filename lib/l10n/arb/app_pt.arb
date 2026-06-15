@@ -4850,6 +4850,7 @@
   "divers_edit_priorMinutesLabel": "Minutos",
   "divers_edit_divingSinceLabel": "Mergulha desde",
   "divers_edit_divingSinceNotSet": "Não definido",
+  "divers_edit_clearDivingSinceTooltip": "Limpar mergulha desde",
   "divers_edit_priorInvalidNumber": "Introduza um número válido",
   "statistics_priorBreakdown": "{logged} registados + {prior} anteriores",
   "statistics_divingSince": "Mergulha desde {year}",

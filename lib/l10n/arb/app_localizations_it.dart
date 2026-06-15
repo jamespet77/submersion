@@ -17166,6 +17166,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Non impostato';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Cancella immersioni dal';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Inserisci un numero valido';
 
   @override

@@ -4850,6 +4850,7 @@
   "divers_edit_priorMinutesLabel": "Perc",
   "divers_edit_divingSinceLabel": "Merül azóta",
   "divers_edit_divingSinceNotSet": "Nincs beállítva",
+  "divers_edit_clearDivingSinceTooltip": "Merül azóta törlése",
   "divers_edit_priorInvalidNumber": "Adjon meg egy érvényes számot",
   "statistics_priorBreakdown": "{logged} naplózva + {prior} korábbi",
   "statistics_divingSince": "{year} óta merül",

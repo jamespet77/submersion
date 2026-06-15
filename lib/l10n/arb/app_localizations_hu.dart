@@ -17117,6 +17117,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Nincs beállítva';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Merül azóta törlése';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Adjon meg egy érvényes számot';
 
   @override

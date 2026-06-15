@@ -103,7 +103,9 @@ Add three nullable columns to the `Divers` table
 - `priorDiveCount` — `IntColumn`, nullable.
 - `priorDiveTimeSeconds` — `IntColumn`, nullable. Stored in seconds to match the
   existing `totalTimeSeconds`.
-- `divingSince` — `DateTimeColumn`, nullable. Stored as a date; entered as a year.
+- `divingSince` — `IntColumn`, nullable. Stored as the **year integer** (e.g. 1990),
+  not a timestamp, so the displayed year is timezone-stable across sync/restore;
+  entered via a year picker.
 
 Bump the Drift `schemaVersion` and add an `onUpgrade` step that adds the three
 columns. Existing rows get `NULL`, which means "no prior experience" and reproduces

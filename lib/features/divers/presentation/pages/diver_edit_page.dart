@@ -859,6 +859,7 @@ class _DiverEditPageState extends ConsumerState<DiverEditPage> {
               trailing: _divingSince != null
                   ? IconButton(
                       icon: const Icon(Icons.clear),
+                      tooltip: context.l10n.divers_edit_clearDivingSinceTooltip,
                       onPressed: () => setState(() {
                         _divingSince = null;
                         _hasChanges = true;

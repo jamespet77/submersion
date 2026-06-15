@@ -17230,6 +17230,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Non défini';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Effacer plonge depuis';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Saisissez un nombre valide';
 
   @override

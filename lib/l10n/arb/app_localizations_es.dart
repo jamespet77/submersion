@@ -17175,6 +17175,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Sin definir';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Borrar buceando desde';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Introduce un número válido';
 
   @override

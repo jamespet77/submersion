@@ -16876,6 +16876,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Not set';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Clear diving since';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Enter a valid number';
 
   @override

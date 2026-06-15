@@ -16840,6 +16840,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'غير محدد';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'مسح يغوص منذ';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'أدخل رقمًا صالحًا';
 
   @override

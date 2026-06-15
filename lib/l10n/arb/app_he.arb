@@ -4850,6 +4850,7 @@
   "divers_edit_priorMinutesLabel": "דקות",
   "divers_edit_divingSinceLabel": "צולל מאז",
   "divers_edit_divingSinceNotSet": "לא הוגדר",
+  "divers_edit_clearDivingSinceTooltip": "נקה צולל מאז",
   "divers_edit_priorInvalidNumber": "הזן מספר תקין",
   "statistics_priorBreakdown": "{logged} מתועדות + {prior} קודמות",
   "statistics_divingSince": "צולל מאז {year}",

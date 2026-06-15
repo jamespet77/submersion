@@ -4850,6 +4850,7 @@
   "divers_edit_priorMinutesLabel": "Minuten",
   "divers_edit_divingSinceLabel": "Taucht seit",
   "divers_edit_divingSinceNotSet": "Nicht festgelegt",
+  "divers_edit_clearDivingSinceTooltip": "Taucht seit löschen",
   "divers_edit_priorInvalidNumber": "Gib eine gültige Zahl ein",
   "statistics_priorBreakdown": "{logged} erfasst + {prior} früher",
   "statistics_divingSince": "Taucht seit {year}",

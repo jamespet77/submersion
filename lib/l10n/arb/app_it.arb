@@ -4850,6 +4850,7 @@
   "divers_edit_priorMinutesLabel": "Minuti",
   "divers_edit_divingSinceLabel": "Immersioni dal",
   "divers_edit_divingSinceNotSet": "Non impostato",
+  "divers_edit_clearDivingSinceTooltip": "Cancella immersioni dal",
   "divers_edit_priorInvalidNumber": "Inserisci un numero valido",
   "statistics_priorBreakdown": "{logged} registrate + {prior} precedenti",
   "statistics_divingSince": "Immersioni dal {year}",

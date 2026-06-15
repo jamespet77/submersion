@@ -4850,6 +4850,7 @@
   "divers_edit_priorMinutesLabel": "دقائق",
   "divers_edit_divingSinceLabel": "يغوص منذ",
   "divers_edit_divingSinceNotSet": "غير محدد",
+  "divers_edit_clearDivingSinceTooltip": "مسح يغوص منذ",
   "divers_edit_priorInvalidNumber": "أدخل رقمًا صالحًا",
   "statistics_priorBreakdown": "{logged} مسجلة + {prior} سابقة",
   "statistics_divingSince": "يغوص منذ {year}",

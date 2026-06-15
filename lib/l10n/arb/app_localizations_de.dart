@@ -17131,6 +17131,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Nicht festgelegt';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Taucht seit löschen';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Gib eine gültige Zahl ein';
 
   @override

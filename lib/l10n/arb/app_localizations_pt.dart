@@ -17171,6 +17171,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'Não definido';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'Limpar mergulha desde';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'Introduza um número válido';
 
   @override

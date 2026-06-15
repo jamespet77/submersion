@@ -16332,6 +16332,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => '未设置';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => '清除潜水始于';
+
+  @override
   String get divers_edit_priorInvalidNumber => '请输入有效数字';
 
   @override

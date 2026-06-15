@@ -90,4 +90,43 @@ void main() {
     expect(find.text('1200'), findsOneWidget);
     expect(find.textContaining('1990'), findsOneWidget);
   });
+
+  testWidgets('zero logged + diver loading shows a loader, not empty state', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final overrides = await getBaseOverrides();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ...overrides,
+          diveStatisticsProvider.overrideWith(
+            (ref) async => _stats(totalDives: 0),
+          ),
+          currentDiverProvider.overrideWith((ref) async {
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            return _diver(count: 1200, since: DateTime(1990));
+          }),
+        ],
+        child: const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: StatisticsOverviewPage(),
+        ),
+      ),
+    );
+    await tester.pump(); // resolve the stats future
+    await tester
+        .pump(); // rebuild _OverviewBody while the diver is still loading
+    // The guard shows a loader rather than flashing the empty state, so a diver
+    // with prior experience but no logged dives never loses their career total.
+    expect(find.byType(CircularProgressIndicator), findsWidgets);
+    // Once the diver resolves, the career total renders.
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('1200'), findsOneWidget);
+  });
 }

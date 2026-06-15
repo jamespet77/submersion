@@ -28840,6 +28840,12 @@ abstract class AppLocalizations {
   /// **'Not set'**
   String get divers_edit_divingSinceNotSet;
 
+  /// No description provided for @divers_edit_clearDivingSinceTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear diving since'**
+  String get divers_edit_clearDivingSinceTooltip;
+
   /// No description provided for @divers_edit_priorInvalidNumber.
   ///
   /// In en, this message translates to:

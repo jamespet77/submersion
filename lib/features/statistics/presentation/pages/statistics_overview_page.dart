@@ -44,7 +44,14 @@ class _OverviewBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final diver = ref.watch(currentDiverProvider).valueOrNull;
+    final diverAsync = ref.watch(currentDiverProvider);
+    // With no logged dives, whether to show the empty state depends on prior
+    // experience -- so wait for the diver to resolve rather than briefly
+    // flashing the empty state (currentDiverProvider is a FutureProvider).
+    if (stats.totalDives == 0 && diverAsync.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    final diver = diverAsync.valueOrNull;
     final career = CareerTotals.from(
       loggedDives: stats.totalDives,
       loggedTimeSeconds: stats.totalTimeSeconds,

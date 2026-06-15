@@ -16719,6 +16719,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get divers_edit_divingSinceNotSet => 'לא הוגדר';
 
   @override
+  String get divers_edit_clearDivingSinceTooltip => 'נקה צולל מאז';
+
+  @override
   String get divers_edit_priorInvalidNumber => 'הזן מספר תקין';
 
   @override
