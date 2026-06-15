@@ -25,7 +25,9 @@ void main() {
 
   test('survives a new store instance over the same prefs (restore)', () async {
     await store.setPending();
-    final reopened = PostRestoreSyncStore(await SharedPreferences.getInstance());
+    final reopened = PostRestoreSyncStore(
+      await SharedPreferences.getInstance(),
+    );
     expect(reopened.pending, isTrue);
   });
 }

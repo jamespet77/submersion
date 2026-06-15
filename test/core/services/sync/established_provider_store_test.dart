@@ -30,8 +30,9 @@ void main() {
 
   test('survives a new store instance over the same prefs (restore)', () async {
     await store.add('s3');
-    final reopened =
-        EstablishedProviderStore(await SharedPreferences.getInstance());
+    final reopened = EstablishedProviderStore(
+      await SharedPreferences.getInstance(),
+    );
     expect(reopened.contains('s3'), isTrue);
   });
 
