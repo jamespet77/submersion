@@ -310,7 +310,17 @@ class SyncNotifier extends StateNotifier<SyncState> {
   SyncService get _syncService => _ref.read(syncServiceProvider);
 
   Future<void> _initialize() async {
-    // Load initial state
+    if (!mounted) return;
+    // Restore the saved provider before reading sync state: restoreLastProvider
+    // is async, so without awaiting it _initialize can race ahead and read a
+    // null provider, skipping the post-restore intent and replaced-library
+    // surfacing for the whole session. Mirrors _maybeSyncOnLaunch awaiting
+    // reconcileDeviceIdentityProvider.
+    try {
+      await _ref.read(restoreLastProviderProvider.future);
+    } catch (_) {
+      // Non-fatal: proceed with whatever provider state exists.
+    }
     if (!mounted) return;
     await refreshState();
     if (!mounted) return;

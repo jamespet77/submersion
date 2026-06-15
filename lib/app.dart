@@ -272,12 +272,14 @@ class _SubmersionAppState extends ConsumerState<SubmersionApp>
     // sync state, so a rewound baseline can't stall sync or resurrect deletes.
     ref.watch(reconcileDeviceIdentityProvider);
 
+    // Restore the last used cloud sync provider BEFORE listening to sync state:
+    // listening instantiates SyncNotifier, whose _initialize needs the restored
+    // provider to run the post-restore intent / replaced-library surfacing.
+    ref.watch(restoreLastProviderProvider);
+
     // Turn transient sync state into unmissable, screen-independent UI: the
     // post-restore "syncing" notice, and the replaced-library adopt prompt.
     ref.listen<SyncState>(syncStateProvider, _onSyncStateChanged);
-
-    // Restore the last used cloud sync provider on app startup
-    ref.watch(restoreLastProviderProvider);
 
     return MaterialApp.router(
       scaffoldMessengerKey: _scaffoldMessengerKey,
