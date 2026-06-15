@@ -50,6 +50,37 @@ class DiveRepository {
   Stream<void> watchDivesChanges() =>
       _db.tableUpdates(TableUpdateQuery.onTable(_db.dives));
 
+  /// Aggregate change-tick for the dive DETAIL page: fires when ANY table that
+  /// feeds a dive's detail view is written -- including a sync applying remote
+  /// changes directly to the DB (which bypasses the notifier paths that
+  /// invalidate per-dive providers on local edits). Every per-dive detail
+  /// provider subscribes to this (via [diveRepositoryProvider], the shared
+  /// cross-feature tick source) and self-invalidates, so the whole detail page
+  /// refreshes after a sync the same way the dive list already does.
+  ///
+  /// Broader than [watchDivesChanges] because a single `Dive` entity hydrates
+  /// tanks, tank pressures, profile, and equipment (see [_mapRowToDive]) and
+  /// the detail page also renders gas switches, data sources, dive sites,
+  /// course, buddies, marine-life sightings, media, and tide records.
+  Stream<void> watchDiveDetailChanges() => _db.tableUpdates(
+    TableUpdateQuery.allOf([
+      TableUpdateQuery.onTable(_db.dives),
+      TableUpdateQuery.onTable(_db.diveProfiles),
+      TableUpdateQuery.onTable(_db.diveTanks),
+      TableUpdateQuery.onTable(_db.tankPressureProfiles),
+      TableUpdateQuery.onTable(_db.diveEquipment),
+      TableUpdateQuery.onTable(_db.gasSwitches),
+      TableUpdateQuery.onTable(_db.diveDataSources),
+      TableUpdateQuery.onTable(_db.diveTags),
+      TableUpdateQuery.onTable(_db.diveSites),
+      TableUpdateQuery.onTable(_db.courses),
+      TableUpdateQuery.onTable(_db.diveBuddies),
+      TableUpdateQuery.onTable(_db.sightings),
+      TableUpdateQuery.onTable(_db.media),
+      TableUpdateQuery.onTable(_db.tideRecords),
+    ]),
+  );
+
   /// Get all dives, ordered by date (newest first)
   /// This method is optimized to avoid N+1 queries by batch loading related data
   /// Optionally filter by [diverId] for multi-diver support
