@@ -348,10 +348,24 @@ class SyncNotifier extends StateNotifier<SyncState> {
     if (mounted) state = state.copyWith(postRestoreSyncing: false);
   }
 
-  /// Surface a replaced cloud library on launch. Full body added in a later
-  /// step; the launch path already calls it so the wiring is exercised.
+  /// On a device that did NOT restore, surface a Replace-everywhere adoption
+  /// proactively -- even with auto-sync off -- so the pause is never hidden
+  /// behind a manual Sync Now. Detection only; the destructive adopt stays
+  /// behind the confirmation dialog.
   Future<void> _detectReplacedLibraryForSurfacing() async {
-    // Implemented in Task 12.
+    final marker = await libraryReplaceInfo();
+    if (marker == null || !mounted) return;
+    final diveCount = await _ref.read(diveRepositoryProvider).getDiveCount();
+    if (!mounted) return;
+    if (diveCount == 0) {
+      // Nothing local to lose: let performSync's empty-device path auto-adopt.
+      unawaited(performSync());
+    } else {
+      state = state.copyWith(
+        replaceAwaitingAdoption: true,
+        replaceMarker: marker,
+      );
+    }
   }
 
   void _listenForChanges() {

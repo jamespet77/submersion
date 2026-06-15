@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/sync/established_provider_store.dart';
+import 'package:submersion/core/services/sync/library_epoch.dart';
 import 'package:submersion/core/services/sync/post_restore_sync_store.dart';
 import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
@@ -166,6 +170,44 @@ void main() {
         reason: 'an explicit reset is a true fresh start, so re-arm the gate',
       );
       expect(PostRestoreSyncStore(prefs).pending, isFalse);
+    },
+  );
+
+  test(
+    'a foreign epoch with local dives arms replaceAwaitingAdoption on launch',
+    () async {
+      const foreign = LibraryEpochMarker(
+        epochId: 'foreign-epoch',
+        replacedAt: 1764000000000,
+        deviceId: 'mac-device',
+        deviceName: 'Eric Mac',
+      );
+      cloud.seedFile(
+        libraryEpochFileName,
+        Uint8List.fromList(utf8.encode(jsonEncode(foreign.toJson()))),
+      );
+      await seedLocalDive('d1');
+
+      final container = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          cloudStorageProviderProvider.overrideWithValue(cloud),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      // Constructing the notifier runs _initialize, which proactively detects
+      // the replaced library (no pending intent, provider configured).
+      container.read(syncStateProvider);
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+
+      final state = container.read(syncStateProvider);
+      expect(
+        state.replaceAwaitingAdoption,
+        isTrue,
+        reason: 'a replaced library must surface even with auto-sync off',
+      );
+      expect(state.replaceMarker?.epochId, 'foreign-epoch');
     },
   );
 }
