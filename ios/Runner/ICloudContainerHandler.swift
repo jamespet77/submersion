@@ -1,6 +1,5 @@
 import Flutter
 import UIKit
-import Security
 
 /// Thread-safe atomic flag for one-shot operations.
 private class AtomicFlag {
@@ -115,31 +114,17 @@ class ICloudContainerHandler: NSObject {
     }
 
     /// Reports iCloud availability without resolving the container URL (which
-    /// can block). Distinguishes a build lacking the iCloud entitlement
-    /// ("unsupported") from a signed-out iCloud account ("signedOut").
+    /// can block). On iOS the app is always provisioned with its iCloud
+    /// entitlement — there is no Developer ID / no-sandbox distribution as on
+    /// macOS — so availability reduces to whether an iCloud account is signed
+    /// in. (`SecTask` entitlement inspection is macOS-only and unavailable on
+    /// iOS, so there is no "unsupported" state here.)
     private func getICloudAvailability(result: @escaping FlutterResult) {
         DispatchQueue.global(qos: .userInitiated).async {
-            let status: String
-            if !self.hasUbiquityEntitlement() {
-                status = "unsupported"
-            } else if FileManager.default.ubiquityIdentityToken == nil {
-                status = "signedOut"
-            } else {
-                status = "available"
-            }
+            let status = FileManager.default.ubiquityIdentityToken == nil
+                ? "signedOut" : "available"
             DispatchQueue.main.async { result(status) }
         }
-    }
-
-    /// Whether this process carries the iCloud ubiquity-container entitlement.
-    private func hasUbiquityEntitlement() -> Bool {
-        guard let task = SecTaskCreateFromSelf(nil) else { return false }
-        let key = "com.apple.developer.ubiquity-container-identifiers" as CFString
-        let value = SecTaskCopyValueForEntitlement(task, key, nil)
-        if let identifiers = value as? [String] {
-            return !identifiers.isEmpty
-        }
-        return value != nil
     }
 
     private func downloadIfNeeded(path: String, result: @escaping FlutterResult) {
