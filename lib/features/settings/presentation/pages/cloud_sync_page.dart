@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 
 import 'package:submersion/core/data/repositories/sync_repository.dart'
     show CloudProviderType;
+import 'package:submersion/core/services/cloud_storage/icloud_native_service.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
 import 'package:submersion/core/services/sync/library_moved.dart';
 import 'package:submersion/features/backup/presentation/providers/backup_providers.dart';
@@ -401,6 +402,15 @@ class CloudSyncPage extends ConsumerWidget {
     WidgetRef ref,
     CloudProviderType? selectedProvider,
   ) {
+    final l10n = context.l10n;
+    final iCloudAvailability = ref
+        .watch(iCloudAvailabilityProvider)
+        .valueOrNull;
+    final iCloudUnsupported =
+        iCloudAvailability == ICloudAvailability.unsupported;
+    final iCloudDisabledSubtitle = (Platform.isIOS || Platform.isMacOS)
+        ? l10n.settings_cloudSync_provider_icloud_unsupportedSubtitle
+        : l10n.settings_cloudSync_provider_notAvailable;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -421,7 +431,8 @@ class CloudSyncPage extends ConsumerWidget {
           subtitle: 'Sync via Apple iCloud',
           icon: Icons.cloud,
           isSelected: selectedProvider == CloudProviderType.icloud,
-          isAvailable: Platform.isIOS || Platform.isMacOS,
+          isAvailable: !iCloudUnsupported,
+          disabledSubtitle: iCloudDisabledSubtitle,
         ),
         // Google Drive is hidden until its integration is fully
         // implemented; the CloudProviderType and provider plumbing remain
@@ -440,14 +451,19 @@ class CloudSyncPage extends ConsumerWidget {
     required IconData icon,
     required bool isSelected,
     required bool isAvailable,
+    String? disabledSubtitle,
   }) {
+    final l10n = context.l10n;
     return Semantics(
       selected: isSelected,
       child: ListTile(
         leading: Icon(icon),
         title: Text(title),
         subtitle: Text(
-          isAvailable ? subtitle : 'Not available on this platform',
+          isAvailable
+              ? subtitle
+              : (disabledSubtitle ??
+                    l10n.settings_cloudSync_provider_notAvailable),
         ),
         trailing: isSelected
             ? const Icon(
@@ -589,13 +605,49 @@ class CloudSyncPage extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              '${cloudProvider.providerName} connection failed: $e',
+              _connectionErrorMessage(
+                context,
+                ref,
+                provider,
+                cloudProvider.providerName,
+                e,
+              ),
             ),
             backgroundColor: Colors.red,
           ),
         );
       }
     }
+  }
+
+  /// Localized connection-failure message. For iCloud, picks wording that
+  /// matches the real availability state instead of leaking the raw exception.
+  String _connectionErrorMessage(
+    BuildContext context,
+    WidgetRef ref,
+    CloudProviderType provider,
+    String providerName,
+    Object error,
+  ) {
+    final l10n = context.l10n;
+    if (provider == CloudProviderType.icloud) {
+      final availability = ref.read(iCloudAvailabilityProvider).valueOrNull;
+      switch (availability) {
+        case ICloudAvailability.unsupported:
+          return l10n.settings_cloudSync_error_icloudUnsupported;
+        case ICloudAvailability.signedOut:
+          return l10n.settings_cloudSync_error_icloudSignedOut;
+        case ICloudAvailability.unknown:
+        case null:
+          return l10n.settings_cloudSync_error_icloudUnknown;
+        case ICloudAvailability.available:
+          break; // genuine failure despite availability — fall through
+      }
+    }
+    return l10n.settings_cloudSync_provider_connectionFailed(
+      providerName,
+      error.toString(),
+    );
   }
 
   /// Display name for a provider type, for dialogs and banners.

@@ -8,6 +8,7 @@ import 'package:submersion/core/data/repositories/sync_repository.dart'
     show CloudProviderType, SyncRepository;
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
+import 'package:submersion/core/services/cloud_storage/icloud_native_service.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_credentials_store.dart';
 import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
@@ -322,6 +323,7 @@ void main() {
       syncOnLaunch: false,
       syncOnResume: false,
     ),
+    ICloudAvailability iCloudAvailability = ICloudAvailability.available,
   }) async {
     final base = await getBaseOverrides();
     final fakeSync = _FakeSyncNotifier(syncState);
@@ -343,6 +345,9 @@ void main() {
           ),
           selectedCloudProviderTypeProvider.overrideWith(
             (ref) => selectedProvider,
+          ),
+          iCloudAvailabilityProvider.overrideWith(
+            (ref) async => iCloudAvailability,
           ),
           isCloudSyncDisabledByCustomFolderProvider.overrideWithValue(
             customFolderMode,
@@ -382,6 +387,51 @@ void main() {
     }
     return (sync: fakeSync, merge: fakeMerge, backup: fakeBackup);
   }
+
+  group('CloudSyncPage - iCloud availability', () {
+    testWidgets('disables the iCloud tile when the build is unsupported', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        iCloudAvailability: ICloudAvailability.unsupported,
+      );
+
+      final tile = tester.widget<ListTile>(
+        find.ancestor(of: find.text('iCloud'), matching: find.byType(ListTile)),
+      );
+      expect(tile.enabled, isFalse);
+    });
+
+    testWidgets('enables the iCloud tile when available', (tester) async {
+      await pumpPage(tester, iCloudAvailability: ICloudAvailability.available);
+
+      final tile = tester.widget<ListTile>(
+        find.ancestor(of: find.text('iCloud'), matching: find.byType(ListTile)),
+      );
+      expect(tile.enabled, isTrue);
+    });
+
+    testWidgets(
+      'shows the build-specific subtitle when unsupported',
+      (tester) async {
+        await pumpPage(
+          tester,
+          iCloudAvailability: ICloudAvailability.unsupported,
+        );
+
+        expect(
+          find.text(
+            'Not available in this build — use S3 or the App Store version',
+          ),
+          findsOneWidget,
+        );
+      },
+      // The build-vs-platform subtitle wording depends on dart:io Platform,
+      // so the exact text is only asserted on Apple hosts.
+      skip: !(Platform.isIOS || Platform.isMacOS),
+    );
+  });
 
   group('CloudSyncPage - base render', () {
     testWidgets('renders app bar, provider tiles, and sections', (
