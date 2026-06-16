@@ -3,6 +3,22 @@
 All notable changes to Submersion are documented in this file.
 
 
+## 1.5.1 (2026-06-15)
+
+### Bug Fixes
+
+- show Cloud Sync entry on all platforms
+
+### Documentation
+
+- release notes
+- release notes
+
+### Chores
+
+- bump version to 1.5.1+98
+
+
 ## 1.5.0 (2026-06-15)
 
 ### Features
