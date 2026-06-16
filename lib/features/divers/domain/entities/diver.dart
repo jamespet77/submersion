@@ -147,50 +147,72 @@ class Diver extends Equatable {
   bool get hasMedicalClearance =>
       medicalClearanceExpiryDate != null && !isMedicalClearanceExpired;
 
+  /// Sentinel marking a `copyWith` parameter as "not provided". Lets callers
+  /// distinguish omitting a nullable field (keep the current value) from
+  /// passing `null` (clear it) — plain `value ?? this.value` cannot express a
+  /// clear. Nullable fields take `Object?` params defaulting to [_unset]; the
+  /// `identical` check below routes them to keep / clear / set accordingly.
+  static const Object _unset = Object();
+
   Diver copyWith({
     String? id,
     String? name,
-    String? email,
-    String? phone,
-    String? photoPath,
+    Object? email = _unset,
+    Object? phone = _unset,
+    Object? photoPath = _unset,
     EmergencyContact? emergencyContact,
     EmergencyContact? emergencyContact2,
     String? medicalNotes,
-    String? bloodType,
-    String? allergies,
-    String? medications,
-    DateTime? medicalClearanceExpiryDate,
+    Object? bloodType = _unset,
+    Object? allergies = _unset,
+    Object? medications = _unset,
+    Object? medicalClearanceExpiryDate = _unset,
     DiverInsurance? insurance,
     String? notes,
     bool? isDefault,
     DateTime? createdAt,
     DateTime? updatedAt,
-    int? priorDiveCount,
-    int? priorDiveTimeSeconds,
-    DateTime? divingSince,
+    Object? priorDiveCount = _unset,
+    Object? priorDiveTimeSeconds = _unset,
+    Object? divingSince = _unset,
   }) {
     return Diver(
       id: id ?? this.id,
       name: name ?? this.name,
-      email: email ?? this.email,
-      phone: phone ?? this.phone,
-      photoPath: photoPath ?? this.photoPath,
+      email: identical(email, _unset) ? this.email : email as String?,
+      phone: identical(phone, _unset) ? this.phone : phone as String?,
+      photoPath: identical(photoPath, _unset)
+          ? this.photoPath
+          : photoPath as String?,
       emergencyContact: emergencyContact ?? this.emergencyContact,
       emergencyContact2: emergencyContact2 ?? this.emergencyContact2,
       medicalNotes: medicalNotes ?? this.medicalNotes,
-      bloodType: bloodType ?? this.bloodType,
-      allergies: allergies ?? this.allergies,
-      medications: medications ?? this.medications,
-      medicalClearanceExpiryDate:
-          medicalClearanceExpiryDate ?? this.medicalClearanceExpiryDate,
+      bloodType: identical(bloodType, _unset)
+          ? this.bloodType
+          : bloodType as String?,
+      allergies: identical(allergies, _unset)
+          ? this.allergies
+          : allergies as String?,
+      medications: identical(medications, _unset)
+          ? this.medications
+          : medications as String?,
+      medicalClearanceExpiryDate: identical(medicalClearanceExpiryDate, _unset)
+          ? this.medicalClearanceExpiryDate
+          : medicalClearanceExpiryDate as DateTime?,
       insurance: insurance ?? this.insurance,
       notes: notes ?? this.notes,
       isDefault: isDefault ?? this.isDefault,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      priorDiveCount: priorDiveCount ?? this.priorDiveCount,
-      priorDiveTimeSeconds: priorDiveTimeSeconds ?? this.priorDiveTimeSeconds,
-      divingSince: divingSince ?? this.divingSince,
+      priorDiveCount: identical(priorDiveCount, _unset)
+          ? this.priorDiveCount
+          : priorDiveCount as int?,
+      priorDiveTimeSeconds: identical(priorDiveTimeSeconds, _unset)
+          ? this.priorDiveTimeSeconds
+          : priorDiveTimeSeconds as int?,
+      divingSince: identical(divingSince, _unset)
+          ? this.divingSince
+          : divingSince as DateTime?,
     );
   }
 
