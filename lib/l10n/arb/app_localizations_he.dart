@@ -10,7 +10,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_cloudSync_error_icloudSignedOut =>
-      'iCloud אינו זמין. היכנס ל-iCloud דרך הגדרות המערכת.';
+      'iCloud אינו זמין. היכנס ל-iCloud דרך הגדרות המכשיר.';
 
   @override
   String get settings_cloudSync_error_icloudUnknown =>

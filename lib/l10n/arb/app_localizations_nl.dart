@@ -10,7 +10,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_cloudSync_error_icloudSignedOut =>
-      'iCloud is niet beschikbaar. Log in bij iCloud in Systeeminstellingen.';
+      'iCloud is niet beschikbaar. Log in bij iCloud in de instellingen van je apparaat.';
 
   @override
   String get settings_cloudSync_error_icloudUnknown =>

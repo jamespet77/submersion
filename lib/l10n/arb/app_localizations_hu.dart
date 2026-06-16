@@ -10,7 +10,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_cloudSync_error_icloudSignedOut =>
-      'Az iCloud nem érhető el. Jelentkezz be az iCloudba a Rendszerbeállításokban.';
+      'Az iCloud nem érhető el. Jelentkezz be az iCloudba a készülék beállításaiban.';
 
   @override
   String get settings_cloudSync_error_icloudUnknown =>

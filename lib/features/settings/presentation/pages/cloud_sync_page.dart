@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +14,37 @@ import 'package:submersion/features/divers/presentation/providers/diver_provider
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
 import 'package:submersion/features/settings/presentation/widgets/adopt_replaced_library_dialog.dart';
 import 'package:submersion/features/settings/presentation/widgets/conflict_resolution_dialog.dart';
+import 'package:submersion/l10n/arb/app_localizations.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
+
+/// Localized connection-failure message for a cloud provider. For iCloud the
+/// wording reflects the real [iCloudAvailability] state; other providers (and a
+/// genuinely-available iCloud that still failed) get the generic message.
+///
+/// Pure (no `BuildContext`/`ref`) so it is unit-testable on any host.
+@visibleForTesting
+String connectionErrorMessage(
+  AppLocalizations l10n,
+  CloudProviderType provider,
+  ICloudAvailability? iCloudAvailability,
+  String providerName,
+  String error,
+) {
+  if (provider == CloudProviderType.icloud) {
+    switch (iCloudAvailability) {
+      case ICloudAvailability.unsupported:
+        return l10n.settings_cloudSync_error_icloudUnsupported;
+      case ICloudAvailability.signedOut:
+        return l10n.settings_cloudSync_error_icloudSignedOut;
+      case ICloudAvailability.unknown:
+      case null:
+        return l10n.settings_cloudSync_error_icloudUnknown;
+      case ICloudAvailability.available:
+        break; // genuine failure despite availability — use the generic message
+    }
+  }
+  return l10n.settings_cloudSync_provider_connectionFailed(providerName, error);
+}
 
 class CloudSyncPage extends ConsumerWidget {
   const CloudSyncPage({super.key});
@@ -403,12 +431,13 @@ class CloudSyncPage extends ConsumerWidget {
     CloudProviderType? selectedProvider,
   ) {
     final l10n = context.l10n;
+    final isApple = ref.watch(isApplePlatformProvider);
     final iCloudAvailability = ref
         .watch(iCloudAvailabilityProvider)
         .valueOrNull;
     final iCloudUnsupported =
         iCloudAvailability == ICloudAvailability.unsupported;
-    final iCloudDisabledSubtitle = (Platform.isIOS || Platform.isMacOS)
+    final iCloudDisabledSubtitle = isApple
         ? l10n.settings_cloudSync_provider_icloud_unsupportedSubtitle
         : l10n.settings_cloudSync_provider_notAvailable;
     return Column(
@@ -431,7 +460,7 @@ class CloudSyncPage extends ConsumerWidget {
           subtitle: 'Sync via Apple iCloud',
           icon: Icons.cloud,
           isSelected: selectedProvider == CloudProviderType.icloud,
-          isAvailable: !iCloudUnsupported,
+          isAvailable: isApple && !iCloudUnsupported,
           disabledSubtitle: iCloudDisabledSubtitle,
         ),
         // Google Drive is hidden until its integration is fully
@@ -620,8 +649,8 @@ class CloudSyncPage extends ConsumerWidget {
     }
   }
 
-  /// Localized connection-failure message. For iCloud, picks wording that
-  /// matches the real availability state instead of leaking the raw exception.
+  /// Localized connection-failure message. For iCloud, the wording reflects
+  /// the real availability state instead of leaking the raw exception.
   String _connectionErrorMessage(
     BuildContext context,
     WidgetRef ref,
@@ -629,22 +658,13 @@ class CloudSyncPage extends ConsumerWidget {
     String providerName,
     Object error,
   ) {
-    final l10n = context.l10n;
-    if (provider == CloudProviderType.icloud) {
-      final availability = ref.read(iCloudAvailabilityProvider).valueOrNull;
-      switch (availability) {
-        case ICloudAvailability.unsupported:
-          return l10n.settings_cloudSync_error_icloudUnsupported;
-        case ICloudAvailability.signedOut:
-          return l10n.settings_cloudSync_error_icloudSignedOut;
-        case ICloudAvailability.unknown:
-        case null:
-          return l10n.settings_cloudSync_error_icloudUnknown;
-        case ICloudAvailability.available:
-          break; // genuine failure despite availability — fall through
-      }
-    }
-    return l10n.settings_cloudSync_provider_connectionFailed(
+    final iCloudAvailability = provider == CloudProviderType.icloud
+        ? ref.read(iCloudAvailabilityProvider).valueOrNull
+        : null;
+    return connectionErrorMessage(
+      context.l10n,
+      provider,
+      iCloudAvailability,
       providerName,
       error.toString(),
     );

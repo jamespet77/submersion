@@ -48,6 +48,14 @@ final iCloudAvailabilityProvider = FutureProvider<ICloudAvailability>((
   return ICloudNativeService.getAvailability();
 });
 
+/// Whether the host is an Apple platform (iOS/macOS), where iCloud can exist at
+/// all. Exposed as a provider so the iCloud tile is never enabled on non-Apple
+/// platforms (even transiently while [iCloudAvailabilityProvider] loads), and so
+/// widget tests can simulate an Apple platform on a non-Apple CI host.
+final isApplePlatformProvider = Provider<bool>(
+  (ref) => Platform.isIOS || Platform.isMacOS,
+);
+
 /// Sync preferences provider
 final syncPreferencesProvider = Provider<SyncPreferences>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);

@@ -10,7 +10,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_cloudSync_error_icloudSignedOut =>
-      'iCloud 不可用。请在“系统设置”中登录 iCloud。';
+      'iCloud 不可用。请在设备设置中登录 iCloud。';
 
   @override
   String get settings_cloudSync_error_icloudUnknown => '无法连接 iCloud。请重试。';

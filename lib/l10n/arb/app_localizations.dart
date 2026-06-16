@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_cloudSync_error_icloudSignedOut.
   ///
   /// In en, this message translates to:
-  /// **'iCloud is not available. Please sign in to iCloud in System Settings.'**
+  /// **'iCloud is not available. Please sign in to iCloud in your device settings.'**
   String get settings_cloudSync_error_icloudSignedOut;
 
   /// No description provided for @settings_cloudSync_error_icloudUnknown.

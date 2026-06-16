@@ -30,6 +30,7 @@ import 'package:submersion/features/settings/presentation/providers/settings_pro
     show sharedPreferencesProvider;
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
 import 'package:submersion/l10n/arb/app_localizations.dart';
+import 'package:submersion/l10n/arb/app_localizations_en.dart';
 
 import '../../../../helpers/fake_cloud_storage_provider.dart';
 import '../../../../helpers/mock_providers.dart';
@@ -324,6 +325,7 @@ void main() {
       syncOnResume: false,
     ),
     ICloudAvailability iCloudAvailability = ICloudAvailability.available,
+    bool applePlatform = true,
   }) async {
     final base = await getBaseOverrides();
     final fakeSync = _FakeSyncNotifier(syncState);
@@ -349,6 +351,7 @@ void main() {
           iCloudAvailabilityProvider.overrideWith(
             (ref) async => iCloudAvailability,
           ),
+          isApplePlatformProvider.overrideWithValue(applePlatform),
           isCloudSyncDisabledByCustomFolderProvider.overrideWithValue(
             customFolderMode,
           ),
@@ -389,6 +392,10 @@ void main() {
   }
 
   group('CloudSyncPage - iCloud availability', () {
+    ListTile iCloudTile(WidgetTester tester) => tester.widget<ListTile>(
+      find.ancestor(of: find.text('iCloud'), matching: find.byType(ListTile)),
+    );
+
     testWidgets('disables the iCloud tile when the build is unsupported', (
       tester,
     ) async {
@@ -397,40 +404,140 @@ void main() {
         iCloudAvailability: ICloudAvailability.unsupported,
       );
 
-      final tile = tester.widget<ListTile>(
-        find.ancestor(of: find.text('iCloud'), matching: find.byType(ListTile)),
-      );
-      expect(tile.enabled, isFalse);
+      expect(iCloudTile(tester).enabled, isFalse);
     });
 
     testWidgets('enables the iCloud tile when available', (tester) async {
       await pumpPage(tester, iCloudAvailability: ICloudAvailability.available);
 
-      final tile = tester.widget<ListTile>(
-        find.ancestor(of: find.text('iCloud'), matching: find.byType(ListTile)),
-      );
-      expect(tile.enabled, isTrue);
+      expect(iCloudTile(tester).enabled, isTrue);
     });
 
-    testWidgets(
-      'shows the build-specific subtitle when unsupported',
-      (tester) async {
-        await pumpPage(
-          tester,
-          iCloudAvailability: ICloudAvailability.unsupported,
-        );
+    testWidgets('shows the build-specific subtitle when unsupported', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        iCloudAvailability: ICloudAvailability.unsupported,
+      );
 
-        expect(
-          find.text(
-            'Not available in this build — use S3 or the App Store version',
-          ),
-          findsOneWidget,
-        );
-      },
-      // The build-vs-platform subtitle wording depends on dart:io Platform,
-      // so the exact text is only asserted on Apple hosts.
-      skip: !(Platform.isIOS || Platform.isMacOS),
-    );
+      expect(
+        find.text(
+          'Not available in this build — use S3 or the App Store version',
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('disables with the platform subtitle on non-Apple platforms', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        applePlatform: false,
+        iCloudAvailability: ICloudAvailability.unsupported,
+      );
+
+      expect(iCloudTile(tester).enabled, isFalse);
+      expect(find.text('Not available on this platform'), findsOneWidget);
+    });
+
+    testWidgets('iCloud connection failure shows the signed-out message', (
+      tester,
+    ) async {
+      await pumpPage(
+        tester,
+        iCloudAvailability: ICloudAvailability.signedOut,
+        cloudProvider: _ThrowingCloudStorageProvider(),
+      );
+
+      await tester.tap(find.text('iCloud'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'iCloud is not available. Please sign in to iCloud in your '
+          'device settings.',
+        ),
+        findsOneWidget,
+      );
+    });
+  });
+
+  group('connectionErrorMessage', () {
+    final l10n = AppLocalizationsEn();
+
+    test('iCloud unsupported maps to the unsupported message', () {
+      expect(
+        connectionErrorMessage(
+          l10n,
+          CloudProviderType.icloud,
+          ICloudAvailability.unsupported,
+          'iCloud',
+          'err',
+        ),
+        l10n.settings_cloudSync_error_icloudUnsupported,
+      );
+    });
+
+    test('iCloud signedOut maps to the signed-out message', () {
+      expect(
+        connectionErrorMessage(
+          l10n,
+          CloudProviderType.icloud,
+          ICloudAvailability.signedOut,
+          'iCloud',
+          'err',
+        ),
+        l10n.settings_cloudSync_error_icloudSignedOut,
+      );
+    });
+
+    test('iCloud unknown maps to the unknown message', () {
+      expect(
+        connectionErrorMessage(
+          l10n,
+          CloudProviderType.icloud,
+          ICloudAvailability.unknown,
+          'iCloud',
+          'err',
+        ),
+        l10n.settings_cloudSync_error_icloudUnknown,
+      );
+    });
+
+    test('iCloud null availability maps to the unknown message', () {
+      expect(
+        connectionErrorMessage(
+          l10n,
+          CloudProviderType.icloud,
+          null,
+          'iCloud',
+          'err',
+        ),
+        l10n.settings_cloudSync_error_icloudUnknown,
+      );
+    });
+
+    test('available iCloud falls back to the generic message', () {
+      expect(
+        connectionErrorMessage(
+          l10n,
+          CloudProviderType.icloud,
+          ICloudAvailability.available,
+          'iCloud',
+          'boom',
+        ),
+        l10n.settings_cloudSync_provider_connectionFailed('iCloud', 'boom'),
+      );
+    });
+
+    test('non-iCloud provider uses the generic message', () {
+      expect(
+        connectionErrorMessage(l10n, CloudProviderType.s3, null, 'S3', 'boom'),
+        l10n.settings_cloudSync_provider_connectionFailed('S3', 'boom'),
+      );
+    });
   });
 
   group('CloudSyncPage - base render', () {

@@ -1,5 +1,5 @@
 {
-  "settings_cloudSync_error_icloudSignedOut": "iCloud אינו זמין. היכנס ל-iCloud דרך הגדרות המערכת.",
+  "settings_cloudSync_error_icloudSignedOut": "iCloud אינו זמין. היכנס ל-iCloud דרך הגדרות המכשיר.",
   "settings_cloudSync_error_icloudUnknown": "לא ניתן היה להגיע ל-iCloud. נסה שוב.",
   "settings_cloudSync_error_icloudUnsupported": "סנכרון iCloud אינו זמין בגרסה זו של Submersion. השתמש בסנכרון S3 או בגרסת App Store.",
   "settings_cloudSync_provider_icloud_unsupportedSubtitle": "לא זמין בגרסה זו — השתמש ב-S3 או בגרסת App Store",

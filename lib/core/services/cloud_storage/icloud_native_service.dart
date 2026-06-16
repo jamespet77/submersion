@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'package:submersion/core/services/logger_service.dart';
@@ -59,13 +60,20 @@ class ICloudNativeService {
   ///
   /// Non-blocking on the native side (it does not resolve the container URL),
   /// so it cannot hang. Returns [ICloudAvailability.unsupported] on
-  /// non-iOS/macOS platforms, and [ICloudAvailability.unknown] on a channel
-  /// error (e.g. [MissingPluginException]) — `unknown` is treated optimistically
-  /// by the UI.
+  /// non-iOS/macOS platforms; otherwise delegates to [queryNativeAvailability].
   static Future<ICloudAvailability> getAvailability() async {
     if (!Platform.isIOS && !Platform.isMacOS) {
       return ICloudAvailability.unsupported;
     }
+    return queryNativeAvailability();
+  }
+
+  /// Invokes the native availability channel and maps the result. Unlike
+  /// [getAvailability] it has no platform guard, so it is unit-testable on any
+  /// host via a mocked method channel. Returns [ICloudAvailability.unknown] on a
+  /// channel error (e.g. [MissingPluginException]).
+  @visibleForTesting
+  static Future<ICloudAvailability> queryNativeAvailability() async {
     try {
       final status = await _channel.invokeMethod<String>(
         'getICloudAvailability',

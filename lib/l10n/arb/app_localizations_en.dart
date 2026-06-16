@@ -10,7 +10,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_cloudSync_error_icloudSignedOut =>
-      'iCloud is not available. Please sign in to iCloud in System Settings.';
+      'iCloud is not available. Please sign in to iCloud in your device settings.';
 
   @override
   String get settings_cloudSync_error_icloudUnknown =>
