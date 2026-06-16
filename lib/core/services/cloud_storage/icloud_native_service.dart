@@ -6,9 +6,15 @@ import 'package:submersion/core/services/logger_service.dart';
 
 /// Runtime iCloud availability for the current build/device.
 ///
-/// `unsupported` means this build lacks the iCloud (ubiquity-container)
-/// entitlement — e.g. a Developer ID / no-sandbox distribution build — so
-/// iCloud can never work here regardless of the user's iCloud account.
+/// - `available`: an iCloud account is signed in and this build can reach its
+///   ubiquity container.
+/// - `signedOut`: the build is entitled, but no iCloud account is signed in.
+/// - `unsupported`: iCloud can never work here, for either of two reasons — the
+///   running build lacks the ubiquity-container entitlement (e.g. a Developer ID
+///   / no-sandbox distribution build), or the platform is not iOS/macOS at all.
+///   The user's iCloud account is irrelevant in this state.
+/// - `unknown`: the status could not be determined (a channel error on an Apple
+///   platform); the UI treats it optimistically.
 enum ICloudAvailability { available, signedOut, unsupported, unknown }
 
 /// Platform channel helpers for iCloud container access and file download.
@@ -52,8 +58,10 @@ class ICloudNativeService {
   /// Reports iCloud availability for the current build/device.
   ///
   /// Non-blocking on the native side (it does not resolve the container URL),
-  /// so it cannot hang. Returns [ICloudAvailability.unknown] on any channel
-  /// error or unmirrored platform, which the UI treats optimistically.
+  /// so it cannot hang. Returns [ICloudAvailability.unsupported] on
+  /// non-iOS/macOS platforms, and [ICloudAvailability.unknown] on a channel
+  /// error (e.g. [MissingPluginException]) — `unknown` is treated optimistically
+  /// by the UI.
   static Future<ICloudAvailability> getAvailability() async {
     if (!Platform.isIOS && !Platform.isMacOS) {
       return ICloudAvailability.unsupported;
