@@ -48,7 +48,8 @@ def main() -> int:
         print(f"error: no certificates found in {source}")
         return 1
 
-    # Normalize to exactly one trailing newline per cert, joined with none.
+    # Strip each cert and join with a single newline, plus one trailing
+    # newline -- so consecutive PEM blocks are separated by exactly one "\n".
     bundle = "\n".join(c.strip() for c in certs) + "\n"
 
     if "'''" in bundle:

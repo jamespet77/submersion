@@ -28,7 +28,7 @@ void main() {
     });
 
     test('wraps the base64 body at 64 characters per line', () {
-      // 150 DER bytes -> 200 base64 chars -> lines of 64, 64, 72.
+      // 150 DER bytes -> 200 base64 chars -> lines of 64, 64, 64, 8.
       final der = Uint8List.fromList(List<int>.generate(150, (i) => i % 256));
 
       final pem = derToPem(der);
