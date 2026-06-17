@@ -86,4 +86,23 @@ void main() {
       expect(d.divingSince, DateTime(1999));
     });
   });
+
+  group('copyWith asserts the runtime type of sentinel params (debug)', () {
+    test('wrong type for a String? field throws AssertionError', () {
+      // Object? params accept anything at compile time; the debug assert
+      // catches a type mismatch that the old typed signature would have
+      // rejected at compile time.
+      expect(
+        () => populated().copyWith(email: 123),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('wrong type for an int? field throws AssertionError', () {
+      expect(
+        () => populated().copyWith(priorDiveCount: 'lots'),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+  });
 }
