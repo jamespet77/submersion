@@ -140,4 +140,20 @@ void main() {
 
     expect(notifier.updated, isNull);
   });
+
+  testWidgets('clearing a previously-set dive count persists null', (
+    tester,
+  ) async {
+    final notifier = await pump(tester, makeDiver(priorDiveCount: 80));
+
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Prior dives'),
+      '',
+    );
+    await tester.tap(find.text('Save'));
+    await tester.pumpAndSettle();
+
+    expect(notifier.updated, isNotNull);
+    expect(notifier.updated!.priorDiveCount, isNull);
+  });
 }
