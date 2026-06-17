@@ -35,6 +35,15 @@ class CloudStorageException implements Exception {
 
   const CloudStorageException(this.message, [this.cause, this.stackTrace]);
 
+  /// User-facing message that appends the underlying [cause] when present.
+  ///
+  /// The top-level [message] is intentionally generic (e.g. "Could not reach
+  /// S3 endpoint ..."); the [cause] carries the actionable transport detail
+  /// (TLS handshake / certificate / socket errors). Unlike [toString] this
+  /// omits the class-name prefix, so it is safe to show directly in a
+  /// snackbar.
+  String get displayMessage => cause == null ? message : '$message ($cause)';
+
   @override
   String toString() =>
       'CloudStorageException: $message${cause != null ? ' ($cause)' : ''}';
