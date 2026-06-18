@@ -10,6 +10,7 @@ import 'package:uuid/uuid.dart';
 
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart';
+import 'package:submersion/core/services/backup_bookmark_service.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
@@ -50,6 +51,36 @@ class DefaultBackupDatabaseAdapter implements BackupDatabaseAdapter {
 
   @override
   AppDatabase get database => _dbAdapter.database;
+}
+
+/// A backups directory ready to write into, plus [release] to call when the
+/// caller is done -- which stops any security-scoped access that was armed to
+/// reach a custom Apple location. For the default/sandbox location the release
+/// is a no-op.
+class BackupDirLease {
+  final String path;
+  final Future<void> Function() _release;
+  const BackupDirLease(this.path, this._release);
+
+  Future<void> release() => _release();
+}
+
+/// Narrow seam over [BackupBookmarkService] so the leased resolver can be
+/// tested without a native channel.
+abstract class BackupBookmarkPort {
+  Future<BackupBookmarkLease?> resolve(Uint8List data);
+  Future<void> release(String ref);
+}
+
+class _DefaultBackupBookmarkPort implements BackupBookmarkPort {
+  const _DefaultBackupBookmarkPort();
+
+  @override
+  Future<BackupBookmarkLease?> resolve(Uint8List data) =>
+      BackupBookmarkService.resolveBookmark(data);
+
+  @override
+  Future<void> release(String ref) => BackupBookmarkService.release(ref);
 }
 
 /// Core backup service handling backup creation, restore, pruning, and cloud upload.
@@ -638,6 +669,53 @@ class BackupService {
       await backupDir.create(recursive: true);
     }
     return backupDir.path;
+  }
+
+  /// Resolves the backups directory and arms any security-scoped access needed
+  /// to write into it, returning a [BackupDirLease]. Callers MUST call
+  /// [BackupDirLease.release] when finished writing.
+  ///
+  /// On Apple platforms a custom location is only reachable through its
+  /// security-scoped bookmark. If the bookmark is missing or cannot be
+  /// resolved (e.g. an iCloud folder whose access was revoked), the location is
+  /// reset to the sandbox default rather than left broken -- this is what
+  /// self-heals an already-stored dead path. On other platforms, and for the
+  /// default location, the path is returned directly with a no-op release.
+  static Future<BackupDirLease> resolveBackupsDirectoryLeased(
+    BackupPreferences preferences, {
+    BackupBookmarkPort? bookmarks,
+  }) async {
+    final custom = preferences.getSettings().backupLocation;
+    if (custom == null) {
+      return BackupDirLease(await resolveDefaultBackupsDirectory(), _noRelease);
+    }
+    if (!BackupBookmarkService.isSupported) {
+      // Desktop/Android: bare custom paths persist and work without scoping.
+      return BackupDirLease(await _ensureDir(custom), _noRelease);
+    }
+    final port = bookmarks ?? const _DefaultBackupBookmarkPort();
+    final bytes = preferences.getBackupLocationBookmark();
+    if (bytes != null) {
+      final lease = await port.resolve(bytes);
+      if (lease != null) {
+        return BackupDirLease(
+          await _ensureDir(lease.path),
+          () => port.release(lease.ref),
+        );
+      }
+    }
+    // No bookmark, or it could not be resolved: the custom location is unusable
+    // on this platform. Reset to the sandbox default so backups keep working.
+    await preferences.setBackupLocation(null); // clears location + bookmark
+    return BackupDirLease(await resolveDefaultBackupsDirectory(), _noRelease);
+  }
+
+  static Future<void> _noRelease() async {}
+
+  static Future<String> _ensureDir(String dir) async {
+    final directory = Directory(dir);
+    if (!await directory.exists()) await directory.create(recursive: true);
+    return dir;
   }
 
   /// Get the active backups directory (custom or default), creating it if needed.
