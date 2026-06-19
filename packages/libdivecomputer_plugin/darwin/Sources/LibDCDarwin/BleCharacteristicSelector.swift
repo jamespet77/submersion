@@ -92,8 +92,12 @@ enum BleCharacteristicSelector {
     /// Choose the best write/notify pair across all services, or nil if no
     /// service has both a writable and a notify/indicate characteristic.
     ///
-    /// Ties (equal scores) resolve to the first characteristic in discovery
-    /// order, matching CoreBluetooth handle ordering.
+    /// Ties (equal scores) resolve to the earliest candidate in the input
+    /// order the caller supplies. BleIoStream builds that order from BLE
+    /// discovery (service-callback completion order, plus the characteristic
+    /// order CoreBluetooth returns), which is not guaranteed to match GATT
+    /// handle order -- so device-specific cases that must not depend on
+    /// ordering use a preferred UUID rather than relying on the tie-break.
     static func select(services: [Service]) -> Selection? {
         var best: Selection?
         for (serviceIndex, service) in services.enumerated() {
