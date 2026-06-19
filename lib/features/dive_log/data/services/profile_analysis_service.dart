@@ -512,6 +512,10 @@ class ProfileAnalysisService {
   /// [startOtu] is cumulative OTU from earlier same-day dives (non-negative).
   /// [gasSegments] optionally provides a time-ordered gas schedule for
   /// decompression calculations across the profile.
+  /// [rebreatherPpO2Curve] is the per-sample ppO2 (bar) resolved from O2 cells
+  /// or the setpoint for CCR/SCR dives. When provided it drives the ppO2, CNS,
+  /// and OTU calculations directly, so they match the measured loop ppO2 rather
+  /// than a setpoint or OC depth x FO2 fallback. Must align with [depths].
   ProfileAnalysis analyze({
     required String diveId,
     required List<double> depths,
@@ -530,6 +534,7 @@ class ProfileAnalysisService {
     List<TissueCompartment>? startCompartments,
     double startOtu = 0.0,
     List<ProfileGasSegment>? gasSegments,
+    List<double>? rebreatherPpO2Curve,
   }) {
     if (depths.isEmpty || depths.length != timestamps.length) {
       return ProfileAnalysis.empty();
@@ -592,12 +597,22 @@ class ProfileAnalysisService {
     final pointN2Fractions = ocGasMetrics?.n2Fractions;
     final pointHeFractions = ocGasMetrics?.heFractions;
 
+    // A measured ppO2 curve (from O2 cells/setpoint) takes priority for
+    // rebreather dives: it reflects the actual loop ppO2, unlike the setpoint
+    // (which may be absent for imported dives) or the OC depth x FO2 fallback.
+    final hasMeasuredPpO2 =
+        rebreatherPpO2Curve != null &&
+        rebreatherPpO2Curve.length == depths.length;
+
     // Calculate ppO2 curve based on dive mode
     final List<double> ppO2Curve;
     switch (diveMode) {
       case DiveMode.ccr:
-        // CCR: ppO2 equals the setpoint (constant or variable by depth phase)
-        if (setpointHigh != null) {
+        if (hasMeasuredPpO2) {
+          // CCR: measured loop ppO2 from O2 cells / setpoint
+          ppO2Curve = rebreatherPpO2Curve;
+        } else if (setpointHigh != null) {
+          // CCR: ppO2 equals the setpoint (constant or variable by depth phase)
           ppO2Curve = _o2ToxicityCalculator.calculatePpO2CurveCCR(
             depths,
             setpointHigh: setpointHigh,
@@ -612,8 +627,11 @@ class ProfileAnalysisService {
           );
         }
       case DiveMode.scr:
-        // SCR: ppO2 varies with depth based on steady-state loop FO2
-        if (scrInjectionRate != null && scrSupplyO2Percent != null) {
+        if (hasMeasuredPpO2) {
+          // SCR: measured loop ppO2 from O2 cells / setpoint
+          ppO2Curve = rebreatherPpO2Curve;
+        } else if (scrInjectionRate != null && scrSupplyO2Percent != null) {
+          // SCR: ppO2 varies with depth based on steady-state loop FO2
           ppO2Curve = _o2ToxicityCalculator.calculatePpO2CurveSCR(
             depths,
             injectionRateLpm: scrInjectionRate,
