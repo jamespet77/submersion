@@ -32,6 +32,29 @@ void main() {
   });
 
   group('SiteRepository', () {
+    test('dive_sites table persists city and island columns', () async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await database
+          .into(database.diveSites)
+          .insert(
+            db.DiveSitesCompanion.insert(
+              id: 'site-ci',
+              name: 'Test Site',
+              createdAt: now,
+              updatedAt: now,
+              city: const Value('Cebu City'),
+              island: const Value('Malapascua'),
+              bodyOfWater: const Value('Visayan Sea'),
+            ),
+          );
+      final row = await (database.select(
+        database.diveSites,
+      )..where((t) => t.id.equals('site-ci'))).getSingle();
+      expect(row.city, 'Cebu City');
+      expect(row.island, 'Malapascua');
+      expect(row.bodyOfWater, 'Visayan Sea');
+    });
+
     group('createSite', () {
       test(
         'should create a new site with generated ID when ID is empty',
