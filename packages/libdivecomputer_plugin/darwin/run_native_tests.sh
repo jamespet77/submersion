@@ -16,6 +16,12 @@ swiftc -o "$BUILD_DIR/packet_read_buffer_tests" \
 
 "$BUILD_DIR/packet_read_buffer_tests"
 
+swiftc -o "$BUILD_DIR/ble_characteristic_selector_tests" \
+    Sources/LibDCDarwin/BleCharacteristicSelector.swift \
+    Tests/BleCharacteristicSelectorTests/main.swift
+
+"$BUILD_DIR/ble_characteristic_selector_tests"
+
 # SerialPortEnumerator pure-logic tests (USB-serial port classification and
 # candidate selection for the Mares Puck Pro / serial-over-USB download path).
 # -framework IOKit satisfies the IOKit references in enumerateUsbSerialPaths();
