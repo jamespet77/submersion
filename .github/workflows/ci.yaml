@@ -201,8 +201,12 @@ jobs:
         # coverage reports via the per-shard flag below.
         run: |
           total=$(find test -name '*_test.dart' | wc -l)
+          # (NR-1) so the modulus is 0-based like matrix.shard: shard i owns
+          # file indices i, i+N, i+2N, ... (shard 0 -> first file). Plain NR
+          # (1-based) would map shard 0 to every Nth file and leave it empty
+          # for suites smaller than N.
           mapfile -t files < <(find test -name '*_test.dart' | sort \
-            | awk "NR % ${TOTAL_SHARDS} == ${{ matrix.shard }}")
+            | awk "(NR-1) % ${TOTAL_SHARDS} == ${{ matrix.shard }}")
           echo "Shard ${{ matrix.shard }}/${TOTAL_SHARDS}: ${#files[@]} of ${total} test files"
           # Guard: with no paths, `flutter test` runs the ENTIRE suite. An empty
           # shard (more shards than files) would silently re-run everything and
