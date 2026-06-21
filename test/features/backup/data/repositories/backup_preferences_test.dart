@@ -224,5 +224,13 @@ void main() {
         expect(backupPreferences.backupLocationLabel, isNull);
       },
     );
+
+    test('setBackupLocationLabel(null) clears the label directly', () async {
+      await backupPreferences.setBackupLocationLabel('Backups');
+      expect(backupPreferences.backupLocationLabel, 'Backups');
+
+      await backupPreferences.setBackupLocationLabel(null);
+      expect(backupPreferences.backupLocationLabel, isNull);
+    });
   });
 }

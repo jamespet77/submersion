@@ -107,4 +107,18 @@ void main() {
       expect(valid.map((r) => r.id), ['keep']);
     },
   );
+
+  test('deleteBackup removes a filesystem-path backup file', () async {
+    final tmp = await Directory.systemTemp.createTemp('del_fs_');
+    addTearDown(() => tmp.delete(recursive: true));
+    final file = File('${tmp.path}/b.db');
+    await file.writeAsString('x');
+    final r = _saf('fs', file.path);
+    await prefs.addRecord(r);
+
+    await service().deleteBackup(r);
+
+    expect(file.existsSync(), isFalse);
+    expect(port.deleted, isEmpty); // filesystem path must not route to SAF
+  });
 }
