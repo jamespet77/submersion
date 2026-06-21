@@ -31,3 +31,13 @@ swiftc -framework IOKit -o "$BUILD_DIR/serial_port_enumerator_tests" \
     Tests/SerialPortEnumeratorTests/main.swift
 
 "$BUILD_DIR/serial_port_enumerator_tests"
+
+# serialReadFully accumulation tests (issue #334): the serial read must return
+# exactly the requested byte count or time out, accumulating across the
+# ~64-byte USB chunks that macOS USB-serial drivers deliver. Pure POSIX logic;
+# a socketpair stands in for the serial fd.
+swiftc -o "$BUILD_DIR/serial_read_loop_tests" \
+    Sources/LibDCDarwin/SerialReadLoop.swift \
+    Tests/SerialReadLoopTests/main.swift
+
+"$BUILD_DIR/serial_read_loop_tests"

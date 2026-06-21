@@ -105,25 +105,19 @@ class SerialIoStream {
             return Int32(LIBDC_STATUS_IO)
         }
 
-        // Use poll() for timeout support (simpler than select() in Swift).
-        var pfd = pollfd(fd: fileDescriptor, events: Int16(POLLIN), revents: 0)
-        let ready = poll(&pfd, 1, timeoutMs)
-        if ready < 0 {
-            actual.pointee = 0
-            return Int32(LIBDC_STATUS_IO)
+        // Accumulate exactly `size` bytes (or time out). A single poll()+read()
+        // returns only the first ~64-byte USB chunk of a larger device
+        // response, which truncates multi-chunk packets like the Mares Puck Pro
+        // 140-byte version block and desyncs libdivecomputer's framing (#334).
+        // serialReadFully mirrors the serial_posix.c read contract.
+        let outcome = serialReadFully(
+            fd: fileDescriptor, into: buffer, size: size, timeoutMs: timeoutMs)
+        actual.pointee = outcome.bytesRead
+        switch outcome.status {
+        case .success: return Int32(LIBDC_STATUS_SUCCESS)
+        case .timeout: return Int32(LIBDC_STATUS_TIMEOUT)
+        case .io: return Int32(LIBDC_STATUS_IO)
         }
-        if ready == 0 {
-            actual.pointee = 0
-            return Int32(LIBDC_STATUS_TIMEOUT)
-        }
-
-        let n = Darwin.read(fileDescriptor, buffer, size)
-        if n < 0 {
-            actual.pointee = 0
-            return Int32(LIBDC_STATUS_IO)
-        }
-        actual.pointee = n
-        return Int32(LIBDC_STATUS_SUCCESS)
     }
 
     private func performWrite(
