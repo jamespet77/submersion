@@ -1961,4 +1961,31 @@ void main() {
       expect(after.minX, 0.0); // cannot zoom out past 1.0
     });
   });
+
+  group('trackpad interaction', () {
+    testWidgets('trackpad pinch zooms in anchored off-center (not at 0)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildChart(profile: _makeProfile(points: 20)));
+      await tester.pumpAndSettle();
+
+      final chart = find.byType(LineChart).first;
+      final topLeft = tester.getTopLeft(chart);
+      final size = tester.getSize(chart);
+      final anchor = topLeft + Offset(size.width * 0.7, size.height * 0.5);
+
+      final before = tester.widget<LineChart>(chart).data;
+      final pointer = TestPointer(1, PointerDeviceKind.trackpad);
+      await tester.sendEventToBinding(pointer.panZoomStart(anchor));
+      await tester.sendEventToBinding(
+        pointer.panZoomUpdate(anchor, scale: 2.0),
+      );
+      await tester.sendEventToBinding(pointer.panZoomEnd());
+      await tester.pump();
+
+      final after = tester.widget<LineChart>(chart).data;
+      expect(after.maxX - after.minX, lessThan(before.maxX - before.minX));
+      expect(after.minX, greaterThan(0.0)); // anchored toward the cursor
+    });
+  });
 }

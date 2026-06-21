@@ -1,8 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:fl_chart/fl_chart.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import 'package:submersion/core/providers/provider.dart';
 
 import 'package:submersion/core/constants/enums.dart';
@@ -465,6 +466,18 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
 
   // Local position of the most recent (double-)tap, for tap-anchored zoom.
   Offset _lastTapDownLocal = Offset.zero;
+
+  // Active pointer kind, corrected on the first real pointer event. Chooses
+  // pan-vs-scrub for single-pointer drags and is set by trackpad gestures.
+  // ignore: unused_field — read by Task 6 (single-pointer drag routing).
+  PointerDeviceKind _activePointerKind =
+      (defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.android)
+      ? PointerDeviceKind.touch
+      : PointerDeviceKind.mouse;
+
+  // Cursor position at the start of a trackpad pan/zoom gesture.
+  Offset _trackpadAnchor = Offset.zero;
 
   // Tooltip memoization
   int? _lastTooltipSpotIndex;
@@ -1162,6 +1175,45 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
               });
             },
             child: Listener(
+              onPointerDown: (event) => _activePointerKind = event.kind,
+              onPointerPanZoomStart: (event) {
+                _activePointerKind = PointerDeviceKind.trackpad;
+                _gestureStartViewport = _viewport;
+                _trackpadAnchor = event.localPosition;
+              },
+              onPointerPanZoomUpdate: (event) {
+                setState(() {
+                  final box = constraints.biggest;
+                  final insets = _plotInsets(constraints.maxWidth, units);
+                  final plotW = (box.width - insets.left - insets.right).clamp(
+                    1.0,
+                    double.infinity,
+                  );
+                  final plotH = (box.height - insets.top - insets.bottom).clamp(
+                    1.0,
+                    double.infinity,
+                  );
+                  final focal = chartFocalFraction(
+                    _trackpadAnchor,
+                    box,
+                    left: insets.left,
+                    right: insets.right,
+                    top: insets.top,
+                    bottom: insets.bottom,
+                  );
+                  // scale and localPan are cumulative from the gesture start.
+                  var vp = _gestureStartViewport.zoomedAt(
+                    focal.fx,
+                    focal.fy,
+                    event.scale,
+                  );
+                  vp = vp.pannedBy(
+                    -event.localPan.dx / plotW / vp.zoom,
+                    -event.localPan.dy / plotH / vp.zoom,
+                  );
+                  _viewport = vp;
+                });
+              },
               onPointerSignal: (event) {
                 if (event is PointerScrollEvent) {
                   setState(() {
