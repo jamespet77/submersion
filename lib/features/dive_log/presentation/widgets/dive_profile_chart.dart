@@ -1119,6 +1119,12 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
               // later task; for now only multi-touch pinch+pan acts here.
               if (details.pointerCount < 2) return;
 
+              // Trackpad pinch is handled by the Listener's onPointerPanZoomUpdate
+              // (reliable cursor anchor); the ScaleGestureRecognizer's synthesized
+              // focal point is unreliable on desktop. Touch focal points are correct,
+              // so touch pinch is handled here.
+              if (_activePointerKind != PointerDeviceKind.touch) return;
+
               setState(() {
                 final box = constraints.biggest;
                 final insets = _plotInsets(constraints.maxWidth, units);
