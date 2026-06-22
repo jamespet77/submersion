@@ -149,19 +149,51 @@ class UsbSerialIoStream(
 
     override fun read(size: Int, timeoutMs: Int): ByteArray? {
         val p = port ?: return null
-        val buf = ByteArray(size)
-        // usb-serial treats timeout 0 as blocking; libdivecomputer uses negative
-        // for "infinite", so map negative to 0.
-        val timeout = if (timeoutMs < 0) 0 else timeoutMs
-        val n = try {
-            p.read(buf, timeout)
-        } catch (e: IOException) {
-            NativeLogger.e(TAG, "SER", "read failed: ${e.message}")
-            return null
+        if (size <= 0) return ByteArray(0)
+
+        // libdivecomputer's read contract (see serial_posix.c dc_serial_read) is
+        // "return exactly `size` bytes or time out" -- every driver relies on it.
+        // A single UsbSerialPort.read() returns only the first ~64-byte USB bulk
+        // chunk, so a larger device response (e.g. the Mares Puck Pro 140-byte
+        // version block) came back truncated, desynced libdivecomputer's framing
+        // and failed every probe with rc=-8. Accumulate across chunks, re-reading
+        // on the remaining timeout, until the whole packet arrives (#334).
+        val result = ByteArray(size)
+        var received = 0
+        // Bound the TOTAL wait for a finite (positive) libdivecomputer timeout.
+        val deadlineNanos =
+            if (timeoutMs > 0) System.nanoTime() + timeoutMs.toLong() * 1_000_000L else 0L
+
+        while (received < size) {
+            val sliceTimeout: Int = when {
+                timeoutMs < 0 -> 0   // libdc infinite; usb-serial blocks on 0
+                timeoutMs == 0 -> 1  // libdc non-blocking; smallest real slice
+                else -> {
+                    val remainingNanos = deadlineNanos - System.nanoTime()
+                    if (remainingNanos <= 0) break
+                    ((remainingNanos + 999_999L) / 1_000_000L).toInt().coerceAtLeast(1)
+                }
+            }
+            val tmp = ByteArray(size - received)
+            val n = try {
+                p.read(tmp, sliceTimeout)
+            } catch (e: IOException) {
+                // A real I/O error (device unplugged, USB permission revoked) --
+                // not a timeout, which returns 0 rather than throwing. Propagate
+                // so the JNI bridge reports LIBDC_STATUS_IO and the driver fails
+                // fast instead of retrying a dead port.
+                NativeLogger.e(TAG, "SER", "read failed: ${e.message}")
+                throw e
+            }
+            if (n <= 0) break // timeout / nothing available this slice
+            System.arraycopy(tmp, 0, result, received, n)
+            received += n
         }
-        // 0 bytes means timeout -> null so the JNI bridge reports LIBDC_STATUS_TIMEOUT.
-        if (n <= 0) return null
-        return if (n == size) buf else buf.copyOf(n)
+
+        // Exactly `size` -> success. A short read returns null so the JNI bridge
+        // reports LIBDC_STATUS_TIMEOUT and libdivecomputer retries, rather than
+        // accepting a truncated packet as a successful read.
+        return if (received == size) result else null
     }
 
     override fun write(data: ByteArray, timeoutMs: Int): Int {
