@@ -1,5 +1,5 @@
-/// Pure helpers for trackpad two-finger-scroll zooming, shared by the maps and
-/// the dive profile chart so sign and sensitivity live in one tested place.
+// Pure helpers for trackpad two-finger-scroll zooming, shared by the maps and
+// the dive profile chart so sign and sensitivity live in one tested place.
 
 /// Converts a trackpad two-finger vertical scroll delta (logical pixels) into an
 /// additive zoom-level delta.

@@ -90,42 +90,57 @@ from #372 (the chart has no rotation/scale, so global == correct local).
 
 File: `lib/features/maps/presentation/widgets/trackpad_zoom_map.dart`.
 
-A `StatelessWidget` taking a required `MapController`, the `FlutterMap` `child`,
-and optional `minZoom`/`maxZoom`. Wraps `child` in a passive `Listener`:
+**Revised during implementation (verified by probes):** a passive `Listener`
+alone does NOT work. flutter_map's `pinchMove` handler pins the camera to the
+gesture-start position on every frame of a trackpad two-finger gesture (scale
+stays 1.0, so it recomputes the start camera and calls `moveRaw`), reverting any
+`move()` we apply. Disabling `pinchMove` frees our zoom — but `pinchMove` also
+powers touch pinch-zoom focal anchoring, so it must only be dropped for the
+duration of a trackpad gesture, never for touch.
 
-```
-onPointerPanZoomUpdate: (event) {
-  if (event.kind != PointerDeviceKind.trackpad) return;   // touch -> flutter_map
-  final camera = controller.camera;
-  final delta = trackpadScrollZoomDelta(event.panDelta.dy); // per-event delta
-  if (delta == 0) return;
-  final newZoom = (camera.zoom + delta).clamp(minZoom, maxZoom);
-  if (newZoom == camera.zoom) return;
-  controller.move(camera.focusedZoomCenter(event.localPosition, newZoom), newZoom);
-}
+So `TrackpadZoomMap` is a **`StatefulWidget`** with a **builder** API:
+
+```dart
+TrackpadZoomMap({
+  required MapController controller,
+  required Widget Function(BuildContext, int flags) builder,
+  int baseFlags = InteractiveFlag.all,
+  double minZoom = 1.0,
+  double maxZoom = 22.0,
+})
 ```
 
+- It holds `_trackpadActive`. `onPointerPanZoomStart` (kind == trackpad) sets it
+  true; `onPointerPanZoomEnd` sets it false. Effective flags handed to `builder`
+  are `baseFlags & ~InteractiveFlag.pinchMove` while active, else `baseFlags`.
+- `onPointerPanZoomUpdate` (kind == trackpad) reads `controller.camera`, computes
+  `newZoom = (camera.zoom + trackpadScrollZoomDelta(event.panDelta.dy)).clamp(...)`,
+  and `controller.move(camera.focusedZoomCenter(event.localPosition, newZoom), newZoom)`.
 - Uses **global `panDelta`** (per-event) for the scroll amount and
   **`localPosition`** for the cursor — per the #372 macOS `localPan`
   contamination lesson.
 - `MapCamera.focusedZoomCenter(cursorPos, zoom)` returns the new center that keeps
-  the point under the cursor fixed (flutter_map built-in; the same helper #370
-  used). It already accounts for map rotation.
-- `Listener` is passive (does not enter the gesture arena), so flutter_map's own
-  click-drag pan, pinch zoom, and mouse-wheel zoom keep working underneath.
-- `minZoom`/`maxZoom` default to flutter_map's camera limits when available;
-  call sites can pass the same bounds they give `MapOptions`.
+  the point under the cursor fixed (flutter_map built-in). It accounts for map
+  rotation.
+- Callers thread the supplied `flags` into `MapOptions.interactionOptions`, and
+  pass their at-rest flags as `baseFlags` (default `InteractiveFlag.all`).
 
-#### Roll-out to 15 maps
+This preserves touch (tablet/iPad) pinch-zoom exactly; `pinchMove` is only ever
+dropped while a trackpad gesture is in progress. Aligns with the agreed UX:
+two-finger trackpad scroll zooms (no two-finger trackpad pan), pan via click-drag.
 
-Each call site wraps its `FlutterMap` in `TrackpadZoomMap(controller: ..., child: FlutterMap(...))`.
+#### Roll-out to 15 files / 17 maps
+
+Each call site wraps its `FlutterMap` in
+`TrackpadZoomMap(controller: ..., baseFlags: ..., builder: (context, flags) => FlutterMap(... interactionOptions: InteractionOptions(flags: flags, ...) ...))`.
 Maps that are currently stateless and do not own a `MapController` get a minimal
 `StatefulWidget` / `ConsumerStatefulWidget` conversion to create and hold one
-(create in `initState`/field, no `dispose` needed for `MapController` — matches
-existing repo pattern; note the repo-wide latent "MapController never disposed"
+(create as a field, no `dispose` needed for `MapController` — matches existing
+repo pattern; note the repo-wide latent "MapController never disposed"
 observation from #370, not introduced here).
 
-The 15 sites:
+The 15 files (two contain 2 maps each — `site_detail_page` and
+`dive_center_detail_page` — for 17 maps total):
 
 - `lib/features/maps/presentation/pages/region_picker_page.dart`
 - `lib/features/maps/presentation/pages/dive_activity_map_page.dart`
@@ -143,16 +158,18 @@ The 15 sites:
 - `lib/features/dive_centers/presentation/pages/dive_center_detail_page.dart`
 - `lib/features/dive_centers/presentation/widgets/dive_center_map_content.dart`
 
-## Key risk (verify on real hardware)
+## Key risk — RESOLVED in implementation
 
-Whether flutter_map's internal `ScaleGestureRecognizer` *also* reacts to trackpad
-pan-zoom, causing double-handling (our zoom + flutter_map's pan from the same
-gesture). The #238/#370 work found it does **not** — trackpad `PointerPanZoom`
-sends no `PointerDownEvent`, so flutter_map's pointer-down-based recognizer never
-engages. This builds on that finding but it requires real-trackpad confirmation.
-
-Fallback if double-handling is observed: gate flutter_map by disabling `pinchMove`
-only when the active pointer is a trackpad, or interpose a custom recognizer.
+The risk (flutter_map double-handling the trackpad gesture) **materialized**:
+flutter_map's `ScaleGestureRecognizer` does engage on trackpad `PointerPanZoom`
+and its `pinchMove` handler pins the camera to gesture-start every frame,
+reverting our zoom. Verified with probes. Resolved by the pointer-kind-aware
+`pinchMove` flag swap in `TrackpadZoomMap` (section 3). The earlier #370 note
+("no double-handling, trackpad sends no PointerDownEvent") did not hold for
+flutter_map 8.2.2; `ScaleGestureRecognizer.addAllowedPointerPanZoom` accepts the
+gesture without a pointer-down. On-device macOS confirmation is still part of
+Task 6 (smooth progressive zoom; brief possible stutter on the first frame of a
+gesture before the flag-swap rebuild lands).
 
 ## Testing
 

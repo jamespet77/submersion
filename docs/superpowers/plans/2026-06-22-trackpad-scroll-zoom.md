@@ -114,7 +114,7 @@ git commit -m "feat(ui): add trackpadScrollZoomDelta helper"
 
 **Interfaces:**
 - Consumes: `trackpadScrollZoomDelta` (Task 1); flutter_map `MapController`, `MapCamera.focusedZoomCenter`.
-- Produces: `TrackpadZoomMap({required MapController controller, required Widget child, double minZoom = 1.0, double maxZoom = 22.0})` — a `StatelessWidget` that wraps `child` (a `FlutterMap`) in a passive `Listener` and zooms `controller` on trackpad two-finger vertical scroll.
+- Produces: `TrackpadZoomMap({required MapController controller, required Widget Function(BuildContext, int flags) builder, int baseFlags = InteractiveFlag.all, double minZoom = 1.0, double maxZoom = 22.0})` — a `StatefulWidget` that zooms `controller` on trackpad two-finger vertical scroll and drops `InteractiveFlag.pinchMove` from the flags handed to `builder` only while a trackpad gesture is active (so flutter_map cannot pin the camera and revert the zoom; touch pinch-zoom is preserved). See the implemented file for the verified code; the original passive-`Listener` `StatelessWidget` form does NOT work (flutter_map clobbers it).
 
 - [ ] **Step 1: Write the failing test**
 
@@ -407,26 +407,39 @@ Add the import:
 import 'package:submersion/features/maps/presentation/widgets/trackpad_zoom_map.dart';
 ```
 
-Transform, where `<ctrl>` is the exact expression already given to `mapController:`:
+Transform, where `<ctrl>` is the exact expression already given to `mapController:`
+and `<base>` is the site's existing `interactionOptions.flags` (or
+`InteractiveFlag.all` if it sets none). Thread the builder's `flags` into the
+`FlutterMap`'s `interactionOptions`:
 ```dart
 // Before:
 FlutterMap(
   mapController: <ctrl>,
-  options: ...,
+  options: MapOptions(
+    ...,
+    interactionOptions: InteractionOptions(flags: <base>, /* other opts */),
+  ),
   children: ...,
 )
 // After:
 TrackpadZoomMap(
   controller: <ctrl>,
-  child: FlutterMap(
+  baseFlags: <base>,
+  builder: (context, flags) => FlutterMap(
     mapController: <ctrl>,
-    options: ...,
+    options: MapOptions(
+      ...,
+      interactionOptions: InteractionOptions(flags: flags, /* other opts */),
+    ),
     children: ...,
   ),
 )
 ```
+If the site currently sets no `interactionOptions`, add
+`interactionOptions: InteractionOptions(flags: flags)` and omit `baseFlags`
+(defaults to `InteractiveFlag.all`).
 
-- [ ] **Step 1: Apply the recipe to all 9 files.** Use the controller already passed to each `mapController:` argument. Do not change options/children.
+- [ ] **Step 1: Apply the recipe to all 9 files.** Use the controller already passed to each `mapController:` argument. Preserve any other interaction options (scrollWheelVelocity, etc.). Do not change other options/children.
 
 - [ ] **Step 2: Format + analyze**
 
@@ -499,13 +512,18 @@ class _FooState extends ConsumerState<Foo> {
 ```
 Inside the new `build`, replace references to constructor params with `widget.<param>` and use `ref` directly (it is a member of `ConsumerState`).
 
-3. Wrap the FlutterMap and supply the controller:
+3. Wrap the FlutterMap with the builder, supplying the controller and threading
+   `flags` into `interactionOptions`:
 ```dart
 TrackpadZoomMap(
   controller: _mapController,
-  child: FlutterMap(
+  baseFlags: <site base flags or InteractiveFlag.all>,
+  builder: (context, flags) => FlutterMap(
     mapController: _mapController,
-    options: ...,
+    options: MapOptions(
+      ...,
+      interactionOptions: InteractionOptions(flags: flags, /* other opts */),
+    ),
     children: ...,
   ),
 )
