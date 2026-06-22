@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:submersion/core/constants/enums.dart';
+import 'package:submersion/core/utils/gas_compressibility.dart';
 import 'package:submersion/features/dive_log/domain/entities/cylinder_sac.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/entities/gas_switch.dart';
@@ -14,9 +15,6 @@ import 'package:submersion/features/dive_log/data/services/profile_analysis_serv
 /// - **Gas-switch**: Segments divided by tank changes
 /// - **Depth-phase**: Segments based on dive phases (descent, bottom, ascent)
 class GasAnalysisService {
-  /// Standard surface pressure in bar
-  static const double surfacePressureBar = 1.013;
-
   /// Minimum segment duration in seconds to be considered valid
   static const int minSegmentDuration = 30;
 
@@ -88,8 +86,8 @@ class GasAnalysisService {
 
       // Calculate gas consumed
       final durationMin = (endTime - startTime) / 60.0;
-      final ambientPressure = surfacePressureBar + (avgDepth / 10.0);
-      final gasConsumed = sacRate * durationMin * ambientPressure;
+      final ambientPressureAtm = (avgDepth / 10.0) + 1.0;
+      final gasConsumed = sacRate * durationMin * ambientPressureAtm;
 
       segments.add(
         SacSegment(
@@ -200,8 +198,8 @@ class GasAnalysisService {
       if (sacRate == null) continue;
 
       final durationMin = (seg.end - seg.start) / 60.0;
-      final ambientPressure = surfacePressureBar + (avgDepth / 10.0);
-      final gasConsumed = sacRate * durationMin * ambientPressure;
+      final ambientPressureAtm = (avgDepth / 10.0) + 1.0;
+      final gasConsumed = sacRate * durationMin * ambientPressureAtm;
 
       segments.add(
         SacSegment(
@@ -282,18 +280,39 @@ class GasAnalysisService {
           startTime: usageRange.start,
           endTime: usageRange.end,
           avgDepth: avgDepthDuringUse ?? dive.avgDepth ?? 10.0,
+          tankVolume: tank.volume,
+          gasMix: tank.gasMix,
         );
       } else if (tank.startPressure != null &&
           tank.endPressure != null &&
           avgDepthDuringUse != null) {
-        // Basic calculation from start/end pressures
+        // Basic calculation from start/end pressures with Z-factor correction
         final pressureUsed = tank.startPressure! - tank.endPressure!;
-        if (pressureUsed > 0) {
+        if (pressureUsed > 0 && tank.volume != null) {
           final durationMin = (usageRange.end - usageRange.start) / 60.0;
           if (durationMin > 0) {
-            final ambientPressure =
-                surfacePressureBar + (avgDepthDuringUse / 10.0);
-            sacRate = pressureUsed / durationMin / ambientPressure;
+            final ambientPressureAtm = (avgDepthDuringUse / 10.0) + 1.0;
+            final startVol = gasVolume(
+              tankSizeLiters: tank.volume!,
+              pressureBar: tank.startPressure!,
+              o2Percent: tank.gasMix.o2,
+              hePercent: tank.gasMix.he,
+            );
+            final endVol = gasVolume(
+              tankSizeLiters: tank.volume!,
+              pressureBar: tank.endPressure!,
+              o2Percent: tank.gasMix.o2,
+              hePercent: tank.gasMix.he,
+            );
+            final gasUsedLiters = startVol - endVol;
+            if (gasUsedLiters > 0) {
+              // SAC in bar/min at surface (pressure-based)
+              sacRate =
+                  gasUsedLiters /
+                  tank.volume! /
+                  durationMin /
+                  ambientPressureAtm;
+            }
           }
         }
       }
@@ -534,14 +553,13 @@ class GasAnalysisService {
     if (avgDepth <= 0) return null;
 
     double? pressureUsed;
+    double? startPressure;
+    double? endPressure;
 
     // Try time-series pressure data first
     if (tankPressures != null && tankPressures.length >= 2) {
-      final startPressure = _interpolatePressureAtTime(
-        tankPressures,
-        startTime,
-      );
-      final endPressure = _interpolatePressureAtTime(tankPressures, endTime);
+      startPressure = _interpolatePressureAtTime(tankPressures, startTime);
+      endPressure = _interpolatePressureAtTime(tankPressures, endTime);
       if (startPressure != null && endPressure != null) {
         pressureUsed = startPressure - endPressure;
       }
@@ -556,17 +574,44 @@ class GasAnalysisService {
           final tankPressureUsed = tank.startPressure! - tank.endPressure!;
           final proportion = durationSec / totalDuration;
           pressureUsed = tankPressureUsed * proportion;
+          // Estimate absolute pressures for this segment
+          startPressure =
+              tank.startPressure! -
+              (tankPressureUsed *
+                  (startTime - profile.first.timestamp) /
+                  totalDuration);
+          endPressure = startPressure - pressureUsed;
         }
       }
     }
 
     if (pressureUsed == null || pressureUsed <= 0) return null;
 
-    // Calculate SAC
+    // Calculate SAC with Z-factor correction
     final durationMin = durationSec / 60.0;
-    final ambientPressure = surfacePressureBar + (avgDepth / 10.0);
+    final ambientPressureAtm = (avgDepth / 10.0) + 1.0;
 
-    return pressureUsed / durationMin / ambientPressure;
+    // Use Z-factor corrected volume when tank data available
+    if (tank.volume != null && startPressure != null && endPressure != null) {
+      final startVol = gasVolume(
+        tankSizeLiters: tank.volume!,
+        pressureBar: startPressure,
+        o2Percent: tank.gasMix.o2,
+        hePercent: tank.gasMix.he,
+      );
+      final endVol = gasVolume(
+        tankSizeLiters: tank.volume!,
+        pressureBar: endPressure,
+        o2Percent: tank.gasMix.o2,
+        hePercent: tank.gasMix.he,
+      );
+      final gasUsedLiters = startVol - endVol;
+      if (gasUsedLiters > 0) {
+        return gasUsedLiters / tank.volume! / durationMin / ambientPressureAtm;
+      }
+    }
+
+    return pressureUsed / durationMin / ambientPressureAtm;
   }
 
   /// Calculate SAC from time-series pressure data
@@ -575,6 +620,8 @@ class GasAnalysisService {
     required int startTime,
     required int endTime,
     required double avgDepth,
+    double? tankVolume,
+    GasMix gasMix = const GasMix(),
   }) {
     if (pressurePoints.length < 2) return null;
 
@@ -589,9 +636,29 @@ class GasAnalysisService {
     final durationMin = (endTime - startTime) / 60.0;
     if (durationMin <= 0) return null;
 
-    final ambientPressure = surfacePressureBar + (avgDepth / 10.0);
+    final ambientPressureAtm = (avgDepth / 10.0) + 1.0;
 
-    return pressureUsed / durationMin / ambientPressure;
+    // Use Z-factor corrected volume if tank size is known
+    if (tankVolume != null && tankVolume > 0) {
+      final startVol = gasVolume(
+        tankSizeLiters: tankVolume,
+        pressureBar: startPressure,
+        o2Percent: gasMix.o2,
+        hePercent: gasMix.he,
+      );
+      final endVol = gasVolume(
+        tankSizeLiters: tankVolume,
+        pressureBar: endPressure,
+        o2Percent: gasMix.o2,
+        hePercent: gasMix.he,
+      );
+      final gasUsedLiters = startVol - endVol;
+      if (gasUsedLiters <= 0) return null;
+      return gasUsedLiters / tankVolume / durationMin / ambientPressureAtm;
+    }
+
+    // Fallback: simple pressure-based (no Z correction possible)
+    return pressureUsed / durationMin / ambientPressureAtm;
   }
 
   /// Interpolate pressure at a specific timestamp from time-series data
