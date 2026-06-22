@@ -11,8 +11,30 @@ import 'package:submersion/features/dive_sites/presentation/pages/site_edit_page
 import 'package:submersion/features/dive_sites/presentation/providers/site_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/l10n/arb/app_localizations.dart';
+import 'package:submersion/core/providers/location_service_provider.dart';
+import 'package:submersion/core/services/location_service.dart';
 
 import '../../../../helpers/test_database.dart';
+
+/// A [LocationService] whose reverse geocoding returns fixed values, so tests
+/// can prove the edit form never re-imposes geocoded names over the user's
+/// chosen (or deliberately cleared) location fields. Only [reverseGeocode] is
+/// exercised; any other call throws via [noSuchMethod].
+class _FakeLocationService implements LocationService {
+  _FakeLocationService({this.country, this.region});
+
+  final String? country;
+  final String? region;
+
+  @override
+  Future<({String? country, String? region, String? locality})> reverseGeocode(
+    double latitude,
+    double longitude,
+  ) async => (country: country, region: region, locality: null);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 Widget _buildHarness({
   required SharedPreferences prefs,
@@ -877,5 +899,149 @@ void main() {
       expect(saved.island, 'Malapascua');
       expect(saved.bodyOfWater, 'Visayan Sea');
     });
+  });
+
+  group('location auto-fill does not override user edits', () {
+    testWidgets(
+      'clearing Region on a site with coordinates persists empty, not a '
+      'geocoded value',
+      (tester) async {
+        tester.view.physicalSize = const Size(900, 3200);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        // A Grand Turk site whose coordinates reverse-geocode to a region the
+        // user wants gone. diverId stays null so no Divers FK row is needed.
+        final repo = SiteRepository();
+        final seeded = await repo.createSite(
+          const DiveSite(
+            id: '',
+            name: 'Grand Turk Wall',
+            country: 'Turks and Caicos Islands',
+            region: 'St. Croix',
+            location: GeoPoint(21.4665, -71.139),
+          ),
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              allDiversProvider.overrideWith((_) async => const <Diver>[]),
+              shareByDefaultProvider.overrideWith((_) async => false),
+              validatedCurrentDiverIdProvider.overrideWith((_) async => null),
+              siteProvider(seeded.id).overrideWith((_) async => seeded),
+              locationServiceProvider.overrideWithValue(
+                _FakeLocationService(
+                  country: 'Turks and Caicos Islands',
+                  region: 'St. Croix',
+                ),
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SiteEditPage(
+                  siteId: seeded.id,
+                  embedded: true,
+                  onSaved: (_) {},
+                  onCancel: () {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Remove the auto-suggested region the user does not want.
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Region'),
+          '',
+        );
+        await tester.tap(find.text('Save'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        final saved = await repo.getSiteById(seeded.id);
+        expect(saved, isNotNull);
+        // The cleared region stays cleared instead of reverting to St. Croix.
+        expect(saved!.region, isNull);
+        // Coordinates and the untouched country are preserved.
+        expect(saved.location, isNotNull);
+        expect(saved.country, 'Turks and Caicos Islands');
+      },
+    );
+
+    testWidgets(
+      'clearing Country on a site with coordinates persists empty, not a '
+      'geocoded value',
+      (tester) async {
+        tester.view.physicalSize = const Size(900, 3200);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        // A Bonaire site whose coordinates reverse-geocode to 'Caribbean
+        // Netherlands' — the value the user keeps having to fight.
+        final repo = SiteRepository();
+        final seeded = await repo.createSite(
+          const DiveSite(
+            id: '',
+            name: 'Bonaire House Reef',
+            country: 'Caribbean Netherlands',
+            region: 'Bonaire',
+            location: GeoPoint(12.16, -68.28),
+          ),
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              sharedPreferencesProvider.overrideWithValue(prefs),
+              allDiversProvider.overrideWith((_) async => const <Diver>[]),
+              shareByDefaultProvider.overrideWith((_) async => false),
+              validatedCurrentDiverIdProvider.overrideWith((_) async => null),
+              siteProvider(seeded.id).overrideWith((_) async => seeded),
+              locationServiceProvider.overrideWithValue(
+                _FakeLocationService(
+                  country: 'Caribbean Netherlands',
+                  region: 'Bonaire',
+                ),
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: Scaffold(
+                body: SiteEditPage(
+                  siteId: seeded.id,
+                  embedded: true,
+                  onSaved: (_) {},
+                  onCancel: () {},
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.widgetWithText(TextFormField, 'Country'),
+          '',
+        );
+        await tester.tap(find.text('Save'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+        await tester.pump(const Duration(milliseconds: 500));
+
+        final saved = await repo.getSiteById(seeded.id);
+        expect(saved, isNotNull);
+        // The cleared country stays cleared instead of reverting to the
+        // geocoder's 'Caribbean Netherlands'.
+        expect(saved!.country, isNull);
+        expect(saved.region, 'Bonaire');
+      },
+    );
   });
 }
