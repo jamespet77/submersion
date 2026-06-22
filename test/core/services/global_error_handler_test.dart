@@ -76,4 +76,22 @@ void main() {
       reason: 'an uncaught platform error should be logged at error level',
     );
   });
+
+  test('logUncaughtZoneError logs the error at error level', () async {
+    final captured = <LogEntry>[];
+    final sub = LoggerService.logStream.listen(captured.add);
+    addTearDown(sub.cancel);
+
+    logUncaughtZoneError(StateError('boom-zone'), StackTrace.current);
+
+    await pumpEventQueue();
+
+    expect(
+      captured.where(
+        (e) => e.level == LogLevel.error && e.message.contains('boom-zone'),
+      ),
+      isNotEmpty,
+      reason: 'an uncaught zone error should be logged at error level',
+    );
+  });
 }

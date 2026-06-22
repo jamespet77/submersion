@@ -26,12 +26,9 @@ void installGlobalErrorHandlers() {
       stackTrace: details.stack,
     );
     // Preserve the default presentation (red error screen in debug builds,
-    // console/logcat dump otherwise).
-    if (previousFlutterOnError != null) {
-      previousFlutterOnError(details);
-    } else {
-      FlutterError.presentError(details);
-    }
+    // console/logcat dump otherwise). Falls back to FlutterError.presentError
+    // when no prior handler was installed.
+    (previousFlutterOnError ?? FlutterError.presentError)(details);
   };
 
   PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
@@ -45,4 +42,17 @@ void installGlobalErrorHandlers() {
     // still applies its default behavior (printing to the console / logcat).
     return false;
   };
+}
+
+/// Logs an uncaught error escaping the top-level guarded zone (see `main`).
+///
+/// Extracted so the logging behavior is unit-testable; `main`'s
+/// `runZonedGuarded` wiring itself is untestable startup glue.
+void logUncaughtZoneError(Object error, StackTrace stack) {
+  _logger.error(
+    'Uncaught zone error',
+    category: LogCategory.app,
+    error: error,
+    stackTrace: stack,
+  );
 }

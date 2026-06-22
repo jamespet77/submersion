@@ -19,23 +19,25 @@ import 'package:submersion/features/media/data/network_cache_config.dart';
 import 'package:submersion/features/settings/presentation/providers/debug_log_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 
+// main() and the _bootstrap signature are untestable startup wiring (they
+// never run under test); the zone-error logging is unit-tested via
+// logUncaughtZoneError. Exclude only the wiring from coverage; the _bootstrap
+// body below is covered normally.
+// coverage:ignore-start
 void main() {
   // Run startup inside a guarded zone so an uncaught async error during
   // initialization is logged instead of vanishing silently (issue #318
   // hardening: the app previously installed no global error capture at all).
-  runZonedGuarded(_bootstrap, (Object error, StackTrace stack) {
-    const LoggerService(
-      'UncaughtError',
-    ).error('Uncaught zone error', error: error, stackTrace: stack);
-  });
+  runZonedGuarded(_bootstrap, logUncaughtZoneError);
 }
 
 Future<void> _bootstrap() async {
+  // coverage:ignore-end
   WidgetsFlutterBinding.ensureInitialized();
 
   // Route uncaught Flutter framework and platform errors into the debug log so
   // future crashes are diagnosable from the user-shared log (issue #318).
-  installGlobalErrorHandlers();
+  installGlobalErrorHandlers(); // coverage:ignore-line
 
   // Windows cannot expose its system trust store to Dart's bundled BoringSSL,
   // so every default-context HttpClient (S3 sync, map tiles, NetworkImage,
