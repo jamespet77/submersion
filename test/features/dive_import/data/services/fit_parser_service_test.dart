@@ -246,7 +246,9 @@ Uint8List buildAiDiveFitFile() {
     );
     // tank_update at the same instant; field 253 is raw FIT-epoch seconds.
     final fitSec = t.millisecondsSinceEpoch ~/ 1000 - 631065600;
-    builder.add(_genericTank(319, {253: fitSec, 0: sensor, 1: pressuresRaw[i]}));
+    builder.add(
+      _genericTank(319, {253: fitSec, 0: sensor, 1: pressuresRaw[i]}),
+    );
   }
 
   builder.add(
@@ -559,26 +561,29 @@ void main() {
       },
     );
 
-    test('air-integration: tank pressure from msgs 319/323 merges to samples', () async {
-      final dive = await service.parseFitFile(buildAiDiveFitFile());
+    test(
+      'air-integration: tank pressure from msgs 319/323 merges to samples',
+      () async {
+        final dive = await service.parseFitFile(buildAiDiveFitFile());
 
-      expect(dive, isNotNull);
-      expect(dive!.tanks, hasLength(1));
-      final tank = dive.tanks.single;
-      expect(tank.o2Percent, 28);
-      expect(tank.startPressureBar, closeTo(221.25, 1e-6));
-      expect(tank.endPressureBar, closeTo(88.11, 1e-6));
-      expect(tank.volumeUsedLiters, closeTo(1993.5, 1e-6));
+        expect(dive, isNotNull);
+        expect(dive!.tanks, hasLength(1));
+        final tank = dive.tanks.single;
+        expect(tank.o2Percent, 28);
+        expect(tank.startPressureBar, closeTo(221.25, 1e-6));
+        expect(tank.endPressureBar, closeTo(88.11, 1e-6));
+        expect(tank.volumeUsedLiters, closeTo(1993.5, 1e-6));
 
-      // The pressure series is merged onto the contemporaneous depth samples.
-      final withPressure = dive.profile
-          .where((s) => s.tankPressures != null)
-          .toList();
-      expect(withPressure, isNotEmpty);
-      final firstReading = withPressure.first.tankPressures!.single;
-      expect(firstReading.tankIndex, 0);
-      expect(firstReading.pressureBar, closeTo(220.0, 1e-6));
-    });
+        // The pressure series is merged onto the contemporaneous depth samples.
+        final withPressure = dive.profile
+            .where((s) => s.tankPressures != null)
+            .toList();
+        expect(withPressure, isNotEmpty);
+        final firstReading = withPressure.first.tankPressures!.single;
+        expect(firstReading.tankIndex, 0);
+        expect(firstReading.pressureBar, closeTo(220.0, 1e-6));
+      },
+    );
   });
 
   group('parseFitFiles', () {

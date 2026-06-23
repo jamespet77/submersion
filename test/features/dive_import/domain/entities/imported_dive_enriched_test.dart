@@ -48,6 +48,69 @@ void main() {
     expect(dive.profile.single.tankPressures!.single.pressureBar, 221.25);
   });
 
+  test('value equality (props) holds across the import entities', () {
+    const tank = ImportedTank(
+      order: 0,
+      startPressureBar: 200,
+      endPressureBar: 80,
+      volumeUsedLiters: 1000,
+      o2Percent: 32,
+      hePercent: 0,
+    );
+    expect(
+      tank,
+      equals(
+        const ImportedTank(
+          order: 0,
+          startPressureBar: 200,
+          endPressureBar: 80,
+          volumeUsedLiters: 1000,
+          o2Percent: 32,
+          hePercent: 0,
+        ),
+      ),
+    );
+    expect(tank, isNot(equals(const ImportedTank(order: 1))));
+
+    const pressure = ImportedTankPressureSample(tankIndex: 0, pressureBar: 200);
+    expect(
+      pressure,
+      equals(const ImportedTankPressureSample(tankIndex: 0, pressureBar: 200)),
+    );
+    expect(
+      pressure,
+      isNot(
+        equals(const ImportedTankPressureSample(tankIndex: 1, pressureBar: 9)),
+      ),
+    );
+
+    const sample = ImportedProfileSample(
+      timeSeconds: 5,
+      depth: 10,
+      temperature: 22,
+      heartRate: 70,
+      cns: 1,
+      ndlSeconds: 99,
+      ttsSeconds: 0,
+      ceiling: 0,
+    );
+    expect(sample, equals(sample));
+    expect(
+      sample,
+      isNot(equals(const ImportedProfileSample(timeSeconds: 6, depth: 10))),
+    );
+
+    ImportedDive makeDive() => ImportedDive(
+      sourceId: 'a',
+      source: ImportSource.garmin,
+      startTime: DateTime.utc(2025),
+      endTime: DateTime.utc(2025, 1, 1, 1),
+      maxDepth: 10,
+      profile: const [],
+    );
+    expect(makeDive(), equals(makeDive()));
+  });
+
   test('ImportedProfileSample.copyWith adds tank pressures', () {
     const s = ImportedProfileSample(timeSeconds: 5, depth: 10.0);
     final merged = s.copyWith(
