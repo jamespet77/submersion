@@ -57,8 +57,8 @@ void main() {
       await pumpBulk(tester);
 
       // 5 Logistics gates (dive center, trip, dive type, rating, favorite)
-      // + 1 Notes gate.
-      expect(find.byType(BulkFieldGate), findsNWidgets(6));
+      // + 9 Conditions gates + 1 Notes gate.
+      expect(find.byType(BulkFieldGate), findsNWidgets(15));
       expect(find.text('Favorite'), findsOneWidget);
       // 6 collections (tags, equipment, buddies, weights, tanks, sightings)
       // each render a mode selector.

@@ -817,6 +817,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
               ),
             ],
           ),
+          _buildBulkConditionsSection(units),
           _buildBulkCollectionsSection(units),
           FormSection(
             label: l10n.diveLog_edit_section_notes,
@@ -858,6 +859,27 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       diveTypeId: _selectedDiveTypeId,
       rating: _rating > 0 ? _rating : null,
       isFavorite: _bulkFavorite,
+      waterType: _waterType?.name,
+      visibility: _selectedVisibility != Visibility.unknown
+          ? _selectedVisibility.name
+          : null,
+      currentDirection: _currentDirection?.name,
+      currentStrength: _currentStrength?.name,
+      swellHeight: _swellHeightController.text.isNotEmpty
+          ? units.depthToMeters(
+              double.tryParse(_swellHeightController.text) ?? 0,
+            )
+          : null,
+      entryMethod: _entryMethod?.name,
+      exitMethod: _exitMethod?.name,
+      altitude: _altitudeController.text.isNotEmpty
+          ? units.altitudeToMeters(
+              double.tryParse(_altitudeController.text) ?? 0,
+            )
+          : null,
+      surfacePressure: _surfacePressureController.text.isNotEmpty
+          ? (double.tryParse(_surfacePressureController.text) ?? 0) / 1000
+          : null,
       notes: _notesController.text,
     );
   }
@@ -1035,6 +1057,133 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       ops.add(SightingsOp(mode: sightingsMode, sightings: _sightings));
     }
     return ops;
+  }
+
+  Widget _enumDropdown<T extends Object>({
+    required T? value,
+    required List<T> options,
+    required String Function(T) label,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return DropdownButtonFormField<T?>(
+      initialValue: value,
+      items: <DropdownMenuItem<T?>>[
+        const DropdownMenuItem(value: null, child: Text('—')),
+        for (final o in options)
+          DropdownMenuItem<T?>(value: o, child: Text(label(o))),
+      ],
+      onChanged: onChanged,
+    );
+  }
+
+  Widget _buildBulkConditionsSection(UnitFormatter units) {
+    return FormSection(
+      label: 'Conditions', // localized in Phase 6
+      expanded: true,
+      onToggle: null,
+      children: [
+        _gatedRow(
+          BulkField.waterType,
+          FormRow.custom(
+            label: 'Water type',
+            child: _enumDropdown<WaterType>(
+              value: _waterType,
+              options: WaterType.values,
+              label: (v) => v.displayName,
+              onChanged: (v) => setState(() => _waterType = v),
+            ),
+          ),
+        ),
+        _gatedRow(
+          BulkField.visibility,
+          FormRow.custom(
+            label: 'Visibility',
+            child: _enumDropdown<Visibility>(
+              value: _selectedVisibility,
+              options: Visibility.values,
+              label: (v) => v.displayName,
+              onChanged: (v) =>
+                  setState(() => _selectedVisibility = v ?? Visibility.unknown),
+            ),
+          ),
+        ),
+        _gatedRow(
+          BulkField.currentDirection,
+          FormRow.custom(
+            label: 'Current direction',
+            child: _enumDropdown<CurrentDirection>(
+              value: _currentDirection,
+              options: CurrentDirection.values,
+              label: (v) => v.displayName,
+              onChanged: (v) => setState(() => _currentDirection = v),
+            ),
+          ),
+        ),
+        _gatedRow(
+          BulkField.currentStrength,
+          FormRow.custom(
+            label: 'Current strength',
+            child: _enumDropdown<CurrentStrength>(
+              value: _currentStrength,
+              options: CurrentStrength.values,
+              label: (v) => v.displayName,
+              onChanged: (v) => setState(() => _currentStrength = v),
+            ),
+          ),
+        ),
+        _gatedRow(
+          BulkField.swellHeight,
+          FormRow.text(
+            label: 'Swell height',
+            controller: _swellHeightController,
+            keyboardType: TextInputType.number,
+            alwaysEditing: true,
+          ),
+        ),
+        _gatedRow(
+          BulkField.entryMethod,
+          FormRow.custom(
+            label: 'Entry method',
+            child: _enumDropdown<EntryMethod>(
+              value: _entryMethod,
+              options: EntryMethod.values,
+              label: (v) => v.displayName,
+              onChanged: (v) => setState(() => _entryMethod = v),
+            ),
+          ),
+        ),
+        _gatedRow(
+          BulkField.exitMethod,
+          FormRow.custom(
+            label: 'Exit method',
+            child: _enumDropdown<EntryMethod>(
+              value: _exitMethod,
+              options: EntryMethod.values,
+              label: (v) => v.displayName,
+              onChanged: (v) => setState(() => _exitMethod = v),
+            ),
+          ),
+        ),
+        _gatedRow(
+          BulkField.altitude,
+          FormRow.text(
+            label: 'Altitude',
+            controller: _altitudeController,
+            keyboardType: TextInputType.number,
+            alwaysEditing: true,
+          ),
+        ),
+        _gatedRow(
+          BulkField.surfacePressure,
+          FormRow.text(
+            label: 'Surface pressure',
+            controller: _surfacePressureController,
+            keyboardType: TextInputType.number,
+            alwaysEditing: true,
+          ),
+        ),
+      ],
+    );
   }
 
   Future<void> _saveBulk(UnitFormatter units) async {
