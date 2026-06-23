@@ -26,4 +26,9 @@ class FitConstants {
   static const double pressureScaleBar = 100.0; // raw / 100 = bar
   static const double volumeScaleLiters = 100.0; // raw / 100 = liters
   static const double semicircleToDegrees = 180.0 / 2147483648.0;
+
+  /// Seconds between the Unix epoch (1970-01-01) and the FIT epoch
+  /// (1989-12-31). A GenericMessage timestamp field is raw FIT-epoch seconds;
+  /// add this and multiply by 1000 to get Unix milliseconds.
+  static const int fitEpochToUnixSeconds = 631065600;
 }
