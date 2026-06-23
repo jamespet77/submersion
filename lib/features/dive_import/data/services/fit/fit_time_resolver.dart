@@ -1,3 +1,5 @@
+import 'package:submersion/features/dive_import/data/services/fit/fit_constants.dart';
+
 /// Resolves a dive's local wall-clock start, stored as a UTC-flagged DateTime
 /// (the app's "wall-clock-as-UTC" convention: the displayed time must equal the
 /// local time at the dive site regardless of the importing device's timezone).
@@ -5,6 +7,10 @@
 /// FIT `record`/`session` timestamps are UTC. The `activity` message carries
 /// both `timestamp` (UTC) and `local_timestamp`; their difference is the dive's
 /// UTC offset, which we add to the UTC start to recover the local wall-clock.
+///
+/// fit_tool returns most timestamps already as Unix ms, but some (notably
+/// `activity.localTimestamp`) come back as raw FIT-epoch seconds, so every
+/// input is normalized to Unix ms before the offset is computed.
 class FitTimeResolver {
   const FitTimeResolver._();
 
@@ -14,10 +20,10 @@ class FitTimeResolver {
     required int? utcTimestampMs,
     required int? localTimestampMs,
   }) {
-    final startMs = utcStartMs ?? localStartMs ?? 0;
+    final startMs = _toUnixMs(utcStartMs ?? localStartMs ?? 0);
     var offsetMs = 0;
     if (utcTimestampMs != null && localTimestampMs != null) {
-      offsetMs = localTimestampMs - utcTimestampMs;
+      offsetMs = _toUnixMs(localTimestampMs) - _toUnixMs(utcTimestampMs);
     }
     final wall = DateTime.fromMillisecondsSinceEpoch(
       startMs + offsetMs,
@@ -33,4 +39,9 @@ class FitTimeResolver {
       wall.second,
     );
   }
+
+  /// Normalizes a fit_tool timestamp to Unix ms. Values at or below the uint32
+  /// max are raw FIT-epoch seconds; larger values are already Unix ms.
+  static int _toUnixMs(int ts) =>
+      ts > 4294967295 ? ts : (ts + FitConstants.fitEpochToUnixSeconds) * 1000;
 }

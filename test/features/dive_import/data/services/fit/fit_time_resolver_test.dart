@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/features/dive_import/data/services/fit/fit_constants.dart';
 import 'package:submersion/features/dive_import/data/services/fit/fit_time_resolver.dart';
 
 void main() {
@@ -35,5 +36,23 @@ void main() {
       localTimestampMs: null,
     );
     expect(result, DateTime.utc(2025, 10, 13, 8, 51, 10));
+  });
+
+  test('normalizes a FIT-epoch-seconds local_timestamp (real-file quirk)', () {
+    // fit_tool returns activity.timestamp as Unix ms but activity.localTimestamp
+    // as raw FIT-epoch seconds. Dive is 07:19:49 UTC, 09:19:49 local (+2h).
+    final utcInstant = DateTime.utc(2025, 9, 8, 7, 19, 49);
+    final localFitSeconds =
+        DateTime.utc(2025, 9, 8, 9, 19, 49).millisecondsSinceEpoch ~/ 1000 -
+        FitConstants.fitEpochToUnixSeconds;
+
+    final result = FitTimeResolver.wallClockStart(
+      utcStartMs: utcInstant.millisecondsSinceEpoch,
+      localStartMs: null,
+      utcTimestampMs: utcInstant.millisecondsSinceEpoch,
+      localTimestampMs: localFitSeconds,
+    );
+
+    expect(result, DateTime.utc(2025, 9, 8, 9, 19, 49));
   });
 }

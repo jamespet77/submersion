@@ -5,7 +5,6 @@ import 'package:fit_tool/fit_tool.dart';
 // ignore: implementation_imports
 import 'package:fit_tool/src/utils/logger.dart' as fit_log;
 import 'package:logger/logger.dart' show Level, Logger;
-import 'package:submersion/features/dive_import/data/services/fit/fit_constants.dart';
 import 'package:submersion/features/dive_import/data/services/fit/fit_device_mapper.dart';
 import 'package:submersion/features/dive_import/data/services/fit/fit_gas_extractor.dart';
 import 'package:submersion/features/dive_import/data/services/fit/fit_profile_extractor.dart';
@@ -79,15 +78,12 @@ class FitParserService {
     );
 
     // Wall-clock start (local time stored as UTC, per the app convention).
-    // fit_tool returns most timestamps as Unix ms but activity.localTimestamp
-    // as raw FIT-epoch seconds, so normalize both before diffing them.
-    final actUtc = activity?.timestamp;
-    final actLocal = activity?.localTimestamp;
+    // FitTimeResolver normalizes the mixed timestamp bases fit_tool returns.
     final startTime = FitTimeResolver.wallClockStart(
-      utcStartMs: _toUnixMs(sessionStartMs),
+      utcStartMs: sessionStartMs,
       localStartMs: null,
-      utcTimestampMs: actUtc == null ? null : _toUnixMs(actUtc),
-      localTimestampMs: actLocal == null ? null : _toUnixMs(actLocal),
+      utcTimestampMs: activity?.timestamp,
+      localTimestampMs: activity?.localTimestamp,
     );
 
     final totalElapsed = session.totalElapsedTime;
@@ -288,10 +284,4 @@ class FitParserService {
         ),
     ];
   }
-
-  /// fit_tool returns most timestamps as Unix ms, but some (notably
-  /// activity.localTimestamp) come back as raw FIT-epoch seconds. Normalize
-  /// either form to Unix ms (FIT-epoch seconds are always below the uint32 max).
-  int _toUnixMs(int ts) =>
-      ts > 4294967295 ? ts : (ts + FitConstants.fitEpochToUnixSeconds) * 1000;
 }
