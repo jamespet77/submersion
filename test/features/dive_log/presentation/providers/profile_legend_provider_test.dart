@@ -196,6 +196,22 @@ void main() {
       expect(on, isNot(equals(off)));
     });
 
+    test('hashCode includes showAscentRateLine', () {
+      // Empty maps keep the hash deterministic: the state's hashCode spreads
+      // Map.entries, whose MapEntry values hash by identity.
+      const on = ProfileLegendState(
+        showAscentRateLine: true,
+        sectionExpanded: {},
+        showTankPressure: {},
+      );
+      const off = ProfileLegendState(
+        showAscentRateLine: false,
+        sectionExpanded: {},
+        showTankPressure: {},
+      );
+      expect(on.hashCode, isNot(off.hashCode));
+    });
+
     test('activeSecondaryCount includes showAscentRateLine', () {
       const state = ProfileLegendState(
         showAscentRateLine: true,

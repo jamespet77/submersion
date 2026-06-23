@@ -2331,6 +2331,37 @@ void main() {
       expect(colors, contains(Colors.red));
     });
 
+    testWidgets('a band change at the final sample still draws a line', (
+      tester,
+    ) async {
+      // Rate is recorded at point i for the segment (i-1 -> i). When only the
+      // last sample is danger, its segment must render as a >=2-point line, not
+      // a 1-point dot.
+      final profile = _makeProfile(points: 8);
+      final rates = List.generate(profile.length, (i) {
+        final danger = i == profile.length - 1;
+        return AscentRatePoint(
+          timestamp: profile[i].timestamp,
+          depth: profile[i].depth,
+          rateMetersPerMin: danger ? 13.0 : 3.0,
+          category: danger
+              ? AscentRateCategory.danger
+              : AscentRateCategory.safe,
+        );
+      });
+
+      await tester.pumpWidget(
+        _buildChart(profile: profile, ascentRates: rates),
+      );
+      await tester.pumpAndSettle();
+
+      final redBars = primaryChartData(
+        tester,
+      ).lineBarsData.where((b) => b.color == Colors.red).toList();
+      expect(redBars, isNotEmpty);
+      expect(redBars.every((b) => b.spots.length >= 2), isTrue);
+    });
+
     testWidgets('depth line is one solid segment when coloring is disabled', (
       tester,
     ) async {

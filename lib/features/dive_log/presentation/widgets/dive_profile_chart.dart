@@ -266,7 +266,10 @@ class DiveProfileChart extends ConsumerStatefulWidget {
       final a = r.rateMetersPerMin.abs();
       if (a > maxAbs) maxAbs = a;
     }
-    const floorSpan = 15.0; // ~ criticalThreshold (12 m/min) * 1.25
+    // Floor the scale a little above the danger threshold so the warning/danger
+    // bands are always on-axis; derived from the calculator's threshold so the
+    // two cannot drift apart.
+    const floorSpan = AscentRateCalculator.defaultCriticalThreshold * 1.25;
     final span = math.max(maxAbs, floorSpan);
     return (min: -span, max: span);
   }
@@ -2694,37 +2697,41 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
   }
 
   /// Build depth-line segments coloured by ascent-rate band ("velocity
-  /// coloring", green/orange/red). The profile is split into consecutive runs
-  /// of the same [AscentRateCategory] and each run is drawn in its band colour.
-  /// Adjacent runs share their boundary sample so the coloured pieces join
-  /// without a gap, and every run keeps the gradient fill so the plot still
-  /// reads as a continuous depth area.
+  /// coloring", green/orange/red).
+  ///
+  /// Each line segment between samples i-1 and i is coloured by the velocity
+  /// recorded at point i ([AscentRateCalculator] stores the rate for the
+  /// segment that *ends* at i; index 0 is a zero placeholder). Consecutive
+  /// same-band segments are merged into one polyline, so every bar spans at
+  /// least two points (the final sample never collapses to a 1-point dot) and
+  /// every run keeps the gradient fill so the plot reads as a continuous depth
+  /// area.
   List<LineChartBarData> _buildVelocityColoredDepthLines(
     UnitFormatter units,
     List<AscentRatePoint> ascentRates,
   ) {
     final n = widget.profile.length;
     final lines = <LineChartBarData>[];
-    var start = 0;
-    while (start < n) {
-      var end = start;
-      while (end + 1 < n &&
-          ascentRates[end + 1].category == ascentRates[start].category) {
-        end++;
+    var segStart = 1; // first drawable segment connects points 0 and 1
+    while (segStart < n) {
+      var segEnd = segStart;
+      while (segEnd + 1 < n &&
+          ascentRates[segEnd + 1].category == ascentRates[segStart].category) {
+        segEnd++;
       }
-      // sublist end is exclusive; include the next run's first sample (end + 2)
-      // as a shared connecting point when a next run exists.
-      final sublistEnd = (end + 1 < n) ? end + 2 : end + 1;
+      // Segments [segStart..segEnd] cover points [segStart-1 .. segEnd]; the
+      // sublist end is exclusive, so segEnd + 1 includes point segEnd. Adjacent
+      // runs share their boundary sample, so the coloured pieces join cleanly.
       lines.add(
         _buildSingleDepthSegment(
-          _getAscentRateColor(ascentRates[start].category),
+          _getAscentRateColor(ascentRates[segStart].category),
           units,
-          start,
-          sublistEnd,
+          segStart - 1,
+          segEnd + 1,
           showFill: true,
         ),
       );
-      start = end + 1;
+      segStart = segEnd + 1;
     }
     return lines;
   }
