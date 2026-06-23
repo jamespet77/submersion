@@ -3672,6 +3672,50 @@ class DiveRepository {
     }
   }
 
+  /// Replace each dive's tag membership with exactly [tagIds]. No notify/txn.
+  Future<void> bulkReplaceTags(List<String> diveIds, List<String> tagIds) async {
+    if (diveIds.isEmpty) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final existing = await (_db.select(
+      _db.diveTags,
+    )..where((t) => t.diveId.isIn(diveIds))).get();
+    await (_db.delete(_db.diveTags)..where((t) => t.diveId.isIn(diveIds))).go();
+    for (final row in existing) {
+      await _syncRepository.logDeletion(
+        entityType: 'diveTags',
+        recordId: row.id,
+      );
+    }
+    for (final diveId in diveIds) {
+      for (final tagId in tagIds) {
+        final id = _uuid.v4();
+        await _db.into(_db.diveTags).insert(
+          DiveTagsCompanion(
+            id: Value(id),
+            diveId: Value(diveId),
+            tagId: Value(tagId),
+            createdAt: Value(now),
+          ),
+        );
+        await _syncRepository.markRecordPending(
+          entityType: 'diveTags',
+          recordId: id,
+          localUpdatedAt: now,
+        );
+      }
+    }
+    await (_db.update(_db.dives)..where((t) => t.id.isIn(diveIds))).write(
+      DivesCompanion(updatedAt: Value(now)),
+    );
+    for (final diveId in diveIds) {
+      await _syncRepository.markRecordPending(
+        entityType: 'dives',
+        recordId: diveId,
+        localUpdatedAt: now,
+      );
+    }
+  }
+
   /// Bulk update trip for multiple dives
   Future<void> bulkUpdateTrip(List<String> diveIds, String? tripId) async {
     if (diveIds.isEmpty) return;

@@ -76,4 +76,22 @@ void main() {
       expect(rb.notes, '\nGreat viz');
     });
   });
+
+  group('bulkReplaceTags', () {
+    setUp(() async {
+      await db.customStatement('PRAGMA foreign_keys = OFF'); // test-only isolation
+    });
+
+    test('replaces existing tag membership with the given set', () async {
+      await seed('d1');
+      await repository.bulkAddTags(['d1'], ['old-tag']);
+
+      await repository.bulkReplaceTags(['d1'], ['t1', 't2']);
+
+      final rows = await (db.select(
+        db.diveTags,
+      )..where((t) => t.diveId.equals('d1'))).get();
+      expect(rows.map((r) => r.tagId).toSet(), {'t1', 't2'});
+    });
+  });
 }
