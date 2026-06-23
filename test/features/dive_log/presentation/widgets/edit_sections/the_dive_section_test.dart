@@ -61,7 +61,48 @@ void main() {
       // Avg depth shows the single one-tap calculate button and it fires onUse.
       expect(find.byIcon(Icons.calculate_outlined), findsOneWidget);
       await tester.tap(find.byIcon(Icons.calculate_outlined));
+      await tester.pump();
       expect(avgUsed, 1);
+      // The icon tap must not also enter the row's inline edit mode.
+      expect(find.byType(TextFormField), findsNothing);
     },
   );
+
+  testWidgets('bottom time row filters decimal input to digits only', (
+    tester,
+  ) async {
+    final maxC = TextEditingController(text: '30.0');
+    final avgC = TextEditingController(text: '18.0');
+    final botC = TextEditingController(text: '42');
+    final runC = TextEditingController(text: '50');
+    final numC = TextEditingController(text: '7');
+    for (final c in [maxC, avgC, botC, runC, numC]) {
+      addTearDown(c.dispose);
+    }
+    await tester.pumpWidget(
+      _wrap(
+        TheDiveSection(
+          depthSymbol: 'm',
+          maxDepthController: maxC,
+          avgDepthController: avgC,
+          bottomTimeController: botC,
+          runtimeController: runC,
+          diveNumberController: numC,
+          entryText: 'ENTRY_TS',
+          onEditEntry: () {},
+          exitText: 'EXIT_TS',
+          onEditExit: () {},
+          siteName: 'Blue Hole',
+          onPickSite: () {},
+        ),
+      ),
+    );
+
+    // Bottom time is parsed with int.tryParse on save, so non-digits would
+    // silently become 0 -- the digits-only formatter must strip them.
+    await tester.tap(find.text('42 min'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField), '12.5');
+    expect(botC.text, '125');
+  });
 }

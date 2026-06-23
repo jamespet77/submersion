@@ -94,6 +94,9 @@ class TheDiveSection extends StatelessWidget {
           controller: maxDepthController,
           suffixText: depthSymbol,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
+          ],
           profileSuggestion: maxDepthSuggestion,
         ),
         FormRow.text(
@@ -101,6 +104,9 @@ class TheDiveSection extends StatelessWidget {
           controller: avgDepthController,
           suffixText: depthSymbol,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
+          ],
           profileSuggestion: avgDepthSuggestion,
         ),
         FormRow.text(
@@ -108,6 +114,7 @@ class TheDiveSection extends StatelessWidget {
           controller: bottomTimeController,
           suffixText: 'min',
           keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           profileSuggestion: bottomTimeSuggestion,
         ),
         FormRow.text(

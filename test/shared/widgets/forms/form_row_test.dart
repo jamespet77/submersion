@@ -85,6 +85,7 @@ void main() {
       );
       expect(find.byIcon(Icons.calculate_outlined), findsOneWidget);
       await tester.tap(find.byIcon(Icons.calculate_outlined));
+      await tester.pump();
       expect(used, 1);
       expect(find.byType(TextFormField), findsNothing);
     });
