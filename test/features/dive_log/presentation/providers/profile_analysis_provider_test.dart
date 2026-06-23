@@ -443,10 +443,11 @@ void main() {
       );
 
       expect(result, isNotNull);
-      expect(result, hasLength(3));
-      expect(result![0], closeTo(200, 0.001));
-      expect(result[1], closeTo(190, 0.001));
-      expect(result[2], closeTo(180, 0.001));
+      final combined = result!;
+      expect(combined, hasLength(3));
+      expect(combined[0], closeTo(200, 0.001));
+      expect(combined[1], closeTo(190, 0.001));
+      expect(combined[2], closeTo(180, 0.001));
     });
   });
 
