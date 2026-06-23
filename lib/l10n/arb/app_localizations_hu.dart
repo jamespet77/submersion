@@ -9,6 +9,86 @@ class AppLocalizationsHu extends AppLocalizations {
   AppLocalizationsHu([String locale = 'hu']) : super(locale);
 
   @override
+  String get diveLog_bulkEdit_groupRebreather => 'Merülési mód és rebreather';
+
+  @override
+  String get diveLog_bulkEdit_fieldSetpointLow => 'Alacsony alapérték';
+
+  @override
+  String get diveLog_bulkEdit_fieldSetpointHigh => 'Magas alapérték';
+
+  @override
+  String get diveLog_bulkEdit_fieldSetpointDeco => 'Dekó alapérték';
+
+  @override
+  String get diveLog_bulkEdit_fieldScrubberType => 'Abszorber típusa';
+
+  @override
+  String get diveLog_bulkEdit_fieldScrubberDuration => 'Abszorber időtartama';
+
+  @override
+  String get diveLog_bulkEdit_contradiction =>
+      'Az OC mód nem tartalmazhat rebreather beállításokat. Kapcsold ki ezeket a mezőket, vagy változtasd meg a módot.';
+
+  @override
+  String diveLog_bulkEdit_appBarTitle(int count) {
+    return '$count merülés szerkesztése';
+  }
+
+  @override
+  String get diveLog_bulkEdit_groupLogistics => 'Logisztika';
+
+  @override
+  String get diveLog_bulkEdit_groupWeather => 'Időjárás';
+
+  @override
+  String get diveLog_bulkEdit_groupCollections =>
+      'Címkék, felszerelés és élővilág';
+
+  @override
+  String get diveLog_bulkEdit_fieldFavorite => 'Kedvenc';
+
+  @override
+  String get diveLog_bulkEdit_collectionWeights => 'Súlyok';
+
+  @override
+  String get diveLog_bulkEdit_collectionTanks => 'Palackok';
+
+  @override
+  String get diveLog_bulkEdit_notesSet => 'Beállítás';
+
+  @override
+  String get diveLog_bulkEdit_notesAppend => 'Hozzáfűzés';
+
+  @override
+  String get diveLog_bulkEdit_modeAdd => 'Hozzáadás';
+
+  @override
+  String get diveLog_bulkEdit_modeRemove => 'Eltávolítás';
+
+  @override
+  String get diveLog_bulkEdit_modeReplace => 'Csere';
+
+  @override
+  String get diveLog_bulkEdit_tankOnlyIfEmpty =>
+      'Csak a meglévő palack nélküli merülések';
+
+  @override
+  String get diveLog_bulkEdit_confirmTitle => 'Alkalmazza a módosításokat?';
+
+  @override
+  String get diveLog_bulkEdit_confirmApply => 'Alkalmaz';
+
+  @override
+  String get diveLog_bulkEdit_nothingSelected =>
+      'Engedélyezzen legalább egy mezőt a módosítások alkalmazásához.';
+
+  @override
+  String diveLog_bulkEdit_applied(int count) {
+    return '$count merülés frissítve';
+  }
+
+  @override
   String get settings_cloudSync_error_icloudSignedOut =>
       'Az iCloud nem érhető el. Jelentkezz be az iCloudba a készülék beállításaiban.';
 
