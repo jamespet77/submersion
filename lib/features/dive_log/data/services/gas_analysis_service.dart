@@ -351,6 +351,9 @@ class GasAnalysisService {
     required double durationMin,
     required double ambientPressureAtm,
   }) {
+    if (tankVolume <= 0 || durationMin <= 0 || ambientPressureAtm <= 0) {
+      return null;
+    }
     final startVol = gasVolume(
       tankSizeLiters: tankVolume,
       pressureBar: startPressureBar,

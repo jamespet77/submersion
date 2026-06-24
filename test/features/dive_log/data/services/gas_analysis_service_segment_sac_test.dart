@@ -354,5 +354,36 @@ void main() {
         expect(results.first.sacVolume, isNull);
       },
     );
+
+    test(
+      'calculateCylinderSac returns null sacRate when endPressure >= startPressure (no gas used)',
+      () {
+        const tank = DiveTank(
+          id: 't1',
+          volume: 12.0,
+          startPressure: 100,
+          endPressure: 100, // zero gas used
+          gasMix: GasMix(o2: 21, he: 0),
+        );
+        final profile = flatProfile(50 * 60, 20.0);
+
+        final dive = Dive(
+          id: 'dive-no-gas-used',
+          dateTime: DateTime(2026),
+          runtime: const Duration(minutes: 50),
+          avgDepth: 20.0,
+          tanks: const [tank],
+          profile: profile,
+        );
+
+        final results = service.calculateCylinderSac(
+          dive: dive,
+          profile: profile,
+        );
+
+        expect(results, hasLength(1));
+        expect(results.first.sacRate, isNull);
+      },
+    );
   });
 }
