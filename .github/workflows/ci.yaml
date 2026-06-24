@@ -549,6 +549,13 @@ jobs:
       - name: Verify 16 KB native library alignment
         run: python3 scripts/check_16kb_alignment.py build/app/outputs/flutter-apk/app-release.apk
 
+      # Guards against the second half of issue #318: R8 release minification
+      # renamed the reflectively-probed usb-serial-for-android driver methods
+      # (e.g. getSupportedDevices), so every serial-USB download crashed with a
+      # NoSuchMethodException. Fails the build if a driver method was obfuscated.
+      - name: Verify serial driver ProGuard keep rules
+        run: python3 scripts/check_proguard_serial_keep.py build/app/outputs/mapping/release/mapping.txt
+
       - name: Upload Android artifact
         uses: actions/upload-artifact@v7
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
