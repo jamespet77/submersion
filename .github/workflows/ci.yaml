@@ -238,6 +238,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+
       - name: Install coverage.py
         run: python3 -m pip install coverage
 

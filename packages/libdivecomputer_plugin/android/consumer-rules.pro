@@ -12,7 +12,7 @@
 # purely by reflection, so R8 has no visible call site and would rename or
 # strip the members, breaking the lookups at runtime:
 #   - ProbeTable.addDriver() -> Class.getMethod("getSupportedDevices") / ("probe")
-#   - UsbSerialProber.probeDevice() -> Class.getConstructor(UsbDevice)
+#   - UsbSerialProber.probeDevice() -> Class.getConstructor(UsbDevice.class)
 # When the members are renamed the reflective lookup throws NoSuchMethodException,
 # which surfaces as "Download failed unexpectedly (RuntimeException)" and every
 # serial-USB download crashes (issue #318). This mirrors the consumer ProGuard

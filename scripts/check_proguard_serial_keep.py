@@ -21,9 +21,12 @@ Because the lookup is by method name on a runtime ``Class`` object, the precise
 thing that must survive is the *method name*, not the class name -- R8 may
 freely rename synthetic helper classes (e.g. ``$$ExternalSyntheticLambda``) in
 the same package without harm. This script reads the R8 ``mapping.txt`` from a
-release build and fails (exit code 1) if a reflectively-accessed method on a
-driver class was renamed, or if it vanished entirely. It is the build-artifact
-counterpart to ``check_16kb_alignment`` and is dependency-free (pure stdlib).
+release build and fails (exit code 1) if a reflectively-accessed driver method
+was renamed, or was stripped from an obfuscated mapping. A mapping showing no
+obfuscation at all only warns, since it cannot prove the drivers survived
+(Submersion's release builds always obfuscate, so CI never hits that case). It
+is the build-artifact counterpart to ``check_16kb_alignment`` and is
+dependency-free (pure stdlib).
 
 Usage:
     check_proguard_serial_keep.py <mapping.txt>
