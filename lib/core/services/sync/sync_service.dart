@@ -1882,46 +1882,9 @@ class SyncService {
         uploadNonce: null,
       );
 
-      await _serializer.applyInDeferredFkTransaction(() async {
-        // Union the restored records; for ids present in several files the
-        // latest export wins (payloads are sorted ascending).
-        final cloudIds = <String, Set<String>>{};
-        final restored = <String, Map<String, Map<String, dynamic>>>{};
-        for (final payload in payloads) {
-          for (final entry in payload.data.toJson().entries) {
-            final entityType = entry.key;
-            final records = (entry.value as List).cast<Map<String, dynamic>>();
-            for (final record in records) {
-              final id = _recordIdForEntity(entityType, record);
-              if (id == null) continue;
-              (cloudIds[entityType] ??= <String>{}).add(id);
-              (restored[entityType] ??= {})[id] = record;
-            }
-          }
-        }
-
-        // Delete local rows the restored library does not contain.
-        for (final entry in localSnapshot.data.toJson().entries) {
-          final entityType = entry.key;
-          final records = (entry.value as List).cast<Map<String, dynamic>>();
-          for (final record in records) {
-            final id = _recordIdForEntity(entityType, record);
-            if (id == null) continue;
-            if (!(cloudIds[entityType]?.contains(id) ?? false)) {
-              await _serializer.deleteRecord(entityType, id);
-            }
-          }
-        }
-
-        // Upsert every restored record.
-        for (final entry in restored.entries) {
-          for (final record in entry.value.values) {
-            await _serializer.upsertRecord(entry.key, record);
-          }
-        }
-
-        await _serializer.repairDanglingForeignKeys();
-      });
+      await _serializer.applyInDeferredFkTransaction(
+        () => _applyAdoptInMemory(payloads, localSnapshot),
+      );
 
       // Re-baseline under the adopted epoch. Our tombstones are obsolete --
       // the restored library is authoritative.
@@ -1945,6 +1908,72 @@ class SyncService {
         message: 'Failed to adopt the restored library: $e',
       );
     }
+  }
+
+  /// In-memory union/delete/upsert adopt apply (parity reference for the
+  /// streaming path [_adoptApplyStreaming]). Runs inside the caller's
+  /// deferred-FK transaction. Unions every payload's `data` (latest export
+  /// wins; [payloads] must be sorted ascending by exportedAt), deletes local
+  /// rows absent from the union, then upserts the union and repairs FKs.
+  Future<void> _applyAdoptInMemory(
+    List<SyncPayload> payloads,
+    SyncPayload localSnapshot,
+  ) async {
+    // Union the restored records; for ids present in several files the latest
+    // export wins (payloads are sorted ascending).
+    final cloudIds = <String, Set<String>>{};
+    final restored = <String, Map<String, Map<String, dynamic>>>{};
+    for (final payload in payloads) {
+      for (final entry in payload.data.toJson().entries) {
+        final entityType = entry.key;
+        final records = (entry.value as List).cast<Map<String, dynamic>>();
+        for (final record in records) {
+          final id = _recordIdForEntity(entityType, record);
+          if (id == null) continue;
+          (cloudIds[entityType] ??= <String>{}).add(id);
+          (restored[entityType] ??= {})[id] = record;
+        }
+      }
+    }
+
+    // Delete local rows the restored library does not contain.
+    for (final entry in localSnapshot.data.toJson().entries) {
+      final entityType = entry.key;
+      final records = (entry.value as List).cast<Map<String, dynamic>>();
+      for (final record in records) {
+        final id = _recordIdForEntity(entityType, record);
+        if (id == null) continue;
+        if (!(cloudIds[entityType]?.contains(id) ?? false)) {
+          await _serializer.deleteRecord(entityType, id);
+        }
+      }
+    }
+
+    // Upsert every restored record.
+    for (final entry in restored.entries) {
+      for (final record in entry.value.values) {
+        await _serializer.upsertRecord(entry.key, record);
+      }
+    }
+
+    await _serializer.repairDanglingForeignKeys();
+  }
+
+  /// Test seam: in-memory adopt of [payloads] (the parity reference). Captures
+  /// the local snapshot, sorts payloads ascending, and applies in one
+  /// deferred-FK transaction. No re-baseline, so a parity comparison sees only
+  /// the data effects. See sync_adopt_streaming_parity_test.dart.
+  @visibleForTesting
+  Future<void> debugAdoptInMemory(List<SyncPayload> payloads) async {
+    final local = await _serializer.exportData(
+      deviceId: 'adopt',
+      deletions: const [],
+    );
+    final sorted = [...payloads]
+      ..sort((a, b) => a.exportedAt.compareTo(b.exportedAt));
+    await _serializer.applyInDeferredFkTransaction(
+      () => _applyAdoptInMemory(sorted, local),
+    );
   }
 
   /// Collect every payload (base + changesets) from all changeset logs stamped
