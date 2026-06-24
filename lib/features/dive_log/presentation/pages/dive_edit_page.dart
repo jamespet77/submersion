@@ -63,6 +63,7 @@ import 'package:submersion/features/courses/presentation/widgets/course_picker.d
 import 'package:submersion/features/media/presentation/providers/media_providers.dart';
 import 'package:submersion/features/media/presentation/widgets/photo_gps_suggestion_banner.dart';
 import 'package:submersion/features/media/presentation/widgets/quick_site_from_gps_dialog.dart';
+import 'package:submersion/features/dive_log/presentation/widgets/dive_type_multi_select_field.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 import 'package:submersion/shared/widgets/forms/add_section_row.dart';
 import 'package:submersion/shared/widgets/forms/edit_form_scaffold.dart';
@@ -137,7 +138,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
   final _airTempController = TextEditingController();
   final _notesController = TextEditingController();
 
-  String _selectedDiveTypeId = 'recreational';
+  List<String> _selectedDiveTypeIds = const ['recreational'];
   Visibility _selectedVisibility = Visibility.unknown;
   int _rating = 0;
   DiveSite? _selectedSite;
@@ -456,7 +457,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
               ? units.convertTemperature(dive.airTemp!).toStringAsFixed(0)
               : '';
           _notesController.text = dive.notes;
-          _selectedDiveTypeId = dive.diveTypeId;
+          _selectedDiveTypeIds = List.from(dive.diveTypeIds);
           _selectedVisibility = dive.visibility ?? Visibility.unknown;
           _rating = dive.rating ?? 0;
           _selectedSite = dive.site;
@@ -745,8 +746,13 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
           Text(context.l10n.diveLog_edit_errorLoadingDiveTypes(e.toString())),
       data: (diveTypes) {
         if (diveTypes.isEmpty) return const SizedBox.shrink();
-        final exists = diveTypes.any((t) => t.id == _selectedDiveTypeId);
-        final value = exists ? _selectedDiveTypeId : 'recreational';
+        // Stopgap single-select bulk control; Task 11 replaces this whole
+        // method with a collection-lane (Add/Remove/Replace) editor.
+        final current = _selectedDiveTypeIds.isEmpty
+            ? 'recreational'
+            : _selectedDiveTypeIds.first;
+        final exists = diveTypes.any((t) => t.id == current);
+        final value = exists ? current : 'recreational';
         return DropdownButtonFormField<String>(
           key: ValueKey('bulk_dive_type_${diveTypes.length}_$value'),
           initialValue: value,
@@ -754,7 +760,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
               .map((t) => DropdownMenuItem(value: t.id, child: Text(t.name)))
               .toList(),
           onChanged: (v) {
-            if (v != null) setState(() => _selectedDiveTypeId = v);
+            if (v != null) setState(() => _selectedDiveTypeIds = [v]);
           },
         );
       },
@@ -869,7 +875,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       diveCenterId: _selectedDiveCenter?.id,
       tripId: _selectedTrip?.id,
       courseId: _selectedCourse?.id,
-      diveTypeId: _selectedDiveTypeId,
+      diveTypeId: _selectedDiveTypeIds.first,
       rating: _rating > 0 ? _rating : null,
       isFavorite: _bulkFavorite,
       waterType: _waterType?.name,
@@ -2936,46 +2942,9 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Consumer(
-            builder: (context, ref, child) {
-              final diveTypesAsync = ref.watch(diveTypeListNotifierProvider);
-              return diveTypesAsync.when(
-                loading: () => const LinearProgressIndicator(),
-                error: (e, st) => Text(
-                  context.l10n.diveLog_edit_errorLoadingDiveTypes(e.toString()),
-                ),
-                data: (diveTypes) {
-                  // Ensure selected dive type exists in the list
-                  final selectedExists = diveTypes.any(
-                    (t) => t.id == _selectedDiveTypeId,
-                  );
-                  final effectiveValue = selectedExists
-                      ? _selectedDiveTypeId
-                      : 'recreational';
-
-                  return DropdownButtonFormField<String>(
-                    key: ValueKey(
-                      'dive_type_${diveTypes.length}_$effectiveValue',
-                    ),
-                    initialValue: effectiveValue,
-                    decoration: InputDecoration(
-                      labelText: context.l10n.diveLog_edit_label_diveType,
-                    ),
-                    items: diveTypes.map((type) {
-                      return DropdownMenuItem(
-                        value: type.id,
-                        child: Text(type.name),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => _selectedDiveTypeId = value);
-                      }
-                    },
-                  );
-                },
-              );
-            },
+          DiveTypeMultiSelectField(
+            selectedTypeIds: _selectedDiveTypeIds,
+            onChanged: (ids) => setState(() => _selectedDiveTypeIds = ids),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<Visibility>(
@@ -4000,7 +3969,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
         visibility: _selectedVisibility != Visibility.unknown
             ? _selectedVisibility
             : null,
-        diveTypeIds: [_selectedDiveTypeId],
+        diveTypeIds: _selectedDiveTypeIds,
         notes: _notesController.text,
         rating: _rating > 0 ? _rating : null,
         site: _selectedSite,
