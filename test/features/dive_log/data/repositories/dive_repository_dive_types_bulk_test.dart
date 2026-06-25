@@ -63,4 +63,31 @@ void main() {
     expect(await typesOf('d2'), ['boat', 'night']);
     expect(await typesOf('d3'), ['cave']); // untouched
   });
+
+  test('bulk add seeds from the representative column for a legacy dive', () async {
+    await seed('d1', ['shore']);
+    // Simulate a legacy/old-version dive: only dives.dive_type, no junction rows.
+    await (db.delete(
+      db.diveDiveTypes,
+    )..where((t) => t.diveId.equals('d1'))).go();
+
+    await repository.bulkAddDiveTypes(['d1'], ['wreck']);
+    // Without seeding from the column, the representative 'shore' would be lost.
+    expect(await typesOf('d1'), ['shore', 'wreck']);
+  });
+
+  test(
+    'bulk remove seeds from the representative column for a legacy dive',
+    () async {
+      await seed('d1', ['shore', 'wreck']);
+      await (db.delete(
+        db.diveDiveTypes,
+      )..where((t) => t.diveId.equals('d1'))).go();
+
+      await repository.bulkRemoveDiveTypes(['d1'], ['wreck']);
+      // Seeded from the representative 'shore'; removing absent 'wreck' keeps it
+      // instead of falling back to recreational.
+      expect(await typesOf('d1'), ['shore']);
+    },
+  );
 }

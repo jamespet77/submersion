@@ -63,9 +63,13 @@ class BulkDiveEditService {
             priorTagIds[r.diveId]!.add(r.tagId);
           }
         case DiveTypesOp():
-          final rows = await (_db.select(
-            _db.diveDiveTypes,
-          )..where((t) => t.diveId.isIn(ids))).get();
+          // Order by createdAt so undo restores the original representative
+          // (the first type), matching _diveTypesForDives.
+          final rows =
+              await (_db.select(_db.diveDiveTypes)
+                    ..where((t) => t.diveId.isIn(ids))
+                    ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
+                  .get();
           priorDiveTypeIds = {for (final id in ids) id: <String>[]};
           for (final r in rows) {
             priorDiveTypeIds[r.diveId]!.add(r.diveTypeId);

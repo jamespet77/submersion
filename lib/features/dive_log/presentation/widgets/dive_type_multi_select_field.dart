@@ -15,6 +15,7 @@ class DiveTypeMultiSelectField extends ConsumerWidget {
     required this.selectedTypeIds,
     required this.onChanged,
     this.labelText,
+    this.allowEmpty = false,
   });
 
   /// The currently selected dive-type slugs (>= 1 by invariant).
@@ -24,6 +25,11 @@ class DiveTypeMultiSelectField extends ConsumerWidget {
   final ValueChanged<List<String>> onChanged;
 
   final String? labelText;
+
+  /// When true (bulk-edit mode), the selection may be cleared to empty. The
+  /// >= 1 invariant only applies to a single dive's own type set, not to the
+  /// "which types to add/remove/replace" selection in bulk mode.
+  final bool allowEmpty;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,7 +51,8 @@ class DiveTypeMultiSelectField extends ConsumerWidget {
             if (!next.contains(id)) next.add(id);
           } else {
             next.remove(id);
-            if (next.isEmpty) return; // enforce >= 1: ignore the last uncheck
+            // Single-dive editor enforces >= 1; bulk mode allows clearing.
+            if (next.isEmpty && !allowEmpty) return;
           }
           onChanged(next);
         }
@@ -120,6 +127,7 @@ class DiveTypeMultiSelectField extends ConsumerWidget {
         ],
       ),
     );
+    controller.dispose();
     if (name == null || name.isEmpty) return;
     try {
       final created = await ref

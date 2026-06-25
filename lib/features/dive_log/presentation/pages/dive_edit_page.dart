@@ -293,6 +293,9 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       // Bulk mode: start from empty form state; no draft load, no GPS/number,
       // and no starting tank (bulk tanks are Add/Replace, not a default list).
       _tanks = [];
+      // Bulk dive-type selection starts empty (like tags); a ['recreational']
+      // default would make enabling the collection silently operate on it.
+      _selectedDiveTypeIds = <String>[];
       _suppressDirty = false;
     } else if (widget.isEditing) {
       _loadExistingDive();
@@ -984,6 +987,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
           editor: DiveTypeMultiSelectField(
             selectedTypeIds: _selectedDiveTypeIds,
             onChanged: (ids) => setState(() => _selectedDiveTypeIds = ids),
+            allowEmpty: true,
           ),
         ),
         _collectionEntry(
@@ -1032,7 +1036,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       );
     }
     final diveTypesMode = _collectionModes[BulkCollectionType.diveTypes];
-    if (diveTypesMode != null) {
+    if (diveTypesMode != null && _selectedDiveTypeIds.isNotEmpty) {
       ops.add(
         DiveTypesOp(mode: diveTypesMode, diveTypeIds: _selectedDiveTypeIds),
       );

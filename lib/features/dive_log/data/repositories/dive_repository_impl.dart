@@ -3691,7 +3691,6 @@ class DiveRepository {
     }
   }
 
-  /// Replace each dive's tag membership with exactly [tagIds]. No notify/txn.
   /// Load each dive's ordered dive-type slugs from the junction, keyed by dive
   /// id. Used by the mappers and the summary query to hydrate `diveTypeIds`.
   Future<Map<String, List<String>>> _diveTypesForDives(
@@ -3708,6 +3707,19 @@ class DiveRepository {
       (map[r.diveId] ??= <String>[]).add(r.diveTypeId);
     }
     return map;
+  }
+
+  /// Load each dive's representative `dives.dive_type` slug, keyed by id. Used
+  /// to seed the base set for bulk add/remove on legacy dives that have no
+  /// junction rows yet (sync transition window).
+  Future<Map<String, String>> _representativeDiveTypeColumn(
+    List<String> diveIds,
+  ) async {
+    if (diveIds.isEmpty) return {};
+    final rows = await (_db.select(
+      _db.dives,
+    )..where((t) => t.id.isIn(diveIds))).get();
+    return {for (final r in rows) r.id: r.diveType};
   }
 
   /// Replace [diveId]'s dive-type rows with exactly [typeIds] (>= 1 enforced),
@@ -3757,6 +3769,7 @@ class DiveRepository {
     );
   }
 
+  /// Replace each dive's tag membership with exactly [tagIds]. No notify/txn.
   Future<void> bulkReplaceTags(
     List<String> diveIds,
     List<String> tagIds,
@@ -3841,8 +3854,13 @@ class DiveRepository {
     if (diveIds.isEmpty || typeIds.isEmpty) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final current = await _diveTypesForDives(diveIds);
+    final reps = await _representativeDiveTypeColumn(diveIds);
     for (final diveId in diveIds) {
-      final merged = [...(current[diveId] ?? const <String>[])];
+      // Seed from the representative column for legacy dives with no junction
+      // rows, so adding a type does not drop the existing representative.
+      final merged = [
+        ...(current[diveId] ?? [reps[diveId] ?? 'recreational']),
+      ];
       for (final t in typeIds) {
         if (!merged.contains(t)) merged.add(t);
       }
@@ -3860,8 +3878,11 @@ class DiveRepository {
     if (diveIds.isEmpty || typeIds.isEmpty) return;
     final now = DateTime.now().millisecondsSinceEpoch;
     final current = await _diveTypesForDives(diveIds);
+    final reps = await _representativeDiveTypeColumn(diveIds);
     for (final diveId in diveIds) {
-      final existing = current[diveId] ?? const <String>[];
+      // Seed from the representative column for legacy dives with no junction
+      // rows, so a remove does not silently reset the type to recreational.
+      final existing = current[diveId] ?? [reps[diveId] ?? 'recreational'];
       final remaining = existing.where((t) => !typeIds.contains(t)).toList();
       await _replaceDiveTypeRows(
         diveId,

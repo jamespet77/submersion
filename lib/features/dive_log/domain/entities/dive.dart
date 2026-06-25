@@ -39,8 +39,9 @@ class Dive extends Equatable {
   final double? waterTemp; // celsius
   final double? airTemp; // celsius
   final Visibility? visibility;
-  final List<String>
-  diveTypeIds; // References dive_types table (>= 1; first = representative)
+
+  /// References dive_types table (>= 1; first is the representative).
+  final List<String> diveTypeIds;
   final DiveTypeEntity? diveType; // Loaded dive type entity (for display)
   final String? buddy;
   final String? diveMaster;
