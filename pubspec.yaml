@@ -68,7 +68,9 @@ dependencies:
   image_picker: ^1.1.2
   share_plus: ^12.0.1
   desktop_drop: ^0.7.0
-  receive_sharing_intent: ^1.8.1
+  # Pinned <1.9.0: 1.9.0 is Swift Package Manager-only and drops CocoaPods
+  # support, which breaks the iOS/macOS build (this project uses CocoaPods).
+  receive_sharing_intent: ">=1.8.1 <1.9.0"
   url_launcher: ^6.3.1
   flutter_contacts: ^2.0.2
   geolocator: ^14.0.2

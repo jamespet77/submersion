@@ -234,7 +234,7 @@ SPEC CHECKSUMS:
   sqlite3: a51c07cf16e023d6c48abd5e5791a61a47354921
   sqlite3_flutter_libs: b3e120efe9a82017e5552a620f696589ed4f62ab
   url_launcher_macos: f87a979182d112f911de6820aefddaf56ee9fbfd
-  video_player_avfoundation: dd410b52df6d2466a42d28550e33e4146928280a
+  video_player_avfoundation: 3453f792138786248960ca029747fcd9f318ef52
 
 PODFILE CHECKSUM: 043eeb0720acdf3fb487152375287e3161c7c51c
 
