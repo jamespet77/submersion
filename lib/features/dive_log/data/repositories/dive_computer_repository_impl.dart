@@ -12,6 +12,7 @@ import 'package:submersion/core/database/database.dart'
         DiveProfileEventsCompanion,
         DivesCompanion,
         DiveTanksCompanion,
+        GasSwitchesCompanion,
         DiveProfile,
         DiveProfileEvent,
         TankPressureProfilesCompanion;
@@ -816,6 +817,7 @@ class DiveComputerRepository {
     int? gfHigh,
     int? decoConservatism,
     List<EventData>? events,
+    List<GasSwitchData>? gasSwitches,
     int? diveNumber,
     bool forceNew = false,
     Uint8List? rawData,
@@ -1149,6 +1151,32 @@ class DiveComputerRepository {
             }
           }
         }
+      }
+
+      // Batch insert gas switches. The gas-usage timeline is driven solely by
+      // the gas_switches table; each switch maps its cylinder index to the
+      // tank id created above.
+      if (gasSwitches != null &&
+          gasSwitches.isNotEmpty &&
+          tankIdsByIndex.isNotEmpty) {
+        await _db.batch((batch) {
+          for (final sw in gasSwitches) {
+            final tankId = tankIdsByIndex[sw.toTankIndex];
+            if (tankId == null) continue;
+            batch.insert(
+              _db.gasSwitches,
+              GasSwitchesCompanion(
+                id: Value(_uuid.v4()),
+                diveId: Value(diveId),
+                timestamp: Value(sw.timestamp),
+                tankId: Value(tankId),
+                depth: Value(sw.depth),
+                createdAt: Value(now),
+              ),
+            );
+          }
+        });
+        _log.info('Imported gas switches for dive $diveId');
       }
 
       // Batch insert dive events
@@ -1663,6 +1691,24 @@ class TankData {
     this.startPressure,
     this.endPressure,
     this.volumeLiters,
+  });
+}
+
+/// Data class for importing a gas switch (a change to the cylinder at [toTankIndex]).
+class GasSwitchData {
+  /// Time offset from dive start in seconds
+  final int timestamp;
+
+  /// Depth at the switch in meters
+  final double depth;
+
+  /// Index of the cylinder switched to (matches [TankData.index])
+  final int toTankIndex;
+
+  const GasSwitchData({
+    required this.timestamp,
+    required this.depth,
+    required this.toTankIndex,
   });
 }
 

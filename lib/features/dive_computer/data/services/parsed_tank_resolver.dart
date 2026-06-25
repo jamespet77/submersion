@@ -11,20 +11,88 @@ import 'package:submersion/features/dive_computer/domain/entities/downloaded_div
 /// "first gas mix" fallback both mislabeled the transmitter and dropped any gas
 /// used without one (e.g. a deco bottle). Gases with no tank become pressureless
 /// cylinders.
-List<DownloadedTank> resolveParsedTanks(pigeon.ParsedDive parsed) {
+List<DownloadedTank> resolveParsedTanks(pigeon.ParsedDive parsed) =>
+    _resolveCylinders(parsed).tanks;
+
+/// Derive the dive's gas switches from per-sample gas-mix transitions, keyed by
+/// the cylinder index assigned by [resolveParsedTanks].
+///
+/// Shearwater (and most air-integrated computers) report gas changes as
+/// per-sample `DC_SAMPLE_GASMIX` rather than discrete `gaschange` events, so the
+/// only authoritative record of when a gas was switched is a change in
+/// `sample.gasMixIndex`. The first observed gas is the baseline (it is the
+/// starting tank in the gas-usage timeline, not a switch); every later change to
+/// a different gas mix becomes a [GasSwitchEvent] pointing at the cylinder that
+/// holds that gas.
+List<GasSwitchEvent> resolveGasSwitches(pigeon.ParsedDive parsed) {
+  final gasIndexToTankIndex = _resolveCylinders(parsed).gasIndexToTankIndex;
+  if (gasIndexToTankIndex.isEmpty) {
+    return const [];
+  }
+
+  final sorted = [...parsed.samples]
+    ..sort((a, b) => a.timeSeconds.compareTo(b.timeSeconds));
+
+  final switches = <GasSwitchEvent>[];
+  int? previousGasIndex;
+  for (final s in sorted) {
+    final gasIndex = s.gasMixIndex;
+    if (gasIndex == null) {
+      continue;
+    }
+    if (previousGasIndex == null) {
+      // Baseline: the starting gas, represented by the starting tank.
+      previousGasIndex = gasIndex;
+      continue;
+    }
+    if (gasIndex == previousGasIndex) {
+      continue;
+    }
+    previousGasIndex = gasIndex;
+    final tankIndex = gasIndexToTankIndex[gasIndex];
+    if (tankIndex == null) {
+      continue;
+    }
+    switches.add(
+      GasSwitchEvent(
+        timeSeconds: s.timeSeconds,
+        depth: s.depthMeters,
+        toTankIndex: tankIndex,
+      ),
+    );
+  }
+  return switches;
+}
+
+/// The resolved cylinders plus the map from each gas-mix index to the cylinder
+/// index that holds it, so tank labeling and gas-switch derivation share one
+/// gas-to-cylinder assignment and cannot drift apart.
+class _ResolvedCylinders {
+  final List<DownloadedTank> tanks;
+  final Map<int, int> gasIndexToTankIndex;
+
+  const _ResolvedCylinders(this.tanks, this.gasIndexToTankIndex);
+}
+
+_ResolvedCylinders _resolveCylinders(pigeon.ParsedDive parsed) {
   final gasMixes = parsed.gasMixes;
+  final gasIndexToTankIndex = <int, int>{};
 
   // No tank records: one pressureless cylinder per gas mix.
   if (parsed.tanks.isEmpty) {
-    return gasMixes
-        .map(
-          (g) => DownloadedTank(
-            index: g.index,
-            o2Percent: g.o2Percent,
-            hePercent: g.hePercent,
-          ),
-        )
-        .toList();
+    final tanks = <DownloadedTank>[];
+    for (var i = 0; i < gasMixes.length; i++) {
+      final g = gasMixes[i];
+      gasIndexToTankIndex[i] = g.index;
+      tanks.add(
+        DownloadedTank(
+          index: g.index,
+          o2Percent: g.o2Percent,
+          hePercent: g.hePercent,
+        ),
+      );
+    }
+    return _ResolvedCylinders(tanks, gasIndexToTankIndex);
   }
 
   // Gas indices are positions into gasMixes (every bridge sets GasMix.index == i).
@@ -36,6 +104,7 @@ List<DownloadedTank> resolveParsedTanks(pigeon.ParsedDive parsed) {
     final gas = gasIndex != null ? gasMixes[gasIndex] : null;
     if (gasIndex != null) {
       consumed.add(gasIndex);
+      gasIndexToTankIndex[gasIndex] = tank.index;
     }
     result.add(
       DownloadedTank(
@@ -57,6 +126,7 @@ List<DownloadedTank> resolveParsedTanks(pigeon.ParsedDive parsed) {
     if (consumed.contains(i)) {
       continue;
     }
+    gasIndexToTankIndex[i] = nextIndex;
     result.add(
       DownloadedTank(
         index: nextIndex++,
@@ -66,7 +136,7 @@ List<DownloadedTank> resolveParsedTanks(pigeon.ParsedDive parsed) {
     );
   }
 
-  return result;
+  return _ResolvedCylinders(result, gasIndexToTankIndex);
 }
 
 /// The gas-mix index (position in [gasMixes]) for [tank], preferring the gas

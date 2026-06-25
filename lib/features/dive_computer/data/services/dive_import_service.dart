@@ -457,6 +457,9 @@ class DiveImportService {
     // Convert events to EventData
     final events = _convertEvents(dive.events);
 
+    // Convert gas switches to GasSwitchData
+    final gasSwitches = _parser.parseGasSwitches(dive);
+
     // Import using repository
     final diveId = await _repository.importProfile(
       computerId: computerId,
@@ -473,6 +476,7 @@ class DiveImportService {
       gfHigh: dive.gfHigh,
       decoConservatism: dive.decoConservatism,
       events: events,
+      gasSwitches: gasSwitches,
       diveNumber: diveNumber,
       forceNew: forceNew,
       rawData: dive.rawData,

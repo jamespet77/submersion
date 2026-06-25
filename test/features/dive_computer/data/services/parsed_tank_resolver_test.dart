@@ -242,4 +242,146 @@ void main() {
       expect(tanks[0].isAir, isTrue);
     });
   });
+
+  group('resolveGasSwitches', () {
+    const unknownGasMixIndex = 4294967295;
+
+    pigeon.ParsedDive makeParsedDive({
+      List<pigeon.ProfileSample> samples = const [],
+      List<pigeon.TankInfo> tanks = const [],
+      List<pigeon.GasMix> gasMixes = const [],
+    }) {
+      return pigeon.ParsedDive(
+        fingerprint: 'test',
+        dateTimeYear: 2026,
+        dateTimeMonth: 6,
+        dateTimeDay: 20,
+        dateTimeHour: 9,
+        dateTimeMinute: 43,
+        dateTimeSecond: 2,
+        maxDepthMeters: 23.4,
+        avgDepthMeters: 16.6,
+        durationSeconds: 6409,
+        samples: samples,
+        tanks: tanks,
+        gasMixes: gasMixes,
+        events: const [],
+      );
+    }
+
+    pigeon.ProfileSample sample(
+      int t,
+      int tankIndex,
+      int? gasMixIndex, {
+      double depth = 10.0,
+    }) => pigeon.ProfileSample(
+      timeSeconds: t,
+      depthMeters: depth,
+      pressureBar: 150.0,
+      tankIndex: tankIndex,
+      gasMixIndex: gasMixIndex,
+    );
+
+    test(
+      'emits a switch at the transition to the synthesized deco cylinder',
+      () {
+        // gas[1]=32% back gas on transmitter tank 0; gas[0]=99% deco (no
+        // transmitter -> synthesized cylinder at index 1). Diver breathes 32%
+        // then switches to 99% during deco at t=5958.
+        final parsed = makeParsedDive(
+          gasMixes: [
+            pigeon.GasMix(index: 0, o2Percent: 99.0, hePercent: 0.0),
+            pigeon.GasMix(index: 1, o2Percent: 32.0, hePercent: 0.0),
+          ],
+          tanks: [
+            pigeon.TankInfo(
+              index: 0,
+              gasMixIndex: unknownGasMixIndex,
+              startPressureBar: 246.8,
+              endPressureBar: 86.6,
+            ),
+          ],
+          samples: [
+            sample(2, 0, 1),
+            sample(1000, 0, 1),
+            sample(5000, 0, 1),
+            sample(5958, 0, 0, depth: 6.0),
+            sample(6400, 0, 0, depth: 5.0),
+          ],
+        );
+
+        final switches = resolveGasSwitches(parsed);
+
+        expect(switches, hasLength(1));
+        expect(switches.single.timeSeconds, 5958);
+        expect(switches.single.depth, 6.0);
+        expect(
+          switches.single.toTankIndex,
+          1,
+          reason: 'the 99% deco gas resolves to the synthesized cylinder index',
+        );
+      },
+    );
+
+    test('emits a switch for each distinct gas change', () {
+      // 32% -> 99% -> back to 32%: two switches.
+      final parsed = makeParsedDive(
+        gasMixes: [
+          pigeon.GasMix(index: 0, o2Percent: 99.0, hePercent: 0.0),
+          pigeon.GasMix(index: 1, o2Percent: 32.0, hePercent: 0.0),
+        ],
+        tanks: [pigeon.TankInfo(index: 0, gasMixIndex: unknownGasMixIndex)],
+        samples: [sample(2, 0, 1), sample(1000, 0, 0), sample(2000, 0, 1)],
+      );
+
+      final switches = resolveGasSwitches(parsed);
+
+      expect(switches.map((s) => s.timeSeconds), [1000, 2000]);
+      expect(switches[0].toTankIndex, 1); // 99% synthesized cylinder
+      expect(switches[1].toTankIndex, 0); // back to the 32% transmitter tank
+    });
+
+    test('returns no switches when the gas never changes', () {
+      final parsed = makeParsedDive(
+        gasMixes: [pigeon.GasMix(index: 0, o2Percent: 32.0, hePercent: 0.0)],
+        tanks: [pigeon.TankInfo(index: 0, gasMixIndex: unknownGasMixIndex)],
+        samples: [sample(2, 0, 0), sample(1000, 0, 0), sample(3000, 0, 0)],
+      );
+
+      expect(resolveGasSwitches(parsed), isEmpty);
+    });
+
+    test('returns no switches when samples carry no gas-mix index', () {
+      final parsed = makeParsedDive(
+        gasMixes: [
+          pigeon.GasMix(index: 0, o2Percent: 32.0, hePercent: 0.0),
+          pigeon.GasMix(index: 1, o2Percent: 99.0, hePercent: 0.0),
+        ],
+        tanks: [pigeon.TankInfo(index: 0, gasMixIndex: unknownGasMixIndex)],
+        samples: [sample(2, 0, null), sample(1000, 0, null)],
+      );
+
+      expect(resolveGasSwitches(parsed), isEmpty);
+    });
+
+    test('maps switches through a valid native tank->gas link', () {
+      // Two transmitters with the computer's own gas links: tank 0 = gas 0
+      // (21%), tank 1 = gas 1 (50%). A switch to gas 1 points at tank 1.
+      final parsed = makeParsedDive(
+        gasMixes: [
+          pigeon.GasMix(index: 0, o2Percent: 21.0, hePercent: 0.0),
+          pigeon.GasMix(index: 1, o2Percent: 50.0, hePercent: 0.0),
+        ],
+        tanks: [
+          pigeon.TankInfo(index: 0, gasMixIndex: 0, startPressureBar: 200.0),
+          pigeon.TankInfo(index: 1, gasMixIndex: 1, startPressureBar: 200.0),
+        ],
+        samples: [sample(2, 0, 0), sample(1000, 1, 1)],
+      );
+
+      final switches = resolveGasSwitches(parsed);
+      expect(switches, hasLength(1));
+      expect(switches.single.toTankIndex, 1);
+    });
+  });
 }
