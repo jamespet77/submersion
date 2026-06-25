@@ -1189,7 +1189,6 @@
   "diveLog_edit_label_currentStrength": "Aramlat erossege",
   "diveLog_edit_label_diveType": "Merules tipusa",
   "diveLog_edit_label_diveTypes": "Dive Types",
-  "diveLog_edit_addCustomDiveType": "Add custom type…",
   "diveLog_edit_label_diveNumber": "Merules sz.",
   "diveLog_edit_hint_diveNumber": "Automatikusan kiosztva, ha ures marad",
   "diveLog_edit_label_entryMethod": "Beszallasi mod",

@@ -8,7 +8,7 @@ import 'package:submersion/l10n/l10n_extension.dart';
 /// Multi-select dive-type field: collapses to a row of chips for the selected
 /// types and expands (as an anchored dropdown of checkboxes) to add or remove
 /// types. Enforces the at-least-one invariant — the last selected type cannot
-/// be unchecked. Includes an inline "Add custom type…" affordance.
+/// be unchecked. Custom types are managed on the dedicated dive-types page.
 class DiveTypeMultiSelectField extends ConsumerWidget {
   const DiveTypeMultiSelectField({
     super.key,
@@ -65,11 +65,6 @@ class DiveTypeMultiSelectField extends ConsumerWidget {
                 onChanged: (v) => toggle(t.id, v ?? false),
                 child: Text(t.name),
               ),
-            MenuItemButton(
-              leadingIcon: const Icon(Icons.add),
-              onPressed: () => _addCustomType(context, ref),
-              child: Text(context.l10n.diveLog_edit_addCustomDiveType),
-            ),
           ],
           builder: (context, controller, child) {
             return InkWell(
@@ -98,46 +93,5 @@ class DiveTypeMultiSelectField extends ConsumerWidget {
         );
       },
     );
-  }
-
-  Future<void> _addCustomType(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(ctx.l10n.diveLog_edit_addCustomDiveType),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            labelText: ctx.l10n.diveLog_edit_label_diveType,
-          ),
-          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(ctx.l10n.common_action_cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: Text(ctx.l10n.diveLog_edit_add),
-          ),
-        ],
-      ),
-    );
-    controller.dispose();
-    if (name == null || name.isEmpty) return;
-    try {
-      final created = await ref
-          .read(diveTypeListNotifierProvider.notifier)
-          .addDiveTypeByName(name);
-      if (!selectedTypeIds.contains(created.id)) {
-        onChanged([...selectedTypeIds, created.id]);
-      }
-    } catch (_) {
-      // e.g. no valid diver profile — leave the selection unchanged.
-    }
   }
 }

@@ -1343,7 +1343,6 @@
   "diveLog_edit_label_diveNumber": "潜水编号",
   "diveLog_edit_label_diveType": "潜水类型",
   "diveLog_edit_label_diveTypes": "Dive Types",
-  "diveLog_edit_addCustomDiveType": "Add custom type…",
   "diveLog_edit_label_entryMethod": "入水方式",
   "diveLog_edit_label_exitMethod": "出水方式",
   "diveLog_edit_label_humidity": "湿度",
