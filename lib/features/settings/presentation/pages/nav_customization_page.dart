@@ -238,8 +238,10 @@ class _NavCustomizationPageState extends ConsumerState<NavCustomizationPage> {
   }
 
   void _moveDown(int index) {
-    // When stepping across the divider, skip over it to the slot below.
-    final target = index == _dividerIndex - 1 ? _dividerIndex + 2 : index + 2;
+    // applyReorderPreservingDivider expects onReorderItem-style indices (already
+    // adjusted for the removed item), so the slot below is index + 1; stepping
+    // across the divider lands at _dividerIndex + 1.
+    final target = index == _dividerIndex - 1 ? _dividerIndex + 1 : index + 1;
     _commitReorder(index, target);
   }
 

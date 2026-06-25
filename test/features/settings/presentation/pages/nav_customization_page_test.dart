@@ -195,5 +195,25 @@ void main() {
       expect(repo.stored, contains('equipment'));
       expect(repo.stored, isNot(contains('trips')));
     });
+
+    testWidgets('move-down moves a row down by exactly one slot (not two)', (
+      tester,
+    ) async {
+      // Default primary order is [dives, sites, trips]. Moving the first row
+      // down by one must swap it with the second -> [sites, dives, trips], and
+      // must NOT overshoot to [sites, trips, dives]. The move buttons feed
+      // _commitReorder/applyReorderPreservingDivider, which expect
+      // onReorderItem-style (already-adjusted) indices; this guards against the
+      // old onReorder off-by-one in _moveDown.
+      final repo = _FakeRepo();
+      await tester.pumpWidget(buildHarness(repo));
+      await tester.pumpAndSettle();
+
+      // The first arrow_downward belongs to the first movable row (dives).
+      await tester.tap(find.byIcon(Icons.arrow_downward).first);
+      await tester.pumpAndSettle();
+
+      expect(repo.stored, ['sites', 'dives', 'trips']);
+    });
   });
 }
