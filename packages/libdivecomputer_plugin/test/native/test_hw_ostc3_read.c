@@ -778,16 +778,18 @@ static void check_dive_profile_terminated(void) {
   {
     unsigned char buf[256 + 100 + 4];
     size_t full = build_dive(buf, 100, 1, 1);  // header + 100 samples + FD FD + ready
-    // Drop 16 interior sample bytes, keeping the FD FD + ready tail intact.
-    const size_t drop = 16;
-    memmove(buf + 256 + 40, buf + 256 + 40 + drop, full - (256 + 40 + drop));
-    size_t lossy = full - drop;
+    // Drop one whole mock notification (MOCK_CHUNK bytes), aligned to a
+    // notification boundary inside the sample stream, while keeping the FD FD +
+    // ready tail intact -- the device's BLE bridge losing a single notification.
+    const size_t cut = 256 + 2 * MOCK_CHUNK;  // a notification boundary in the samples
+    memmove(buf + cut, buf + cut + MOCK_CHUNK, full - (cut + MOCK_CHUNK));
+    size_t lossy = full - MOCK_CHUNK;
     unsigned char out[512];
     unsigned int len = 0;
     dc_status_t rc = run_dive(buf, lossy, 380, &len, out, sizeof(out));
     expect(rc == DC_STATUS_SUCCESS,
            "lost-middle-with-FD-FD-tail is accepted as complete (known limitation)");
-    expect(len == 256 + 100 + 2 - drop,
+    expect(len == 256 + 100 + 2 - MOCK_CHUNK,
            "the corrupt short profile is accepted at its received length");
   }
 }
