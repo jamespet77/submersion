@@ -1930,13 +1930,22 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                   if (widget.tooltipBelow) {
                     return touchedSpots.map((_) => null).toList();
                   }
-                  // Return cached result if the same spot index is touched again
+                  // Return cached result if the same spot index is touched again.
+                  // The cache is keyed on spotIndex, but the cached list length
+                  // equals the number of touched bars when it was built. fl_chart
+                  // requires the returned list to match touchedSpots.length, so
+                  // the cache is only valid while the bar count is unchanged --
+                  // the set of rendered lines can change under a parked cursor
+                  // (a metric toggled, or a data provider refreshing), and a
+                  // stale-length cached list throws
+                  // 'tooltipItems and touchedSpots size should be same'.
                   if (touchedSpots.isNotEmpty) {
                     final firstDepthSpot = touchedSpots
                         .where((s) => s.barIndex == 0)
                         .firstOrNull;
                     if (firstDepthSpot != null &&
-                        firstDepthSpot.spotIndex == _lastTooltipSpotIndex) {
+                        firstDepthSpot.spotIndex == _lastTooltipSpotIndex &&
+                        _lastTooltipItems.length == touchedSpots.length) {
                       return _lastTooltipItems;
                     }
                   }
