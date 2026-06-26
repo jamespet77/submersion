@@ -1650,8 +1650,15 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
     // Get collapsed state from provider
     final isExpanded = ref.watch(sacSegmentsSectionExpandedProvider);
 
-    // Use current segments or fall back to time-based
-    final displaySegments = segments ?? analysis.sacSegments!;
+    // Use the selected mode's segments, falling back to the (last-good)
+    // analysis time segments when that mode yields nothing usable. Treat an
+    // empty list like null: activeSegmentsForDiveProvider watches the LIVE
+    // profileAnalysisProvider, so a transient non-null/empty-sacSegments
+    // emission would otherwise leave `segments` empty and render an empty card
+    // even though `analysis` holds a usable last-good list.
+    final displaySegments = (segments == null || segments.isEmpty)
+        ? analysis.sacSegments!
+        : segments;
 
     // Get tank volume for L/min conversion (use first tank with volume)
     final tankVolume = dive.tanks

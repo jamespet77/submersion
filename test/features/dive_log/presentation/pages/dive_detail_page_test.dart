@@ -837,5 +837,77 @@ void main() {
             'card; the section should fall back to the last usable analysis',
       );
     });
+
+    testWidgets(
+      'keeps cached segments when analysis flips to non-null empty sacSegments',
+      (tester) async {
+        final dive = diveWithProfile();
+        final analysis = analysisWithSacSegments();
+        // Flip from a good analysis to a NON-NULL analysis whose sacSegments is
+        // an empty (not null) list -- the case where
+        // activeSegmentsForDiveProvider yields [] for time/depth modes. The
+        // null-coalescing displaySegments fallback (`segments ?? ...`) does not
+        // catch an empty list, so without an empty-aware fallback the card
+        // would render zero rows even though the cached analysis still has a
+        // usable segment.
+        final controllable = StateProvider<ProfileAnalysis?>((ref) => analysis);
+        final base = await getBaseOverrides();
+        final originalOnError = FlutterError.onError;
+        addTearDown(() => FlutterError.onError = originalOnError);
+        FlutterError.onError = (d) {
+          if (d.toString().contains('overflowed')) return;
+          originalOnError?.call(d);
+        };
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              ...base,
+              ...sacOverrides(
+                dive,
+                profileAnalysisProvider(
+                  dive.id,
+                ).overrideWith((ref) async => ref.watch(controllable)),
+              ),
+            ],
+            child: MaterialApp(
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              home: DiveDetailPage(diveId: dive.id, embedded: true),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+
+        // Good analysis -> the single time segment row renders (label '0-5min').
+        expect(find.text('0-5min'), findsOneWidget);
+
+        // Flip to a non-null analysis carrying an EMPTY segment list.
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(DiveDetailPage)),
+        );
+        container.read(controllable.notifier).state = ProfileAnalysis.empty()
+            .copyWith(sacSegments: const <SacSegment>[]);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 1));
+
+        // The live analysis is non-null with empty sacSegments, so
+        // activeSegmentsForDiveProvider yields []. The card must still render
+        // the cached segment rather than an empty list.
+        expect(
+          sacCardFinder(tester),
+          findsOneWidget,
+          reason: 'card stays visible on a non-null empty-segments analysis',
+        );
+        expect(
+          find.text('0-5min'),
+          findsOneWidget,
+          reason:
+              'an empty (non-null) segment list must fall back to the cached '
+              'analysis segments, not render an empty card',
+        );
+      },
+    );
   });
 }
