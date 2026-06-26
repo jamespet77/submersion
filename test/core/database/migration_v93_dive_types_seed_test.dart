@@ -42,6 +42,15 @@ void main() {
     expect(builtIns[4]['id'], 'wreck');
     expect(builtIns.last['id'], 'cavern');
 
+    // created_at / updated_at are seeded from a single computed value, so a
+    // freshly inserted built-in has them identical (PR #430 review).
+    final ts = db
+        .select(
+          "SELECT created_at, updated_at FROM dive_types WHERE id = 'recreational'",
+        )
+        .first;
+    expect(ts['created_at'], ts['updated_at']);
+
     // Pre-existing rows preserved, not overwritten or duplicated.
     final cavern = db.select(
       "SELECT created_at FROM dive_types WHERE id = 'cavern'",

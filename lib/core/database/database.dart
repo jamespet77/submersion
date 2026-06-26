@@ -1159,12 +1159,14 @@ const String kSeedDiveDiveTypesSql = '''
 /// present (synced custom types, or 'cavern' added by the v88 migration) and
 /// makes re-running the seed a no-op. Keep this list in sync with the
 /// onboarding documentation; it is asserted directly in tests.
+///
+/// The timestamp is computed once (the trailing `CROSS JOIN`) and reused for
+/// both `created_at` and `updated_at`, so the two can never diverge across a
+/// `strftime('now')` second boundary.
 const String kSeedBuiltInDiveTypesSql = '''
   INSERT OR IGNORE INTO dive_types
     (id, name, is_built_in, sort_order, created_at, updated_at)
-  SELECT id, name, 1, sort_order,
-    CAST(strftime('%s','now') AS INTEGER) * 1000,
-    CAST(strftime('%s','now') AS INTEGER) * 1000
+  SELECT t.id, t.name, 1, t.sort_order, n.now_ms, n.now_ms
   FROM (
     SELECT 'recreational' AS id, 'Recreational' AS name, 0 AS sort_order
     UNION ALL SELECT 'technical', 'Technical', 1
@@ -1181,7 +1183,8 @@ const String kSeedBuiltInDiveTypesSql = '''
     UNION ALL SELECT 'boat', 'Boat', 12
     UNION ALL SELECT 'liveaboard', 'Liveaboard', 13
     UNION ALL SELECT 'cavern', 'Cavern', 14
-  )
+  ) t
+  CROSS JOIN (SELECT CAST(strftime('%s','now') AS INTEGER) * 1000 AS now_ms) n
 ''';
 
 /// Custom tank presets (user-defined tank configurations)
