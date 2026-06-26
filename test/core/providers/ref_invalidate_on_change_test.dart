@@ -15,8 +15,8 @@ import 'package:submersion/core/providers/ref_invalidate_on_change.dart';
 /// a re-entrant pause/invalidate through the provider's `ref.watch` dependents
 /// and tripping Riverpod's internal pause-state accounting.
 ///
-/// The raw pattern reproduces the crash; [Ref.invalidateSelfWhen] (which pauses
-/// the subscription alongside the provider) must not.
+/// The raw pattern reproduces the crash; [Ref.invalidateSelfWhen] (which defers
+/// the catch-up invalidation past the pause) must not.
 void main() {
   /// Drives [body] in its own error-capturing zone so the assertion that
   /// Riverpod reports through `runBinaryGuarded` -> `Zone.handleUncaughtError`
@@ -110,11 +110,52 @@ void main() {
     },
   );
 
-  test('Ref.invalidateSelfWhen pauses with the provider and does not trip the '
-      'assertion on resume', () async {
+  test('Ref.invalidateSelfWhen defers invalidation past a pause and does not '
+      'trip the assertion on resume', () async {
     final errors = await runPauseResume((ref, changes) {
       ref.invalidateSelfWhen(changes);
     });
     expect(errors, isEmpty);
+  });
+
+  test('Ref.invalidateSelfWhen catches up on resume after a tick emitted while '
+      'paused (broadcast stream is not dropped)', () async {
+    // Drift's tableUpdates is a broadcast stream; a paused broadcast
+    // subscription drops events, so the helper must NOT rely on pausing it.
+    final changes = StreamController<void>.broadcast();
+    addTearDown(changes.close);
+
+    var builds = 0;
+    final provider = FutureProvider.family<int, String>((ref, id) {
+      builds++;
+      ref.invalidateSelfWhen(changes.stream);
+      return builds;
+    });
+
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    final sub = container.listen(provider('d'), (_, _) {});
+    await container.read(provider('d').future);
+    expect(builds, 1);
+
+    // Off-screen: the only listener pauses, so the provider pauses.
+    sub.pause();
+
+    // A background sync writes the table while paused. No rebuild yet, but
+    // the tick must not be lost.
+    changes.add(null);
+    await Future<void>.delayed(Duration.zero);
+    expect(builds, 1);
+
+    // Back on-screen: the missed tick is caught up exactly once (the catch-up
+    // invalidateSelf is scheduled on a microtask from onResume).
+    sub.resume();
+    await pumpEventQueue();
+    expect(
+      builds,
+      2,
+      reason: 'a tick emitted while paused must refresh on resume',
+    );
   });
 }
