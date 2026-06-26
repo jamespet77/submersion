@@ -545,6 +545,9 @@ void main() {
       final dive = diveWithProfile();
       final base = await getBaseOverrides();
       final originalOnError = FlutterError.onError;
+      // Guaranteed restore even if the test throws before the end, so the
+      // global handler never leaks into later tests.
+      addTearDown(() => FlutterError.onError = originalOnError);
       FlutterError.onError = (d) {
         if (d.toString().contains('overflowed')) return;
         originalOnError?.call(d);
@@ -570,7 +573,6 @@ void main() {
       );
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
-      FlutterError.onError = originalOnError;
 
       // Genuine null: the last-good cache must not fabricate a panel for a dive
       // that has no analysis.
@@ -590,6 +592,9 @@ void main() {
       final controllable = StateProvider<ProfileAnalysis?>((ref) => analysis);
       final base = await getBaseOverrides();
       final originalOnError = FlutterError.onError;
+      // Guaranteed restore even if the test throws before the end, so the
+      // global handler never leaks into later tests.
+      addTearDown(() => FlutterError.onError = originalOnError);
       FlutterError.onError = (d) {
         if (d.toString().contains('overflowed')) return;
         originalOnError?.call(d);
@@ -628,7 +633,6 @@ void main() {
       container.read(controllable.notifier).state = null;
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
-      FlutterError.onError = originalOnError;
 
       // The provider has genuinely settled to AsyncData(null) -- so the cards
       // below survive only because of the last-good fallback, not a loading
