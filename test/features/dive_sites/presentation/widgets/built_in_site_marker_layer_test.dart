@@ -66,6 +66,26 @@ void main() {
     );
   });
 
+  testWidgets('renders a cluster bubble for co-located built-in sites', (
+    tester,
+  ) async {
+    // Two built-in sites at the same point reliably cluster, exercising the
+    // recessive cluster-bubble builder.
+    await tester.pumpWidget(
+      _host(
+        BuiltInSiteMarkerLayer(
+          sites: [ext('a', 10.0, 20.0), ext('b', 10.0, 20.0)],
+          selectedExternalId: 'a',
+          onTap: (_) {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // The cluster bubble shows the count of clustered built-in sites.
+    expect(find.text('2'), findsOneWidget);
+  });
+
   testWidgets('renders nothing when there are no sites', (tester) async {
     await tester.pumpWidget(
       _host(

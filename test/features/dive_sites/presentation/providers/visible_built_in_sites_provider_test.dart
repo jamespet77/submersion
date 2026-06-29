@@ -15,11 +15,25 @@ ExternalDiveSite ext(String id, double lat, double lng) => ExternalDiveSite(
 );
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   test('showBuiltInSitesProvider defaults to false', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
     expect(container.read(showBuiltInSitesProvider), isFalse);
   });
+
+  test(
+    'builtInSitesProvider loads bundled sites that all have coordinates',
+    () async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final sites = await container.read(builtInSitesProvider.future);
+      expect(sites, isNotEmpty);
+      expect(sites.every((s) => s.hasCoordinates), isTrue);
+    },
+  );
 
   test(
     'visibleBuiltInSitesProvider removes built-ins matching user sites',
