@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
@@ -9,6 +11,20 @@ import 'package:submersion/core/services/logger_service.dart';
 
 /// Sync data format version for compatibility checking
 const int syncFormatVersion = 2;
+
+/// Unique-ish suffix for base temp files (deviceId + seq already scope them).
+const _baseTempUuid = Uuid();
+
+/// Result of streaming a base snapshot to a temp file. The caller owns [path]
+/// and must delete it. [byteLength] is the on-disk base size (== manifest
+/// `baseBytes`); [rowCount] is the total rows written (0 => an empty library).
+typedef StreamedBase = ({
+  String path,
+  int byteLength,
+  int exportedAt,
+  String? toHlc,
+  int rowCount,
+});
 
 /// Value serializer used only for sync export/import of BLOB-bearing entities.
 ///
@@ -474,6 +490,301 @@ class SyncDataSerializer {
       uploadNonce: uploadNonce,
       epochId: epochId,
     );
+  }
+
+  /// Ordered table descriptors for a base snapshot, matching SyncData.toJson.
+  /// `table != null` => keyset-page by `id`; otherwise `full` loads the whole
+  /// (small, composite-key) table once. `blob` selects the base64 BLOB
+  /// serializer (media / certifications / diveDataSources).
+  List<
+    ({
+      String key,
+      TableInfo<Table, dynamic>? table,
+      bool blob,
+      Future<List<Map<String, dynamic>>> Function()? full,
+    })
+  >
+  get _baseTables => [
+    (key: 'divers', table: _db.divers, blob: false, full: null),
+    (key: 'diverSettings', table: _db.diverSettings, blob: false, full: null),
+    (key: 'dives', table: _db.dives, blob: false, full: null),
+    (key: 'diveProfiles', table: _db.diveProfiles, blob: false, full: null),
+    (key: 'diveTanks', table: _db.diveTanks, blob: false, full: null),
+    (
+      key: 'diveEquipment',
+      table: null,
+      blob: false,
+      full: () => _exportDiveEquipment(null),
+    ),
+    (key: 'diveWeights', table: _db.diveWeights, blob: false, full: null),
+    (key: 'diveSites', table: _db.diveSites, blob: false, full: null),
+    (key: 'equipment', table: _db.equipment, blob: false, full: null),
+    (key: 'equipmentSets', table: _db.equipmentSets, blob: false, full: null),
+    (
+      key: 'equipmentSetItems',
+      table: null,
+      blob: false,
+      full: () => _exportEquipmentSetItems(null),
+    ),
+    (key: 'media', table: _db.media, blob: true, full: null),
+    (key: 'buddies', table: _db.buddies, blob: false, full: null),
+    (key: 'diveBuddies', table: _db.diveBuddies, blob: false, full: null),
+    (key: 'certifications', table: _db.certifications, blob: true, full: null),
+    (key: 'courses', table: _db.courses, blob: false, full: null),
+    (key: 'serviceRecords', table: _db.serviceRecords, blob: false, full: null),
+    (key: 'diveCenters', table: _db.diveCenters, blob: false, full: null),
+    (key: 'trips', table: _db.trips, blob: false, full: null),
+    (
+      key: 'liveaboardDetails',
+      table: _db.liveaboardDetailRecords,
+      blob: false,
+      full: null,
+    ),
+    (
+      key: 'itineraryDays',
+      table: _db.tripItineraryDays,
+      blob: false,
+      full: null,
+    ),
+    (key: 'tags', table: _db.tags, blob: false, full: null),
+    (key: 'diveTags', table: _db.diveTags, blob: false, full: null),
+    (key: 'diveDiveTypes', table: _db.diveDiveTypes, blob: false, full: null),
+    // diveTypes/species/fieldPresets exclude built-in reference data
+    // (isBuiltIn=false), so reuse their exporters rather than paging all rows.
+    (
+      key: 'diveTypes',
+      table: null,
+      blob: false,
+      full: () => _exportDiveTypes(null),
+    ),
+    (key: 'tankPresets', table: _db.tankPresets, blob: false, full: null),
+    (key: 'diveComputers', table: _db.diveComputers, blob: false, full: null),
+    (
+      key: 'tankPressureProfiles',
+      table: _db.tankPressureProfiles,
+      blob: false,
+      full: null,
+    ),
+    (key: 'tideRecords', table: _db.tideRecords, blob: false, full: null),
+    (
+      key: 'settings',
+      table: null,
+      blob: false,
+      full: () => _exportSettings(null),
+    ),
+    (
+      key: 'species',
+      table: null,
+      blob: false,
+      full: () => _exportSpecies(null),
+    ),
+    (key: 'sightings', table: _db.sightings, blob: false, full: null),
+    (
+      key: 'diveProfileEvents',
+      table: _db.diveProfileEvents,
+      blob: false,
+      full: null,
+    ),
+    (key: 'gasSwitches', table: _db.gasSwitches, blob: false, full: null),
+    (
+      key: 'diveCustomFields',
+      table: _db.diveCustomFields,
+      blob: false,
+      full: null,
+    ),
+    (
+      key: 'diveDataSources',
+      table: _db.diveDataSources,
+      blob: true,
+      full: null,
+    ),
+    (key: 'siteSpecies', table: _db.siteSpecies, blob: false, full: null),
+    (key: 'csvPresets', table: _db.csvPresets, blob: false, full: null),
+    (key: 'viewConfigs', table: _db.viewConfigs, blob: false, full: null),
+    (
+      key: 'fieldPresets',
+      table: null,
+      blob: false,
+      full: () => _exportFieldPresets(null),
+    ),
+  ];
+
+  /// Test seam: the base table order, asserted equal to SyncData.toJson keys so
+  /// a dropped/added/misordered entity is caught at build time.
+  static List<String> get debugBaseTableKeys =>
+      SyncDataSerializer()._baseTables.map((t) => t.key).toList();
+
+  /// One keyset page (`id > cursor`, ascending, up to [limit]) of an id-PK
+  /// table, as JSON rows identical to the table's own `toJson` (BLOB serializer
+  /// applied for BLOB tables). O(n) total across pages; never loads the whole
+  /// table into memory.
+  Future<List<Map<String, dynamic>>> _pageBaseTableById(
+    TableInfo<Table, dynamic> table, {
+    required String? cursor,
+    required int limit,
+    required bool blob,
+  }) async {
+    final name = table.actualTableName;
+    final rows = cursor == null
+        ? await _db
+              .customSelect(
+                'SELECT * FROM "$name" ORDER BY id LIMIT ?',
+                variables: [Variable.withInt(limit)],
+              )
+              .get()
+        : await _db
+              .customSelect(
+                'SELECT * FROM "$name" WHERE id > ? ORDER BY id LIMIT ?',
+                variables: [
+                  Variable.withString(cursor),
+                  Variable.withInt(limit),
+                ],
+              )
+              .get();
+    return rows.map((r) {
+      final data = table.map(r.data) as dynamic;
+      return (blob
+              ? data.toJson(serializer: _syncBlobSerializer)
+              : data.toJson())
+          as Map<String, dynamic>;
+    }).toList();
+  }
+
+  /// Streams a full base snapshot to a temp file as exactly
+  /// `jsonEncode(SyncPayload.toJson())`, in bounded memory (one keyset page +
+  /// one write). Replaces `exportChangeset(null)` + `encodeChangeset` on the
+  /// publish/compact path, whose full-graph materialization OOM-crashed iOS on
+  /// large libraries (#358, write side). Rows stream in `id` order; the internal
+  /// `checksum` is patched in over the streamed `data` bytes via a single
+  /// seek-back so there is no second DB scan. Caller owns and must delete [path].
+  Future<StreamedBase> exportBaseToTempFile({
+    required String deviceId,
+    required List<DeletionLogData> deletions,
+    String? epochId,
+    String? uploadNonce,
+    int? seq,
+    int pageSize = 2000,
+    DateTime Function() now = DateTime.now,
+    Future<Directory> Function()? tempDir,
+  }) async {
+    final dir = await (tempDir?.call() ?? Future.value(Directory.systemTemp));
+    final path =
+        '${dir.path}/ssv1_base_${deviceId}_${seq ?? 0}.${_baseTempUuid.v4()}.json';
+    final raf = await File(path).open(mode: FileMode.write);
+    final digestSink = _Sha256DigestSink();
+    final dataHash = sha256.startChunkedConversion(digestSink);
+    final exportedAt = now().millisecondsSinceEpoch;
+    String? maxRowHlc;
+    var rowCount = 0;
+
+    // Writes + hashes only the `data` object bytes (matches _computeChecksum,
+    // which hashes jsonEncode(data.toJson())).
+    Future<void> writeData(String s) async {
+      final bytes = utf8.encode(s);
+      dataHash.add(bytes);
+      await raf.writeFrom(bytes);
+    }
+
+    try {
+      // Header up to (but not including) the checksum value.
+      await raf.writeString(
+        '{"version":$syncFormatVersion,"exportedAt":$exportedAt,'
+        '"deviceId":${jsonEncode(deviceId)},"lastSyncTimestamp":null,'
+        '"checksum":"',
+      );
+      final checksumOffset = await raf.position();
+      await raf.writeFrom(List.filled(64, 0x30)); // '0'*64 placeholder
+      await raf.writeString('","data":');
+
+      // ---- data object (hashed) ----
+      await writeData('{');
+      final tables = _baseTables;
+      for (var t = 0; t < tables.length; t++) {
+        final spec = tables[t];
+        if (t > 0) await writeData(',');
+        await writeData('${jsonEncode(spec.key)}:[');
+        var firstRow = true;
+
+        Future<void> emit(Map<String, dynamic> row) async {
+          if (!firstRow) await writeData(',');
+          firstRow = false;
+          rowCount++;
+          final hlc = row['hlc'];
+          if (hlc is String &&
+              (maxRowHlc == null || hlc.compareTo(maxRowHlc!) > 0)) {
+            maxRowHlc = hlc;
+          }
+          await writeData(jsonEncode(row));
+        }
+
+        if (spec.table != null) {
+          String? cursor;
+          while (true) {
+            final rows = await _pageBaseTableById(
+              spec.table!,
+              cursor: cursor,
+              limit: pageSize,
+              blob: spec.blob,
+            );
+            for (final row in rows) {
+              await emit(row);
+            }
+            if (rows.length < pageSize) break;
+            cursor = rows.last['id'] as String;
+          }
+        } else {
+          for (final row in await spec.full!()) {
+            await emit(row);
+          }
+        }
+        await writeData(']');
+      }
+      await writeData('}');
+
+      // ---- trailer (not part of the data checksum) ----
+      final toHlc = _maxHlc([maxRowHlc, ...deletions.map((d) => d.hlc)]);
+      final tail = <String, dynamic>{
+        'deletions': _groupDeletions(
+          deletions,
+        ).map((k, v) => MapEntry(k, v.map((d) => d.toJson()).toList())),
+        'uploadNonce': uploadNonce,
+        'epochId': epochId,
+        'seq': seq,
+        'baseSeq': null,
+        'sinceHlc': null,
+        'toHlc': toHlc,
+      };
+      final tailBuf = StringBuffer();
+      tail.forEach(
+        (k, v) => tailBuf.write(',${jsonEncode(k)}:${jsonEncode(v)}'),
+      );
+      tailBuf.write('}');
+      await raf.writeString(tailBuf.toString());
+
+      // ---- patch the checksum placeholder with the real data digest ----
+      dataHash.close();
+      final endPos = await raf.position();
+      await raf.setPosition(checksumOffset);
+      await raf.writeFrom(utf8.encode(digestSink.value.toString()));
+      await raf.setPosition(endPos);
+      await raf.flush();
+      await raf.close();
+
+      final byteLength = await File(path).length();
+      return (
+        path: path,
+        byteLength: byteLength,
+        exportedAt: exportedAt,
+        toHlc: toHlc,
+        rowCount: rowCount,
+      );
+    } catch (_) {
+      await raf.close();
+      try {
+        await File(path).delete();
+      } catch (_) {}
+      rethrow;
+    }
   }
 
   /// Group a flat deletion list into the payload's entityType -> deletions map.
@@ -2232,4 +2543,17 @@ class SyncDataSerializer {
     }
     return merged;
   }
+}
+
+/// Captures the single digest a chunked SHA-256 conversion emits at close.
+/// Mirrors the sink in base_part_file_sink.dart (crypto does not export
+/// AccumulatorSink).
+class _Sha256DigestSink implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) => value = data;
+
+  @override
+  void close() {}
 }
