@@ -26,6 +26,11 @@ android {
     namespace = "com.submersion.libdivecomputer"
     compileSdk = 34
 
+    // AIDL for the :dc download-service IPC contract (issue #318).
+    buildFeatures {
+        aidl true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
