@@ -159,7 +159,11 @@ final visibilityDistributionProvider =
       _keepAliveWithExpiry(ref);
       final repository = ref.watch(statisticsRepositoryProvider);
       final currentDiverId = ref.watch(currentDiverIdProvider);
-      return repository.getVisibilityDistribution(diverId: currentDiverId);
+      final filter = ref.watch(statisticsFilterProvider);
+      return repository.getVisibilityDistribution(
+        diverId: currentDiverId,
+        filter: filter,
+      );
     });
 
 final waterTypeDistributionProvider = FutureProvider<List<DistributionSegment>>(
@@ -167,7 +171,11 @@ final waterTypeDistributionProvider = FutureProvider<List<DistributionSegment>>(
     _keepAliveWithExpiry(ref);
     final repository = ref.watch(statisticsRepositoryProvider);
     final currentDiverId = ref.watch(currentDiverIdProvider);
-    return repository.getWaterTypeDistribution(diverId: currentDiverId);
+    final filter = ref.watch(statisticsFilterProvider);
+    return repository.getWaterTypeDistribution(
+      diverId: currentDiverId,
+      filter: filter,
+    );
   },
 );
 
@@ -176,7 +184,11 @@ final entryMethodDistributionProvider =
       _keepAliveWithExpiry(ref);
       final repository = ref.watch(statisticsRepositoryProvider);
       final currentDiverId = ref.watch(currentDiverIdProvider);
-      return repository.getEntryMethodDistribution(diverId: currentDiverId);
+      final filter = ref.watch(statisticsFilterProvider);
+      return repository.getEntryMethodDistribution(
+        diverId: currentDiverId,
+        filter: filter,
+      );
     });
 
 final temperatureByMonthProvider =

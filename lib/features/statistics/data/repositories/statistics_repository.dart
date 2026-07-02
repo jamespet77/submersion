@@ -4,6 +4,8 @@ import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
 import 'package:submersion/core/utils/gas_compressibility.dart';
+import 'package:submersion/features/dive_log/domain/models/dive_filter_state.dart';
+import 'package:submersion/features/statistics/data/dive_filter_sql.dart';
 import 'package:submersion/features/statistics/domain/entities/species_statistics.dart';
 
 /// Data point for line chart trends
@@ -55,6 +57,17 @@ class DistributionSegment {
 class StatisticsRepository {
   AppDatabase get _db => DatabaseService.instance.database;
   final _log = LoggerService.forClass(StatisticsRepository);
+
+  /// Builds the `AND <alias>.id IN (<subquery>)` fragment + raw params for a
+  /// stats filter. Empty (no-op) when the filter has no active axes.
+  ({String clause, List<Object?> params}) _diveFilter(
+    DiveFilterState filter, {
+    String alias = 'dives',
+  }) {
+    final f = buildFilteredDiveIdSubquery(filter);
+    if (f.subquery.isEmpty) return (clause: '', params: const <Object?>[]);
+    return (clause: 'AND $alias.id IN (${f.subquery})', params: f.params);
+  }
 
   // ============================================================================
   // Gas Statistics
@@ -822,17 +835,19 @@ class StatisticsRepository {
   /// Get visibility distribution
   Future<List<DistributionSegment>> getVisibilityDistribution({
     String? diverId,
+    DiveFilterState filter = const DiveFilterState(),
   }) async {
     try {
       final diverFilter = diverId != null ? 'AND diver_id = ?' : '';
-      final params = diverId != null ? [diverId] : <dynamic>[];
+      final df = _diveFilter(filter, alias: 'dives');
+      final params = diverId != null ? [diverId, ...df.params] : [...df.params];
 
       final results = await _db.customSelect('''
         SELECT
           visibility,
           COUNT(*) AS count
         FROM dives
-        WHERE visibility IS NOT NULL AND visibility != '' $diverFilter
+        WHERE visibility IS NOT NULL AND visibility != '' $diverFilter ${df.clause}
         GROUP BY visibility
         ORDER BY count DESC
         ''', variables: params.map((p) => Variable(p)).toList()).get();
@@ -864,17 +879,19 @@ class StatisticsRepository {
   /// Get water type distribution (salt/fresh)
   Future<List<DistributionSegment>> getWaterTypeDistribution({
     String? diverId,
+    DiveFilterState filter = const DiveFilterState(),
   }) async {
     try {
       final diverFilter = diverId != null ? 'AND diver_id = ?' : '';
-      final params = diverId != null ? [diverId] : <dynamic>[];
+      final df = _diveFilter(filter, alias: 'dives');
+      final params = diverId != null ? [diverId, ...df.params] : [...df.params];
 
       final results = await _db.customSelect('''
         SELECT
           COALESCE(water_type, 'Unknown') AS water_type,
           COUNT(*) AS count
         FROM dives
-        WHERE water_type IS NOT NULL AND water_type != '' $diverFilter
+        WHERE water_type IS NOT NULL AND water_type != '' $diverFilter ${df.clause}
         GROUP BY water_type
         ORDER BY count DESC
         ''', variables: params.map((p) => Variable(p)).toList()).get();
@@ -906,17 +923,19 @@ class StatisticsRepository {
   /// Get entry method distribution
   Future<List<DistributionSegment>> getEntryMethodDistribution({
     String? diverId,
+    DiveFilterState filter = const DiveFilterState(),
   }) async {
     try {
       final diverFilter = diverId != null ? 'AND diver_id = ?' : '';
-      final params = diverId != null ? [diverId] : <dynamic>[];
+      final df = _diveFilter(filter, alias: 'dives');
+      final params = diverId != null ? [diverId, ...df.params] : [...df.params];
 
       final results = await _db.customSelect('''
         SELECT
           entry_method,
           COUNT(*) AS count
         FROM dives
-        WHERE entry_method IS NOT NULL AND entry_method != '' $diverFilter
+        WHERE entry_method IS NOT NULL AND entry_method != '' $diverFilter ${df.clause}
         GROUP BY entry_method
         ORDER BY count DESC
         ''', variables: params.map((p) => Variable(p)).toList()).get();

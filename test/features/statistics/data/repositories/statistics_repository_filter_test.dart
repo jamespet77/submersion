@@ -1,0 +1,78 @@
+import 'package:drift/drift.dart' hide isNull, isNotNull;
+import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/database/database.dart';
+import 'package:submersion/features/dive_log/domain/models/dive_filter_state.dart';
+import 'package:submersion/features/statistics/data/repositories/statistics_repository.dart';
+
+import '../../../../helpers/test_database.dart';
+
+void main() {
+  late AppDatabase db;
+  late StatisticsRepository repo;
+
+  setUp(() async {
+    db = await setUpTestDatabase();
+    repo = StatisticsRepository();
+  });
+  tearDown(() async {
+    await tearDownTestDatabase();
+  });
+
+  final now = DateTime(2026, 6, 1).millisecondsSinceEpoch;
+
+  Future<void> dive(String id, {String? visibility}) async {
+    await db
+        .into(db.dives)
+        .insert(
+          DivesCompanion(
+            id: Value(id),
+            diveDateTime: Value(now),
+            visibility: Value(visibility),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+  }
+
+  Future<void> tag(String id) async {
+    await db
+        .into(db.tags)
+        .insert(
+          TagsCompanion(
+            id: Value(id),
+            name: Value(id),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
+  }
+
+  Future<void> link(String diveId, String tagId) async {
+    await db
+        .into(db.diveTags)
+        .insert(
+          DiveTagsCompanion(
+            id: Value('$diveId-$tagId'),
+            diveId: Value(diveId),
+            tagId: Value(tagId),
+            createdAt: Value(now),
+          ),
+        );
+  }
+
+  test('visibility distribution respects a tag filter', () async {
+    await dive('a', visibility: 'Good');
+    await dive('b', visibility: 'Poor');
+    await tag('dry');
+    await link('a', 'dry');
+
+    final all = await repo.getVisibilityDistribution();
+    expect(all.length, 2);
+
+    final filtered = await repo.getVisibilityDistribution(
+      filter: const DiveFilterState(tagIds: ['dry']),
+    );
+    expect(filtered.length, 1);
+    expect(filtered.first.label, 'Good');
+  });
+}
