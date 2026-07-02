@@ -48,17 +48,27 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
 
   Future<void> _confirm() async {
     setState(() => _working = true);
+    // Captured before the await so nothing touches [context] after the pop.
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     try {
       final outcome = await ref
           .read(diveMergeServiceProvider)
           .apply(widget.diveIds);
       if (mounted) Navigator.of(context).pop(outcome);
     } catch (_) {
+      // The transaction rolled back -- nothing changed. Surface the failure
+      // to the user instead of rethrowing (#449 design spec).
       if (mounted) {
         setState(() => _working = false);
         Navigator.of(context).pop(null);
       }
-      rethrow;
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(l10n.diveLog_combine_error),
+          duration: const Duration(seconds: 4),
+        ),
+      );
     }
   }
 

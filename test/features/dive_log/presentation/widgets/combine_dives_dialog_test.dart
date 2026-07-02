@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/constants/map_style.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
+import 'package:submersion/features/dive_log/data/services/dive_merge_service.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart'
     as domain;
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
@@ -38,6 +39,17 @@ class _FakeDiveRepository implements DiveRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// Fake [DiveMergeService] whose `apply` always fails.
+class _ThrowingMergeService implements DiveMergeService {
+  @override
+  Future<DiveMergeOutcome> apply(List<String> diveIds) async {
+    throw StateError('apply failed');
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 /// Minimal SettingsNotifier override that returns default AppSettings.
 class _FakeSettingsNotifier extends StateNotifier<AppSettings>
     implements SettingsNotifier {
@@ -56,6 +68,7 @@ class _FakeSettingsNotifier extends StateNotifier<AppSettings>
 Future<void> pumpCombineDialog(
   WidgetTester tester, {
   required List<domain.Dive> dives,
+  DiveMergeService? mergeService,
 }) async {
   tester.view.physicalSize = const Size(1024, 768);
   tester.view.devicePixelRatio = 1.0;
@@ -71,6 +84,8 @@ Future<void> pumpCombineDialog(
       overrides: [
         diveRepositoryProvider.overrideWithValue(_FakeDiveRepository(dives)),
         settingsProvider.overrideWith((ref) => _FakeSettingsNotifier()),
+        if (mergeService != null)
+          diveMergeServiceProvider.overrideWithValue(mergeService),
       ],
       child: MaterialApp(
         localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -125,5 +140,28 @@ void main() {
     expect(find.text('Combine into one dive'), findsNothing);
     // 2 dives selected -> hint at the existing per-dive merge action.
     expect(find.textContaining('Merge with another dive'), findsOneWidget);
+  });
+
+  testWidgets('apply failure closes dialog and shows error snackbar', (
+    tester,
+  ) async {
+    await pumpCombineDialog(
+      tester,
+      dives: [
+        diveAt('a', DateTime.utc(2026, 7, 1, 9)),
+        diveAt('b', DateTime.utc(2026, 7, 1, 10)),
+      ],
+      mergeService: _ThrowingMergeService(),
+    );
+
+    await tester.tap(find.text('Combine into one dive'));
+    await tester.pumpAndSettle();
+
+    // Dialog is gone; failure is surfaced as an error snackbar.
+    expect(find.text('Combine dives'), findsNothing);
+    expect(
+      find.text("Couldn't combine the dives. Nothing was changed."),
+      findsOneWidget,
+    );
   });
 }

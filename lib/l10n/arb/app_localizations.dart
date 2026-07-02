@@ -5021,6 +5021,12 @@ abstract class AppLocalizations {
   /// **'Details come from the earliest dive, with blanks filled from later dives. Notes are combined. Tanks, gear, buddies, tags, and sightings are all kept.'**
   String get diveLog_combine_dataNote;
 
+  /// No description provided for @diveLog_combine_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t combine the dives. Nothing was changed.'**
+  String get diveLog_combine_error;
+
   /// No description provided for @diveLog_combine_gapLabel.
   ///
   /// In en, this message translates to:

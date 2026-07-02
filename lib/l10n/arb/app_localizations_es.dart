@@ -2957,6 +2957,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Details come from the earliest dive, with blanks filled from later dives. Notes are combined. Tanks, gear, buddies, tags, and sightings are all kept.';
 
   @override
+  String get diveLog_combine_error =>
+      'Couldn\'t combine the dives. Nothing was changed.';
+
+  @override
   String diveLog_combine_gapLabel(String duration) {
     return 'Surface interval: $duration';
   }
