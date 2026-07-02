@@ -3631,10 +3631,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_edit_label_diveNumber => 'Merules sz.';
 
   @override
-  String get diveLog_edit_label_diveName => 'Name';
+  String get diveLog_edit_label_diveName => 'Név';
 
   @override
-  String get diveLog_edit_diveNamePlaceholder => 'Optional name for this dive';
+  String get diveLog_edit_diveNamePlaceholder =>
+      'Opcionális név ehhez a merüléshez';
 
   @override
   String get diveLog_edit_hint_diveNumber =>

@@ -3548,10 +3548,10 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_edit_label_diveNumber => 'מס\' צלילה';
 
   @override
-  String get diveLog_edit_label_diveName => 'Name';
+  String get diveLog_edit_label_diveName => 'שם';
 
   @override
-  String get diveLog_edit_diveNamePlaceholder => 'Optional name for this dive';
+  String get diveLog_edit_diveNamePlaceholder => 'שם אופציונלי לצלילה זו';
 
   @override
   String get diveLog_edit_hint_diveNumber => 'מוקצה אוטומטית אם נותר ריק';

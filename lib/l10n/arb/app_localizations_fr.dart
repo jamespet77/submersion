@@ -3663,10 +3663,11 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diveLog_edit_label_diveNumber => 'No. de plongee';
 
   @override
-  String get diveLog_edit_label_diveName => 'Name';
+  String get diveLog_edit_label_diveName => 'Nom';
 
   @override
-  String get diveLog_edit_diveNamePlaceholder => 'Optional name for this dive';
+  String get diveLog_edit_diveNamePlaceholder =>
+      'Nom facultatif pour cette plongée';
 
   @override
   String get diveLog_edit_hint_diveNumber =>

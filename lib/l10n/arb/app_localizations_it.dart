@@ -3646,10 +3646,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get diveLog_edit_label_diveNumber => 'N. immersione';
 
   @override
-  String get diveLog_edit_label_diveName => 'Name';
+  String get diveLog_edit_label_diveName => 'Nome';
 
   @override
-  String get diveLog_edit_diveNamePlaceholder => 'Optional name for this dive';
+  String get diveLog_edit_diveNamePlaceholder =>
+      'Nome facoltativo per questa immersione';
 
   @override
   String get diveLog_edit_hint_diveNumber =>

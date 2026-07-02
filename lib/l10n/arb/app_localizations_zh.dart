@@ -3469,10 +3469,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_edit_label_diveNumber => '潜水编号';
 
   @override
-  String get diveLog_edit_label_diveName => 'Name';
+  String get diveLog_edit_label_diveName => '名称';
 
   @override
-  String get diveLog_edit_diveNamePlaceholder => 'Optional name for this dive';
+  String get diveLog_edit_diveNamePlaceholder => '此次潜水的可选名称';
 
   @override
   String get diveLog_edit_hint_diveNumber => '留空则自动分配';
