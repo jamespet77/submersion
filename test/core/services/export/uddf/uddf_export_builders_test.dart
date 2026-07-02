@@ -454,6 +454,37 @@ void main() {
       },
     );
 
+    test('omits divename when the name is whitespace-only', () {
+      final dive = Dive(
+        id: 'dive-ws',
+        dateTime: DateTime(2026, 3, 28),
+        name: '   ',
+      );
+
+      final builder = XmlBuilder();
+      builder.element(
+        'root',
+        nest: () {
+          UddfExportBuilders.buildDiveElement(
+            builder,
+            dive,
+            null,
+            const [],
+            const [],
+            const [],
+            const [],
+            null,
+            const [],
+          );
+        },
+      );
+
+      expect(
+        builder.buildDocument().toXmlString(),
+        isNot(contains('<divename>')),
+      );
+    });
+
     test('omits divename when the dive is unnamed', () {
       final dive = Dive(id: 'dive-unnamed', dateTime: DateTime(2026, 3, 28));
 

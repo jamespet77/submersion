@@ -223,6 +223,15 @@ class Dive extends Equatable {
   /// Effective start time of the dive (entryTime if set, otherwise dateTime)
   DateTime get effectiveEntryTime => entryTime ?? dateTime;
 
+  /// User-defined name, normalized for display: trimmed, with empty or
+  /// whitespace-only values treated as unset (null). In-app writes never
+  /// store such values, but synced rows from other writers can; display
+  /// fallbacks and exports should use this instead of [name].
+  String? get effectiveName {
+    final trimmed = name?.trim();
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+  }
+
   /// Display name for the representative (first) dive type.
   String get diveTypeName => diveType?.name ?? diveTypeDisplayName(diveTypeId);
 

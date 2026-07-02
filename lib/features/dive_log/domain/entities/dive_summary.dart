@@ -85,6 +85,14 @@ class DiveSummary extends Equatable {
     );
   }
 
+  /// User-defined name, normalized for display: trimmed, with empty or
+  /// whitespace-only values treated as unset (null). Mirrors
+  /// [Dive.effectiveName].
+  String? get effectiveName {
+    final trimmed = name?.trim();
+    return (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+  }
+
   /// Formatted location string matching DiveSite.locationString
   String? get siteLocation {
     final parts = <String>[];

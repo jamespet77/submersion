@@ -136,10 +136,10 @@ class UddfExportBuilders {
             if (dive.diveNumber != null) {
               builder.element('divenumber', nest: dive.diveNumber.toString());
             }
-            if (dive.name != null && dive.name!.isNotEmpty) {
+            if (dive.effectiveName != null) {
               // Custom dive-name extension (not UDDF standard, consistent
               // with the existing custom elements in informationbeforedive).
-              builder.element('divename', nest: dive.name);
+              builder.element('divename', nest: dive.effectiveName);
             }
             if (dive.entryTime != null) {
               builder.element(

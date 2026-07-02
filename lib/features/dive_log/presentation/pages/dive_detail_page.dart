@@ -656,7 +656,7 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  dive.name ??
+                  dive.effectiveName ??
                       dive.site?.name ??
                       context.l10n.diveLog_listPage_unknownSite,
                   style: Theme.of(
@@ -664,7 +664,7 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                 ),
-                if (dive.name != null && dive.site != null)
+                if (dive.effectiveName != null && dive.site != null)
                   Text(
                     dive.site!.name,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -829,12 +829,12 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      dive.name ??
+                      dive.effectiveName ??
                           dive.site?.name ??
                           context.l10n.diveLog_listPage_unknownSite,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
-                    if (dive.name != null && dive.site != null)
+                    if (dive.effectiveName != null && dive.site != null)
                       Text(
                         dive.site!.name,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(

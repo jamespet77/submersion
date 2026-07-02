@@ -25,4 +25,33 @@ void main() {
     // Unnamed dive exports an empty cell, never a site fallback.
     expect(lines[2].split(',')[nameIdx], isEmpty);
   });
+
+  test('name newlines are normalized and whitespace-only exports empty', () {
+    final dives = [
+      Dive(
+        id: 'd1',
+        diveNumber: 60,
+        dateTime: DateTime(2026, 3, 28, 10, 0),
+        name: 'Wreck\npenetration',
+      ),
+      Dive(
+        id: 'd2',
+        diveNumber: 61,
+        dateTime: DateTime(2026, 3, 29, 10, 0),
+        name: '   ',
+      ),
+    ];
+
+    final csv = CsvExportService().generateDivesCsvContent(dives);
+    final lines = csv.trim().split('\n');
+
+    final headers = lines.first.split(',');
+    final nameIdx = headers.indexOf('Name');
+
+    // Embedded newlines are replaced so each record stays on one line,
+    // matching how notes are exported.
+    expect(lines[1].split(',')[nameIdx], 'Wreck penetration');
+    // Whitespace-only names behave as unset.
+    expect(lines[2].split(',')[nameIdx], isEmpty);
+  });
 }

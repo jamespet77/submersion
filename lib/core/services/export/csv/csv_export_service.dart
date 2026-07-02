@@ -154,7 +154,7 @@ class CsvExportService {
       final tank = dive.tanks.isNotEmpty ? dive.tanks.first : null;
       rows.add([
         dive.diveNumber ?? '',
-        dive.name ?? '',
+        dive.effectiveName?.replaceAll('\n', ' ') ?? '',
         _dateFormat.format(dive.dateTime),
         _timeFormat.format(dive.dateTime),
         dive.site?.name ?? '',

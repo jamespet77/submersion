@@ -26,7 +26,7 @@ extension DiveFieldExtractor on DiveField {
       case DiveField.siteName:
         return dive.site?.name;
       case DiveField.diveName:
-        return dive.name ?? dive.site?.name;
+        return dive.effectiveName ?? dive.site?.name;
       case DiveField.maxDepth:
         return dive.maxDepth;
       case DiveField.avgDepth:
@@ -150,7 +150,7 @@ extension DiveFieldExtractor on DiveField {
       case DiveField.siteName:
         return summary.siteName;
       case DiveField.diveName:
-        return summary.name ?? summary.siteName;
+        return summary.effectiveName ?? summary.siteName;
       case DiveField.maxDepth:
         return summary.maxDepth;
       case DiveField.avgDepth:
