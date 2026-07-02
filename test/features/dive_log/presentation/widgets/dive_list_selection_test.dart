@@ -1,10 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/constants/list_view_mode.dart';
+import 'package:submersion/core/providers/provider.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_summary.dart';
+import 'package:submersion/features/dive_log/presentation/pages/dive_list_page.dart';
+import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/dive_list_content.dart';
+import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
+import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
+
+import '../../../../helpers/mock_providers.dart';
+import '../../../../helpers/test_app.dart';
 
 DiveSummary summary(String id, [DateTime? dt]) =>
     DiveSummary(id: id, dateTime: dt ?? DateTime(2026, 1, 1), sortTimestamp: 0);
+
+Dive _makeDive({required String id, DiveSite? site}) {
+  return Dive(id: id, dateTime: DateTime(2026, 1, 1), site: site);
+}
+
+/// Stand-in for [PaginatedDiveListNotifier] that serves a fixed list of
+/// dives without touching the database. Mirrors the equivalent mock in
+/// dive_list_content_test.dart.
+class _MockPaginatedNotifier
+    extends StateNotifier<AsyncValue<PaginatedDiveListState>>
+    implements PaginatedDiveListNotifier {
+  _MockPaginatedNotifier(List<DiveSummary> dives)
+    : super(
+        AsyncValue.data(PaginatedDiveListState(dives: dives, hasMore: false)),
+      );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
 
 void main() {
   test('rangeIds returns inclusive span regardless of direction', () {
@@ -22,5 +51,48 @@ void main() {
     expect(inDateRange(summary('a', DateTime(2026, 6, 1, 8)), r), isTrue);
     expect(inDateRange(summary('b', DateTime(2026, 6, 3, 23)), r), isTrue);
     expect(inDateRange(summary('c', DateTime(2026, 5, 31)), r), isFalse);
+  });
+
+  testWidgets('Combine action appears only with 2+ selected', (tester) async {
+    final dives = [
+      _makeDive(
+        id: 'd1',
+        site: const DiveSite(id: 's1', name: 'Aaa'),
+      ),
+      _makeDive(
+        id: 'd2',
+        site: const DiveSite(id: 's2', name: 'Bbb'),
+      ),
+    ];
+    final summaries = dives.map(DiveSummary.fromDive).toList();
+    final base = await getBaseOverrides();
+    final overrides = [
+      ...base,
+      diveListViewModeProvider.overrideWith((ref) => ListViewMode.detailed),
+      paginatedDiveListProvider.overrideWith(
+        (ref) => _MockPaginatedNotifier(summaries),
+      ),
+    ];
+
+    await tester.pumpWidget(
+      testApp(
+        overrides: overrides,
+        child: const DiveListContent(showAppBar: false),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    Finder tileFinder(String id) =>
+        find.byWidgetPredicate((w) => w is DiveListTile && w.diveId == id);
+
+    // Long-press d1 -> enter selection mode with only d1 selected.
+    await tester.longPress(tileFinder('d1'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Combine'), findsNothing);
+
+    // Tap d2 -> two dives selected, Combine action appears.
+    await tester.tap(tileFinder('d2'));
+    await tester.pumpAndSettle();
+    expect(find.byTooltip('Combine'), findsOneWidget);
   });
 }

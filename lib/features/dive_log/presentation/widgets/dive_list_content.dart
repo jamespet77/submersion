@@ -23,11 +23,13 @@ import 'package:submersion/features/dive_types/presentation/providers/dive_type_
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
 import 'package:submersion/features/trips/presentation/providers/trip_providers.dart';
 import 'package:submersion/features/dive_centers/presentation/providers/dive_center_providers.dart';
+import 'package:submersion/features/dive_log/data/services/dive_merge_service.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_summary.dart';
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_log/presentation/pages/dive_list_page.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/add_dive_bottom_sheet.dart';
+import 'package:submersion/features/dive_log/presentation/widgets/combine_dives_dialog.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/dive_numbering_dialog.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/dive_table_view.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
@@ -102,6 +104,7 @@ class _DiveListContentState extends ConsumerState<DiveListContent> {
   bool _isSelectionMode = false;
   final Set<String> _selectedIds = {};
   List<Dive>? _deletedDives;
+  DiveMergeOutcome? _lastMergeOutcome;
   final ScrollController _scrollController = ScrollController();
   String? _lastScrolledToId;
   bool _selectionFromList =
@@ -355,6 +358,70 @@ class _DiveListContentState extends ConsumerState<DiveListContent> {
         );
       }
     }
+  }
+
+  /// Show the combine-dives dialog for the current selection, then refresh
+  /// the list/detail/stats providers and surface an undoable snackbar.
+  ///
+  /// Mirrors [_confirmAndDelete]'s messenger-capture and stale-detail
+  /// clearing, but the snackbar action is #406-complete: `persist: false` is
+  /// required whenever a SnackBar has an action, otherwise it defaults to
+  /// persisting until explicitly dismissed.
+  Future<void> _combineSelected() async {
+    final ids = _selectedIds.toList();
+    if (ids.length < 2) return;
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+
+    final outcome = await showCombineDivesDialog(
+      context: context,
+      diveIds: ids,
+    );
+    if (outcome == null || !mounted) return;
+
+    // The merged dive replaced the sources; clear a stale detail selection.
+    if (widget.selectedId != null && ids.contains(widget.selectedId)) {
+      widget.onItemSelected?.call(null);
+    }
+    _exitSelectionMode();
+    _lastMergeOutcome = outcome;
+    _refreshAfterMerge();
+
+    scaffoldMessenger.clearSnackBars();
+    scaffoldMessenger.showSnackBar(
+      SnackBar(
+        content: Text(context.l10n.diveLog_combine_snackbar(ids.length)),
+        duration: const Duration(seconds: 5),
+        // #406: an action defaults to persist: true; force auto-dismiss and
+        // allow closing without triggering Undo.
+        persist: false,
+        showCloseIcon: true,
+        action: SnackBarAction(
+          label: context.l10n.diveLog_bulkDelete_undo,
+          onPressed: () async {
+            final toUndo = _lastMergeOutcome;
+            if (toUndo == null) return;
+            _lastMergeOutcome = null;
+            await ref.read(diveMergeServiceProvider).undo(toUndo.snapshot);
+            _refreshAfterMerge();
+            if (mounted) {
+              scaffoldMessenger.showSnackBar(
+                SnackBar(
+                  content: Text(context.l10n.diveLog_combine_undone),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _refreshAfterMerge() {
+    ref.invalidate(paginatedDiveListProvider);
+    ref.invalidate(diveListNotifierProvider);
+    ref.invalidate(diveStatisticsProvider);
+    ref.invalidate(diveNumberingInfoProvider);
   }
 
   void _showExportDialog() {
@@ -884,6 +951,12 @@ class _DiveListContentState extends ConsumerState<DiveListContent> {
           tooltip: context.l10n.diveLog_selection_tooltip_selectDateRange,
           onPressed: () => _selectByDateRange(dives),
         ),
+        if (_selectedIds.length >= 2)
+          IconButton(
+            icon: const Icon(Icons.call_merge),
+            tooltip: context.l10n.diveLog_selection_tooltip_combine,
+            onPressed: _combineSelected,
+          ),
         if (_selectedIds.isNotEmpty)
           IconButton(
             icon: const Icon(Icons.upload),
@@ -953,6 +1026,12 @@ class _DiveListContentState extends ConsumerState<DiveListContent> {
             tooltip: context.l10n.diveLog_selection_tooltip_selectDateRange,
             onPressed: () => _selectByDateRange(dives),
           ),
+          if (_selectedIds.length >= 2)
+            IconButton(
+              icon: const Icon(Icons.call_merge, size: 20),
+              tooltip: context.l10n.diveLog_selection_tooltip_combine,
+              onPressed: _combineSelected,
+            ),
           if (_selectedIds.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.upload, size: 20),
