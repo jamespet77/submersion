@@ -2885,44 +2885,43 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get diveLog_combine_confirm => 'Combine into one dive';
+  String get diveLog_combine_confirm => 'دمج في غوصة واحدة';
 
   @override
   String get diveLog_combine_dataNote =>
-      'Details come from the earliest dive, with blanks filled from later dives. Notes are combined. Tanks, gear, buddies, tags, and sightings are all kept.';
+      'تُؤخذ التفاصيل من أقدم غوصة، مع تعبئة الفراغات من الغوصات اللاحقة. يتم دمج الملاحظات. يتم الاحتفاظ بجميع الأسطوانات والمعدات ورفقاء الغوص والوسوم والمشاهدات.';
 
   @override
-  String get diveLog_combine_error =>
-      'Couldn\'t combine the dives. Nothing was changed.';
+  String get diveLog_combine_error => 'تعذّر دمج الغوصات. لم يتغيّر شيء.';
 
   @override
   String diveLog_combine_gapLabel(String duration) {
-    return 'Surface interval: $duration';
+    return 'فترة السطح: $duration';
   }
 
   @override
   String get diveLog_combine_mixedDivers =>
-      'The selected dives belong to different divers and can\'t be combined.';
+      'الغوصات المحددة تخص غواصين مختلفين ولا يمكن دمجها.';
 
   @override
   String get diveLog_combine_overlapBody =>
-      'Overlapping dives look like the same dive recorded by multiple dive computers. Combining those into a single entry that shows every computer\'s data is coming in a future release.';
+      'الغوصات المتداخلة تبدو وكأنها الغوصة نفسها مسجّلة بواسطة عدة أجهزة كمبيوتر غوص. ستتوفر قريبًا ميزة دمج هذه الغوصات في إدخال واحد يعرض بيانات كل جهاز.';
 
   @override
   String get diveLog_combine_overlapHintTwoDives =>
-      'To merge two records of the same dive now, open one of them and use \"Merge with another dive\".';
+      'لدمج سجلّين لنفس الغوصة الآن، افتح أحدهما واستخدم «دمج مع غوصة أخرى».';
 
   @override
-  String get diveLog_combine_overlapTitle => 'These dives overlap in time';
+  String get diveLog_combine_overlapTitle => 'هذه الغوصات متداخلة زمنياً';
 
   @override
   String diveLog_combine_previewIntro(int count) {
-    return 'These $count dives will be combined into one continuous dive. Gaps between them become surface time.';
+    return 'ستُدمَج هذه الغوصات الـ $count في غوصة واحدة متواصلة. تتحول الفجوات بينها إلى وقت على السطح.';
   }
 
   @override
   String diveLog_combine_resultSummary(String runtime, String maxDepth) {
-    return 'Result: $runtime total, max depth $maxDepth';
+    return 'النتيجة: $runtime إجمالاً، أقصى عمق $maxDepth';
   }
 
   @override
@@ -2930,17 +2929,17 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'dives',
-      one: 'dive',
+      other: 'غوصات',
+      one: 'غوصة',
     );
-    return 'Combined $count $_temp0';
+    return 'تم دمج $count $_temp0';
   }
 
   @override
-  String get diveLog_combine_title => 'Combine dives';
+  String get diveLog_combine_title => 'دمج الغوصات';
 
   @override
-  String get diveLog_combine_undone => 'Combine undone';
+  String get diveLog_combine_undone => 'تم التراجع عن الدمج';
 
   @override
   String get diveLog_computerSheet_description =>
@@ -4965,7 +4964,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get diveLog_selection_tooltip_combine => 'Combine';
+  String get diveLog_selection_tooltip_combine => 'دمج';
 
   @override
   String get diveLog_selection_tooltip_delete => 'حذف المحدد';

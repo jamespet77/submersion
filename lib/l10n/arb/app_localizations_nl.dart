@@ -2930,44 +2930,44 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get diveLog_combine_confirm => 'Combine into one dive';
+  String get diveLog_combine_confirm => 'Samenvoegen tot één duik';
 
   @override
   String get diveLog_combine_dataNote =>
-      'Details come from the earliest dive, with blanks filled from later dives. Notes are combined. Tanks, gear, buddies, tags, and sightings are all kept.';
+      'Details komen van de vroegste duik, met lege velden aangevuld vanuit latere duiken. Notities worden samengevoegd. Flessen, uitrusting, buddy\'s, tags en waarnemingen blijven allemaal behouden.';
 
   @override
   String get diveLog_combine_error =>
-      'Couldn\'t combine the dives. Nothing was changed.';
+      'Kon de duiken niet samenvoegen. Er is niets gewijzigd.';
 
   @override
   String diveLog_combine_gapLabel(String duration) {
-    return 'Surface interval: $duration';
+    return 'Oppervlakte-interval: $duration';
   }
 
   @override
   String get diveLog_combine_mixedDivers =>
-      'The selected dives belong to different divers and can\'t be combined.';
+      'De geselecteerde duiken behoren tot verschillende duikers en kunnen niet worden samengevoegd.';
 
   @override
   String get diveLog_combine_overlapBody =>
-      'Overlapping dives look like the same dive recorded by multiple dive computers. Combining those into a single entry that shows every computer\'s data is coming in a future release.';
+      'Overlappende duiken lijken op dezelfde duik die door meerdere duikcomputers is vastgelegd. Het samenvoegen daarvan tot één item dat de gegevens van elke computer toont, komt in een toekomstige release.';
 
   @override
   String get diveLog_combine_overlapHintTwoDives =>
-      'To merge two records of the same dive now, open one of them and use \"Merge with another dive\".';
+      'Om nu twee registraties van dezelfde duik samen te voegen, open je er een en gebruik je \'Samenvoegen met een andere duik\'.';
 
   @override
-  String get diveLog_combine_overlapTitle => 'These dives overlap in time';
+  String get diveLog_combine_overlapTitle => 'Deze duiken overlappen in tijd';
 
   @override
   String diveLog_combine_previewIntro(int count) {
-    return 'These $count dives will be combined into one continuous dive. Gaps between them become surface time.';
+    return 'Deze $count duiken worden samengevoegd tot één doorlopende duik. Tussenliggende intervallen worden oppervlaktetijd.';
   }
 
   @override
   String diveLog_combine_resultSummary(String runtime, String maxDepth) {
-    return 'Result: $runtime total, max depth $maxDepth';
+    return 'Resultaat: $runtime totaal, maximale diepte $maxDepth';
   }
 
   @override
@@ -2975,17 +2975,17 @@ class AppLocalizationsNl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'dives',
-      one: 'dive',
+      other: 'duiken',
+      one: 'duik',
     );
-    return 'Combined $count $_temp0';
+    return '$count $_temp0 samengevoegd';
   }
 
   @override
-  String get diveLog_combine_title => 'Combine dives';
+  String get diveLog_combine_title => 'Duiken samenvoegen';
 
   @override
-  String get diveLog_combine_undone => 'Combine undone';
+  String get diveLog_combine_undone => 'Samenvoeging ongedaan gemaakt';
 
   @override
   String get diveLog_computerSheet_description =>
@@ -5040,7 +5040,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get diveLog_selection_tooltip_combine => 'Combine';
+  String get diveLog_selection_tooltip_combine => 'Samenvoegen';
 
   @override
   String get diveLog_selection_tooltip_delete => 'Geselecteerde verwijderen';

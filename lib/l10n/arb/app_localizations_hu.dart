@@ -2941,44 +2941,45 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get diveLog_combine_confirm => 'Combine into one dive';
+  String get diveLog_combine_confirm => 'Összevonás egy merüléssé';
 
   @override
   String get diveLog_combine_dataNote =>
-      'Details come from the earliest dive, with blanks filled from later dives. Notes are combined. Tanks, gear, buddies, tags, and sightings are all kept.';
+      'A részletek a legkorábbi merülésből származnak, az üres mezőket a későbbi merülések töltik ki. A jegyzetek összevonásra kerülnek. Az összes palack, felszerelés, búvártárs, cimke és megfigyelés megmarad.';
 
   @override
   String get diveLog_combine_error =>
-      'Couldn\'t combine the dives. Nothing was changed.';
+      'Nem sikerült összevonni a merüléseket. Semmi sem változott.';
 
   @override
   String diveLog_combine_gapLabel(String duration) {
-    return 'Surface interval: $duration';
+    return 'Felszíni szünet: $duration';
   }
 
   @override
   String get diveLog_combine_mixedDivers =>
-      'The selected dives belong to different divers and can\'t be combined.';
+      'A kiválasztott merülések különböző búvárokhoz tartoznak, ezért nem vonhatók össze.';
 
   @override
   String get diveLog_combine_overlapBody =>
-      'Overlapping dives look like the same dive recorded by multiple dive computers. Combining those into a single entry that shows every computer\'s data is coming in a future release.';
+      'Az egymást átfedő merülések úgy néznek ki, mintha ugyanaz a merülés lenne, amelyet több merülésszámítógép rögzített. Az ilyen merülések egyetlen, minden számítógép adatait megjelenítő bejegyzéssé történő összevonása egy jövőbeli verzióban lesz elérhető.';
 
   @override
   String get diveLog_combine_overlapHintTwoDives =>
-      'To merge two records of the same dive now, open one of them and use \"Merge with another dive\".';
+      'Ha most szeretnéd összevonni ugyanannak a merülésnek a két rögzített változatát, nyisd meg az egyiket, és használd az „Összevonás egy másik merüléssel” funkciót.';
 
   @override
-  String get diveLog_combine_overlapTitle => 'These dives overlap in time';
+  String get diveLog_combine_overlapTitle =>
+      'Ezek a merülések időben átfedik egymást';
 
   @override
   String diveLog_combine_previewIntro(int count) {
-    return 'These $count dives will be combined into one continuous dive. Gaps between them become surface time.';
+    return 'Ez a $count merülés egyetlen folyamatos merüléssé lesz összevonva. A köztük lévő szünetek felszíni idővé válnak.';
   }
 
   @override
   String diveLog_combine_resultSummary(String runtime, String maxDepth) {
-    return 'Result: $runtime total, max depth $maxDepth';
+    return 'Eredmény: összesen $runtime, legnagyobb mélység $maxDepth';
   }
 
   @override
@@ -2986,17 +2987,17 @@ class AppLocalizationsHu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'dives',
-      one: 'dive',
+      other: 'merülés',
+      one: 'merülés',
     );
-    return 'Combined $count $_temp0';
+    return '$count $_temp0 összevonva';
   }
 
   @override
-  String get diveLog_combine_title => 'Combine dives';
+  String get diveLog_combine_title => 'Merülések összevonása';
 
   @override
-  String get diveLog_combine_undone => 'Combine undone';
+  String get diveLog_combine_undone => 'Összevonás visszavonva';
 
   @override
   String get diveLog_computerSheet_description =>
@@ -5065,7 +5066,7 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get diveLog_selection_tooltip_combine => 'Combine';
+  String get diveLog_selection_tooltip_combine => 'Összevonás';
 
   @override
   String get diveLog_selection_tooltip_delete => 'Kivalasztottak torlese';

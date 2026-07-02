@@ -2805,44 +2805,42 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get diveLog_combine_confirm => 'Combine into one dive';
+  String get diveLog_combine_confirm => '合并为一次潜水';
 
   @override
   String get diveLog_combine_dataNote =>
-      'Details come from the earliest dive, with blanks filled from later dives. Notes are combined. Tanks, gear, buddies, tags, and sightings are all kept.';
+      '详细信息取自最早的潜水，空白项由后续潜水填补。备注将被合并。气瓶、装备、潜伴、标签和目击记录都会保留。';
 
   @override
-  String get diveLog_combine_error =>
-      'Couldn\'t combine the dives. Nothing was changed.';
+  String get diveLog_combine_error => '无法合并这些潜水。未做任何更改。';
 
   @override
   String diveLog_combine_gapLabel(String duration) {
-    return 'Surface interval: $duration';
+    return '水面间隔：$duration';
   }
 
   @override
-  String get diveLog_combine_mixedDivers =>
-      'The selected dives belong to different divers and can\'t be combined.';
+  String get diveLog_combine_mixedDivers => '所选潜水属于不同的潜水员，无法合并。';
 
   @override
   String get diveLog_combine_overlapBody =>
-      'Overlapping dives look like the same dive recorded by multiple dive computers. Combining those into a single entry that shows every computer\'s data is coming in a future release.';
+      '重叠的潜水看起来像是由多台潜水电脑记录的同一次潜水。将它们合并为显示每台电脑数据的单条记录的功能即将在未来版本中推出。';
 
   @override
   String get diveLog_combine_overlapHintTwoDives =>
-      'To merge two records of the same dive now, open one of them and use \"Merge with another dive\".';
+      '要立即合并同一次潜水的两条记录，请打开其中一条并使用“与另一次潜水合并”。';
 
   @override
-  String get diveLog_combine_overlapTitle => 'These dives overlap in time';
+  String get diveLog_combine_overlapTitle => '这些潜水在时间上重叠';
 
   @override
   String diveLog_combine_previewIntro(int count) {
-    return 'These $count dives will be combined into one continuous dive. Gaps between them become surface time.';
+    return '这 $count 次潜水将合并为一次连续潜水。它们之间的间隔将变为水面时间。';
   }
 
   @override
   String diveLog_combine_resultSummary(String runtime, String maxDepth) {
-    return 'Result: $runtime total, max depth $maxDepth';
+    return '结果：总计 $runtime，最大深度 $maxDepth';
   }
 
   @override
@@ -2850,17 +2848,17 @@ class AppLocalizationsZh extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'dives',
-      one: 'dive',
+      other: '次潜水',
+      one: '次潜水',
     );
-    return 'Combined $count $_temp0';
+    return '已合并 $count $_temp0';
   }
 
   @override
-  String get diveLog_combine_title => 'Combine dives';
+  String get diveLog_combine_title => '合并潜水';
 
   @override
-  String get diveLog_combine_undone => 'Combine undone';
+  String get diveLog_combine_undone => '已撤消合并';
 
   @override
   String get diveLog_computerSheet_description => '选择要从哪台电脑的轮廓开始编辑。';
@@ -4841,7 +4839,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get diveLog_selection_tooltip_combine => 'Combine';
+  String get diveLog_selection_tooltip_combine => '合并';
 
   @override
   String get diveLog_selection_tooltip_delete => '删除所选';
