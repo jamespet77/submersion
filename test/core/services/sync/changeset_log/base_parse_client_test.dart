@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
@@ -22,6 +23,16 @@ void _workerSilentNoHandshake(List<Object> args) {
   // Intentionally no handshake: exercises the spawn timeout backstop.
 }
 
+/// Test worker that completes the handshake, then never answers a command --
+/// exercises the per-message timeout backstop in _nextMessage (a worker that
+/// dies/hangs after the handshake without an onError).
+void _workerReadyThenSilent(List<Object> args) {
+  final toMain = args[0] as SendPort;
+  final cmdPort = ReceivePort();
+  toMain.send(<String, Object>{'type': 'ready', 'port': cmdPort.sendPort});
+  cmdPort.listen((_) {}); // stay alive, but never reply
+}
+
 void main() {
   late Directory tmp;
   setUp(() => tmp = Directory.systemTemp.createTempSync('s3base'));
@@ -36,6 +47,34 @@ void main() {
     final client = await BaseParseClient.spawn(f.path);
     await client.dispose();
   });
+
+  test(
+    'times out (not hang) when the worker goes silent after handshake',
+    () async {
+      final f = _writeBase(tmp, {
+        'exportedAt': 1,
+        'deletions': <String, dynamic>{},
+        'data': <String, dynamic>{},
+      });
+      final original = BaseParseClient.messageTimeout;
+      BaseParseClient.messageTimeout = const Duration(milliseconds: 300);
+      try {
+        final client = await BaseParseClient.spawn(
+          f.path,
+          entryPoint: _workerReadyThenSilent,
+        );
+        // A pull against a silent worker must surface a BaseParseException (so the
+        // SyncService caller falls back to the inline parser) rather than hang.
+        await expectLater(
+          client.readScalarsAndDeletions(),
+          throwsA(isA<BaseParseException>()),
+        );
+        await client.dispose();
+      } finally {
+        BaseParseClient.messageTimeout = original;
+      }
+    },
+  );
 
   test(
     'readScalarsAndDeletions returns exportedAt + deletions in file order',

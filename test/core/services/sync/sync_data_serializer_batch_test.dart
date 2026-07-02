@@ -61,4 +61,24 @@ void main() {
     expect(got.keys.toSet(), {'theme', 'units'});
     expect(got['theme'], await s.fetchRecord('settings', 'theme'));
   });
+
+  test(
+    'fetchRecords chunks past the SQLite variable limit (>900 ids)',
+    () async {
+      // A single `WHERE id IN (...)` with >999 ids overflows SQLite's
+      // bound-variable limit ("too many SQL variables"); a large changeset apply
+      // hits this, so fetchRecords must chunk the id list (#448 review).
+      final s = SyncDataSerializer();
+      const n = 1500;
+      await s.upsertRecords('divers', [
+        for (var i = 0; i < n; i++) _diver('d$i', 'N$i'),
+      ]);
+      final got = await s.fetchRecords('divers', [
+        for (var i = 0; i < n; i++) 'd$i',
+      ]);
+      expect(got.length, n);
+      expect(got['d0'], isNotNull);
+      expect(got['d${n - 1}'], isNotNull);
+    },
+  );
 }

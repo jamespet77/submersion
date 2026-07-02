@@ -128,11 +128,25 @@ class BaseParseClient {
     }
   }
 
+  /// Per-message backstop: after the handshake, a worker can still die or hang
+  /// without delivering an `onError` (e.g. an OS OOM kill), which would leave a
+  /// waiting pull blocked forever and hang the whole sync. Time out and surface
+  /// a [BaseParseException] so the caller (readScalarsAndDeletions /
+  /// nextDataBatch) falls back to the inline parser. Injectable for tests.
+  @visibleForTesting
+  static Duration messageTimeout = const Duration(seconds: 60);
+
   Future<Map<dynamic, dynamic>> _nextMessage() {
     if (_queue.isNotEmpty) return Future.value(_queue.removeAt(0));
     final c = Completer<Map<dynamic, dynamic>>();
     _waiters.add(c);
-    return c.future;
+    return c.future.timeout(
+      messageTimeout,
+      onTimeout: () {
+        _waiters.remove(c);
+        throw BaseParseException('worker message timed out');
+      },
+    );
   }
 
   List<({String table, Map<String, dynamic> row})> _decodeRows(Object? raw) {

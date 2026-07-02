@@ -1309,6 +1309,19 @@ class SyncDataSerializer {
   ) async {
     final idList = ids.toList();
     if (idList.isEmpty) return {};
+    // Chunk to stay under SQLite's bound-variable limit (~999): a large
+    // changeset apply can pass thousands of ids, which would overflow a single
+    // `WHERE id IN (...)` with "too many SQL variables". Each chunk recurses to
+    // the per-entity switch below (a slice <= idChunk skips this branch).
+    const idChunk = 900;
+    if (idList.length > idChunk) {
+      final merged = <String, Map<String, dynamic>>{};
+      for (var i = 0; i < idList.length; i += idChunk) {
+        final end = (i + idChunk < idList.length) ? i + idChunk : idList.length;
+        merged.addAll(await fetchRecords(entityType, idList.sublist(i, end)));
+      }
+      return merged;
+    }
     switch (entityType) {
       case 'divers':
         final rows = await (_db.select(
