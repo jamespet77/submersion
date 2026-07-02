@@ -2972,6 +2972,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_combine_undone => 'Combine undone';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Couldn\'t merge the dives. Nothing was changed.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'These dives don\'t overlap in time, so they can\'t be merged as the same dive.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'These dives are from the same dive computer and can\'t be merged this way.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Dive merged as an additional computer.';
+
+  @override
+  String get diveLog_consolidate_undoError => 'Couldn\'t undo the merge.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Merge undone';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Select which computer\'s profile to edit from.';
 

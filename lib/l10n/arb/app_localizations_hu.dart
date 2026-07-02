@@ -3015,6 +3015,29 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_combine_undone => 'Összevonás visszavonva';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Nem sikerült összevonni a merüléseket. Semmi sem változott.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Ezek a merülések időben nem fedik egymást, ezért nem vonhatók össze egyetlen merülésként.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Ezek a merülések ugyanattól a búvárszámítógéptől származnak, ezért így nem vonhatók össze.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'A merülés összevonva egy további számítógépként.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Nem sikerült visszavonni az összevonást.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Összevonás visszavonva';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Válaszd ki, melyik számítógép profiljából szerkesztesz.';
 

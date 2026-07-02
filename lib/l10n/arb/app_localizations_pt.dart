@@ -3027,6 +3027,29 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diveLog_combine_undone => 'Combinação desfeita';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Não foi possível mesclar os mergulhos. Nada foi alterado.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Esses mergulhos não se sobrepõem no tempo, portanto não podem ser mesclados como o mesmo mergulho.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Esses mergulhos são do mesmo computador de mergulho e não podem ser mesclados dessa forma.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Mergulho mesclado como computador adicional.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Não foi possível desfazer a mesclagem.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Mesclagem desfeita';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Selecione de qual perfil de computador editar.';
 

@@ -273,97 +273,11 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // mergeDives
+  // mergeDives was removed in favor of DiveConsolidationService.apply --
+  // its "re-parent secondary into primary, delete secondary, synthesize a
+  // data source from secondary metadata" scenarios are exercised directly
+  // against the service in dive_consolidation_service_test.dart.
   // ---------------------------------------------------------------------------
-
-  group('mergeDives', () {
-    test(
-      're-parents secondary profiles to primary dive and deletes source dive',
-      () async {
-        final primaryId = await insertTestDive(
-          id: 'dive-primary',
-          diveComputerModel: 'Shearwater',
-          maxDepth: 40.0,
-        );
-        final secondaryId = await insertTestDive(
-          id: 'dive-secondary',
-          diveComputerModel: 'Suunto',
-          maxDepth: 39.0,
-        );
-
-        await insertTestProfile(
-          diveId: primaryId,
-          sourceTag: 'primary',
-          isPrimary: true,
-          timestamp: 0,
-          depth: 5.0,
-        );
-        await insertTestProfile(
-          diveId: secondaryId,
-          sourceTag: 'secondary',
-          isPrimary: true,
-          timestamp: 10,
-          depth: 8.0,
-        );
-
-        await repository.mergeDives(
-          primaryDiveId: primaryId,
-          secondaryDiveId: secondaryId,
-        );
-
-        // Secondary dive should be deleted.
-        final secondaryDive = await (db.select(
-          db.dives,
-        )..where((t) => t.id.equals(secondaryId))).getSingleOrNull();
-        expect(secondaryDive, isNull);
-
-        // Both profiles (original + re-parented) should be on the primary dive.
-        final primaryProfiles = await (db.select(
-          db.diveProfiles,
-        )..where((t) => t.diveId.equals(primaryId))).get();
-        expect(primaryProfiles.length, equals(2));
-
-        // The re-parented profile should have isPrimary=false.
-        final reParented = primaryProfiles.firstWhere((p) => p.timestamp == 10);
-        expect(reParented.isPrimary, isFalse);
-      },
-    );
-
-    test('creates a computer reading from secondary dive metadata', () async {
-      final primaryId = await insertTestDive(
-        id: 'dive-a',
-        diveComputerModel: 'Primary Computer',
-        maxDepth: 40.0,
-      );
-      final secondaryId = await insertTestDive(
-        id: 'dive-b',
-        diveComputerModel: 'Secondary Computer',
-        diveComputerSerial: 'SN-222',
-        maxDepth: 39.0,
-        duration: 2700,
-        waterTemp: 18.5,
-      );
-
-      await repository.mergeDives(
-        primaryDiveId: primaryId,
-        secondaryDiveId: secondaryId,
-      );
-
-      final readings = await repository.getDataSources(primaryId);
-      expect(readings.isNotEmpty, isTrue);
-
-      // The non-primary reading should contain the secondary's metadata.
-      final secondaryReading = readings.firstWhere(
-        (r) => r.computerModel == 'Secondary Computer',
-        orElse: () => throw StateError('No secondary computer reading found'),
-      );
-      expect(secondaryReading.computerSerial, equals('SN-222'));
-      expect(secondaryReading.maxDepth, equals(39.0));
-      expect(secondaryReading.duration, equals(2700));
-      expect(secondaryReading.waterTemp, equals(18.5));
-      expect(secondaryReading.isPrimary, isFalse);
-    });
-  });
 
   // ---------------------------------------------------------------------------
   // unlinkComputer

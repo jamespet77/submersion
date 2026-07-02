@@ -2875,6 +2875,26 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_combine_undone => '已撤消合并';
 
   @override
+  String get diveLog_consolidate_error_generic => '无法合并这些潜水。未做任何更改。';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      '这些潜水在时间上不重叠，因此无法合并为同一次潜水。';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      '这些潜水来自同一台潜水电脑，无法以这种方式合并。';
+
+  @override
+  String get diveLog_consolidate_snackbar => '潜水已作为附加电脑合并。';
+
+  @override
+  String get diveLog_consolidate_undoError => '无法撤消合并。';
+
+  @override
+  String get diveLog_consolidate_undone => '已撤消合并';
+
+  @override
   String get diveLog_computerSheet_description => '选择要从哪台电脑的轮廓开始编辑。';
 
   @override

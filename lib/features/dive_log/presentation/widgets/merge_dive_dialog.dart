@@ -16,7 +16,12 @@ import 'package:submersion/features/settings/presentation/providers/settings_pro
 class MergeDiveDialog extends ConsumerStatefulWidget {
   final String currentDiveId;
   final DateTime currentDiveDate;
-  final void Function(String selectedDiveId) onMerge;
+
+  /// Called with the selected dive's id wrapped in a single-element list --
+  /// the shape [DiveConsolidationService.apply]'s `secondaryDiveIds`
+  /// parameter expects, since it supports folding in more than one computer
+  /// at a time even though this dialog currently only lets the user pick one.
+  final void Function(List<String> secondaryDiveIds) onMerge;
 
   const MergeDiveDialog({
     super.key,
@@ -241,7 +246,7 @@ class _MergeDiveDialogState extends ConsumerState<MergeDiveDialog> {
               FilledButton(
                 onPressed: () {
                   Navigator.of(context).pop();
-                  widget.onMerge(dive.id);
+                  widget.onMerge([dive.id]);
                 },
                 style: FilledButton.styleFrom(
                   backgroundColor: colorScheme.error,
@@ -365,7 +370,7 @@ Future<void> showMergeDiveDialog({
   required BuildContext context,
   required String currentDiveId,
   required DateTime currentDiveDate,
-  required void Function(String selectedDiveId) onMerge,
+  required void Function(List<String> secondaryDiveIds) onMerge,
 }) {
   return showDialog(
     context: context,

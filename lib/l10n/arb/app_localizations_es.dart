@@ -3023,6 +3023,28 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_combine_undone => 'Combinación deshecha';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'No se pudieron fusionar las inmersiones. No se realizó ningún cambio.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Estas inmersiones no se superponen en el tiempo, por lo que no se pueden fusionar como la misma inmersión.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Estas inmersiones son del mismo ordenador de buceo y no se pueden fusionar de esta manera.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Inmersión fusionada como ordenador adicional.';
+
+  @override
+  String get diveLog_consolidate_undoError => 'No se pudo deshacer la fusión.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Fusión deshecha';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Selecciona desde qué perfil de ordenador editar.';
 

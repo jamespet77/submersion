@@ -3034,6 +3034,29 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_combine_undone => 'Kombination rückgängig gemacht';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Die Tauchgänge konnten nicht zusammengeführt werden. Es wurde nichts geändert.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Diese Tauchgänge überschneiden sich zeitlich nicht und können daher nicht als derselbe Tauchgang zusammengeführt werden.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Diese Tauchgänge stammen vom selben Tauchcomputer und können auf diese Weise nicht zusammengeführt werden.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Tauchgang als zusätzlicher Computer zusammengeführt.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Die Zusammenführung konnte nicht rückgängig gemacht werden.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Zusammenführung rückgängig gemacht';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Wähle, von welchem Computerprofil aus bearbeitet wird.';
 

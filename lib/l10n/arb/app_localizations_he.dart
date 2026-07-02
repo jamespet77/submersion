@@ -2940,6 +2940,27 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_combine_undone => 'המיזוג בוטל';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'לא ניתן היה למזג את הצלילות. שום דבר לא השתנה.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'הצלילות האלה אינן חופפות בזמן, ולכן לא ניתן למזג אותן כצלילה אחת.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'הצלילות האלה מגיעות מאותו מחשב צלילה ולא ניתן למזג אותן בדרך זו.';
+
+  @override
+  String get diveLog_consolidate_snackbar => 'הצלילה מוזגה כמחשב נוסף.';
+
+  @override
+  String get diveLog_consolidate_undoError => 'לא ניתן היה לבטל את המיזוג.';
+
+  @override
+  String get diveLog_consolidate_undone => 'המיזוג בוטל';
+
+  @override
   String get diveLog_computerSheet_description =>
       'בחר מאיזה פרופיל מחשב לערוך.';
 

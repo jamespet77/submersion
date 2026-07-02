@@ -3043,6 +3043,29 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diveLog_combine_undone => 'Combinaison annulée';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Impossible de fusionner les plongées. Rien n\'a été modifié.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Ces plongées ne se chevauchent pas dans le temps et ne peuvent donc pas être fusionnées en une seule plongée.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Ces plongées proviennent du même ordinateur de plongée et ne peuvent pas être fusionnées de cette façon.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Plongée fusionnée en tant qu\'ordinateur supplémentaire.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Impossible d\'annuler la fusion.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Fusion annulée';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Sélectionnez le profil d\'ordinateur à partir duquel modifier.';
 

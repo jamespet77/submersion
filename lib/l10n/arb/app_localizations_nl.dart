@@ -3003,6 +3003,29 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_combine_undone => 'Samenvoeging ongedaan gemaakt';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Kon de duiken niet samenvoegen. Er is niets gewijzigd.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Deze duiken overlappen niet in tijd en kunnen daarom niet als dezelfde duik worden samengevoegd.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Deze duiken zijn afkomstig van dezelfde duikcomputer en kunnen op deze manier niet worden samengevoegd.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Duik samengevoegd als extra computer.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Kon het samenvoegen niet ongedaan maken.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Samenvoeging ongedaan gemaakt';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Kies vanaf welk computerprofiel je wilt bewerken.';
 

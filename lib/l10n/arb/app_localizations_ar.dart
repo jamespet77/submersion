@@ -2956,6 +2956,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_combine_undone => 'تم التراجع عن الدمج';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'تعذّر دمج الغوصات. لم يتغيّر أي شيء.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'هاتان الغوصتان لا تتداخلان زمنيًا، لذا لا يمكن دمجهما كغوصة واحدة.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'هاتان الغوصتان من نفس كمبيوتر الغوص ولا يمكن دمجهما بهذه الطريقة.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'تم دمج الغوصة كجهاز كمبيوتر إضافي.';
+
+  @override
+  String get diveLog_consolidate_undoError => 'تعذّر التراجع عن الدمج.';
+
+  @override
+  String get diveLog_consolidate_undone => 'تم التراجع عن الدمج';
+
+  @override
   String get diveLog_computerSheet_description =>
       'اختر ملف أي كمبيوتر تريد التحرير منه.';
 

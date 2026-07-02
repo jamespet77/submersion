@@ -3028,6 +3028,29 @@ class AppLocalizationsIt extends AppLocalizations {
   String get diveLog_combine_undone => 'Unione annullata';
 
   @override
+  String get diveLog_consolidate_error_generic =>
+      'Impossibile unire le immersioni. Non è stato modificato nulla.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Queste immersioni non si sovrappongono nel tempo, quindi non possono essere unite come la stessa immersione.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Queste immersioni provengono dallo stesso computer subacqueo e non possono essere unite in questo modo.';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Immersione unita come computer aggiuntivo.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Impossibile annullare l\'unione.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Unione annullata';
+
+  @override
   String get diveLog_computerSheet_description =>
       'Seleziona da quale profilo del computer modificare.';
 

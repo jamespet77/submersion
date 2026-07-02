@@ -5109,6 +5109,42 @@ abstract class AppLocalizations {
   /// **'Combine undone'**
   String get diveLog_combine_undone;
 
+  /// No description provided for @diveLog_consolidate_error_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t merge the dives. Nothing was changed.'**
+  String get diveLog_consolidate_error_generic;
+
+  /// No description provided for @diveLog_consolidate_error_notOverlapping.
+  ///
+  /// In en, this message translates to:
+  /// **'These dives don\'t overlap in time, so they can\'t be merged as the same dive.'**
+  String get diveLog_consolidate_error_notOverlapping;
+
+  /// No description provided for @diveLog_consolidate_error_sameComputer.
+  ///
+  /// In en, this message translates to:
+  /// **'These dives are from the same dive computer and can\'t be merged this way.'**
+  String get diveLog_consolidate_error_sameComputer;
+
+  /// No description provided for @diveLog_consolidate_snackbar.
+  ///
+  /// In en, this message translates to:
+  /// **'Dive merged as an additional computer.'**
+  String get diveLog_consolidate_snackbar;
+
+  /// No description provided for @diveLog_consolidate_undoError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t undo the merge.'**
+  String get diveLog_consolidate_undoError;
+
+  /// No description provided for @diveLog_consolidate_undone.
+  ///
+  /// In en, this message translates to:
+  /// **'Merge undone'**
+  String get diveLog_consolidate_undone;
+
   /// Description of the computer profile selection sheet
   ///
   /// In en, this message translates to:

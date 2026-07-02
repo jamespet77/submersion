@@ -4,11 +4,16 @@ import 'package:intl/intl.dart';
 
 import 'package:submersion/core/constants/map_style.dart';
 import 'package:submersion/core/providers/provider.dart';
+import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
+import 'package:submersion/features/dive_log/data/services/dive_consolidation_service.dart';
+import 'package:submersion/features/dive_log/data/services/dive_merge_snapshot.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/merge_dive_dialog.dart';
 import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
+import 'package:submersion/l10n/arb/app_localizations.dart';
+import 'package:submersion/l10n/l10n_extension.dart';
 
 /// Fixed date used for the "current" dive across all tests.
 final _currentDiveDate = DateTime(2026, 3, 20, 10, 0);
@@ -49,7 +54,7 @@ Future<void> _pumpAndOpenDialog(
   required List<Dive> allDives,
   String currentDiveId = 'current-dive',
   DateTime? currentDiveDate,
-  void Function(String)? onMerge,
+  void Function(List<String>)? onMerge,
 }) async {
   tester.view.physicalSize = const Size(1024, 768);
   tester.view.devicePixelRatio = 1.0;
@@ -268,11 +273,11 @@ void main() {
     });
 
     testWidgets('Cancel button dismisses the dialog', (tester) async {
-      String? mergedId;
+      List<String>? mergedIds;
       await _pumpAndOpenDialog(
         tester,
         allDives: _sameDayCandidates(),
-        onMerge: (id) => mergedId = id,
+        onMerge: (ids) => mergedIds = ids,
       );
 
       expect(find.text('Merge with another dive'), findsOneWidget);
@@ -281,7 +286,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Merge with another dive'), findsNothing);
-      expect(mergedId, isNull);
+      expect(mergedIds, isNull);
     });
 
     testWidgets('shows loading indicator while dives are loading', (
@@ -425,25 +430,27 @@ void main() {
       expect(find.text('Confirm merge'), findsNothing);
     });
 
-    testWidgets('Merge button calls onMerge with the selected dive ID', (
-      tester,
-    ) async {
-      String? mergedId;
+    testWidgets(
+      'Merge button calls onMerge with the selected dive ID wrapped in a '
+      'list (secondaryDiveIds shape expected by DiveConsolidationService)',
+      (tester) async {
+        List<String>? mergedIds;
 
-      await _pumpAndOpenDialog(
-        tester,
-        allDives: _sameDayCandidates(),
-        onMerge: (id) => mergedId = id,
-      );
-      await _navigateToConfirmation(tester);
+        await _pumpAndOpenDialog(
+          tester,
+          allDives: _sameDayCandidates(),
+          onMerge: (ids) => mergedIds = ids,
+        );
+        await _navigateToConfirmation(tester);
 
-      await tester.tap(find.widgetWithText(FilledButton, 'Merge'));
-      await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Merge'));
+        await tester.pumpAndSettle();
 
-      expect(mergedId, equals('candidate-1'));
-      // Dialog should be dismissed.
-      expect(find.text('Confirm merge'), findsNothing);
-    });
+        expect(mergedIds, equals(['candidate-1']));
+        // Dialog should be dismissed.
+        expect(find.text('Confirm merge'), findsNothing);
+      },
+    );
   });
 
   group('MergeDiveDialog - candidate ordering', () {
@@ -573,6 +580,258 @@ void main() {
       expect(find.byType(Dialog), findsOneWidget);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Consolidation service wiring (Task 7).
+  //
+  // The dialog itself only plumbs the selected id out via onMerge; the
+  // apply/undo/snackbar wiring lives in dive_detail_page.dart's confirm
+  // handler. _consolidationConfirmHandler below mirrors that production
+  // wiring exactly (same provider, same apply/undo calls, same SnackBar
+  // shape) so it can be exercised here without pumping the entire
+  // DiveDetailPage widget tree.
+  // ---------------------------------------------------------------------------
+  group('MergeDiveDialog - consolidation service wiring', () {
+    testWidgets(
+      'confirming the merge calls DiveConsolidationService.apply with the '
+      'current dive as targetDiveId and the selection as secondaryDiveIds',
+      (tester) async {
+        final service = _FakeDiveConsolidationService();
+
+        await _pumpWithConsolidationHandler(tester, service: service);
+        await _navigateToConfirmation(tester);
+        await tester.tap(find.widgetWithText(FilledButton, 'Merge'));
+        await tester.pumpAndSettle();
+
+        expect(service.capturedTargetDiveId, equals('current-dive'));
+        expect(service.capturedSecondaryDiveIds, equals(['candidate-1']));
+      },
+    );
+
+    testWidgets('shows an Undo snackbar on success with persist:false and '
+        "showCloseIcon:true (this repo's convention for actioned SnackBars, "
+        "e.g. the combine flow's undo snackbar)", (tester) async {
+      final service = _FakeDiveConsolidationService();
+
+      await _pumpWithConsolidationHandler(tester, service: service);
+      await _navigateToConfirmation(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Merge'));
+      await tester.pumpAndSettle();
+
+      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(snackBar.action, isNotNull);
+      expect(snackBar.action!.label, equals('Undo'));
+      expect(snackBar.persist, isFalse);
+      expect(snackBar.showCloseIcon, isTrue);
+    });
+
+    testWidgets('tapping Undo calls service.undo with the outcome snapshot', (
+      tester,
+    ) async {
+      final service = _FakeDiveConsolidationService();
+
+      await _pumpWithConsolidationHandler(tester, service: service);
+      await _navigateToConfirmation(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Merge'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Undo'));
+      await tester.pumpAndSettle();
+
+      expect(service.undoneSnapshot, isNotNull);
+      expect(identical(service.undoneSnapshot, service.outcomeSnapshot), true);
+    });
+
+    testWidgets('an ArgumentError with a sameComputer reason surfaces the '
+        'sameComputer error text instead of a success snackbar', (
+      tester,
+    ) async {
+      final service = _FakeDiveConsolidationService(
+        applyError: ArgumentError('sameComputer: shares comp-1'),
+      );
+
+      await _pumpWithConsolidationHandler(tester, service: service);
+      await _navigateToConfirmation(tester);
+      await tester.tap(find.widgetWithText(FilledButton, 'Merge'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text(
+          'These dives are from the same dive computer and can\'t be '
+          'merged this way.',
+        ),
+        findsOneWidget,
+      );
+      // No Undo action on a failure snackbar.
+      final snackBar = tester.widget<SnackBar>(find.byType(SnackBar));
+      expect(snackBar.action, isNull);
+    });
+  });
+}
+
+/// Pumps a dialog whose `onMerge` is wired exactly like
+/// dive_detail_page.dart's `_showMergeDiveDialog` confirm handler: it reads
+/// [diveConsolidationServiceProvider], calls apply/undo on it, and shows the
+/// same SnackBar shape (Undo action, persist:false, showCloseIcon:true) or
+/// error text on an ArgumentError.
+Future<void> _pumpWithConsolidationHandler(
+  WidgetTester tester, {
+  required _FakeDiveConsolidationService service,
+  String currentDiveId = 'current-dive',
+}) async {
+  tester.view.physicalSize = const Size(1024, 768);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(() {
+    tester.view.resetPhysicalSize();
+    tester.view.resetDevicePixelRatio();
+  });
+
+  late BuildContext savedContext;
+  late WidgetRef savedRef;
+
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        diveListNotifierProvider.overrideWith(
+          (ref) => _FakeDiveListNotifier(_sameDayCandidates()),
+        ),
+        settingsProvider.overrideWith((ref) => _FakeSettingsNotifier()),
+        diveConsolidationServiceProvider.overrideWithValue(service),
+      ],
+      child: MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: Consumer(
+            builder: (context, ref, _) {
+              savedContext = context;
+              savedRef = ref;
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pumpAndSettle();
+
+  showMergeDiveDialog(
+    context: savedContext,
+    currentDiveId: currentDiveId,
+    currentDiveDate: _currentDiveDate,
+    onMerge: (ids) => _consolidationConfirmHandler(
+      savedContext,
+      savedRef,
+      currentDiveId,
+      ids,
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Mirrors dive_detail_page.dart's `_showMergeDiveDialog` confirm handler
+/// (same provider read, same apply/undo calls, same error mapping and
+/// SnackBar shape) so that wiring can be exercised at the dialog level
+/// without pumping the entire DiveDetailPage widget tree.
+Future<void> _consolidationConfirmHandler(
+  BuildContext context,
+  WidgetRef ref,
+  String currentDiveId,
+  List<String> secondaryDiveIds,
+) async {
+  final l10n = context.l10n;
+  final scaffoldMessenger = ScaffoldMessenger.of(context);
+  final service = ref.read(diveConsolidationServiceProvider);
+
+  final DiveConsolidationOutcome outcome;
+  try {
+    outcome = await service.apply(
+      targetDiveId: currentDiveId,
+      secondaryDiveIds: secondaryDiveIds,
+    );
+  } on ArgumentError catch (e) {
+    final message = e.message?.toString() ?? '';
+    final String text;
+    if (message.startsWith('sameComputer')) {
+      text = l10n.diveLog_consolidate_error_sameComputer;
+    } else if (message.contains('notOverlapping')) {
+      text = l10n.diveLog_consolidate_error_notOverlapping;
+    } else {
+      text = l10n.diveLog_consolidate_error_generic;
+    }
+    scaffoldMessenger.showSnackBar(SnackBar(content: Text(text)));
+    return;
+  }
+
+  scaffoldMessenger.showSnackBar(
+    SnackBar(
+      content: Text(l10n.diveLog_consolidate_snackbar),
+      duration: const Duration(seconds: 5),
+      persist: false,
+      showCloseIcon: true,
+      action: SnackBarAction(
+        label: l10n.diveLog_bulkDelete_undo,
+        onPressed: () async {
+          await service.undo(outcome.snapshot);
+        },
+      ),
+    ),
+  );
+}
+
+/// Records calls made to [DiveConsolidationService.apply] and [.undo] so
+/// tests can assert on the wiring contract without touching a real database.
+class _FakeDiveConsolidationService extends DiveConsolidationService {
+  _FakeDiveConsolidationService({this.applyError}) : super(DiveRepository());
+
+  /// When set, [apply] throws this instead of returning a fake outcome.
+  final Object? applyError;
+
+  String? capturedTargetDiveId;
+  List<String>? capturedSecondaryDiveIds;
+  DiveMergeSnapshot? undoneSnapshot;
+
+  /// The snapshot handed back inside [apply]'s outcome -- exposed so tests
+  /// can assert Undo is invoked with this exact instance.
+  final DiveMergeSnapshot outcomeSnapshot = const DiveMergeSnapshot(
+    mergedDiveId: 'candidate-1',
+    diveRows: [],
+    profileRows: [],
+    tankRows: [],
+    weightRows: [],
+    customFieldRows: [],
+    equipmentRows: [],
+    diveTypeRows: [],
+    tagRows: [],
+    buddyRows: [],
+    sightingRows: [],
+    eventRows: [],
+    gasSwitchRows: [],
+    tankPressureRows: [],
+    dataSourceRows: [],
+    tideRows: [],
+    mediaDiveIds: {},
+  );
+
+  @override
+  Future<DiveConsolidationOutcome> apply({
+    required String targetDiveId,
+    required List<String> secondaryDiveIds,
+  }) async {
+    capturedTargetDiveId = targetDiveId;
+    capturedSecondaryDiveIds = secondaryDiveIds;
+    final error = applyError;
+    if (error != null) throw error;
+    return DiveConsolidationOutcome(
+      targetDiveId: targetDiveId,
+      snapshot: outcomeSnapshot,
+    );
+  }
+
+  @override
+  Future<void> undo(DiveMergeSnapshot snapshot) async {
+    undoneSnapshot = snapshot;
+  }
 }
 
 /// Notifier that stays in loading state indefinitely.

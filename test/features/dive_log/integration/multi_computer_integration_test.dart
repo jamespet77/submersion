@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
+import 'package:submersion/features/dive_log/data/services/dive_consolidation_service.dart';
 
 import '../../../helpers/test_database.dart';
 
@@ -267,10 +268,13 @@ void main() {
         depth: 39.5,
       );
 
-      // 2. Call mergeDives (merge dive B into dive A).
-      await repository.mergeDives(
-        primaryDiveId: diveAId,
-        secondaryDiveId: diveBId,
+      // 2. Consolidate dive B into dive A via DiveConsolidationService
+      // (the mergeDives repository method it replaced was removed; see
+      // dive_consolidation_service_test.dart for the service's own suite).
+      final consolidation = DiveConsolidationService(repository);
+      await consolidation.apply(
+        targetDiveId: diveAId,
+        secondaryDiveIds: [diveBId],
       );
 
       // 3. Verify: primary dive has 2 computer readings.
