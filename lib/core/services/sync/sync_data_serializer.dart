@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
@@ -9,6 +11,20 @@ import 'package:submersion/core/services/logger_service.dart';
 
 /// Sync data format version for compatibility checking
 const int syncFormatVersion = 2;
+
+/// Unique-ish suffix for base temp files (deviceId + seq already scope them).
+const _baseTempUuid = Uuid();
+
+/// Result of streaming a base snapshot to a temp file. The caller owns [path]
+/// and must delete it. [byteLength] is the on-disk base size (== manifest
+/// `baseBytes`); [rowCount] is the total rows written (0 => an empty library).
+typedef StreamedBase = ({
+  String path,
+  int byteLength,
+  int exportedAt,
+  String? toHlc,
+  int rowCount,
+});
 
 /// Value serializer used only for sync export/import of BLOB-bearing entities.
 ///
@@ -474,6 +490,301 @@ class SyncDataSerializer {
       uploadNonce: uploadNonce,
       epochId: epochId,
     );
+  }
+
+  /// Ordered table descriptors for a base snapshot, matching SyncData.toJson.
+  /// `table != null` => keyset-page by `id`; otherwise `full` loads the whole
+  /// (small, composite-key) table once. `blob` selects the base64 BLOB
+  /// serializer (media / certifications / diveDataSources).
+  List<
+    ({
+      String key,
+      TableInfo<Table, dynamic>? table,
+      bool blob,
+      Future<List<Map<String, dynamic>>> Function()? full,
+    })
+  >
+  get _baseTables => [
+    (key: 'divers', table: _db.divers, blob: false, full: null),
+    (key: 'diverSettings', table: _db.diverSettings, blob: false, full: null),
+    (key: 'dives', table: _db.dives, blob: false, full: null),
+    (key: 'diveProfiles', table: _db.diveProfiles, blob: false, full: null),
+    (key: 'diveTanks', table: _db.diveTanks, blob: false, full: null),
+    (
+      key: 'diveEquipment',
+      table: null,
+      blob: false,
+      full: () => _exportDiveEquipment(null),
+    ),
+    (key: 'diveWeights', table: _db.diveWeights, blob: false, full: null),
+    (key: 'diveSites', table: _db.diveSites, blob: false, full: null),
+    (key: 'equipment', table: _db.equipment, blob: false, full: null),
+    (key: 'equipmentSets', table: _db.equipmentSets, blob: false, full: null),
+    (
+      key: 'equipmentSetItems',
+      table: null,
+      blob: false,
+      full: () => _exportEquipmentSetItems(null),
+    ),
+    (key: 'media', table: _db.media, blob: true, full: null),
+    (key: 'buddies', table: _db.buddies, blob: false, full: null),
+    (key: 'diveBuddies', table: _db.diveBuddies, blob: false, full: null),
+    (key: 'certifications', table: _db.certifications, blob: true, full: null),
+    (key: 'courses', table: _db.courses, blob: false, full: null),
+    (key: 'serviceRecords', table: _db.serviceRecords, blob: false, full: null),
+    (key: 'diveCenters', table: _db.diveCenters, blob: false, full: null),
+    (key: 'trips', table: _db.trips, blob: false, full: null),
+    (
+      key: 'liveaboardDetails',
+      table: _db.liveaboardDetailRecords,
+      blob: false,
+      full: null,
+    ),
+    (
+      key: 'itineraryDays',
+      table: _db.tripItineraryDays,
+      blob: false,
+      full: null,
+    ),
+    (key: 'tags', table: _db.tags, blob: false, full: null),
+    (key: 'diveTags', table: _db.diveTags, blob: false, full: null),
+    (key: 'diveDiveTypes', table: _db.diveDiveTypes, blob: false, full: null),
+    // diveTypes/species/fieldPresets exclude built-in reference data
+    // (isBuiltIn=false), so reuse their exporters rather than paging all rows.
+    (
+      key: 'diveTypes',
+      table: null,
+      blob: false,
+      full: () => _exportDiveTypes(null),
+    ),
+    (key: 'tankPresets', table: _db.tankPresets, blob: false, full: null),
+    (key: 'diveComputers', table: _db.diveComputers, blob: false, full: null),
+    (
+      key: 'tankPressureProfiles',
+      table: _db.tankPressureProfiles,
+      blob: false,
+      full: null,
+    ),
+    (key: 'tideRecords', table: _db.tideRecords, blob: false, full: null),
+    (
+      key: 'settings',
+      table: null,
+      blob: false,
+      full: () => _exportSettings(null),
+    ),
+    (
+      key: 'species',
+      table: null,
+      blob: false,
+      full: () => _exportSpecies(null),
+    ),
+    (key: 'sightings', table: _db.sightings, blob: false, full: null),
+    (
+      key: 'diveProfileEvents',
+      table: _db.diveProfileEvents,
+      blob: false,
+      full: null,
+    ),
+    (key: 'gasSwitches', table: _db.gasSwitches, blob: false, full: null),
+    (
+      key: 'diveCustomFields',
+      table: _db.diveCustomFields,
+      blob: false,
+      full: null,
+    ),
+    (
+      key: 'diveDataSources',
+      table: _db.diveDataSources,
+      blob: true,
+      full: null,
+    ),
+    (key: 'siteSpecies', table: _db.siteSpecies, blob: false, full: null),
+    (key: 'csvPresets', table: _db.csvPresets, blob: false, full: null),
+    (key: 'viewConfigs', table: _db.viewConfigs, blob: false, full: null),
+    (
+      key: 'fieldPresets',
+      table: null,
+      blob: false,
+      full: () => _exportFieldPresets(null),
+    ),
+  ];
+
+  /// Test seam: the base table order, asserted equal to SyncData.toJson keys so
+  /// a dropped/added/misordered entity is caught at build time.
+  static List<String> get debugBaseTableKeys =>
+      SyncDataSerializer()._baseTables.map((t) => t.key).toList();
+
+  /// One keyset page (`id > cursor`, ascending, up to [limit]) of an id-PK
+  /// table, as JSON rows identical to the table's own `toJson` (BLOB serializer
+  /// applied for BLOB tables). O(n) total across pages; never loads the whole
+  /// table into memory.
+  Future<List<Map<String, dynamic>>> _pageBaseTableById(
+    TableInfo<Table, dynamic> table, {
+    required String? cursor,
+    required int limit,
+    required bool blob,
+  }) async {
+    final name = table.actualTableName;
+    final rows = cursor == null
+        ? await _db
+              .customSelect(
+                'SELECT * FROM "$name" ORDER BY id LIMIT ?',
+                variables: [Variable.withInt(limit)],
+              )
+              .get()
+        : await _db
+              .customSelect(
+                'SELECT * FROM "$name" WHERE id > ? ORDER BY id LIMIT ?',
+                variables: [
+                  Variable.withString(cursor),
+                  Variable.withInt(limit),
+                ],
+              )
+              .get();
+    return rows.map((r) {
+      final data = table.map(r.data) as dynamic;
+      return (blob
+              ? data.toJson(serializer: _syncBlobSerializer)
+              : data.toJson())
+          as Map<String, dynamic>;
+    }).toList();
+  }
+
+  /// Streams a full base snapshot to a temp file as exactly
+  /// `jsonEncode(SyncPayload.toJson())`, in bounded memory (one keyset page +
+  /// one write). Replaces `exportChangeset(null)` + `encodeChangeset` on the
+  /// publish/compact path, whose full-graph materialization OOM-crashed iOS on
+  /// large libraries (#358, write side). Rows stream in `id` order; the internal
+  /// `checksum` is patched in over the streamed `data` bytes via a single
+  /// seek-back so there is no second DB scan. Caller owns and must delete [path].
+  Future<StreamedBase> exportBaseToTempFile({
+    required String deviceId,
+    required List<DeletionLogData> deletions,
+    String? epochId,
+    String? uploadNonce,
+    int? seq,
+    int pageSize = 2000,
+    DateTime Function() now = DateTime.now,
+    Future<Directory> Function()? tempDir,
+  }) async {
+    final dir = await (tempDir?.call() ?? Future.value(Directory.systemTemp));
+    final path =
+        '${dir.path}/ssv1_base_${deviceId}_${seq ?? 0}.${_baseTempUuid.v4()}.json';
+    final raf = await File(path).open(mode: FileMode.write);
+    final digestSink = _Sha256DigestSink();
+    final dataHash = sha256.startChunkedConversion(digestSink);
+    final exportedAt = now().millisecondsSinceEpoch;
+    String? maxRowHlc;
+    var rowCount = 0;
+
+    // Writes + hashes only the `data` object bytes (matches _computeChecksum,
+    // which hashes jsonEncode(data.toJson())).
+    Future<void> writeData(String s) async {
+      final bytes = utf8.encode(s);
+      dataHash.add(bytes);
+      await raf.writeFrom(bytes);
+    }
+
+    try {
+      // Header up to (but not including) the checksum value.
+      await raf.writeString(
+        '{"version":$syncFormatVersion,"exportedAt":$exportedAt,'
+        '"deviceId":${jsonEncode(deviceId)},"lastSyncTimestamp":null,'
+        '"checksum":"',
+      );
+      final checksumOffset = await raf.position();
+      await raf.writeFrom(List.filled(64, 0x30)); // '0'*64 placeholder
+      await raf.writeString('","data":');
+
+      // ---- data object (hashed) ----
+      await writeData('{');
+      final tables = _baseTables;
+      for (var t = 0; t < tables.length; t++) {
+        final spec = tables[t];
+        if (t > 0) await writeData(',');
+        await writeData('${jsonEncode(spec.key)}:[');
+        var firstRow = true;
+
+        Future<void> emit(Map<String, dynamic> row) async {
+          if (!firstRow) await writeData(',');
+          firstRow = false;
+          rowCount++;
+          final hlc = row['hlc'];
+          if (hlc is String &&
+              (maxRowHlc == null || hlc.compareTo(maxRowHlc!) > 0)) {
+            maxRowHlc = hlc;
+          }
+          await writeData(jsonEncode(row));
+        }
+
+        if (spec.table != null) {
+          String? cursor;
+          while (true) {
+            final rows = await _pageBaseTableById(
+              spec.table!,
+              cursor: cursor,
+              limit: pageSize,
+              blob: spec.blob,
+            );
+            for (final row in rows) {
+              await emit(row);
+            }
+            if (rows.length < pageSize) break;
+            cursor = rows.last['id'] as String;
+          }
+        } else {
+          for (final row in await spec.full!()) {
+            await emit(row);
+          }
+        }
+        await writeData(']');
+      }
+      await writeData('}');
+
+      // ---- trailer (not part of the data checksum) ----
+      final toHlc = _maxHlc([maxRowHlc, ...deletions.map((d) => d.hlc)]);
+      final tail = <String, dynamic>{
+        'deletions': _groupDeletions(
+          deletions,
+        ).map((k, v) => MapEntry(k, v.map((d) => d.toJson()).toList())),
+        'uploadNonce': uploadNonce,
+        'epochId': epochId,
+        'seq': seq,
+        'baseSeq': null,
+        'sinceHlc': null,
+        'toHlc': toHlc,
+      };
+      final tailBuf = StringBuffer();
+      tail.forEach(
+        (k, v) => tailBuf.write(',${jsonEncode(k)}:${jsonEncode(v)}'),
+      );
+      tailBuf.write('}');
+      await raf.writeString(tailBuf.toString());
+
+      // ---- patch the checksum placeholder with the real data digest ----
+      dataHash.close();
+      final endPos = await raf.position();
+      await raf.setPosition(checksumOffset);
+      await raf.writeFrom(utf8.encode(digestSink.value.toString()));
+      await raf.setPosition(endPos);
+      await raf.flush();
+      await raf.close();
+
+      final byteLength = await File(path).length();
+      return (
+        path: path,
+        byteLength: byteLength,
+        exportedAt: exportedAt,
+        toHlc: toHlc,
+        rowCount: rowCount,
+      );
+    } catch (_) {
+      await raf.close();
+      try {
+        await File(path).delete();
+      } catch (_) {}
+      rethrow;
+    }
   }
 
   /// Group a flat deletion list into the payload's entityType -> deletions map.
@@ -1221,6 +1532,383 @@ class SyncDataSerializer {
     }
   }
 
+  /// Batched [upsertRecord]: writes all [records] for [entityType] in one Drift
+  /// `batch()` (reused prepared statements), in list order, with identical
+  /// conflict semantics. Mirrors [upsertRecord]'s per-entity logic per record --
+  /// the same `<Type>.fromJson`, the same per-record transforms, and the same
+  /// `settings` device-local-key filter.
+  Future<void> upsertRecords(
+    String entityType,
+    List<Map<String, dynamic>> records,
+  ) async {
+    if (records.isEmpty) return;
+    switch (entityType) {
+      case 'divers':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.divers,
+            records.map((r) => Diver.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diverSettings':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diverSettings,
+            records
+                .map(
+                  (r) => DiverSetting.fromJson(_applyDiverSettingDefaults(r)),
+                )
+                .toList(),
+          ),
+        );
+        return;
+      case 'dives':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.dives,
+            records.map((r) => Dive.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveProfiles':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveProfiles,
+            records.map((r) => DiveProfile.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveTanks':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveTanks,
+            records.map((r) => DiveTank.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveEquipment':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveEquipment,
+            records.map((r) => DiveEquipmentData.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveWeights':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveWeights,
+            records.map((r) => DiveWeight.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveSites':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveSites,
+            records.map((r) => DiveSite.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'equipment':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.equipment,
+            records.map((r) => EquipmentData.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'equipmentSets':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.equipmentSets,
+            records.map((r) => EquipmentSet.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'equipmentSetItems':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.equipmentSetItems,
+            records.map((r) => EquipmentSetItem.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'media':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.media,
+            records
+                .map(
+                  (r) => MediaData.fromJson(r, serializer: _syncBlobSerializer),
+                )
+                .toList(),
+          ),
+        );
+        return;
+      case 'buddies':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.buddies,
+            records.map((r) => Buddy.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveBuddies':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveBuddies,
+            records.map((r) => DiveBuddy.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'certifications':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.certifications,
+            records
+                .map(
+                  (r) => Certification.fromJson(
+                    r,
+                    serializer: _syncBlobSerializer,
+                  ),
+                )
+                .toList(),
+          ),
+        );
+        return;
+      case 'courses':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.courses,
+            records.map((r) => Course.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'serviceRecords':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.serviceRecords,
+            records.map((r) => ServiceRecord.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveCenters':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveCenters,
+            records.map((r) => DiveCenter.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'trips':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.trips,
+            records.map((r) => Trip.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'liveaboardDetails':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.liveaboardDetailRecords,
+            records.map((r) => LiveaboardDetailRecord.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'itineraryDays':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.tripItineraryDays,
+            records.map((r) => TripItineraryDay.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'tags':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.tags,
+            records.map((r) => Tag.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveTags':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveTags,
+            records.map((r) => DiveTag.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveDiveTypes':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveDiveTypes,
+            records.map((r) => DiveDiveType.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveTypes':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveTypes,
+            records.map((r) => DiveType.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'tankPresets':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.tankPresets,
+            records.map((r) => TankPreset.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveComputers':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveComputers,
+            records.map((r) => DiveComputer.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'tankPressureProfiles':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.tankPressureProfiles,
+            records.map((r) => TankPressureProfile.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'tideRecords':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.tideRecords,
+            records.map((r) => TideRecord.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'settings':
+        // Mirror upsertRecord: never overwrite a device-local settings key.
+        final settingsRows = records
+            .where((r) => !_deviceLocalSettingsKeys.contains(r['key']))
+            .map((r) => Setting.fromJson(r))
+            .toList();
+        if (settingsRows.isEmpty) return;
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(_db.settings, settingsRows),
+        );
+        return;
+      case 'species':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.species,
+            records.map((r) => Specy.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'sightings':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.sightings,
+            records.map((r) => Sighting.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveProfileEvents':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveProfileEvents,
+            records
+                .map(
+                  (r) => DiveProfileEvent.fromJson(
+                    r['source'] == null ? {...r, 'source': 'imported'} : r,
+                  ),
+                )
+                .toList(),
+          ),
+        );
+        return;
+      case 'gasSwitches':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.gasSwitches,
+            records.map((r) => GasSwitche.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diveCustomFields':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveCustomFields,
+            records
+                .map((r) => DiveCustomField.fromJson(_withTimestampDefaults(r)))
+                .toList(),
+          ),
+        );
+        return;
+      case 'diveDataSources':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveDataSources,
+            records
+                .map(
+                  (r) => DiveDataSourcesData.fromJson(
+                    _withTimestampDefaults(r),
+                    serializer: _syncBlobSerializer,
+                  ),
+                )
+                .toList(),
+          ),
+        );
+        return;
+      case 'siteSpecies':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.siteSpecies,
+            records
+                .map((r) => SiteSpecy.fromJson(_withTimestampDefaults(r)))
+                .toList(),
+          ),
+        );
+        return;
+      case 'csvPresets':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.csvPresets,
+            records
+                .map((r) => CsvPreset.fromJson(_withTimestampDefaults(r)))
+                .toList(),
+          ),
+        );
+        return;
+      case 'viewConfigs':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.viewConfigs,
+            records
+                .map((r) => ViewConfig.fromJson(_withTimestampDefaults(r)))
+                .toList(),
+          ),
+        );
+        return;
+      case 'fieldPresets':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.fieldPresets,
+            records
+                .map((r) => FieldPreset.fromJson(_withTimestampDefaults(r)))
+                .toList(),
+          ),
+        );
+        return;
+      default:
+        throw ArgumentError('upsertRecords: unknown entityType $entityType');
+    }
+  }
+
   /// Every local row id for [entityType], in the id form [deleteRecord]
   /// accepts: plain `id` for most entities, `key` for `settings`, and the
   /// composite `a|b` form (matching [_compositeId]) for the two junction
@@ -1355,6 +2043,117 @@ class SyncDataSerializer {
           entityType,
           'entityType',
           'recordIdsFor has no case for this synced entity',
+        );
+    }
+  }
+
+  /// Delete every row of the table backing [entityType]. Used by streaming
+  /// Replace-adopt (#358): clearing each table then re-inserting the cloud
+  /// union is equivalent to upsert-then-delete-not-in-cloud but needs no in-RAM
+  /// id set to diff against, so adopt memory stays bounded regardless of size.
+  ///
+  /// Device-local settings keys ([_deviceLocalSettingsKeys], e.g.
+  /// `active_diver_id`) are preserved: they are never part of a synced or
+  /// replaced library, so an adopt must not wipe them (they are also excluded
+  /// from the base by [_exportSettings], so re-insert would not restore them).
+  Future<void> deleteAllRecords(String entityType) async {
+    if (entityType == 'settings') {
+      await (_db.delete(
+        _db.settings,
+      )..where((t) => t.key.isNotIn(_deviceLocalSettingsKeys.toList()))).go();
+      return;
+    }
+    await _db.delete(_syncTableFor(entityType)).go();
+  }
+
+  /// The Drift table backing a synced [entityType] (mirrors recordIdsFor).
+  TableInfo<Table, dynamic> _syncTableFor(String entityType) {
+    switch (entityType) {
+      case 'settings':
+        return _db.settings;
+      case 'diveEquipment':
+        return _db.diveEquipment;
+      case 'equipmentSetItems':
+        return _db.equipmentSetItems;
+      case 'divers':
+        return _db.divers;
+      case 'diverSettings':
+        return _db.diverSettings;
+      case 'buddies':
+        return _db.buddies;
+      case 'diveCenters':
+        return _db.diveCenters;
+      case 'trips':
+        return _db.trips;
+      case 'liveaboardDetails':
+        return _db.liveaboardDetailRecords;
+      case 'itineraryDays':
+        return _db.tripItineraryDays;
+      case 'equipment':
+        return _db.equipment;
+      case 'equipmentSets':
+        return _db.equipmentSets;
+      case 'diveTypes':
+        return _db.diveTypes;
+      case 'tankPresets':
+        return _db.tankPresets;
+      case 'diveComputers':
+        return _db.diveComputers;
+      case 'species':
+        return _db.species;
+      case 'tags':
+        return _db.tags;
+      case 'courses':
+        return _db.courses;
+      case 'dives':
+        return _db.dives;
+      case 'diveSites':
+        return _db.diveSites;
+      case 'diveTanks':
+        return _db.diveTanks;
+      case 'diveWeights':
+        return _db.diveWeights;
+      case 'diveTags':
+        return _db.diveTags;
+      case 'diveDiveTypes':
+        return _db.diveDiveTypes;
+      case 'diveBuddies':
+        return _db.diveBuddies;
+      case 'diveProfiles':
+        return _db.diveProfiles;
+      case 'diveProfileEvents':
+        return _db.diveProfileEvents;
+      case 'gasSwitches':
+        return _db.gasSwitches;
+      case 'diveCustomFields':
+        return _db.diveCustomFields;
+      case 'diveDataSources':
+        return _db.diveDataSources;
+      case 'siteSpecies':
+        return _db.siteSpecies;
+      case 'csvPresets':
+        return _db.csvPresets;
+      case 'viewConfigs':
+        return _db.viewConfigs;
+      case 'fieldPresets':
+        return _db.fieldPresets;
+      case 'tankPressureProfiles':
+        return _db.tankPressureProfiles;
+      case 'tideRecords':
+        return _db.tideRecords;
+      case 'sightings':
+        return _db.sightings;
+      case 'certifications':
+        return _db.certifications;
+      case 'serviceRecords':
+        return _db.serviceRecords;
+      case 'media':
+        return _db.media;
+      default:
+        throw ArgumentError.value(
+          entityType,
+          'entityType',
+          '_syncTableFor has no case for this synced entity',
         );
     }
   }
@@ -2232,4 +3031,17 @@ class SyncDataSerializer {
     }
     return merged;
   }
+}
+
+/// Captures the single digest a chunked SHA-256 conversion emits at close.
+/// Mirrors the sink in base_part_file_sink.dart (crypto does not export
+/// AccumulatorSink).
+class _Sha256DigestSink implements Sink<Digest> {
+  Digest? value;
+
+  @override
+  void add(Digest data) => value = data;
+
+  @override
+  void close() {}
 }
