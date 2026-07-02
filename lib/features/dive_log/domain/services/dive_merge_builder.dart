@@ -1,6 +1,8 @@
 import 'package:uuid/uuid.dart';
 
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive_custom_field.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive_weight.dart';
 import 'package:submersion/features/tags/domain/entities/tag.dart';
 
 /// Why a merge was rejected outright (neither sequential nor overlapping).
@@ -186,8 +188,111 @@ class DiveMergeBuilder {
         d.id: d.effectiveEntryTime.difference(mergedStart).inSeconds,
     };
 
+    final mergedId = idGen();
+
+    // Tanks: all kept, chronological, fresh ids, order re-sequenced.
+    final tankIdMap = <String, String>{};
+    final mergedTanks = <DiveTank>[];
+    var tankOrder = 0;
+    for (final d in sorted) {
+      final tanksInOrder = [...d.tanks]
+        ..sort((x, y) => x.order.compareTo(y.order));
+      for (final tank in tanksInOrder) {
+        final freshId = idGen();
+        tankIdMap[tank.id] = freshId;
+        mergedTanks.add(tank.copyWith(id: freshId, order: tankOrder++));
+      }
+    }
+
+    // Weights: first source that has any (avoids double-counting lead).
+    final weightSource = sorted.firstWhere(
+      (d) => d.weights.isNotEmpty,
+      orElse: () => sorted.first,
+    );
+    final mergedWeights = [
+      for (final w in weightSource.weights)
+        DiveWeight(
+          id: idGen(),
+          diveId: mergedId,
+          weightType: w.weightType,
+          amountKg: w.amountKg,
+          notes: w.notes,
+        ),
+    ];
+
+    // Custom fields: union by key, first-in-order wins.
+    final seenKeys = <String>{};
+    final mergedCustomFields = <DiveCustomField>[];
+    for (final d in sorted) {
+      for (final f in d.customFields) {
+        if (seenKeys.add(f.key)) {
+          mergedCustomFields.add(
+            DiveCustomField(
+              id: idGen(),
+              key: f.key,
+              value: f.value,
+              sortOrder: mergedCustomFields.length,
+            ),
+          );
+        }
+      }
+    }
+
+    // Tags: union by id, chronological order.
+    final seenTagIds = <String>{};
+    final mergedTags = <Tag>[
+      for (final d in sorted)
+        for (final t in tagsByDive[d.id] ?? const <Tag>[])
+          if (seenTagIds.add(t.id)) t,
+    ];
+
+    // Dive types: ordered union (first dive's representative type stays first).
+    final mergedDiveTypeIds = <String>[];
+    for (final d in sorted) {
+      for (final t in d.diveTypeIds) {
+        if (!mergedDiveTypeIds.contains(t)) mergedDiveTypeIds.add(t);
+      }
+    }
+
+    // Equipment: union by item id.
+    final seenEquipment = <String>{};
+    final mergedEquipment = [
+      for (final d in sorted)
+        for (final e in d.equipment)
+          if (seenEquipment.add(e.id)) e,
+    ];
+
+    // Sightings: union; same species merged (counts summed, notes joined).
+    final bySpecies = <String, MarineSighting>{};
+    for (final d in sorted) {
+      for (final s in sightingsByDive[d.id] ?? const <MarineSighting>[]) {
+        final existing = bySpecies[s.speciesId];
+        if (existing == null) {
+          bySpecies[s.speciesId] = MarineSighting(
+            id: idGen(),
+            speciesId: s.speciesId,
+            speciesName: s.speciesName,
+            count: s.count,
+            notes: s.notes,
+          );
+        } else {
+          final notes = [
+            existing.notes,
+            s.notes,
+          ].where((n) => n.trim().isNotEmpty).join('; ');
+          bySpecies[s.speciesId] = MarineSighting(
+            id: existing.id,
+            speciesId: existing.speciesId,
+            speciesName: existing.speciesName,
+            count: existing.count + s.count,
+            notes: notes,
+          );
+        }
+      }
+    }
+
     final mergedDive = Dive(
-      id: idGen(),
+      id: mergedId,
       diverId: first.diverId,
       dateTime: first.dateTime,
       entryTime: mergedStart,
@@ -208,6 +313,7 @@ class DiveMergeBuilder {
       diveCenter: _firstNonNull(sorted, (d) => d.diveCenter),
       trip: _firstNonNull(sorted, (d) => d.trip),
       tripId: _firstNonNull(sorted, (d) => d.tripId),
+      tanks: mergedTanks,
       buddy: _firstNonNull(sorted, (d) => d.buddy),
       diveMaster: _firstNonNull(sorted, (d) => d.diveMaster),
       rating: _firstNonNull(sorted, (d) => d.rating),
@@ -234,6 +340,8 @@ class DiveMergeBuilder {
       ),
       weightAmount: _firstNonNull(sorted, (d) => d.weightAmount),
       weightType: _firstNonNull(sorted, (d) => d.weightType),
+      weights: mergedWeights,
+      tags: mergedTags,
       setpointLow: _firstNonNull(sorted, (d) => d.setpointLow),
       setpointHigh: _firstNonNull(sorted, (d) => d.setpointHigh),
       setpointDeco: _firstNonNull(sorted, (d) => d.setpointDeco),
@@ -251,6 +359,9 @@ class DiveMergeBuilder {
       courseId: _firstNonNull(sorted, (d) => d.courseId),
       importSource: _firstNonNull(sorted, (d) => d.importSource),
       importId: _firstNonNull(sorted, (d) => d.importId),
+      diveTypeIds: mergedDiveTypeIds,
+      equipment: mergedEquipment,
+      customFields: mergedCustomFields,
       windSpeed: _firstNonNull(sorted, (d) => d.windSpeed),
       windDirection: _firstNonNull(sorted, (d) => d.windDirection),
       cloudCover: _firstNonNull(sorted, (d) => d.cloudCover),
@@ -266,8 +377,8 @@ class DiveMergeBuilder {
       sortedSources: sorted,
       gaps: classification.gaps,
       segmentOffsetsSeconds: offsets,
-      tankIdMap: const {},
-      mergedSightings: const [],
+      tankIdMap: tankIdMap,
+      mergedSightings: bySpecies.values.toList(),
     );
   }
 

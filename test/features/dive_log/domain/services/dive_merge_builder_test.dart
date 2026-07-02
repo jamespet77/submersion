@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive_custom_field.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive_weight.dart';
 import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
 import 'package:submersion/features/dive_log/domain/services/dive_merge_builder.dart';
 
@@ -253,6 +256,110 @@ void main() {
       final merged = builder.build([a, b]).mergedDive;
       expect(merged.entryLocation!.latitude, 1);
       expect(merged.exitLocation!.latitude, 3);
+    });
+  });
+
+  group('build - collections', () {
+    test('tanks keep chronological order, get fresh ids and an id map', () {
+      var n = 0;
+      final a = dive(
+        'a',
+        entry: DateTime.utc(2026, 7, 1, 9),
+      ).copyWith(tanks: [const DiveTank(id: 'tA1', volume: 11.1, order: 0)]);
+      final b = dive(
+        'b',
+        entry: DateTime.utc(2026, 7, 1, 10),
+      ).copyWith(tanks: [const DiveTank(id: 'tB1', volume: 15.0, order: 0)]);
+      final result = builder.build([b, a], idGenerator: () => 'gen-${n++}');
+      final tanks = result.mergedDive.tanks;
+      expect(tanks, hasLength(2));
+      expect(tanks[0].volume, 11.1); // a's tank first
+      expect(tanks[0].order, 0);
+      expect(tanks[1].order, 1);
+      expect(result.tankIdMap['tA1'], tanks[0].id);
+      expect(result.tankIdMap['tB1'], tanks[1].id);
+      expect(tanks[0].id, isNot('tA1')); // fresh id
+    });
+
+    test('weights come from the first dive that has any', () {
+      final a = dive('a', entry: DateTime.utc(2026, 7, 1, 9));
+      final b = dive('b', entry: DateTime.utc(2026, 7, 1, 10)).copyWith(
+        weights: [
+          const DiveWeight(
+            id: 'w1',
+            diveId: 'b',
+            weightType: WeightType.belt,
+            amountKg: 6,
+          ),
+        ],
+      );
+      final result = builder.build([a, b]);
+      expect(result.mergedDive.weights, hasLength(1));
+      expect(result.mergedDive.weights.single.amountKg, 6);
+      expect(result.mergedDive.weights.single.diveId, result.mergedDive.id);
+      expect(result.mergedDive.weights.single.id, isNot('w1'));
+    });
+
+    test('custom fields union by key (first wins); dive types union', () {
+      final a = dive('a', entry: DateTime.utc(2026, 7, 1, 9)).copyWith(
+        customFields: [
+          const DiveCustomField(id: 'c1', key: 'boat', value: 'Sea Cat'),
+        ],
+        diveTypeIds: ['recreational', 'night'],
+      );
+      final b = dive('b', entry: DateTime.utc(2026, 7, 1, 10)).copyWith(
+        customFields: [
+          const DiveCustomField(id: 'c2', key: 'boat', value: 'Other'),
+          const DiveCustomField(id: 'c3', key: 'guide', value: 'Maria'),
+        ],
+        diveTypeIds: ['recreational', 'drift'],
+      );
+      final merged = builder.build([a, b]).mergedDive;
+      expect(merged.customFields, hasLength(2));
+      expect(
+        merged.customFields.firstWhere((f) => f.key == 'boat').value,
+        'Sea Cat',
+      );
+      expect(merged.diveTypeIds, ['recreational', 'night', 'drift']);
+    });
+
+    test('sightings merge same species: counts summed, notes joined', () {
+      final a = dive('a', entry: DateTime.utc(2026, 7, 1, 9));
+      final b = dive('b', entry: DateTime.utc(2026, 7, 1, 10));
+      final result = builder.build(
+        [a, b],
+        sightingsByDive: {
+          'a': [
+            const MarineSighting(
+              id: 's1',
+              speciesId: 'turtle',
+              speciesName: 'Green Turtle',
+              count: 2,
+              notes: 'near reef',
+            ),
+          ],
+          'b': [
+            const MarineSighting(
+              id: 's2',
+              speciesId: 'turtle',
+              speciesName: 'Green Turtle',
+              count: 1,
+            ),
+            const MarineSighting(
+              id: 's3',
+              speciesId: 'ray',
+              speciesName: 'Eagle Ray',
+            ),
+          ],
+        },
+      );
+      expect(result.mergedSightings, hasLength(2));
+      final turtle = result.mergedSightings.firstWhere(
+        (s) => s.speciesId == 'turtle',
+      );
+      expect(turtle.count, 3);
+      expect(turtle.notes, 'near reef');
+      expect(turtle.id, isNot('s1'));
     });
   });
 }
