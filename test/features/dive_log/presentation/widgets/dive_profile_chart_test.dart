@@ -2295,6 +2295,7 @@ void main() {
       required List<DiveProfilePoint> profile,
       required List<AscentRatePoint> ascentRates,
       void Function(ProfileLegend notifier)? configure,
+      void Function(int? index)? onPointSelected,
     }) {
       final container = ProviderContainer(
         overrides: [
@@ -2317,6 +2318,7 @@ void main() {
               child: DiveProfileChart(
                 profile: profile,
                 ascentRates: ascentRates,
+                onPointSelected: onPointSelected,
               ),
             ),
           ),
@@ -2371,10 +2373,111 @@ void main() {
       final colors = primaryChartData(
         tester,
       ).lineBarsData.map((b) => b.color).toSet();
-      expect(colors, contains(Colors.green));
+      // The safe/baseline band keeps the normal depth blue -- only the elevated
+      // warning/danger bands are recoloured.
+      expect(colors, contains(AppColors.chartDepth));
       expect(colors, contains(Colors.orange));
       expect(colors, contains(Colors.red));
+      expect(colors, isNot(contains(Colors.green)));
     });
+
+    test('velocityBandRuns splits bands sharing their boundary sample', () {
+      final profile = _makeProfile(points: 12);
+      final runs = DiveProfileChart.velocityBandRuns(
+        profile.length,
+        ratesSpanningBands(profile),
+      );
+      // Three bands; adjacent runs share the boundary sample (each run's start
+      // is the previous run's last point) so the coloured pieces join cleanly.
+      expect(runs.map((r) => r.start).toList(), [0, 3, 7]);
+      expect(runs.map((r) => r.end).toList(), [4, 8, 12]);
+      expect(runs.map((r) => r.category).toList(), [
+        AscentRateCategory.safe,
+        AscentRateCategory.warning,
+        AscentRateCategory.danger,
+      ]);
+    });
+
+    testWidgets('tooltip builds when hovering a non-first velocity segment', (
+      tester,
+    ) async {
+      // Regression: with velocity colouring on, the depth line is drawn as
+      // one bar per band. The tooltip builder only recognised barIndex 0, so
+      // hovering any later segment produced no tooltip at all.
+      final profile = _makeProfile(points: 12);
+      await tester.pumpWidget(
+        buildWithLegend(
+          profile: profile,
+          ascentRates: ratesSpanningBands(profile),
+          configure: (n) => n.toggleAscentRateColors(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final data = primaryChartData(tester);
+      final bars = data.lineBarsData;
+      expect(
+        bars.length,
+        greaterThan(1),
+        reason: 'velocity colouring should split the depth line into bands',
+      );
+
+      final getItems = data.lineTouchData.touchTooltipData.getTooltipItems;
+      // Hover the second band (barIndex 1) at its first sample.
+      final secondBar = bars[1];
+      final spot = LineBarSpot(secondBar, 1, secondBar.spots.first);
+      final items = getItems(<LineBarSpot>[spot]);
+
+      expect(items.length, 1);
+      expect(
+        items.first,
+        isNotNull,
+        reason: 'a hover on a non-first velocity band must show a tooltip',
+      );
+    });
+
+    testWidgets(
+      'hover on a non-first velocity segment selects the right sample',
+      (tester) async {
+        // The onPointSelected / external-tooltip path shares the same
+        // barIndex==0 assumption; a hover landing on a later band must still
+        // resolve to a global profile index, not the band-local spot index.
+        final profile = _makeProfile(points: 12);
+        int? selected;
+        await tester.pumpWidget(
+          buildWithLegend(
+            profile: profile,
+            ascentRates: ratesSpanningBands(profile),
+            configure: (n) => n.toggleAscentRateColors(),
+            onPointSelected: (i) => selected = i,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final chart = find.byType(LineChart).first;
+        final topLeft = tester.getTopLeft(chart);
+        final size = tester.getSize(chart);
+        // Hover well into the right of the plot -- that x lands in the danger
+        // band (the last, non-first segment).
+        final pointer = TestPointer(1, PointerDeviceKind.mouse);
+        await tester.sendEventToBinding(
+          pointer.hover(topLeft + Offset(size.width * 0.85, size.height * 0.5)),
+        );
+        await tester.pump();
+
+        // Every band-local spotIndex in this fixture is <= 4 (each bar holds at
+        // most 5 points), and the danger band starts at global index 7. A hover
+        // here must resolve to a global index >= 7, which a band-local emission
+        // could never produce -- that is what proves the mapping, not merely
+        // "some in-range index".
+        expect(selected, isNotNull);
+        expect(
+          selected,
+          allOf(greaterThanOrEqualTo(7), lessThan(profile.length)),
+          reason: 'must be the global danger-band index, not a band-local one',
+        );
+      },
+    );
 
     testWidgets('a band change at the final sample still draws a line', (
       tester,
