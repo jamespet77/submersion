@@ -76,6 +76,36 @@ void main() {
     },
   );
 
+  test('surfaces a worker parse error as BaseParseException', () async {
+    // A corrupt base file: the real worker fails to read/parse and reports an
+    // error, which the client raises so the caller falls back to inline.
+    final f = File(p.join(tmp.path, 'base.json'))
+      ..writeAsStringSync('{ not valid json');
+    await expectLater(() async {
+      final client = await BaseParseClient.spawn(f.path);
+      try {
+        await client.readScalarsAndDeletions();
+      } finally {
+        await client.dispose();
+      }
+    }(), throwsA(isA<BaseParseException>()));
+  });
+
+  test('dispose completes a pending pull with an error (no hang)', () async {
+    final f = _writeBase(tmp, {
+      'exportedAt': 1,
+      'deletions': <String, dynamic>{},
+      'data': <String, dynamic>{},
+    });
+    final client = await BaseParseClient.spawn(
+      f.path,
+      entryPoint: _workerReadyThenSilent,
+    );
+    final pending = client.readScalarsAndDeletions();
+    await client.dispose();
+    await expectLater(pending, throwsA(isA<BaseParseException>()));
+  });
+
   test(
     'readScalarsAndDeletions returns exportedAt + deletions in file order',
     () async {
