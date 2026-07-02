@@ -831,4 +831,48 @@ void main() {
       }
     });
   });
+
+  group('DiveField.diveName', () {
+    test('extractFromSummary returns the name when set', () {
+      final summary = DiveSummary(
+        id: 'd1',
+        dateTime: now,
+        name: 'Wreck penetration dive',
+        siteName: 'Blue Hole',
+        sortTimestamp: 0,
+      );
+      expect(
+        DiveField.diveName.extractFromSummary(summary),
+        'Wreck penetration dive',
+      );
+    });
+
+    test('extractFromSummary falls back to the site name when unnamed', () {
+      final summary = DiveSummary(
+        id: 'd1',
+        dateTime: now,
+        siteName: 'Blue Hole',
+        sortTimestamp: 0,
+      );
+      expect(DiveField.diveName.extractFromSummary(summary), 'Blue Hole');
+    });
+
+    test('extractFromSummary returns null when name and site are absent', () {
+      final summary = DiveSummary(id: 'd1', dateTime: now, sortTimestamp: 0);
+      expect(DiveField.diveName.extractFromSummary(summary), isNull);
+    });
+
+    test('extractFromDive falls back to site name', () {
+      final named = Dive(id: 'd1', dateTime: now, name: 'Training 1');
+      final unnamed = Dive(id: 'd2', dateTime: now, site: testSite);
+      expect(DiveField.diveName.extractFromDive(named), 'Training 1');
+      expect(DiveField.diveName.extractFromDive(unnamed), 'Blue Hole');
+    });
+
+    test('diveName is a summary field in the core category', () {
+      expect(DiveField.summaryFields, contains(DiveField.diveName));
+      expect(DiveField.diveName.category, DiveFieldCategory.core);
+      expect(DiveField.diveName.displayName, 'Dive Name');
+    });
+  });
 }
