@@ -984,6 +984,29 @@ class DiveBuddies extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Professional credentials held by a buddy (instructor, divemaster,
+/// dive guide). One row per (buddy, role); the repository enforces that
+/// logical uniqueness. Issue #395.
+@DataClassName('BuddyRoleRow')
+class BuddyRoles extends Table {
+  TextColumn get id => text()();
+  TextColumn get buddyId =>
+      text().references(Buddies, #id, onDelete: KeyAction.cascade)();
+  TextColumn get role => text()(); // BuddyRole enum name
+  TextColumn get credentialNumber => text().nullable()();
+  TextColumn get agency => text().nullable()(); // CertificationAgency enum name
+  TextColumn get notes => text().withDefault(const Constant(''))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Diver certifications
 class Certifications extends Table {
   TextColumn get id => text()();
@@ -996,6 +1019,10 @@ class Certifications extends Table {
   IntColumn get expiryDate => integer().nullable()(); // For certs that expire
   TextColumn get instructorName => text().nullable()();
   TextColumn get instructorNumber => text().nullable()();
+  // Structured instructor link (issue #395). The text fields above remain
+  // the historical snapshot and survive buddy deletion.
+  TextColumn get instructorId =>
+      text().nullable().references(Buddies, #id, onDelete: KeyAction.setNull)();
   TextColumn get photoFrontPath => text()
       .nullable()(); // Front of cert card (deprecated, kept for migration)
   TextColumn get photoBackPath =>
@@ -1655,6 +1682,7 @@ class FieldPresets extends Table {
     Settings,
     Buddies,
     DiveBuddies,
+    BuddyRoles,
     Certifications,
     ServiceRecords,
     DiveCenters,
@@ -1707,7 +1735,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 93;
+  static const int currentSchemaVersion = 94;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1804,6 +1832,7 @@ class AppDatabase extends _$AppDatabase {
     91,
     92,
     93,
+    94,
   ];
 
   /// Tables that carry a per-row Hybrid Logical Clock for cross-device conflict
@@ -1817,6 +1846,7 @@ class AppDatabase extends _$AppDatabase {
     'divers',
     'diver_settings',
     'buddies',
+    'buddy_roles',
     'dive_centers',
     'trips',
     'liveaboard_detail_records',
@@ -4318,6 +4348,28 @@ class AppDatabase extends _$AppDatabase {
           }
         }
         if (from < 93) await reportProgress();
+        if (from < 94) {
+          // Buddy professional credentials + structured instructor link on
+          // certifications (issue #395). PRAGMA-guarded so a healthy database
+          // no-ops and an interrupted upgrade does not fail on a duplicate
+          // ALTER. createTable is IF NOT EXISTS.
+          final certCols = await customSelect(
+            "PRAGMA table_info('certifications')",
+          ).get();
+          if (certCols.isNotEmpty) {
+            final existing = certCols
+                .map((c) => c.read<String>('name'))
+                .toSet();
+            if (!existing.contains('instructor_id')) {
+              await customStatement(
+                'ALTER TABLE certifications ADD COLUMN instructor_id TEXT '
+                'REFERENCES buddies (id) ON DELETE SET NULL',
+              );
+            }
+          }
+          await m.createTable(buddyRoles);
+        }
+        if (from < 94) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
