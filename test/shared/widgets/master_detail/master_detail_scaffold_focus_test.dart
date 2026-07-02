@@ -25,6 +25,7 @@ Widget _buildScaffold({
     VoidCallback onCancel,
   )
   editBuilder,
+  bool provideCreateBuilder = true,
   double width = 1200,
 }) {
   final router = GoRouter(
@@ -40,8 +41,10 @@ Widget _buildScaffold({
             detailBuilder: (_, id) => Text('Detail $id'),
             summaryBuilder: (_) => const Text('Summary'),
             editBuilder: editBuilder,
-            createBuilder: (context, onSaved, onCancel) =>
-                editBuilder(context, 'new', onSaved, onCancel),
+            createBuilder: provideCreateBuilder
+                ? (context, onSaved, onCancel) =>
+                      editBuilder(context, 'new', onSaved, onCancel)
+                : null,
           ),
         ),
       ),
@@ -90,8 +93,9 @@ void main() {
         await tester.pump();
         expect(field2.hasFocus, isTrue);
 
-        // Tabbing forward from the last edit field must wrap within the edit
-        // pane, not cross into the master list on the left.
+        // Tabbing forward from the last edit field must wrap to the first
+        // field within the edit pane, not cross into the master list nor
+        // silently no-op on the last field.
         await tester.sendKeyEvent(LogicalKeyboardKey.tab);
         await tester.pump();
 
@@ -101,10 +105,13 @@ void main() {
           reason: 'Tab must not move focus into the master (list) pane.',
         );
         expect(
-          field1.hasFocus || field2.hasFocus,
+          field1.hasFocus,
           isTrue,
-          reason: 'Focus should remain within the edit pane.',
+          reason:
+              'Tab from the last edit field should wrap to the first edit '
+              'field, confirming traversal cycles within the edit pane.',
         );
+        expect(field2.hasFocus, isFalse);
       },
     );
 
@@ -137,7 +144,55 @@ void main() {
         await tester.pump();
 
         expect(masterNode.hasFocus, isFalse);
-        expect(field1.hasFocus || field2.hasFocus, isTrue);
+        expect(
+          field1.hasFocus,
+          isTrue,
+          reason:
+              'Tab from the last create field should wrap to the first create '
+              'field, confirming traversal cycles within the create pane.',
+        );
+        expect(field2.hasFocus, isFalse);
+      },
+    );
+
+    testWidgets(
+      'mode=new with no createBuilder does not exclude the master pane',
+      (tester) async {
+        // When createBuilder is null, `?mode=new` renders the summary, not a
+        // create form, so the master pane must stay in the Tab order.
+        final master1 = FocusNode(debugLabel: 'master-1');
+        final master2 = FocusNode(debugLabel: 'master-2');
+        addTearDown(master1.dispose);
+        addTearDown(master2.dispose);
+
+        await tester.pumpWidget(
+          _buildScaffold(
+            initialLocation: '/test?mode=new',
+            provideCreateBuilder: false,
+            masterBuilder: (context, onSelect, selectedId) => Column(
+              children: [_focusTarget(master1), _focusTarget(master2)],
+            ),
+            editBuilder: (context, id, onSaved, onCancel) =>
+                const SizedBox.shrink(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        master2.requestFocus();
+        await tester.pump();
+        expect(master2.hasFocus, isTrue);
+
+        // The master pane is traversable, so Tab wraps within it.
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
+
+        expect(
+          master1.hasFocus,
+          isTrue,
+          reason:
+              'Master pane must remain Tab-traversable when no create form is '
+              'shown.',
+        );
       },
     );
   });
