@@ -1,7 +1,7 @@
 import 'package:uuid/uuid.dart';
 
-import '../../../tags/domain/entities/tag.dart';
-import '../entities/dive.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive.dart';
+import 'package:submersion/features/tags/domain/entities/tag.dart';
 
 /// Why a merge was rejected outright (neither sequential nor overlapping).
 enum DiveMergeInvalidReason { tooFewDives, mixedDivers }

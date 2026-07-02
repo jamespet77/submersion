@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/services/dive_merge_builder.dart';
-import 'package:submersion/features/tags/domain/entities/tag.dart';
 
 Dive dive(
   String id, {
