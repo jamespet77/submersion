@@ -113,17 +113,19 @@ class DiveSparkline extends StatelessWidget {
   /// Downsample a profile to at most [maxPoints] using uniform stride.
   ///
   /// Always preserves the first and last points. Returns the original list
-  /// unchanged when it contains [maxPoints] or fewer points.
+  /// unchanged when it contains [maxPoints] or fewer points. [maxPoints] is
+  /// clamped to at least 2 so the stride divisor can never be zero.
   static List<DiveProfilePoint> downsample(
     List<DiveProfilePoint> points, {
     int maxPoints = 40,
   }) {
-    if (points.length <= maxPoints) return points;
+    final cap = maxPoints < 2 ? 2 : maxPoints;
+    if (points.length <= cap) return points;
 
     final result = <DiveProfilePoint>[points.first];
-    final stride = (points.length - 1) / (maxPoints - 1);
+    final stride = (points.length - 1) / (cap - 1);
 
-    for (var i = 1; i < maxPoints - 1; i++) {
+    for (var i = 1; i < cap - 1; i++) {
       result.add(points[(i * stride).round()]);
     }
 

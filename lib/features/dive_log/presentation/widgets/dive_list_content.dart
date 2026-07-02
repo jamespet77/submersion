@@ -399,7 +399,7 @@ class _DiveListContentState extends ConsumerState<DiveListContent> {
     final l10n = context.l10n;
 
     scaffoldMessenger.clearSnackBars();
-    scaffoldMessenger.showSnackBar(
+    final snackBar = scaffoldMessenger.showSnackBar(
       SnackBar(
         content: Text(l10n.diveLog_combine_snackbar(ids.length)),
         duration: const Duration(seconds: 5),
@@ -448,6 +448,16 @@ class _DiveListContentState extends ConsumerState<DiveListContent> {
         ),
       ),
     );
+
+    // Drop the retained undo snapshot once the snackbar closes without Undo
+    // (timeout/dismiss), so the copied profile/child rows aren't held for the
+    // widget's lifetime. Guard on identity in case another merge replaced it.
+    snackBar.closed.then((reason) {
+      if (reason != SnackBarClosedReason.action &&
+          identical(_lastMergeOutcome, outcome)) {
+        _lastMergeOutcome = null;
+      }
+    });
 
     // Reload the list and wait for it to settle -- now including the new
     // merged dive -- then scroll that row into view. The reload must finish

@@ -311,6 +311,52 @@ void main() {
       },
     );
 
+    test('gap samples join the primary profile, not a lingering secondary '
+        '(#449 review)', () async {
+      // 'a' has a user-edited primary profile (computerId null) plus a
+      // lingering non-primary computer profile -- mirrors saveEditedProfile.
+      await seedDive('a', entry: DateTime.utc(2026, 7, 1, 9));
+      await (db.update(
+        db.diveProfiles,
+      )..where((t) => t.diveId.equals('a'))).write(
+        const DiveProfilesCompanion(
+          isPrimary: Value(true),
+          computerId: Value(null),
+        ),
+      );
+      await db
+          .into(db.diveProfiles)
+          .insert(
+            DiveProfilesCompanion.insert(
+              id: 'sec-a',
+              diveId: 'a',
+              timestamp: 30,
+              depth: 5,
+            ).copyWith(
+              isPrimary: const Value(false),
+              computerId: const Value('sec-comp'),
+            ),
+          );
+      await seedDive('b', entry: DateTime.utc(2026, 7, 1, 10));
+
+      final outcome = await service.apply(['a', 'b']);
+      final mergedId = outcome.mergedDive.id;
+
+      // The surface gap runs from a's extent (1800s) to b's entry (3600s).
+      final gapSamples =
+          (await (db.select(
+                db.diveProfiles,
+              )..where((t) => t.diveId.equals(mergedId))).get())
+              .where((p) => p.timestamp > 1800 && p.timestamp < 3600)
+              .toList();
+      expect(gapSamples, isNotEmpty);
+      // Attributed to the primary (edited) profile, not the secondary source.
+      expect(
+        gapSamples.every((p) => p.isPrimary && p.computerId == null),
+        isTrue,
+      );
+    });
+
     test('gap samples match the source profile sample rate', () async {
       // 10s-cadence sources -> the surface gap is filled at 10s too, so the
       // synthesized samples are indistinguishable from the computer's own

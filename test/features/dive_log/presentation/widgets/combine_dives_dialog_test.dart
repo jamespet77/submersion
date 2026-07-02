@@ -46,7 +46,19 @@ class _FakeDiveRepository implements DiveRepository {
   final List<domain.Dive> dives;
 
   @override
-  Future<List<domain.Dive>> getDivesByIds(List<String> ids) async => dives;
+  Future<List<domain.Dive>> getDivesByIds(List<String> ids) async =>
+      dives.where((d) => ids.contains(d.id)).toList();
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// Fake [DiveRepository] whose `getDivesByIds` throws, as the real one does on
+/// a DB/query failure.
+class _ThrowingDiveRepository implements DiveRepository {
+  @override
+  Future<List<domain.Dive>> getDivesByIds(List<String> ids) async =>
+      throw StateError('load failed');
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -83,6 +95,7 @@ Future<void> pumpCombineDialog(
   required List<domain.Dive> dives,
   DiveMergeService? mergeService,
   List<String>? requestIds,
+  DiveRepository? repository,
 }) async {
   tester.view.physicalSize = const Size(1024, 768);
   tester.view.devicePixelRatio = 1.0;
@@ -96,7 +109,9 @@ Future<void> pumpCombineDialog(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        diveRepositoryProvider.overrideWithValue(_FakeDiveRepository(dives)),
+        diveRepositoryProvider.overrideWithValue(
+          repository ?? _FakeDiveRepository(dives),
+        ),
         settingsProvider.overrideWith((ref) => _FakeSettingsNotifier()),
         if (mergeService != null)
           diveMergeServiceProvider.overrideWithValue(mergeService),
@@ -188,6 +203,23 @@ void main() {
     // ...but no chart to show.
     expect(find.byType(DiveSparkline), findsNothing);
     expect(find.text('Combined profile'), findsNothing);
+  });
+
+  testWidgets('shows the error panel when loading the dives fails', (
+    tester,
+  ) async {
+    await pumpCombineDialog(
+      tester,
+      dives: const [],
+      repository: _ThrowingDiveRepository(),
+      requestIds: const ['a', 'b'],
+    );
+    // Not stuck on the spinner; the generic combine error is shown.
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(
+      find.text("Couldn't combine the dives. Nothing was changed."),
+      findsOneWidget,
+    );
   });
 
   testWidgets('warns when a surface interval is longer than 30 minutes', (

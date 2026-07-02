@@ -109,14 +109,23 @@ class DiveMergeService {
     return null;
   }
 
-  /// The first profile row belonging to source dive [diveId] that carries a
-  /// computerId, used to attribute synthesized gap samples to the correct
-  /// source (#449 review F1).
+  /// A representative profile row for source dive [diveId], used to attribute
+  /// synthesized gap samples to the correct source (#449 review F1). Prefers
+  /// the primary profile (the one that renders) so the gap fill joins it --
+  /// e.g. a user-edited profile is primary with a null computerId while the
+  /// original download lingers as a non-primary row (see
+  /// DiveRepository.saveEditedProfile). Falls back to any computerId-bearing
+  /// row, then to any row of the segment.
   DiveProfile? _adjacentProfileRow(List<DiveProfile> rows, String diveId) {
-    for (final row in rows) {
-      if (row.diveId == diveId && row.computerId != null) return row;
+    final segment = rows.where((r) => r.diveId == diveId).toList();
+    if (segment.isEmpty) return null;
+    for (final row in segment) {
+      if (row.isPrimary) return row;
     }
-    return null;
+    for (final row in segment) {
+      if (row.computerId != null) return row;
+    }
+    return segment.first;
   }
 
   /// The native sample cadence around [gap]: the median inter-sample delta
@@ -254,12 +263,13 @@ class DiveMergeService {
             snapshot.profileRows,
             gap,
           );
+          // Cap the fill so a very long surface interval (hours/days) at a
+          // dense cadence can't generate tens of thousands of rows in one
+          // transaction; a few hundred flat points render identically.
+          final minStep = ((gap.endSeconds - gap.startSeconds) / 300).ceil();
+          final step = interval > minStep ? interval : minStep;
           final timestamps = <int>[
-            for (
-              var ts = gap.startSeconds + 1;
-              ts < gap.endSeconds;
-              ts += interval
-            )
+            for (var ts = gap.startSeconds + 1; ts < gap.endSeconds; ts += step)
               ts,
           ];
           if (timestamps.last != gap.endSeconds - 1) {

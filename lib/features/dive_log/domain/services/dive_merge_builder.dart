@@ -421,10 +421,18 @@ class DiveMergeBuilder {
         // series; a few hundred flat points render identically anyway.
         final minStep = ((gap.endSeconds - gap.startSeconds) / 300).ceil();
         final step = cadence > minStep ? cadence : minStep;
-        for (var t = gap.startSeconds; t < gap.endSeconds; t += step) {
+        // Fill (start+1 .. end-1), matching the persisted gap fill in
+        // DiveMergeService, so the preview seam mirrors the result exactly
+        // and no 0-depth point duplicates a boundary sample's timestamp.
+        final gapTimestamps = <int>[
+          for (var t = gap.startSeconds + 1; t < gap.endSeconds; t += step) t,
+        ];
+        if (gapTimestamps.isEmpty || gapTimestamps.last != gap.endSeconds - 1) {
+          gapTimestamps.add(gap.endSeconds - 1);
+        }
+        for (final t in gapTimestamps) {
           points.add(DiveProfilePoint(timestamp: t, depth: 0));
         }
-        points.add(DiveProfilePoint(timestamp: gap.endSeconds, depth: 0));
       }
     }
     // A series that never leaves the surface (no submerged samples) is not

@@ -34,6 +34,7 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
   List<domain.Dive>? _dives;
   DiveMergeClassification? _classification;
   bool _working = false;
+  bool _loadFailed = false;
 
   @override
   void initState() {
@@ -42,14 +43,20 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
   }
 
   Future<void> _load() async {
-    final dives = await ref
-        .read(diveRepositoryProvider)
-        .getDivesByIds(widget.diveIds);
-    if (!mounted) return;
-    setState(() {
-      _dives = dives;
-      _classification = const DiveMergeBuilder().classify(dives);
-    });
+    try {
+      final dives = await ref
+          .read(diveRepositoryProvider)
+          .getDivesByIds(widget.diveIds);
+      if (!mounted) return;
+      setState(() {
+        _dives = dives;
+        _classification = const DiveMergeBuilder().classify(dives);
+      });
+    } catch (_) {
+      // A DB/query failure would otherwise leave the dialog stuck on the
+      // loading spinner; surface the generic combine error panel instead.
+      if (mounted) setState(() => _loadFailed = true);
+    }
   }
 
   Future<void> _confirm() async {
@@ -84,12 +91,24 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 520, maxHeight: 600),
         child: switch (_classification) {
+          _ when _loadFailed => _buildErrorPanel(
+            context,
+            context.l10n.diveLog_combine_error,
+          ),
           null => const Center(child: CircularProgressIndicator()),
           final MergeSequential seq => _buildPreview(context, seq),
           MergeOverlapping() => _buildOverlapPanel(context),
           final MergeInvalid invalid => _buildErrorPanel(
             context,
-            invalid.reason,
+            switch (invalid.reason) {
+              // tooFewDives is reachable when a selected dive was deleted
+              // (locally or via sync) before the dialog finished loading; the
+              // mixed-divers text would mislead, so use the generic error.
+              DiveMergeInvalidReason.mixedDivers =>
+                context.l10n.diveLog_combine_mixedDivers,
+              DiveMergeInvalidReason.tooFewDives =>
+                context.l10n.diveLog_combine_error,
+            },
           ),
         },
       ),
@@ -408,17 +427,9 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
     );
   }
 
-  Widget _buildErrorPanel(BuildContext context, DiveMergeInvalidReason reason) {
+  Widget _buildErrorPanel(BuildContext context, String message) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    // tooFewDives is reachable when a selected dive was deleted (locally or
-    // via sync) before the dialog finished loading; the mixed-divers text
-    // would mislead there, so fall back to the generic combine error.
-    final message = switch (reason) {
-      DiveMergeInvalidReason.mixedDivers =>
-        context.l10n.diveLog_combine_mixedDivers,
-      DiveMergeInvalidReason.tooFewDives => context.l10n.diveLog_combine_error,
-    };
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -457,12 +468,14 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
     );
   }
 
+  // Matches the shared duration format (dive_field_formatter.dart): "Xh Ym"
+  // for >= 1 hour, "Xmin" otherwise.
   String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    if (minutes < 60) return '${minutes}min';
-    final hours = duration.inHours;
-    final remaining = minutes - hours * 60;
-    return remaining > 0 ? '${hours}h ${remaining}min' : '${hours}h';
+    final totalMinutes = duration.inMinutes;
+    if (totalMinutes < 60) return '${totalMinutes}min';
+    final hours = totalMinutes ~/ 60;
+    final minutes = totalMinutes % 60;
+    return '${hours}h ${minutes}m';
   }
 }
 

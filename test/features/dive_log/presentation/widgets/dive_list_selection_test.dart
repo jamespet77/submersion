@@ -31,7 +31,8 @@ class _FakeDiveRepository implements DiveRepository {
   final List<Dive> dives;
 
   @override
-  Future<List<Dive>> getDivesByIds(List<String> ids) async => dives;
+  Future<List<Dive>> getDivesByIds(List<String> ids) async =>
+      dives.where((d) => ids.contains(d.id)).toList();
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

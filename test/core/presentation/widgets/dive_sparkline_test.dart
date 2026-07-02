@@ -187,5 +187,16 @@ void main() {
       final two = _makeProfile(2);
       expect(DiveSparkline.downsample(two, maxPoints: 40), same(two));
     });
+
+    test('clamps maxPoints below 2 instead of dividing by zero', () {
+      final points = _makeProfile(200);
+      // maxPoints 0/1 would make the stride divisor (maxPoints - 1) zero.
+      for (final tiny in [0, 1]) {
+        final result = DiveSparkline.downsample(points, maxPoints: tiny);
+        expect(result.length, 2);
+        expect(result.first, points.first);
+        expect(result.last, points.last);
+      }
+    });
   });
 }
