@@ -69,6 +69,7 @@ Future<void> pumpCombineDialog(
   WidgetTester tester, {
   required List<domain.Dive> dives,
   DiveMergeService? mergeService,
+  List<String>? requestIds,
 }) async {
   tester.view.physicalSize = const Size(1024, 768);
   tester.view.devicePixelRatio = 1.0;
@@ -105,7 +106,7 @@ Future<void> pumpCombineDialog(
 
   showCombineDivesDialog(
     context: savedContext,
-    diveIds: dives.map((d) => d.id).toList(),
+    diveIds: requestIds ?? dives.map((d) => d.id).toList(),
   );
   await tester.pumpAndSettle();
 }
@@ -163,5 +164,46 @@ void main() {
       find.text("Couldn't combine the dives. Nothing was changed."),
       findsOneWidget,
     );
+  });
+
+  testWidgets('mixed-diver selection shows the mixed-divers message', (
+    tester,
+  ) async {
+    await pumpCombineDialog(
+      tester,
+      dives: [
+        diveAt('a', DateTime.utc(2026, 7, 1, 9)),
+        diveAt('b', DateTime.utc(2026, 7, 1, 10), diverId: 'diver2'),
+      ],
+    );
+    expect(
+      find.text(
+        "The selected dives belong to different divers and can't be combined.",
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Combine into one dive'), findsNothing);
+  });
+
+  testWidgets('selection that loads too few dives shows the generic error, '
+      'not the mixed-divers message', (tester) async {
+    // Two ids requested, but only one dive still exists by load time
+    // (e.g. deleted locally or via sync) -> tooFewDives.
+    await pumpCombineDialog(
+      tester,
+      dives: [diveAt('a', DateTime.utc(2026, 7, 1, 9))],
+      requestIds: ['a', 'ghost'],
+    );
+    expect(
+      find.text("Couldn't combine the dives. Nothing was changed."),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        "The selected dives belong to different divers and can't be combined.",
+      ),
+      findsNothing,
+    );
+    expect(find.text('Combine into one dive'), findsNothing);
   });
 }

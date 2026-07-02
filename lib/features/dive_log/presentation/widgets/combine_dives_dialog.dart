@@ -81,7 +81,10 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
           null => const Center(child: CircularProgressIndicator()),
           final MergeSequential seq => _buildPreview(context, seq),
           MergeOverlapping() => _buildOverlapPanel(context),
-          MergeInvalid() => _buildErrorPanel(context),
+          final MergeInvalid invalid => _buildErrorPanel(
+            context,
+            invalid.reason,
+          ),
         },
       ),
     );
@@ -278,9 +281,17 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
     );
   }
 
-  Widget _buildErrorPanel(BuildContext context) {
+  Widget _buildErrorPanel(BuildContext context, DiveMergeInvalidReason reason) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    // tooFewDives is reachable when a selected dive was deleted (locally or
+    // via sync) before the dialog finished loading; the mixed-divers text
+    // would mislead there, so fall back to the generic combine error.
+    final message = switch (reason) {
+      DiveMergeInvalidReason.mixedDivers =>
+        context.l10n.diveLog_combine_mixedDivers,
+      DiveMergeInvalidReason.tooFewDives => context.l10n.diveLog_combine_error,
+    };
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -303,10 +314,7 @@ class _CombineDivesDialogState extends ConsumerState<CombineDivesDialog> {
             ],
           ),
           const SizedBox(height: 16),
-          Text(
-            context.l10n.diveLog_combine_mixedDivers,
-            style: textTheme.bodyMedium,
-          ),
+          Text(message, style: textTheme.bodyMedium),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
