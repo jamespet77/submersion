@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/services/dive_merge_builder.dart';
+import 'package:submersion/features/tags/domain/entities/tag.dart';
 
 Dive dive(
   String id, {
@@ -91,6 +92,46 @@ void main() {
       ]);
       expect(result, isA<MergeSequential>());
       expect((result as MergeSequential).gaps.single.duration, Duration.zero);
+    });
+  });
+
+  group('build - timeline', () {
+    test('throws for non-sequential input', () {
+      expect(() => builder.build([dive('a')]), throwsArgumentError);
+    });
+
+    test(
+      'merged dive spans first entry to last exit; offsets are relative',
+      () {
+        var n = 0;
+        final result = builder.build([
+          dive('b', entry: DateTime.utc(2026, 7, 1, 10), runtimeMin: 20),
+          dive('a', entry: DateTime.utc(2026, 7, 1, 9), runtimeMin: 30),
+        ], idGenerator: () => 'gen-${n++}');
+
+        final merged = result.mergedDive;
+        expect(merged.id, 'gen-0');
+        expect(merged.diverId, 'diver1');
+        expect(merged.entryTime, DateTime.utc(2026, 7, 1, 9));
+        expect(merged.exitTime, DateTime.utc(2026, 7, 1, 10, 20));
+        expect(merged.runtime, const Duration(minutes: 80)); // includes the gap
+        expect(result.segmentOffsetsSeconds, {'a': 0, 'b': 3600});
+        expect(result.sortedSources.map((d) => d.id), ['a', 'b']);
+        expect(result.gaps, hasLength(1));
+      },
+    );
+
+    test('uses explicit exitTime of the last dive when set', () {
+      final last = Dive(
+        id: 'b',
+        diverId: 'diver1',
+        dateTime: DateTime.utc(2026, 7, 1, 10),
+        entryTime: DateTime.utc(2026, 7, 1, 10),
+        exitTime: DateTime.utc(2026, 7, 1, 10, 25),
+        runtime: const Duration(minutes: 25),
+      );
+      final result = builder.build([dive('a'), last]);
+      expect(result.mergedDive.exitTime, DateTime.utc(2026, 7, 1, 10, 25));
     });
   });
 }
