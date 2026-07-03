@@ -1151,12 +1151,14 @@ class _DiveComputerDiscoveryWizardRoute extends ConsumerWidget {
     final importService = ref.watch(diveImportServiceProvider);
     final computerRepo = ref.watch(diveComputerRepositoryProvider);
     final diveRepo = ref.watch(diveRepositoryProvider);
+    final consolidationService = ref.watch(diveConsolidationServiceProvider);
 
     return UnifiedImportWizard(
       adapter: DiveComputerAdapter(
         importService: importService,
         computerRepository: computerRepo,
         diveRepository: diveRepo,
+        consolidationService: consolidationService,
         diverId: diverId,
         ref: ref,
       ),
@@ -1181,6 +1183,7 @@ class _DiveComputerDownloadWizardRoute extends ConsumerWidget {
     final importService = ref.watch(diveImportServiceProvider);
     final computerRepo = ref.watch(diveComputerRepositoryProvider);
     final diveRepo = ref.watch(diveRepositoryProvider);
+    final consolidationService = ref.watch(diveConsolidationServiceProvider);
     final computerAsync = ref.watch(diveComputerByIdProvider(computerId));
 
     return computerAsync.when(
@@ -1196,6 +1199,7 @@ class _DiveComputerDownloadWizardRoute extends ConsumerWidget {
             importService: importService,
             computerRepository: computerRepo,
             diveRepository: diveRepo,
+            consolidationService: consolidationService,
             diverId: diverId,
             knownComputer: computer,
             ref: ref,

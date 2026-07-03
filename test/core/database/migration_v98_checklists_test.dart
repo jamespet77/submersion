@@ -3,10 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/database/database.dart';
 
 void main() {
-  test('v97 creates the three checklist tables with hlc columns', () async {
+  test('v98 creates the three checklist tables with hlc columns', () async {
     final nativeDb = NativeDatabase.memory(
       setup: (rawDb) {
-        rawDb.execute('PRAGMA user_version = 96');
+        rawDb.execute('PRAGMA user_version = 97');
         // Minimal parents so FK references resolve.
         rawDb.execute('''
           CREATE TABLE divers (id TEXT NOT NULL PRIMARY KEY)
@@ -63,19 +63,18 @@ void main() {
   });
 
   test(
-    'recovers databases stranded at v96 by the photo-markers collision',
+    'recovers databases stranded at v97 by parallel-branch collisions',
     () async {
-      // Reproduces the user's exact live-DB state: a parallel in-flight
-      // feature (photo markers) also claimed schema v96 and already ran
-      // against this database, so user_version is 96 and
-      // diver_settings.default_show_photo_markers exists, but our checklist
-      // tables were never created because our old `if (from < 96)` guard
-      // saw from == 96 and skipped. The v97 migration must still create the
-      // checklist tables (idempotent DDL) and must not disturb the
-      // photo-markers column that already landed.
+      // Reproduces a real live-DB stranding: parallel in-flight features each
+      // claimed a schema version before checklists merged (photo markers v96,
+      // multi-computer consolidation v97), so a fully-updated database sits at
+      // user_version 97 with diver_settings.default_show_photo_markers present
+      // but no checklist tables. The v98 migration must still create the
+      // checklist tables (idempotent DDL) without disturbing what earlier
+      // versions added.
       final nativeDb = NativeDatabase.memory(
         setup: (rawDb) {
-          rawDb.execute('PRAGMA user_version = 96');
+          rawDb.execute('PRAGMA user_version = 97');
           rawDb.execute('''
             CREATE TABLE divers (id TEXT NOT NULL PRIMARY KEY)
           ''');
@@ -113,9 +112,9 @@ void main() {
     },
   );
 
-  test('schema version is 97 and the migration list includes it', () {
-    expect(AppDatabase.currentSchemaVersion, 97);
-    expect(AppDatabase.migrationVersions, contains(97));
+  test('schema version is 98 and the migration list includes it', () {
+    expect(AppDatabase.currentSchemaVersion, 98);
+    expect(AppDatabase.migrationVersions, contains(98));
   });
 
   test('fresh database exposes the checklist tables via Drift', () async {

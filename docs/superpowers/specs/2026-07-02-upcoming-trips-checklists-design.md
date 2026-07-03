@@ -21,10 +21,11 @@ future-datable; upcoming/completed state is derived from dates, never stored.
 | Template management | Settings page entry, following the Tank Presets pattern |
 | Data model | Copy-on-apply: applying a template copies items into the trip as independent rows |
 
-## Data Model (schema v96 → v97)
+## Data Model (schema v97 → v98)
 
-(originally planned as v95; renumbered twice — main adopted v95 for dive
-naming, and a parallel branch consumed v96 — landing on v97)
+(originally planned as v95; renumbered as parallel branches each consumed a
+version — dive naming v95, photo markers v96, multi-computer consolidation
+v97 — landing on v98)
 
 All tables follow the house pattern: text UUID primary key, unix-timestamp
 `createdAt`/`updatedAt`, nullable `hlc` column for cross-device merge.
@@ -96,7 +97,7 @@ All tables follow the house pattern: text UUID primary key, unix-timestamp
 - Add all three tables to `_hlcTables` in `database.dart`.
 - Add three entries to the entity registry in `sync_repository.dart`
   (pattern: `'itineraryDays': (table: 'trip_itinerary_days', pk: 'id')`).
-- Migration v97: create tables + indexes on `trip_checklist_items(trip_id)`
+- Migration v98: create tables + indexes on `trip_checklist_items(trip_id)`
   and `checklist_template_items(template_id)`.
 - Deletion cascades are application-level (matching itinerary days): deleting
   a trip deletes its checklist items in the same transaction; deleting a
@@ -185,7 +186,7 @@ checklists/
   FK-ON round-trip (FK-OFF test configs mask insert-order bugs in this repo).
 - Entity tests: `isUpcoming` / `daysUntilStart` boundaries (ends today =
   upcoming; starts today = in progress).
-- Migration test: v96 → v97 tables + indexes.
+- Migration test: v97 → v98 tables + indexes.
 - Widget tests: list partitioning and countdown, item tile toggle, progress
   line visibility, templates page list/edit.
 - Sync round-trip test: three tables registered; changeset export/import

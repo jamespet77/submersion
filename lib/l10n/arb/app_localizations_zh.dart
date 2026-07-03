@@ -2974,17 +2974,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_combine_profilePreview => '合并后的剖面';
 
   @override
-  String get diveLog_combine_overlapBody =>
-      '重叠的潜水看起来像是由多台潜水电脑记录的同一次潜水。将它们合并为显示每台电脑数据的单条记录的功能即将在未来版本中推出。';
-
-  @override
-  String get diveLog_combine_overlapHintTwoDives =>
-      '要立即合并同一次潜水的两条记录，请打开其中一条并使用「与另一次潜水合并」。';
-
-  @override
-  String get diveLog_combine_overlapTitle => '这些潜水在时间上重叠';
-
-  @override
   String diveLog_combine_previewIntro(int count) {
     return '这 $count 次潜水将合并为一次连续潜水。它们之间的间隔将变为水面时间。';
   }
@@ -3017,6 +3006,70 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_combine_undone => '已撤消合并';
+
+  @override
+  String get diveLog_computerSource_badge_primary => '主要';
+
+  @override
+  String get diveLog_consolidate_confirm => '保留为一次潜水，包含两台电脑';
+
+  @override
+  String get diveLog_consolidate_error_generic => '无法合并这些潜水。未做任何更改。';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      '这些潜水在时间上不重叠，因此无法合并为同一次潜水。';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      '这些潜水来自同一台潜水电脑，无法以这种方式合并。';
+
+  @override
+  String get diveLog_consolidate_selectPrimary => '主潜水电脑';
+
+  @override
+  String get diveLog_consolidate_snackbar => '潜水已作为附加电脑合并。';
+
+  @override
+  String get diveLog_consolidate_undoError => '无法撤消合并。';
+
+  @override
+  String get diveLog_consolidate_undone => '已撤消合并';
+
+  @override
+  String diveLog_mergeDialog_confirmSubtitle(String time) {
+    return '$time 的潜水将合并到此次潜水中。';
+  }
+
+  @override
+  String get diveLog_mergeDialog_confirmTitle => '确认合并';
+
+  @override
+  String get diveLog_mergeDialog_empty => '当天未找到其他潜水记录。';
+
+  @override
+  String get diveLog_mergeDialog_explanation =>
+      '此次潜水的剖面、气瓶、压力、事件、标签、潜伴和目击记录将作为附加电脑来源合并到此次潜水中。此操作可通过“取消关联电脑”撤消。';
+
+  @override
+  String diveLog_mergeDialog_loadError(String error) {
+    return '加载潜水记录时出错：$error';
+  }
+
+  @override
+  String get diveLog_mergeDialog_merge => '合并';
+
+  @override
+  String get diveLog_mergeDialog_next => '下一步';
+
+  @override
+  String get diveLog_mergeDialog_subtitle => '选择同一天的一次潜水，将其作为附加电脑合并。';
+
+  @override
+  String get diveLog_mergeDialog_title => '与另一次潜水合并';
+
+  @override
+  String get diveLog_mergeDialog_whatThisDoes => '这将执行以下操作';
 
   @override
   String get diveLog_computerSheet_description => '选择要从哪台电脑的轮廓开始编辑。';
@@ -4773,12 +4826,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_playback_tooltip_speed => '回放速度';
 
   @override
-  String get diveLog_profileSelector_badge_primary => '主要';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => '潜水电脑';
-
-  @override
   String diveLog_profile_axisDepth(Object unit) {
     return '深度 ($unit)';
   }
@@ -5314,6 +5361,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_tooltip_tts => 'TTS';
+
+  @override
+  String get diveLog_sources_row_metric => '指标';
+
+  @override
+  String get diveLog_sources_row_maxDepth => '最大深度';
+
+  @override
+  String get diveLog_sources_row_avgDepth => '平均深度';
+
+  @override
+  String get diveLog_sources_row_duration => '时长';
+
+  @override
+  String get diveLog_sources_row_waterTemp => '水温';
+
+  @override
+  String get diveLog_sources_row_cns => 'CNS';
+
+  @override
+  String get diveLog_sources_row_otu => 'OTU';
+
+  @override
+  String get diveLog_sources_row_decoAlgorithm => '减压算法';
+
+  @override
+  String get diveLog_sources_row_gf => 'GF';
+
+  @override
+  String diveLog_sources_minutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 分钟',
+      one: '1 分钟',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diveLog_sources_unknownComputer => '未知电脑';
 
   @override
   String get divePlanner_action_addTank => '添加气瓶';
@@ -10497,6 +10585,55 @@ class AppLocalizationsZh extends AppLocalizations {
   ) {
     return '$providerName 连接失败：$error';
   }
+
+  @override
+  String get settings_cloudSync_dropbox_account_title => 'Dropbox 账户';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_browserFailed =>
+      '无法打开浏览器。请尝试“重新打开浏览器”按钮。';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_codeLabel => '授权码';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_emptyCode => '输入浏览器中显示的授权码';
+
+  @override
+  String settings_cloudSync_dropbox_connect_failed(Object error) {
+    return '无法连接到 Dropbox：$error';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_connect_instructions =>
+      '浏览器已打开 Dropbox 授权页面。请批准访问权限，然后将 Dropbox 显示的代码粘贴到此处。';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_reopenBrowser => '重新打开浏览器';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_submit => '连接';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_title => '连接 Dropbox';
+
+  @override
+  String get settings_cloudSync_dropbox_connected => '已连接到 Dropbox';
+
+  @override
+  String settings_cloudSync_dropbox_connectedAs(Object account) {
+    return '已连接为 $account';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_disconnect => '断开连接';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_subtitle =>
+      '通过 Dropbox 同步（Apps/Submersion）';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_title => 'Dropbox';
 
   @override
   String get settings_cloudSync_provider_googleDrive => 'Google Drive';
