@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/database/database.dart';
 
 void main() {
-  test('fresh v98 schema has buddy_roles table and '
+  test('fresh v99 schema has buddy_roles table and '
       'certifications.instructor_id', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
@@ -36,9 +36,9 @@ void main() {
     expect(certColNames, contains('instructor_id'));
   });
 
-  test('v98 migration adds instructor_id to a pre-v98 certifications table '
+  test('v99 migration adds instructor_id to a pre-v99 certifications table '
       'and is idempotent', () async {
-    // Simulate the guarded ALTER against a pre-v98 table shape.
+    // Simulate the guarded ALTER against a pre-v99 table shape.
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     await db.customStatement('''
@@ -67,12 +67,12 @@ void main() {
     expect(await hasColumn(), isTrue);
   });
 
-  test('real onUpgrade from v97 adds instructor_id and creates buddy_roles, '
+  test('real onUpgrade from v98 adds instructor_id and creates buddy_roles, '
       'preserving rows', () async {
     final nativeDb = NativeDatabase.memory(
       setup: (rawDb) {
-        rawDb.execute('PRAGMA user_version = 97');
-        // Minimal pre-v98 shapes: certifications without instructor_id, a
+        rawDb.execute('PRAGMA user_version = 98');
+        // Minimal pre-v99 shapes: certifications without instructor_id, a
         // buddies table for the new FKs to reference, and NO buddy_roles.
         rawDb.execute('''
           CREATE TABLE buddies (
@@ -104,7 +104,7 @@ void main() {
     final db = AppDatabase(nativeDb);
     addTearDown(() => db.close());
 
-    // Touch the DB so the real onUpgrade v98 block runs.
+    // Touch the DB so the real onUpgrade v99 block runs.
     final certCols = await db
         .customSelect("PRAGMA table_info('certifications')")
         .get();
@@ -142,14 +142,14 @@ void main() {
   });
 
   test('schema version is at least 97 and the migration list includes it', () {
-    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(98));
-    expect(AppDatabase.migrationVersions, contains(98));
+    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(99));
+    expect(AppDatabase.migrationVersions, contains(99));
   });
 
-  test('backstop heals a database stranded past v98 by a parallel-branch '
+  test('backstop heals a database stranded past v99 by a parallel-branch '
       'version collision', () async {
     // Reproduces the field failure: another branch build that also claims
-    // schema version 98 advanced user_version past this branch's v98 block,
+    // schema version 99 advanced user_version past this branch's v99 block,
     // so onUpgrade never runs here and buddy_roles/instructor_id are
     // missing. The beforeOpen backstop must re-assert them anyway.
     final nativeDb = NativeDatabase.memory(
