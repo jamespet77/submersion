@@ -716,6 +716,7 @@ class DiveRepository {
               buddy: Value(dive.buddy),
               diveMaster: Value(dive.diveMaster),
               notes: Value(dive.notes),
+              name: Value(dive.name),
               siteId: Value(dive.site?.id),
               diveCenterId: Value(dive.diveCenter?.id),
               tripId: Value(dive.tripId ?? dive.trip?.id),
@@ -958,6 +959,7 @@ class DiveRepository {
           buddy: Value(dive.buddy),
           diveMaster: Value(dive.diveMaster),
           notes: Value(dive.notes),
+          name: Value(dive.name),
           siteId: Value(dive.site?.id),
           diveCenterId: Value(dive.diveCenter?.id),
           tripId: Value(dive.tripId ?? dive.trip?.id),
@@ -1364,7 +1366,8 @@ class DiveRepository {
 
         final sql =
             'SELECT '
-            'd.id, d.dive_number, d.dive_date_time, d.entry_time, '
+            'd.id, d.dive_number, d.name AS dive_name, '
+            'd.dive_date_time, d.entry_time, '
             'd.max_depth, d.bottom_time, d.runtime, d.water_temp, d.rating, '
             'd.is_favorite, d.dive_type, '
             'COALESCE(d.entry_time, d.dive_date_time) AS sort_timestamp, '
@@ -1402,6 +1405,7 @@ class DiveRepository {
           return DiveSummary(
             id: id,
             diveNumber: row.readNullable<int>('dive_number'),
+            name: row.readNullable<String>('dive_name'),
             dateTime: DateTime.fromMillisecondsSinceEpoch(
               row.read<int>('dive_date_time'),
               isUtc: true,
@@ -1780,12 +1784,13 @@ class DiveRepository {
     return getNextDiveNumber(diverId: diverId);
   }
 
-  /// Search dives by notes or buddy name
+  /// Search dives by name, notes, or buddy name
   Future<List<domain.Dive>> searchDives(String query, {String? diverId}) async {
     try {
       // Search across dive fields and all related tables in a single query.
-      // Matches: notes, buddy (legacy field), dive master, site name/country/
-      // region, dive center name, linked buddy names, tag names, custom fields.
+      // Matches: name, notes, buddy (legacy field), dive master, site name/
+      // country/region, dive center name, linked buddy names, tag names,
+      // custom fields.
       final likeTerm = '%$query%';
       final diverClause = diverId != null ? 'AND d.diver_id = ?' : '';
       final diverArgs = diverId != null
@@ -1806,6 +1811,7 @@ class DiveRepository {
             LEFT JOIN dive_custom_fields cf ON cf.dive_id = d.id
             WHERE (
               d.notes LIKE ?
+              OR d.name LIKE ?
               OR d.buddy LIKE ?
               OR d.dive_master LIKE ?
               OR ds.name LIKE ?
@@ -1820,6 +1826,7 @@ class DiveRepository {
             $diverClause
             ''',
             variables: [
+              Variable(likeTerm),
               Variable(likeTerm),
               Variable(likeTerm),
               Variable(likeTerm),
@@ -2258,6 +2265,7 @@ class DiveRepository {
       buddy: row.buddy,
       diveMaster: row.diveMaster,
       notes: row.notes,
+      name: row.name,
       site: domainSite,
       diveCenter: domainCenter,
       trip: domainTrip,
@@ -2609,6 +2617,7 @@ class DiveRepository {
       buddy: row.buddy,
       diveMaster: row.diveMaster,
       notes: row.notes,
+      name: row.name,
       site: site,
       diveCenter: diveCenter,
       trip: trip,

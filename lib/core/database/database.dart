@@ -131,6 +131,9 @@ class Dives extends Table {
   TextColumn get id => text()();
   TextColumn get diverId => text().nullable().references(Divers, #id)();
   IntColumn get diveNumber => integer().nullable()();
+  // User-defined dive name (#400). Null = never named; display falls back
+  // to the site name.
+  TextColumn get name => text().nullable()();
   IntColumn get diveDateTime =>
       integer()(); // Unix timestamp (legacy, kept for compatibility)
   IntColumn get entryTime =>
@@ -815,6 +818,10 @@ class DiverSettings extends Table {
       boolean().withDefault(const Constant(true))();
   RealColumn get lastStopDepth => real().withDefault(const Constant(3.0))();
   RealColumn get decoStopIncrement => real().withDefault(const Constant(3.0))();
+  // coverage:ignore-start
+  /// Index of AscentGasSet (0 = allCarried). Drives the ideal-gas ascent set.
+  IntColumn get ascentGasSet => integer().withDefault(const Constant(0))();
+  // coverage:ignore-end
   BoolColumn get o2Narcotic => boolean().withDefault(const Constant(true))();
   RealColumn get endLimit => real().withDefault(const Constant(30.0))();
   BoolColumn get useDiveComputerCnsData =>
@@ -1731,7 +1738,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 94;
+  static const int currentSchemaVersion = 96;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1829,6 +1836,8 @@ class AppDatabase extends _$AppDatabase {
     92,
     93,
     94,
+    95,
+    96,
   ];
 
   /// Tables that carry a per-row Hybrid Logical Clock for cross-device conflict
@@ -4344,10 +4353,38 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 93) await reportProgress();
         if (from < 94) {
+          // Guarded by sqlite_master so minimal-schema migration tests without
+          // diver_settings are unaffected.
+          final dsTable = await customSelect(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='diver_settings'",
+          ).get();
+          if (dsTable.isNotEmpty) {
+            await m.addColumn(diverSettings, diverSettings.ascentGasSet);
+          }
+        }
+        if (from < 94) await reportProgress();
+        if (from < 95) {
+          // Dive naming (#400): optional user-defined dive name. Guarded by a
+          // PRAGMA check so an interrupted upgrade that already added the
+          // column does not fail on a duplicate ALTER, and so minimal-schema
+          // migration tests without a dives table are unaffected (empty
+          // table_info means no dives table).
+          final diveCols = await customSelect(
+            "PRAGMA table_info('dives')",
+          ).get();
+          final hasName = diveCols.any((c) => c.read<String>('name') == 'name');
+          if (diveCols.isNotEmpty && !hasName) {
+            await customStatement('ALTER TABLE dives ADD COLUMN name TEXT');
+          }
+        }
+        if (from < 95) await reportProgress();
+        if (from < 96) {
           // Multi-computer consolidation: per-source attribution for tanks,
           // pressure curves, and events. Guarded per table so minimal-schema
           // migration tests without these tables are unaffected; existing
-          // rows keep NULL (= primary source / manual entry).
+          // rows keep NULL (= primary source / manual entry). (Authored as
+          // v94 on the feature branch; renumbered to v96 on merge after
+          // ascent_gas_set took v94 and dive naming took v95 on main.)
           for (final table in [
             'dive_tanks',
             'tank_pressure_profiles',
@@ -4366,7 +4403,7 @@ class AppDatabase extends _$AppDatabase {
             }
           }
         }
-        if (from < 94) await reportProgress();
+        if (from < 96) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
