@@ -59,7 +59,7 @@ void main() {
             overrides: overridesFor([plainBuddy, credentialedBuddy], []),
             child: InstructorPickerField(
               instructorId: null,
-              onSelected: (_, __) {},
+              onSelected: (_, _) {},
             ),
           ),
         );
