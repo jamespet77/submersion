@@ -3011,18 +3011,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_combine_profilePreview => 'Kombiniertes Profil';
 
   @override
-  String get diveLog_combine_overlapBody =>
-      'Sich überschneidende Tauchgänge sehen aus wie derselbe Tauchgang, der von mehreren Tauchcomputern aufgezeichnet wurde. Das Zusammenführen dieser Tauchgänge zu einem einzigen Eintrag, der die Daten jedes Computers zeigt, kommt in einer zukünftigen Version.';
-
-  @override
-  String get diveLog_combine_overlapHintTwoDives =>
-      'Um jetzt zwei Aufzeichnungen desselben Tauchgangs zusammenzuführen, öffnen Sie einen davon und verwenden Sie „Mit einem anderen Tauchgang zusammenführen“.';
-
-  @override
-  String get diveLog_combine_overlapTitle =>
-      'Diese Tauchgänge überschneiden sich zeitlich';
-
-  @override
   String diveLog_combine_previewIntro(int count) {
     return 'Diese $count Tauchgänge werden zu einem durchgehenden Tauchgang kombiniert. Lücken dazwischen werden zu Oberflächenzeit.';
   }
@@ -3056,6 +3044,77 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get diveLog_combine_undone => 'Kombination rückgängig gemacht';
+
+  @override
+  String get diveLog_computerSource_badge_primary => 'Primär';
+
+  @override
+  String get diveLog_consolidate_confirm =>
+      'Als ein Tauchgang mit beiden Computern behalten';
+
+  @override
+  String get diveLog_consolidate_error_generic =>
+      'Die Tauchgänge konnten nicht zusammengeführt werden. Es wurde nichts geändert.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Diese Tauchgänge überschneiden sich zeitlich nicht und können daher nicht als derselbe Tauchgang zusammengeführt werden.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Diese Tauchgänge stammen vom selben Tauchcomputer und können auf diese Weise nicht zusammengeführt werden.';
+
+  @override
+  String get diveLog_consolidate_selectPrimary => 'Primärer Tauchcomputer';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Tauchgang als zusätzlicher Computer zusammengeführt.';
+
+  @override
+  String get diveLog_consolidate_undoError =>
+      'Die Zusammenführung konnte nicht rückgängig gemacht werden.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Zusammenführung rückgängig gemacht';
+
+  @override
+  String diveLog_mergeDialog_confirmSubtitle(String time) {
+    return 'Der Tauchgang um $time wird mit diesem Tauchgang zusammengeführt.';
+  }
+
+  @override
+  String get diveLog_mergeDialog_confirmTitle => 'Zusammenführung bestätigen';
+
+  @override
+  String get diveLog_mergeDialog_empty =>
+      'Keine weiteren Tauchgänge an diesem Tag gefunden.';
+
+  @override
+  String get diveLog_mergeDialog_explanation =>
+      'Das Profil, die Flaschen, Drücke, Ereignisse, Tags, Tauchpartner und Sichtungen dieses Tauchgangs werden als zusätzliche Computerquelle in diesen Tauchgang eingefügt. Diese Aktion kann mit „Computer trennen“ rückgängig gemacht werden.';
+
+  @override
+  String diveLog_mergeDialog_loadError(String error) {
+    return 'Fehler beim Laden der Tauchgänge: $error';
+  }
+
+  @override
+  String get diveLog_mergeDialog_merge => 'Zusammenführen';
+
+  @override
+  String get diveLog_mergeDialog_next => 'Weiter';
+
+  @override
+  String get diveLog_mergeDialog_subtitle =>
+      'Wähle einen Tauchgang vom selben Tag aus, um ihn als zusätzlichen Computer zusammenzuführen.';
+
+  @override
+  String get diveLog_mergeDialog_title =>
+      'Mit einem anderen Tauchgang zusammenführen';
+
+  @override
+  String get diveLog_mergeDialog_whatThisDoes => 'Was das bewirkt';
 
   @override
   String get diveLog_computerSheet_description =>
@@ -3254,21 +3313,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get diveLog_detail_errorLoading => 'Fehler beim Laden des Tauchgangs';
-
-  @override
-  String get diveLog_detail_fullscreen_sampleData => 'Messdaten';
-
-  @override
-  String get diveLog_detail_fullscreen_tapChartCompact =>
-      'Tippen Sie auf das Diagramm für kompakte Ansicht';
-
-  @override
-  String get diveLog_detail_fullscreen_tapChartFull =>
-      'Tippen Sie auf das Diagramm für Vollbildansicht';
-
-  @override
-  String get diveLog_detail_fullscreen_touchChart =>
-      'Berühren Sie das Diagramm, um Daten an diesem Punkt zu sehen';
 
   @override
   String get diveLog_detail_label_airTemp => 'Lufttemperatur';
@@ -4322,6 +4366,13 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get diveLog_instruments_customize => 'Instrumente anpassen';
+
+  @override
+  String get diveLog_instruments_customizeHint =>
+      'Instrumente ein- oder ausschalten. Zum Sortieren ziehen.';
+
+  @override
   String get diveLog_legend_label_ascentRate => 'Aufstiegsgeschwindigkeit';
 
   @override
@@ -4886,12 +4937,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_playback_tooltip_speed => 'Wiedergabegeschwindigkeit';
 
   @override
-  String get diveLog_profileSelector_badge_primary => 'Primär';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'Tauchcomputer';
-
-  @override
   String diveLog_profile_axisDepth(Object unit) {
     return 'Tiefe ($unit)';
   }
@@ -5436,6 +5481,47 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get diveLog_tooltip_tts => 'TTS';
+
+  @override
+  String get diveLog_sources_row_metric => 'Messwert';
+
+  @override
+  String get diveLog_sources_row_maxDepth => 'Max. Tiefe';
+
+  @override
+  String get diveLog_sources_row_avgDepth => 'Ø Tiefe';
+
+  @override
+  String get diveLog_sources_row_duration => 'Dauer';
+
+  @override
+  String get diveLog_sources_row_waterTemp => 'Wassertemp.';
+
+  @override
+  String get diveLog_sources_row_cns => 'CNS';
+
+  @override
+  String get diveLog_sources_row_otu => 'OTU';
+
+  @override
+  String get diveLog_sources_row_decoAlgorithm => 'Deko-Algorithmus';
+
+  @override
+  String get diveLog_sources_row_gf => 'GF';
+
+  @override
+  String diveLog_sources_minutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Min.',
+      one: '1 Min.',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diveLog_sources_unknownComputer => 'Unbekannter Computer';
 
   @override
   String get divePlanner_action_addTank => 'Flasche hinzufügen';
@@ -10875,6 +10961,58 @@ class AppLocalizationsDe extends AppLocalizations {
   ) {
     return 'Verbindung zu $providerName fehlgeschlagen: $error';
   }
+
+  @override
+  String get settings_cloudSync_dropbox_account_title => 'Dropbox-Konto';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_browserFailed =>
+      'Der Browser konnte nicht geöffnet werden. Versuchen Sie die Schaltfläche „Browser erneut öffnen“.';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_codeLabel =>
+      'Autorisierungscode';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_emptyCode =>
+      'Geben Sie den in Ihrem Browser angezeigten Autorisierungscode ein';
+
+  @override
+  String settings_cloudSync_dropbox_connect_failed(Object error) {
+    return 'Verbindung zu Dropbox fehlgeschlagen: $error';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_connect_instructions =>
+      'Ihr Browser hat eine Dropbox-Autorisierungsseite geöffnet. Erteilen Sie den Zugriff und fügen Sie dann den von Dropbox angezeigten Code hier ein.';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_reopenBrowser =>
+      'Browser erneut öffnen';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_submit => 'Verbinden';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_title => 'Dropbox verbinden';
+
+  @override
+  String get settings_cloudSync_dropbox_connected => 'Mit Dropbox verbunden';
+
+  @override
+  String settings_cloudSync_dropbox_connectedAs(Object account) {
+    return 'Verbunden als $account';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_disconnect => 'Trennen';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_subtitle =>
+      'Synchronisierung über Dropbox (Apps/Submersion)';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_title => 'Dropbox';
 
   @override
   String get settings_cloudSync_provider_googleDrive => 'Google Drive';

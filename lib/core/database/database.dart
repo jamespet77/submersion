@@ -404,6 +404,14 @@ class DiveTanks extends Table {
       text().nullable()(); // user-friendly name like "Primary AL80"
   TextColumn get presetName =>
       text().nullable()(); // preset name (e.g., 'al80', 'hp100')
+  // Which computer contributed this tank (null = primary source / manual).
+  // Same null-means-primary semantics as dive_profiles.computerId; deletes
+  // set null.
+  TextColumn get computerId => text().nullable().references(
+    DiveComputers,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1345,6 +1353,14 @@ class DiveProfileEvents extends Table {
   TextColumn get tankId => text().nullable()(); // for gas switch events
   TextColumn get source =>
       text().withDefault(const Constant('imported'))(); // EventSource.name
+  // Which computer contributed this event (null = primary source / manual).
+  // Same null-means-primary semantics as dive_profiles.computerId; deletes
+  // set null.
+  TextColumn get computerId => text().nullable().references(
+    DiveComputers,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
   IntColumn get createdAt => integer()();
 
   @override
@@ -1376,6 +1392,14 @@ class TankPressureProfiles extends Table {
       text().references(DiveTanks, #id, onDelete: KeyAction.cascade)();
   IntColumn get timestamp => integer()(); // seconds from dive start
   RealColumn get pressure => real()(); // bar
+  // Which computer contributed this pressure sample (null = primary source /
+  // manual). Same null-means-primary semantics as dive_profiles.computerId;
+  // deletes set null.
+  TextColumn get computerId => text().nullable().references(
+    DiveComputers,
+    #id,
+    onDelete: KeyAction.setNull,
+  )();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1746,7 +1770,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 97;
+  static const int currentSchemaVersion = 98;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1847,6 +1871,7 @@ class AppDatabase extends _$AppDatabase {
     95,
     96,
     97,
+    98,
   ];
 
   /// Tables that carry a per-row Hybrid Logical Clock for cross-device conflict
@@ -4409,11 +4434,39 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 96) await reportProgress();
         if (from < 97) {
+          // Multi-computer consolidation: per-source attribution for tanks,
+          // pressure curves, and events. Guarded per table so minimal-schema
+          // migration tests without these tables are unaffected; existing
+          // rows keep NULL (= primary source / manual entry). (Authored as
+          // v94 on the feature branch; renumbered on merge as later
+          // migrations landed on main: ascent_gas_set v94, dive naming v95,
+          // photo markers v96.)
+          for (final table in [
+            'dive_tanks',
+            'tank_pressure_profiles',
+            'dive_profile_events',
+          ]) {
+            final cols = await customSelect(
+              "PRAGMA table_info('$table')",
+            ).get();
+            if (cols.isEmpty) continue;
+            final names = cols.map((c) => c.read<String>('name')).toSet();
+            if (!names.contains('computer_id')) {
+              await customStatement(
+                'ALTER TABLE $table ADD COLUMN computer_id TEXT '
+                'REFERENCES dive_computers (id) ON DELETE SET NULL',
+              );
+            }
+          }
+        }
+        if (from < 97) await reportProgress();
+        if (from < 98) {
           // Buddy professional credentials + structured instructor link on
           // certifications (issue #395). PRAGMA-guarded so a healthy database
           // no-ops and an interrupted upgrade does not fail on a duplicate
-          // ALTER. createTable is IF NOT EXISTS. (v97: renumbered from v94
-          // after main claimed 94-96 while the branch was in review.)
+          // ALTER. createTable is IF NOT EXISTS. (v98: renumbered from v94
+          // twice as main claimed 94-96 then 97 while the branch was in
+          // review; a beforeOpen backstop re-asserts these objects too.)
           final certCols = await customSelect(
             "PRAGMA table_info('certifications')",
           ).get();
@@ -4430,7 +4483,7 @@ class AppDatabase extends _$AppDatabase {
           }
           await m.createTable(buddyRoles);
         }
-        if (from < 97) await reportProgress();
+        if (from < 98) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
@@ -4439,9 +4492,9 @@ class AppDatabase extends _$AppDatabase {
         // Backstop for schema-version collisions (issue #395; same disease
         // as the v77/v82/v83 sync-branch incidents): a parallel branch build
         // that claims the same schema version can advance user_version past
-        // the v97 block without creating its objects, and no later migration
+        // the v98 block without creating its objects, and no later migration
         // would ever repair that. All DDL here is idempotent (createTable is
-        // IF NOT EXISTS; the ALTER is PRAGMA-guarded), so re-assert the v97
+        // IF NOT EXISTS; the ALTER is PRAGMA-guarded), so re-assert the v98
         // objects on every open.
         final certCols = await customSelect(
           "PRAGMA table_info('certifications')",

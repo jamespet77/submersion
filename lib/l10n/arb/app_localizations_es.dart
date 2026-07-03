@@ -3002,18 +3002,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_combine_profilePreview => 'Perfil combinado';
 
   @override
-  String get diveLog_combine_overlapBody =>
-      'Las inmersiones superpuestas parecen ser la misma inmersión registrada por varios ordenadores de buceo. Combinarlas en una sola entrada que muestre los datos de cada ordenador llegará en una futura versión.';
-
-  @override
-  String get diveLog_combine_overlapHintTwoDives =>
-      'Para combinar ahora dos registros de la misma inmersión, abre uno de ellos y usa «Combinar con otra inmersión».';
-
-  @override
-  String get diveLog_combine_overlapTitle =>
-      'Estas inmersiones se superponen en el tiempo';
-
-  @override
   String diveLog_combine_previewIntro(int count) {
     return 'Estas $count inmersiones se combinarán en una sola inmersión continua. Los intervalos entre ellas se convertirán en tiempo en superficie.';
   }
@@ -3046,6 +3034,76 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diveLog_combine_undone => 'Combinación deshecha';
+
+  @override
+  String get diveLog_computerSource_badge_primary => 'Principal';
+
+  @override
+  String get diveLog_consolidate_confirm =>
+      'Mantener como una sola inmersión con ambos ordenadores';
+
+  @override
+  String get diveLog_consolidate_error_generic =>
+      'No se pudieron fusionar las inmersiones. No se realizó ningún cambio.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'Estas inmersiones no se superponen en el tiempo, por lo que no se pueden fusionar como la misma inmersión.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'Estas inmersiones son del mismo ordenador de buceo y no se pueden fusionar de esta manera.';
+
+  @override
+  String get diveLog_consolidate_selectPrimary =>
+      'Ordenador de buceo principal';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Inmersión fusionada como ordenador adicional.';
+
+  @override
+  String get diveLog_consolidate_undoError => 'No se pudo deshacer la fusión.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Fusión deshecha';
+
+  @override
+  String diveLog_mergeDialog_confirmSubtitle(String time) {
+    return 'Se fusionará la inmersión de las $time con esta inmersión.';
+  }
+
+  @override
+  String get diveLog_mergeDialog_confirmTitle => 'Confirmar fusión';
+
+  @override
+  String get diveLog_mergeDialog_empty =>
+      'No se encontraron otras inmersiones en este día.';
+
+  @override
+  String get diveLog_mergeDialog_explanation =>
+      'El perfil, los tanques, las presiones, los eventos, las etiquetas, los compañeros y los avistamientos de esta inmersión se incorporarán a esta inmersión como un ordenador adicional. Esta acción se puede revertir con \'Desvincular ordenador\'.';
+
+  @override
+  String diveLog_mergeDialog_loadError(String error) {
+    return 'Error al cargar las inmersiones: $error';
+  }
+
+  @override
+  String get diveLog_mergeDialog_merge => 'Fusionar';
+
+  @override
+  String get diveLog_mergeDialog_next => 'Siguiente';
+
+  @override
+  String get diveLog_mergeDialog_subtitle =>
+      'Selecciona una inmersión del mismo día para fusionarla como ordenador adicional.';
+
+  @override
+  String get diveLog_mergeDialog_title => 'Fusionar con otra inmersión';
+
+  @override
+  String get diveLog_mergeDialog_whatThisDoes => 'Qué hace esto';
 
   @override
   String get diveLog_computerSheet_description =>
@@ -3243,21 +3301,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diveLog_detail_errorLoading => 'Error al cargar la inmersión';
-
-  @override
-  String get diveLog_detail_fullscreen_sampleData => 'Datos de Muestra';
-
-  @override
-  String get diveLog_detail_fullscreen_tapChartCompact =>
-      'Toca el gráfico para vista compacta';
-
-  @override
-  String get diveLog_detail_fullscreen_tapChartFull =>
-      'Toca el gráfico para vista de pantalla completa';
-
-  @override
-  String get diveLog_detail_fullscreen_touchChart =>
-      'Toca el gráfico para ver datos en ese punto';
 
   @override
   String get diveLog_detail_label_airTemp => 'Temp. del aire';
@@ -4323,6 +4366,13 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get diveLog_instruments_customize => 'Personalizar instrumentos';
+
+  @override
+  String get diveLog_instruments_customizeHint =>
+      'Activa o desactiva instrumentos. Arrastra para reordenar.';
+
+  @override
   String get diveLog_legend_label_ascentRate => 'Velocidad de ascenso';
 
   @override
@@ -4887,13 +4937,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_playback_tooltip_speed => 'Velocidad de reproducción';
 
   @override
-  String get diveLog_profileSelector_badge_primary => 'Principal';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers =>
-      'Ordenadores de buceo';
-
-  @override
   String diveLog_profile_axisDepth(Object unit) {
     return 'Profundidad ($unit)';
   }
@@ -5440,6 +5483,47 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diveLog_tooltip_tts => 'TTS';
+
+  @override
+  String get diveLog_sources_row_metric => 'Medida';
+
+  @override
+  String get diveLog_sources_row_maxDepth => 'Prof. máxima';
+
+  @override
+  String get diveLog_sources_row_avgDepth => 'Prof. media';
+
+  @override
+  String get diveLog_sources_row_duration => 'Duración';
+
+  @override
+  String get diveLog_sources_row_waterTemp => 'Temp. agua';
+
+  @override
+  String get diveLog_sources_row_cns => 'CNS';
+
+  @override
+  String get diveLog_sources_row_otu => 'OTU';
+
+  @override
+  String get diveLog_sources_row_decoAlgorithm => 'Algoritmo deco';
+
+  @override
+  String get diveLog_sources_row_gf => 'GF';
+
+  @override
+  String diveLog_sources_minutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diveLog_sources_unknownComputer => 'Ordenador desconocido';
 
   @override
   String get divePlanner_action_addTank => 'Agregar Botella';
@@ -10874,6 +10958,58 @@ class AppLocalizationsEs extends AppLocalizations {
   ) {
     return 'Error de conexion con $providerName: $error';
   }
+
+  @override
+  String get settings_cloudSync_dropbox_account_title => 'Cuenta de Dropbox';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_browserFailed =>
+      'No se pudo abrir el navegador. Prueba el botón Reabrir navegador.';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_codeLabel =>
+      'Código de autorización';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_emptyCode =>
+      'Introduce el código de autorización que aparece en tu navegador';
+
+  @override
+  String settings_cloudSync_dropbox_connect_failed(Object error) {
+    return 'No se pudo conectar con Dropbox: $error';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_connect_instructions =>
+      'Tu navegador abrió una página de autorización de Dropbox. Aprueba el acceso y luego pega aquí el código que te muestra Dropbox.';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_reopenBrowser =>
+      'Reabrir navegador';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_submit => 'Conectar';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_title => 'Conectar Dropbox';
+
+  @override
+  String get settings_cloudSync_dropbox_connected => 'Conectado a Dropbox';
+
+  @override
+  String settings_cloudSync_dropbox_connectedAs(Object account) {
+    return 'Conectado como $account';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_disconnect => 'Desconectar';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_subtitle =>
+      'Sincronizar via Dropbox (Apps/Submersion)';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_title => 'Dropbox';
 
   @override
   String get settings_cloudSync_provider_googleDrive => 'Google Drive';

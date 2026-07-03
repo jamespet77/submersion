@@ -48,7 +48,8 @@ void main() {
 
   test('v96 is in the migration ladder', () {
     // v96 is now a past migration (the latest-version tripwire lives in the
-    // newest migration's test), so assert membership, not equality.
+    // newest migration's test), so assert membership, not equality. It must
+    // remain in the ladder so upgrade step counts stay correct.
     expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(96));
     expect(AppDatabase.migrationVersions, contains(96));
   });

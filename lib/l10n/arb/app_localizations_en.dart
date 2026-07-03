@@ -2951,17 +2951,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_combine_profilePreview => 'Combined profile';
 
   @override
-  String get diveLog_combine_overlapBody =>
-      'Overlapping dives look like the same dive recorded by multiple dive computers. Combining those into a single entry that shows every computer\'s data is coming in a future release.';
-
-  @override
-  String get diveLog_combine_overlapHintTwoDives =>
-      'To merge two records of the same dive now, open one of them and use \"Merge with another dive\".';
-
-  @override
-  String get diveLog_combine_overlapTitle => 'These dives overlap in time';
-
-  @override
   String diveLog_combine_previewIntro(int count) {
     return 'These $count dives will be combined into one continuous dive. Gaps between them become surface time.';
   }
@@ -2994,6 +2983,74 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveLog_combine_undone => 'Combine undone';
+
+  @override
+  String get diveLog_computerSource_badge_primary => 'Primary';
+
+  @override
+  String get diveLog_consolidate_confirm =>
+      'Keep as one dive with both computers';
+
+  @override
+  String get diveLog_consolidate_error_generic =>
+      'Couldn\'t merge the dives. Nothing was changed.';
+
+  @override
+  String get diveLog_consolidate_error_notOverlapping =>
+      'These dives don\'t overlap in time, so they can\'t be merged as the same dive.';
+
+  @override
+  String get diveLog_consolidate_error_sameComputer =>
+      'These dives are from the same dive computer and can\'t be merged this way.';
+
+  @override
+  String get diveLog_consolidate_selectPrimary => 'Primary dive computer';
+
+  @override
+  String get diveLog_consolidate_snackbar =>
+      'Dive merged as an additional computer.';
+
+  @override
+  String get diveLog_consolidate_undoError => 'Couldn\'t undo the merge.';
+
+  @override
+  String get diveLog_consolidate_undone => 'Merge undone';
+
+  @override
+  String diveLog_mergeDialog_confirmSubtitle(String time) {
+    return 'Merging dive at $time into this dive.';
+  }
+
+  @override
+  String get diveLog_mergeDialog_confirmTitle => 'Confirm merge';
+
+  @override
+  String get diveLog_mergeDialog_empty => 'No other dives found on this day.';
+
+  @override
+  String get diveLog_mergeDialog_explanation =>
+      'This dive\'s profile, tanks, pressures, events, tags, buddies, and sightings will be folded into this dive as an additional computer source. This action can be reversed with \'Unlink computer\'.';
+
+  @override
+  String diveLog_mergeDialog_loadError(String error) {
+    return 'Error loading dives: $error';
+  }
+
+  @override
+  String get diveLog_mergeDialog_merge => 'Merge';
+
+  @override
+  String get diveLog_mergeDialog_next => 'Next';
+
+  @override
+  String get diveLog_mergeDialog_subtitle =>
+      'Select a dive from the same day to merge as an additional computer.';
+
+  @override
+  String get diveLog_mergeDialog_title => 'Merge with another dive';
+
+  @override
+  String get diveLog_mergeDialog_whatThisDoes => 'What this does';
 
   @override
   String get diveLog_computerSheet_description =>
@@ -3190,21 +3247,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveLog_detail_errorLoading => 'Error loading dive';
-
-  @override
-  String get diveLog_detail_fullscreen_sampleData => 'Sample Data';
-
-  @override
-  String get diveLog_detail_fullscreen_tapChartCompact =>
-      'Tap chart for compact view';
-
-  @override
-  String get diveLog_detail_fullscreen_tapChartFull =>
-      'Tap chart for full-screen view';
-
-  @override
-  String get diveLog_detail_fullscreen_touchChart =>
-      'Touch the chart to see data at that point';
 
   @override
   String get diveLog_detail_label_airTemp => 'Air Temp';
@@ -4246,6 +4288,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get diveLog_instruments_customize => 'Customize instruments';
+
+  @override
+  String get diveLog_instruments_customizeHint =>
+      'Toggle instruments on or off. Drag to reorder.';
+
+  @override
   String get diveLog_legend_label_ascentRate => 'Ascent Rate';
 
   @override
@@ -4800,12 +4849,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_playback_tooltip_speed => 'Playback speed';
 
   @override
-  String get diveLog_profileSelector_badge_primary => 'Primary';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'Dive Computers';
-
-  @override
   String diveLog_profile_axisDepth(Object unit) {
     return 'Depth ($unit)';
   }
@@ -5346,6 +5389,47 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveLog_tooltip_tts => 'TTS';
+
+  @override
+  String get diveLog_sources_row_metric => 'Metric';
+
+  @override
+  String get diveLog_sources_row_maxDepth => 'Max Depth';
+
+  @override
+  String get diveLog_sources_row_avgDepth => 'Avg Depth';
+
+  @override
+  String get diveLog_sources_row_duration => 'Duration';
+
+  @override
+  String get diveLog_sources_row_waterTemp => 'Water Temp';
+
+  @override
+  String get diveLog_sources_row_cns => 'CNS';
+
+  @override
+  String get diveLog_sources_row_otu => 'OTU';
+
+  @override
+  String get diveLog_sources_row_decoAlgorithm => 'Deco Algorithm';
+
+  @override
+  String get diveLog_sources_row_gf => 'GF';
+
+  @override
+  String diveLog_sources_minutes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count min',
+      one: '1 min',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get diveLog_sources_unknownComputer => 'Unknown Computer';
 
   @override
   String get divePlanner_action_addTank => 'Add Tank';
@@ -10705,6 +10789,58 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$providerName connection failed: $error';
   }
+
+  @override
+  String get settings_cloudSync_dropbox_account_title => 'Dropbox account';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_browserFailed =>
+      'Could not open your browser. Try the Reopen browser button.';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_codeLabel =>
+      'Authorization code';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_emptyCode =>
+      'Enter the authorization code shown in your browser';
+
+  @override
+  String settings_cloudSync_dropbox_connect_failed(Object error) {
+    return 'Could not connect to Dropbox: $error';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_connect_instructions =>
+      'Your browser opened a Dropbox authorization page. Approve access, then paste the code Dropbox shows you here.';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_reopenBrowser =>
+      'Reopen browser';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_submit => 'Connect';
+
+  @override
+  String get settings_cloudSync_dropbox_connect_title => 'Connect Dropbox';
+
+  @override
+  String get settings_cloudSync_dropbox_connected => 'Connected to Dropbox';
+
+  @override
+  String settings_cloudSync_dropbox_connectedAs(Object account) {
+    return 'Connected as $account';
+  }
+
+  @override
+  String get settings_cloudSync_dropbox_disconnect => 'Disconnect';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_subtitle =>
+      'Sync via Dropbox (Apps/Submersion)';
+
+  @override
+  String get settings_cloudSync_provider_dropbox_title => 'Dropbox';
 
   @override
   String get settings_cloudSync_provider_googleDrive => 'Google Drive';
