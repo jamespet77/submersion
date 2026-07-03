@@ -10835,46 +10835,46 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
-  String get settings_cloudSync_dropbox_account_title => 'Dropbox account';
+  String get settings_cloudSync_dropbox_account_title => 'Cuenta de Dropbox';
 
   @override
   String get settings_cloudSync_dropbox_connect_codeLabel =>
-      'Authorization code';
+      'Código de autorización';
 
   @override
   String get settings_cloudSync_dropbox_connect_emptyCode =>
-      'Enter the authorization code shown in your browser';
+      'Introduce el código de autorización que aparece en tu navegador';
 
   @override
   String settings_cloudSync_dropbox_connect_failed(Object error) {
-    return 'Could not connect to Dropbox: $error';
+    return 'No se pudo conectar con Dropbox: $error';
   }
 
   @override
   String get settings_cloudSync_dropbox_connect_instructions =>
-      'Your browser opened a Dropbox authorization page. Approve access, then paste the code Dropbox shows you here.';
+      'Tu navegador abrió una página de autorización de Dropbox. Aprueba el acceso y luego pega aquí el código que te muestra Dropbox.';
 
   @override
   String get settings_cloudSync_dropbox_connect_reopenBrowser =>
-      'Reopen browser';
+      'Reabrir navegador';
 
   @override
-  String get settings_cloudSync_dropbox_connect_submit => 'Connect';
+  String get settings_cloudSync_dropbox_connect_submit => 'Conectar';
 
   @override
-  String get settings_cloudSync_dropbox_connect_title => 'Connect Dropbox';
+  String get settings_cloudSync_dropbox_connect_title => 'Conectar Dropbox';
 
   @override
   String settings_cloudSync_dropbox_connectedAs(Object account) {
-    return 'Connected as $account';
+    return 'Conectado como $account';
   }
 
   @override
-  String get settings_cloudSync_dropbox_disconnect => 'Disconnect';
+  String get settings_cloudSync_dropbox_disconnect => 'Desconectar';
 
   @override
   String get settings_cloudSync_provider_dropbox_subtitle =>
-      'Sync via Dropbox (Apps/Submersion)';
+      'Sincronizar via Dropbox (Apps/Submersion)';
 
   @override
   String get settings_cloudSync_provider_dropbox_title => 'Dropbox';

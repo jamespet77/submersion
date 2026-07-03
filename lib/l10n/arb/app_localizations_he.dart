@@ -10563,46 +10563,45 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get settings_cloudSync_dropbox_account_title => 'Dropbox account';
+  String get settings_cloudSync_dropbox_account_title => 'חשבון Dropbox';
 
   @override
-  String get settings_cloudSync_dropbox_connect_codeLabel =>
-      'Authorization code';
+  String get settings_cloudSync_dropbox_connect_codeLabel => 'קוד הרשאה';
 
   @override
   String get settings_cloudSync_dropbox_connect_emptyCode =>
-      'Enter the authorization code shown in your browser';
+      'הזן את קוד ההרשאה המוצג בדפדפן שלך';
 
   @override
   String settings_cloudSync_dropbox_connect_failed(Object error) {
-    return 'Could not connect to Dropbox: $error';
+    return 'החיבור אל Dropbox נכשל: $error';
   }
 
   @override
   String get settings_cloudSync_dropbox_connect_instructions =>
-      'Your browser opened a Dropbox authorization page. Approve access, then paste the code Dropbox shows you here.';
+      'הדפדפן שלך פתח דף הרשאה של Dropbox. אשר את הגישה, ולאחר מכן הדבק כאן את הקוד שמוצג על ידי Dropbox.';
 
   @override
   String get settings_cloudSync_dropbox_connect_reopenBrowser =>
-      'Reopen browser';
+      'פתח מחדש את הדפדפן';
 
   @override
-  String get settings_cloudSync_dropbox_connect_submit => 'Connect';
+  String get settings_cloudSync_dropbox_connect_submit => 'התחבר';
 
   @override
-  String get settings_cloudSync_dropbox_connect_title => 'Connect Dropbox';
+  String get settings_cloudSync_dropbox_connect_title => 'התחבר ל-Dropbox';
 
   @override
   String settings_cloudSync_dropbox_connectedAs(Object account) {
-    return 'Connected as $account';
+    return 'מחובר בתור $account';
   }
 
   @override
-  String get settings_cloudSync_dropbox_disconnect => 'Disconnect';
+  String get settings_cloudSync_dropbox_disconnect => 'התנתק';
 
   @override
   String get settings_cloudSync_provider_dropbox_subtitle =>
-      'Sync via Dropbox (Apps/Submersion)';
+      'סנכרון באמצעות Dropbox (Apps/Submersion)';
 
   @override
   String get settings_cloudSync_provider_dropbox_title => 'Dropbox';

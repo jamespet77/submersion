@@ -10818,46 +10818,46 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get settings_cloudSync_dropbox_account_title => 'Dropbox account';
+  String get settings_cloudSync_dropbox_account_title => 'Dropbox-fiók';
 
   @override
-  String get settings_cloudSync_dropbox_connect_codeLabel =>
-      'Authorization code';
+  String get settings_cloudSync_dropbox_connect_codeLabel => 'Hitelesítési kód';
 
   @override
   String get settings_cloudSync_dropbox_connect_emptyCode =>
-      'Enter the authorization code shown in your browser';
+      'Add meg a böngésződben megjelenő hitelesítési kódot';
 
   @override
   String settings_cloudSync_dropbox_connect_failed(Object error) {
-    return 'Could not connect to Dropbox: $error';
+    return 'Nem sikerült csatlakozni a Dropboxhoz: $error';
   }
 
   @override
   String get settings_cloudSync_dropbox_connect_instructions =>
-      'Your browser opened a Dropbox authorization page. Approve access, then paste the code Dropbox shows you here.';
+      'A böngésződ megnyitott egy Dropbox hitelesítési oldalt. Engedélyezd a hozzáférést, majd illeszd be ide a Dropbox által mutatott kódot.';
 
   @override
   String get settings_cloudSync_dropbox_connect_reopenBrowser =>
-      'Reopen browser';
+      'Böngésző újranyitása';
 
   @override
-  String get settings_cloudSync_dropbox_connect_submit => 'Connect';
+  String get settings_cloudSync_dropbox_connect_submit => 'Csatlakozás';
 
   @override
-  String get settings_cloudSync_dropbox_connect_title => 'Connect Dropbox';
+  String get settings_cloudSync_dropbox_connect_title =>
+      'Dropbox csatlakoztatása';
 
   @override
   String settings_cloudSync_dropbox_connectedAs(Object account) {
-    return 'Connected as $account';
+    return 'Csatlakoztatva mint $account';
   }
 
   @override
-  String get settings_cloudSync_dropbox_disconnect => 'Disconnect';
+  String get settings_cloudSync_dropbox_disconnect => 'Leválasztás';
 
   @override
   String get settings_cloudSync_provider_dropbox_subtitle =>
-      'Sync via Dropbox (Apps/Submersion)';
+      'Szinkronizálás Dropboxon keresztül (Apps/Submersion)';
 
   @override
   String get settings_cloudSync_provider_dropbox_title => 'Dropbox';
