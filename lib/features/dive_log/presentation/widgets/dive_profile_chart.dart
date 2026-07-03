@@ -333,6 +333,41 @@ class DiveProfileChart extends ConsumerStatefulWidget {
     return runs;
   }
 
+  /// Depth-band touched spots whose built-in focus indicator should be hidden.
+  ///
+  /// Velocity colouring splits the depth line into one [LineChartBarData] per
+  /// ascent-rate band ([velocityBandRuns]). fl_chart's built-in touch handling
+  /// then paints a focus dot on *every* band whose nearest sample falls within
+  /// the touch threshold, so hovering an abrupt (warning/danger) stretch
+  /// clusters several depth dots around the cursor. Keep the dot on the band
+  /// the tooltip resolves to -- the first touched depth bar, matching the
+  /// onPointSelected mapping -- and return the other touched depth-band spots
+  /// so the caller can suppress their indicators.
+  ///
+  /// Returns an empty list when the depth line is a single bar
+  /// ([depthBandCount] <= 1: velocity colouring off, or multi-computer
+  /// rendering) or only one band sits under the cursor, leaving fl_chart's
+  /// default behaviour untouched. A dropped band that shares the kept band's
+  /// exact sample (adjacent bands join on their boundary point) is left in
+  /// place so the two indicators overlap into one dot instead of cancelling.
+  @visibleForTesting
+  static List<({double x, double y})> velocityIndicatorSuppression(
+    List<({int barIndex, double x, double y})> touchedSpots,
+    int depthBandCount,
+  ) {
+    if (depthBandCount <= 1) return const [];
+    final depthSpots = touchedSpots
+        .where((s) => s.barIndex < depthBandCount)
+        .toList();
+    if (depthSpots.length <= 1) return const [];
+    final kept = depthSpots.first;
+    return depthSpots
+        .skip(1)
+        .where((s) => s.x != kept.x || s.y != kept.y)
+        .map((s) => (x: s.x, y: s.y))
+        .toList();
+  }
+
   const DiveProfileChart({
     super.key,
     required this.profile,
@@ -655,6 +690,12 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
   // Tooltip memoization
   int? _lastTooltipSpotIndex;
   List<LineTooltipItem?> _lastTooltipItems = [];
+
+  // Depth-band touched spots whose built-in focus indicator is hidden, so
+  // velocity colouring shows a single depth dot instead of one per band.
+  // Set from the touch response in the LineTouchData touchCallback and read by
+  // getTouchedSpotIndicator during paint. See [velocityIndicatorSuppression].
+  List<({double x, double y})> _suppressedDepthIndicatorSpots = const [];
 
   // Memoized lineBarsData. The chart's series builders are pure w.r.t.
   // interaction state, so the assembled bars are reused across playback / hover
@@ -2067,24 +2108,62 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
               enabled: true,
               touchSpotThreshold: 20,
               handleBuiltInTouches: true,
+              getTouchedSpotIndicator: (barData, spotIndexes) {
+                final suppressed = _suppressedDepthIndicatorSpots;
+                if (suppressed.isEmpty) {
+                  return defaultTouchedIndicators(barData, spotIndexes);
+                }
+                // Hide the built-in focus dot on the extra velocity bands so a
+                // single depth dot remains; every other line keeps its default
+                // indicator. See [velocityIndicatorSuppression].
+                return [
+                  for (final index in spotIndexes)
+                    if (_isSuppressedIndicatorSpot(barData, index, suppressed))
+                      null
+                    else
+                      defaultTouchedIndicators(barData, [index]).first,
+                ];
+              },
               touchCallback: (event, response) {
+                final isTouchEnd =
+                    event is FlPointerExitEvent ||
+                    event is FlLongPressEnd ||
+                    event is FlTapUpEvent ||
+                    event is FlPanEndEvent;
+                final spots =
+                    response?.lineBarSpots ?? const <TouchLineBarSpot>[];
+                final active = !isTouchEnd && spots.isNotEmpty;
+                // Depth-line bar layout: a single bar normally, one per velocity
+                // band when the ascent-rate overlay splits the line. Shared by
+                // the indicator-suppression list and the spot -> global-index
+                // mapping below.
+                final starts = active
+                    ? _depthBarStartIndices()
+                    : const <int>[0];
+
+                // Collapse velocity colouring's per-band focus dots to a single
+                // depth dot, independently of the external selection/tooltip
+                // callbacks below (so the built-in indicator is de-cluttered
+                // even when neither callback is wired).
+                _suppressedDepthIndicatorSpots = active
+                    ? DiveProfileChart.velocityIndicatorSuppression([
+                        for (final s in spots)
+                          (barIndex: s.barIndex, x: s.x, y: s.y),
+                      ], starts.length)
+                    : const [];
+
                 if (widget.onPointSelected != null ||
                     widget.onTooltipData != null) {
-                  if (event is FlPointerExitEvent ||
-                      event is FlLongPressEnd ||
-                      event is FlTapUpEvent ||
-                      event is FlPanEndEvent) {
+                  if (isTouchEnd) {
                     widget.onPointSelected?.call(null);
                     if (widget.tooltipBelow) {
                       widget.onTooltipData?.call(null);
                     }
-                  } else if (response?.lineBarSpots != null &&
-                      response!.lineBarSpots!.isNotEmpty) {
+                  } else if (active) {
                     // Velocity colouring splits the depth line into per-band
                     // bars; find the touched depth spot on any of them and map
                     // it back to the global profile index.
-                    final starts = _depthBarStartIndices();
-                    final depthSpot = response.lineBarSpots!
+                    final depthSpot = spots
                         .where((s) => s.barIndex < starts.length)
                         .firstOrNull;
                     final index = depthSpot == null
@@ -2098,7 +2177,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                         final settings = ref.read(settingsProvider);
                         final units = UnitFormatter(settings);
                         _emitExternalTooltip(
-                          response.lineBarSpots!,
+                          spots,
                           units,
                           Theme.of(context).colorScheme,
                         );
@@ -3055,6 +3134,27 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       ).map((run) => run.start).toList();
     }
     return const [0];
+  }
+
+  /// Whether the built-in focus indicator for [barData]'s spot at [index]
+  /// should be hidden because velocity colouring already shows the depth dot on
+  /// another band (see [velocityIndicatorSuppression]). Matches on the spot
+  /// coordinate because fl_chart hands the indicator callback a copied bar
+  /// without its position in the bar list.
+  bool _isSuppressedIndicatorSpot(
+    LineChartBarData barData,
+    int index,
+    List<({double x, double y})> suppressed,
+  ) {
+    if (index < 0 || index >= barData.spots.length) return false;
+    final spot = barData.spots[index];
+    const epsilon = 1e-6;
+    for (final s in suppressed) {
+      if ((s.x - spot.x).abs() < epsilon && (s.y - spot.y).abs() < epsilon) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Build one depth line per computer for multi-computer rendering.
