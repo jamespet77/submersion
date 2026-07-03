@@ -80,5 +80,25 @@ void main() {
       expect(original.copyWith(), original);
       expect(original.copyWith(notes: 'other'), isNot(original));
     });
+
+    test('can clear nullable fields by passing null', () {
+      final original = make(
+        credentialNumber: '12345',
+        agency: CertificationAgency.padi,
+      );
+      final cleared = original.copyWith(credentialNumber: null, agency: null);
+      expect(cleared.credentialNumber, isNull);
+      expect(cleared.agency, isNull);
+      // Non-nullable fields are untouched.
+      expect(cleared.role, original.role);
+      expect(cleared.id, original.id);
+    });
+
+    test('omitting a nullable field keeps its current value', () {
+      final original = make(credentialNumber: '12345');
+      // Only agency omitted here; credentialNumber explicitly changed.
+      final updated = original.copyWith(credentialNumber: '999');
+      expect(updated.credentialNumber, '999');
+    });
   });
 }

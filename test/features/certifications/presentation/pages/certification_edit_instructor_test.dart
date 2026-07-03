@@ -130,6 +130,40 @@ void main() {
   );
 
   testWidgets(
+    'switching to a non-credentialed buddy clears the instructor number',
+    (tester) async {
+      final plainBuddy = _makeBuddy('buddy-2', 'Bob Plain');
+      final overrides = [
+        ...await getBaseOverrides(),
+        certificationRepositoryProvider.overrideWithValue(repository),
+        allBuddiesProvider.overrideWith(
+          (ref) async => [credentialedBuddy, plainBuddy],
+        ),
+        allBuddyRolesProvider.overrideWith(
+          (ref) async => {
+            'buddy-1': [credential],
+          },
+        ),
+      ];
+
+      await tester.pumpWidget(buildHarness(overrides: overrides));
+      await tester.pumpAndSettle();
+
+      // Pick the credentialed buddy first: number fills.
+      await pickInstructorFromDropdown(
+        tester,
+        'Alice Instructor (${credential.displayLabel})',
+      );
+      expect(find.widgetWithText(TextFormField, '999-PADI'), findsOneWidget);
+
+      // Switch to the buddy with no credential: the stale number must clear.
+      await pickInstructorFromDropdown(tester, 'Bob Plain');
+      expect(find.widgetWithText(TextFormField, '999-PADI'), findsNothing);
+      expect(find.widgetWithText(TextFormField, 'Bob Plain'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'editing the name text after picking does not clear the selection',
     (tester) async {
       final overrides = await getBaseOverrides();

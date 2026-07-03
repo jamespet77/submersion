@@ -42,12 +42,16 @@ class BuddyRoleCredential extends Equatable {
     return '${role.displayName} - ${parts.join(' ')}';
   }
 
+  /// Copy with overrides. The nullable [credentialNumber] and [agency] use a
+  /// sentinel default so passing `null` explicitly CLEARS the field, while
+  /// omitting the argument keeps the current value (a plain `?? this.field`
+  /// cannot express "clear").
   BuddyRoleCredential copyWith({
     String? id,
     String? buddyId,
     BuddyRole? role,
-    String? credentialNumber,
-    CertificationAgency? agency,
+    Object? credentialNumber = _unset,
+    Object? agency = _unset,
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -56,13 +60,21 @@ class BuddyRoleCredential extends Equatable {
       id: id ?? this.id,
       buddyId: buddyId ?? this.buddyId,
       role: role ?? this.role,
-      credentialNumber: credentialNumber ?? this.credentialNumber,
-      agency: agency ?? this.agency,
+      credentialNumber: identical(credentialNumber, _unset)
+          ? this.credentialNumber
+          : credentialNumber as String?,
+      agency: identical(agency, _unset)
+          ? this.agency
+          : agency as CertificationAgency?,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
+
+  /// Sentinel marking a copyWith argument as "not provided" so an explicit
+  /// `null` can be distinguished from omission.
+  static const Object _unset = Object();
 
   @override
   List<Object?> get props => [

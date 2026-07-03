@@ -149,6 +149,29 @@ void main() {
   );
 
   testWidgets(
+    'switching to a non-credentialed buddy clears the instructor number',
+    (tester) async {
+      final overrides = await getBaseOverrides();
+
+      await tester.pumpWidget(
+        buildHarness(overrides: buildOverrides(overrides)),
+      );
+      await tester.pumpAndSettle();
+
+      await pickInstructorFromDropdown(
+        tester,
+        'Alice Instructor (${credential.displayLabel})',
+      );
+      expect(find.widgetWithText(TextFormField, '999-PADI'), findsOneWidget);
+
+      // Switch to the buddy with no credential: the stale number must clear.
+      await pickInstructorFromDropdown(tester, 'Bob NoCert');
+      expect(find.widgetWithText(TextFormField, '999-PADI'), findsNothing);
+      expect(find.widgetWithText(TextFormField, 'Bob NoCert'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
     'a buddy with no credential still appears in the instructor dropdown',
     (tester) async {
       // Regression: the old inline dropdown filtered on

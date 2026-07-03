@@ -200,20 +200,8 @@ class _RoleEntryState extends State<_RoleEntry> {
                 ),
               ],
               onChanged: (value) {
-                widget.onChanged(
-                  value == null
-                      ? BuddyRoleCredential(
-                          id: credential.id,
-                          buddyId: credential.buddyId,
-                          role: credential.role,
-                          credentialNumber: credential.credentialNumber,
-                          agency: null,
-                          notes: credential.notes,
-                          createdAt: credential.createdAt,
-                          updatedAt: credential.updatedAt,
-                        )
-                      : credential.copyWith(agency: value),
-                );
+                // copyWith clears agency when value is null.
+                widget.onChanged(credential.copyWith(agency: value));
               },
             ),
             const SizedBox(height: 12),
@@ -224,18 +212,9 @@ class _RoleEntryState extends State<_RoleEntry> {
               ),
               onChanged: (value) {
                 widget.onChanged(
-                  value.isEmpty
-                      ? BuddyRoleCredential(
-                          id: credential.id,
-                          buddyId: credential.buddyId,
-                          role: credential.role,
-                          credentialNumber: null,
-                          agency: credential.agency,
-                          notes: credential.notes,
-                          createdAt: credential.createdAt,
-                          updatedAt: credential.updatedAt,
-                        )
-                      : credential.copyWith(credentialNumber: value),
+                  credential.copyWith(
+                    credentialNumber: value.isEmpty ? null : value,
+                  ),
                 );
               },
             ),
