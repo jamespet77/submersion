@@ -323,8 +323,8 @@ void main() {
     S3Config? s3Config,
     DropboxAuthData? dropboxAuth,
     // Existing tests exercise the Dropbox tile assuming it is visible; only
-    // the "hidden until configured" test overrides this to false, matching
-    // the current production default (dropboxAppKey is empty).
+    // the "hidden until configured" test overrides this to false, covering
+    // builds whose dropboxAppKey is empty.
     bool dropboxConfigured = true,
     SyncBehaviorSettings behavior = const SyncBehaviorSettings(
       autoSyncEnabled: false,
