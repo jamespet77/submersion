@@ -394,6 +394,45 @@ void main() {
         expect(notifier.state.pendingFor(ImportEntityType.dives), equals({0}));
       });
 
+      // -----------------------------------------------------------------
+      // Exact-source-hit re-download must default to skip (Task 8, PR
+      // review finding 1)
+      // -----------------------------------------------------------------
+
+      test('matchedExistingSource=true with score 1.0 and a DIFFERENT '
+          'matchedComputerId is seeded with DuplicateAction.skip -- NOT '
+          'consolidate -- and drained from pending', () {
+        final bundle = buildBundle(
+          diveItems: [makeItem('Dive 1')],
+          diveDuplicateIndices: {0},
+          diveMatchResults: {
+            0: const DiveMatchResult(
+              diveId: 'existing-dive',
+              score: 1.0,
+              timeDifferenceMs: 0,
+              matchedComputerId: 'computer-other',
+              matchedExistingSource: true,
+            ),
+          },
+          currentComputerId: 'computer-current',
+        );
+
+        notifier.setBundle(bundle);
+
+        expect(
+          notifier.state.duplicateActions[ImportEntityType.dives]?[0],
+          DuplicateAction.skip,
+        );
+        expect(
+          notifier.state.pendingFor(ImportEntityType.dives),
+          isNot(contains(0)),
+        );
+        expect(
+          notifier.state.selections[ImportEntityType.dives],
+          isNot(contains(0)),
+        );
+      });
+
       test('handles bundle with no duplicates — empty duplicateActions', () {
         final bundle = buildBundle(
           diveItems: [makeItem('Dive 1'), makeItem('Dive 2')],
@@ -1663,6 +1702,77 @@ void main() {
         );
       },
     );
+
+    test('consolidate gate never touches a matchedExistingSource match: '
+        "setBundle's skip default survives a subsequent bulk consolidate, "
+        'while a qualifying pending match is still consolidated', () async {
+      const bundle = ImportBundle(
+        source: ImportSourceInfo(
+          type: ImportSourceType.uddf,
+          displayName: 'existing-source.uddf',
+        ),
+        groups: {
+          ImportEntityType.dives: EntityGroup(
+            items: [
+              EntityItem(title: 'Dive 1', subtitle: ''),
+              EntityItem(title: 'Dive 2', subtitle: ''),
+            ],
+            duplicateIndices: {0, 1},
+            matchResults: {
+              // Exact re-download: auto-seeded to skip by setBundle and
+              // drained from pending, so it can never reach the bulk
+              // consolidate gate through the normal review flow.
+              0: DiveMatchResult(
+                diveId: 'e1',
+                score: 1.0,
+                timeDifferenceMs: 0,
+                matchedExistingSource: true,
+              ),
+              // Ordinary probable match: stays pending, eligible for the
+              // bulk consolidate gate (score >= 0.7).
+              1: DiveMatchResult(diveId: 'e2', score: 0.9, timeDifferenceMs: 0),
+            },
+          ),
+        },
+      );
+      final container = ProviderContainer(
+        overrides: [
+          importWizardNotifierProvider.overrideWith(
+            (ref) => ImportWizardNotifier(_TestAdapter()),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(importWizardNotifierProvider.notifier);
+      notifier.setBundle(bundle);
+
+      // Sanity check: index 0 was already resolved to skip by setBundle
+      // and is not part of what the bulk action below can touch.
+      expect(
+        notifier.state.duplicateActions[ImportEntityType.dives]?[0],
+        DuplicateAction.skip,
+      );
+      expect(notifier.state.pendingFor(ImportEntityType.dives), {1});
+
+      notifier.applyBulkAction(
+        ImportEntityType.dives,
+        DuplicateAction.consolidate,
+      );
+
+      final state = container.read(importWizardNotifierProvider);
+      expect(
+        state.duplicateActions[ImportEntityType.dives]?[0],
+        DuplicateAction.skip,
+        reason:
+            'matchedExistingSource match must never become '
+            'consolidate, even via bulk action',
+      );
+      expect(
+        state.duplicateActions[ImportEntityType.dives]?[1],
+        DuplicateAction.consolidate,
+      );
+      expect(state.pendingFor(ImportEntityType.dives), isEmpty);
+    });
 
     test('no-op when pending for type is empty', () async {
       final bundle = bundleWithTwoPendingDives();

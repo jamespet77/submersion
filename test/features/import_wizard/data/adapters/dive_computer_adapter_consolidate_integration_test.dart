@@ -197,4 +197,194 @@ void main() {
     expect(allDives, hasLength(1));
     expect(allDives.single.id, equals('target-dive'));
   });
+
+  // ---------------------------------------------------------------------------
+  // Non-atomic import+consolidate hardening (Task 8, PR review finding 2)
+  // ---------------------------------------------------------------------------
+
+  test('consolidating onto a same-computer target is pre-validated and '
+      'skipped WITHOUT importing anything', () async {
+    await computerRepository.createComputer(
+      DiveComputer.create(
+        id: 'shared-computer',
+        name: 'Shared Computer',
+        diverId: diverId,
+      ),
+    );
+
+    final entryTime = DateTime.utc(2026, 7, 2, 9);
+    await diveRepository.createDive(
+      domain.Dive(
+        id: 'target-dive-same-computer',
+        dateTime: entryTime,
+        entryTime: entryTime,
+        runtime: const Duration(minutes: 40),
+        maxDepth: 25.0,
+        diverId: diverId,
+      ),
+    );
+    await (db.update(db.dives)
+          ..where((t) => t.id.equals('target-dive-same-computer')))
+        .write(const DivesCompanion(computerId: Value('shared-computer')));
+
+    final sameComputer = await computerRepository.getComputerById(
+      'shared-computer',
+    );
+    expect(sameComputer, isNotNull);
+
+    final downloadedDive = DownloadedDive(
+      startTime: entryTime,
+      durationSeconds: 2400,
+      maxDepth: 24.5,
+      profile: const [],
+      tanks: const [],
+      events: const [],
+    );
+
+    final importService = DiveImportService(
+      repository: computerRepository,
+      diveRepository: diveRepository,
+    );
+
+    final adapter = DiveComputerAdapter(
+      importService: importService,
+      computerRepository: computerRepository,
+      diveRepository: diveRepository,
+      consolidationService: consolidationService,
+      diverId: diverId,
+      knownComputer: sameComputer,
+    );
+    adapter.setDownloadedDives([downloadedDive]);
+
+    final rawBundle = await adapter.buildBundle();
+    final bundleWithDupes = ImportBundle(
+      source: rawBundle.source,
+      groups: {
+        ImportEntityType.dives: EntityGroup(
+          items: rawBundle.groups[ImportEntityType.dives]!.items,
+          duplicateIndices: {0},
+          matchResults: const {
+            0: DiveMatchResult(
+              diveId: 'target-dive-same-computer',
+              score: 0.9,
+              timeDifferenceMs: 0,
+              matchedComputerId: 'shared-computer',
+            ),
+          },
+        ),
+      },
+    );
+
+    final result = await adapter.performImport(
+      bundleWithDupes,
+      {
+        ImportEntityType.dives: {0},
+      },
+      {
+        ImportEntityType.dives: {0: DuplicateAction.consolidate},
+      },
+    );
+
+    // Nothing was imported -- the predictable ArgumentError('sameComputer
+    // ...') that DiveConsolidationService.apply would have thrown is
+    // avoided entirely by pre-validating the target's computerId first.
+    expect(result.consolidatedCount, equals(0));
+    expect(result.skippedCount, equals(1));
+
+    final allDives = await db.select(db.dives).get();
+    expect(allDives, hasLength(1));
+    expect(allDives.single.id, equals('target-dive-same-computer'));
+  });
+
+  test('when apply() fails unexpectedly after the import succeeded, the '
+      'orphaned standalone dive is deleted (tombstoned) and the loop '
+      'continues instead of throwing', () async {
+    final secondaryComputer = await computerRepository.createComputer(
+      DiveComputer.create(
+        id: 'secondary-computer-fail',
+        name: 'Secondary Computer',
+        diverId: diverId,
+      ),
+    );
+
+    final entryTime = DateTime.utc(2026, 7, 3, 9);
+    final downloadedDive = DownloadedDive(
+      startTime: entryTime,
+      durationSeconds: 2400,
+      maxDepth: 24.5,
+      profile: const [],
+      tanks: const [],
+      events: const [],
+    );
+
+    final importService = DiveImportService(
+      repository: computerRepository,
+      diveRepository: diveRepository,
+    );
+
+    final adapter = DiveComputerAdapter(
+      importService: importService,
+      computerRepository: computerRepository,
+      diveRepository: diveRepository,
+      consolidationService: consolidationService,
+      diverId: diverId,
+      knownComputer: secondaryComputer,
+    );
+    adapter.setDownloadedDives([downloadedDive]);
+
+    final rawBundle = await adapter.buildBundle();
+    // The matched "target" dive does not exist -- DiveConsolidationService
+    // .apply() will throw ArgumentError('targetDiveId not in selection')
+    // AFTER the secondary has already been imported as a standalone dive,
+    // exercising the unexpected-failure compensation path (as opposed to
+    // the pre-validated same-computer path above).
+    final bundleWithDupes = ImportBundle(
+      source: rawBundle.source,
+      groups: {
+        ImportEntityType.dives: EntityGroup(
+          items: rawBundle.groups[ImportEntityType.dives]!.items,
+          duplicateIndices: {0},
+          matchResults: const {
+            0: DiveMatchResult(
+              diveId: 'nonexistent-target-dive',
+              score: 0.9,
+              timeDifferenceMs: 0,
+            ),
+          },
+        ),
+      },
+    );
+
+    final deletionLogBefore = await (db.select(
+      db.deletionLog,
+    )..where((t) => t.entityType.equals('dives'))).get();
+
+    final result = await adapter.performImport(
+      bundleWithDupes,
+      {
+        ImportEntityType.dives: {0},
+      },
+      {
+        ImportEntityType.dives: {0: DuplicateAction.consolidate},
+      },
+    );
+
+    // The failure was compensated, not thrown: performImport returned
+    // normally and counted it as skipped rather than consolidated.
+    expect(result.consolidatedCount, equals(0));
+    expect(result.skippedCount, equals(1));
+
+    // No dangling dive row: the standalone import was rolled back via
+    // deletion.
+    final allDives = await db.select(db.dives).get();
+    expect(allDives, isEmpty);
+
+    // The compensating delete went through the tombstone-honoring path
+    // (bulkDeleteDives -> SyncRepository.logDeletion), not a bare SQL
+    // delete.
+    final deletionLogAfter = await (db.select(
+      db.deletionLog,
+    )..where((t) => t.entityType.equals('dives'))).get();
+    expect(deletionLogAfter.length, equals(deletionLogBefore.length + 1));
+  });
 }

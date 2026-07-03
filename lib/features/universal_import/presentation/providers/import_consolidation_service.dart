@@ -1,5 +1,23 @@
+import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
 import 'package:submersion/features/dive_log/data/services/dive_consolidation_service.dart';
 import 'package:submersion/features/universal_import/data/services/import_duplicate_checker.dart';
+
+/// Result of [performConsolidations]: how many indices were folded
+/// successfully vs. how many failed and were compensated.
+class ConsolidationSummary {
+  const ConsolidationSummary({
+    required this.consolidated,
+    required this.failed,
+  });
+
+  /// Number of dives successfully folded into their matched dive.
+  final int consolidated;
+
+  /// Number of dives whose fold failed unexpectedly after having already
+  /// been imported as a standalone dive. Each one was deleted (see
+  /// [performConsolidations]) rather than left stranded.
+  final int failed;
+}
 
 /// Folds consolidate-flagged imported dives into their matched existing
 /// dives.
@@ -14,14 +32,21 @@ import 'package:submersion/features/universal_import/data/services/import_duplic
 /// column, tank, pressure, and event with attribution, then tombstones the
 /// now-redundant standalone dive.
 ///
-/// Returns the number of successful consolidations.
-Future<int> performConsolidations({
+/// The import (above, before this function runs) and the fold are not part
+/// of the same transaction. If [DiveConsolidationService.apply] throws for
+/// one index, the freshly-imported standalone dive at that index is deleted
+/// via [DiveRepository.bulkDeleteDives] (tombstone-honoring) so it doesn't
+/// strand as a bare, unconsolidated duplicate, and the loop continues with
+/// the remaining indices rather than aborting the whole import.
+Future<ConsolidationSummary> performConsolidations({
   required Set<int> indices,
   required Map<int, String> diveIdByIndex,
   required ImportDuplicateResult? duplicateResult,
   required DiveConsolidationService consolidationService,
+  required DiveRepository diveRepository,
 }) async {
-  var count = 0;
+  var consolidated = 0;
+  var failed = 0;
 
   for (final index in indices) {
     final matchResult = duplicateResult?.diveMatchFor(index);
@@ -30,12 +55,17 @@ Future<int> performConsolidations({
     final newDiveId = diveIdByIndex[index];
     if (newDiveId == null) continue;
 
-    await consolidationService.apply(
-      targetDiveId: matchResult.diveId,
-      secondaryDiveIds: [newDiveId],
-    );
-    count++;
+    try {
+      await consolidationService.apply(
+        targetDiveId: matchResult.diveId,
+        secondaryDiveIds: [newDiveId],
+      );
+      consolidated++;
+    } catch (e) {
+      await diveRepository.bulkDeleteDives([newDiveId]);
+      failed++;
+    }
   }
 
-  return count;
+  return ConsolidationSummary(consolidated: consolidated, failed: failed);
 }

@@ -25,6 +25,7 @@ import 'package:submersion/features/universal_import/data/models/field_mapping.d
 import 'package:submersion/features/universal_import/data/models/import_enums.dart';
 import 'package:submersion/features/universal_import/data/models/import_options.dart';
 import 'package:submersion/features/universal_import/data/models/import_payload.dart';
+import 'package:submersion/features/universal_import/data/models/import_warning.dart';
 import 'package:submersion/features/universal_import/data/csv/pipeline/csv_pipeline.dart';
 import 'package:submersion/features/universal_import/data/csv/presets/built_in_presets.dart';
 import 'package:submersion/features/universal_import/data/csv/presets/preset_registry.dart';
@@ -629,16 +630,29 @@ class UniversalImportNotifier extends StateNotifier<UniversalImportState> {
 
       // Fold consolidate-flagged dives (just imported above as standalone
       // dives) into their matched existing dive.
+      var consolidationWarnings = const <ImportWarning>[];
       if (consolidateIndices.isNotEmpty) {
         final consolidationService = _ref.read(
           diveConsolidationServiceProvider,
         );
-        await performConsolidations(
+        final summary = await performConsolidations(
           indices: consolidateIndices,
           diveIdByIndex: result.diveIdByIndex,
           duplicateResult: state.duplicateResult,
           consolidationService: consolidationService,
+          diveRepository: repos.diveRepository,
         );
+        if (summary.failed > 0) {
+          consolidationWarnings = [
+            ImportWarning(
+              severity: ImportWarningSeverity.error,
+              message:
+                  '${summary.failed} dive(s) could not be consolidated '
+                  'into their matched dive and were not imported.',
+              entityType: ImportEntityType.dives,
+            ),
+          ];
+        }
       }
 
       _invalidateProviders();
@@ -664,6 +678,13 @@ class UniversalImportNotifier extends StateNotifier<UniversalImportState> {
         currentStep: ImportWizardStep.summary,
         isImporting: false,
         importCounts: counts,
+        payload: consolidationWarnings.isEmpty
+            ? null
+            : ImportPayload(
+                entities: payload.entities,
+                warnings: [...payload.warnings, ...consolidationWarnings],
+                metadata: payload.metadata,
+              ),
       );
     } catch (e) {
       state = state.copyWith(isImporting: false, error: 'Import failed: $e');

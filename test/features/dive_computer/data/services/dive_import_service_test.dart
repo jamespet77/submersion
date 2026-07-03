@@ -754,4 +754,114 @@ void main() {
       );
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // detectDuplicate (Task 8 finding 1)
+  // ---------------------------------------------------------------------------
+
+  group('detectDuplicate', () {
+    test('sets matchedExistingSource=true and score 1.0 on a fingerprint hit '
+        'against an existing dive\'s source keys', () async {
+      final dive = DownloadedDive(
+        fingerprint: 'fp-source-hit',
+        startTime: DateTime(2026, 5, 1, 9, 0),
+        durationSeconds: 3000,
+        maxDepth: 20.0,
+        profile: const [],
+        tanks: const [],
+        events: const [],
+        rawFingerprint: Uint8List.fromList([0xAA, 0xBB, 0xCC]),
+      );
+
+      when(
+        mockDiveRepo.getSourceKeysByDiveId(diverId: anyNamed('diverId')),
+      ).thenAnswer(
+        (_) async => {
+          'existing-dive-source-hit': {'AABBCC'},
+        },
+      );
+
+      final result = await service.detectDuplicate(dive, diverId: 'diver-1');
+
+      expect(result.isDuplicate, isTrue);
+      expect(result.matchingDiveId, 'existing-dive-source-hit');
+      expect(result.score, 1.0);
+      expect(result.confidence, DuplicateConfidence.exact);
+      expect(result.matchedExistingSource, isTrue);
+
+      // The fingerprint pass short-circuits fuzzy matching entirely.
+      verifyNever(
+        mockComputerRepo.findMatchingDiveWithScore(
+          profileStartTime: anyNamed('profileStartTime'),
+          toleranceMinutes: anyNamed('toleranceMinutes'),
+          durationSeconds: anyNamed('durationSeconds'),
+          maxDepth: anyNamed('maxDepth'),
+          fingerprint: anyNamed('fingerprint'),
+          diverId: anyNamed('diverId'),
+        ),
+      );
+    });
+
+    test('leaves matchedExistingSource=false for a fuzzy time/depth/duration '
+        'match with no source-key hit', () async {
+      final dive = DownloadedDive(
+        fingerprint: 'fp-fuzzy',
+        startTime: DateTime(2026, 5, 2, 9, 0),
+        durationSeconds: 3000,
+        maxDepth: 20.0,
+        profile: const [],
+        tanks: const [],
+        events: const [],
+        rawFingerprint: Uint8List.fromList([0x11, 0x22, 0x33]),
+      );
+
+      // No source-key hit for this fingerprint.
+      when(
+        mockDiveRepo.getSourceKeysByDiveId(diverId: anyNamed('diverId')),
+      ).thenAnswer((_) async => {});
+
+      when(
+        mockComputerRepo.findMatchingDiveWithScore(
+          profileStartTime: anyNamed('profileStartTime'),
+          toleranceMinutes: anyNamed('toleranceMinutes'),
+          durationSeconds: anyNamed('durationSeconds'),
+          maxDepth: anyNamed('maxDepth'),
+          fingerprint: anyNamed('fingerprint'),
+          diverId: anyNamed('diverId'),
+        ),
+      ).thenAnswer(
+        (_) async => const DiveMatchResult(
+          diveId: 'existing-dive-fuzzy',
+          score: 0.8,
+          timeDifferenceMs: 60000,
+        ),
+      );
+
+      final result = await service.detectDuplicate(dive, diverId: 'diver-1');
+
+      expect(result.isDuplicate, isTrue);
+      expect(result.matchingDiveId, 'existing-dive-fuzzy');
+      expect(result.matchedExistingSource, isFalse);
+    });
+
+    test(
+      'leaves matchedExistingSource=false when no match is found at all',
+      () async {
+        final dive = DownloadedDive(
+          fingerprint: 'fp-none',
+          startTime: DateTime(2026, 5, 3, 9, 0),
+          durationSeconds: 3000,
+          maxDepth: 20.0,
+          profile: const [],
+          tanks: const [],
+          events: const [],
+        );
+
+        final result = await service.detectDuplicate(dive, diverId: 'diver-1');
+
+        expect(result.isDuplicate, isFalse);
+        expect(result.matchedExistingSource, isFalse);
+      },
+    );
+  });
 }

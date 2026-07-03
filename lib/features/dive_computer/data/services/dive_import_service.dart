@@ -68,12 +68,24 @@ class DuplicateResult {
   /// Depth difference in meters (if matched)
   final double? depthDifferenceMeters;
 
+  /// True when [matchingDiveId] was matched via an exact hit against one of
+  /// the matched dive's EXISTING `dive_data_sources` keys (fingerprint or
+  /// source UUID) rather than fuzzy time/depth/duration matching.
+  ///
+  /// Set by [DiveImportService.detectDuplicate]'s fingerprint pass, which
+  /// KNOWS the match came from a source-key hit. Propagated through
+  /// `DiveMatchResult.matchedExistingSource` so the import wizard can
+  /// default such matches to skip instead of consolidate — the downloaded
+  /// dive is a re-download of data the matched dive already has.
+  final bool matchedExistingSource;
+
   const DuplicateResult({
     this.matchingDiveId,
     required this.confidence,
     required this.score,
     this.timeDifferenceSeconds,
     this.depthDifferenceMeters,
+    this.matchedExistingSource = false,
   });
 
   /// No duplicate found
@@ -415,6 +427,7 @@ class DiveImportService {
             matchingDiveId: entry.key,
             confidence: DuplicateConfidence.exact,
             score: 1.0,
+            matchedExistingSource: true,
           );
         }
       }

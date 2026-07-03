@@ -236,6 +236,15 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
   /// [DuplicateAction.consolidate] and removed from the pending-review set.
   /// A same-computer match (a plain re-download) is never auto-selected —
   /// it stays pending like any other duplicate.
+  ///
+  /// Exact-source-hit default: a dive duplicate whose
+  /// [DiveMatchResult.matchedExistingSource] is true is ALWAYS pre-selected
+  /// with [DuplicateAction.skip] and removed from the pending-review set,
+  /// regardless of score or [DiveMatchResult.matchedComputerId]. This is a
+  /// re-download of data already recorded on the matched dive (its
+  /// fingerprint or source UUID is already one of the matched dive's
+  /// `dive_data_sources` keys) — auto-consolidating it would fold the same
+  /// data in a second time.
   void setBundle(ImportBundle bundle) {
     final selections = <ImportEntityType, Set<int>>{};
     final pendingReview = <ImportEntityType, Set<int>>{};
@@ -260,6 +269,18 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
           for (final index in group.duplicateIndices) {
             final match = matchResults[index];
             if (match == null) continue;
+
+            if (match.matchedExistingSource) {
+              // Re-download of data the matched dive already carries as a
+              // source: default to skip and never auto-consolidate, no
+              // matter the score or matchedComputerId.
+              duplicateActions.putIfAbsent(type, () => {})[index] =
+                  DuplicateAction.skip;
+              selections[type] = selections[type]!.difference({index});
+              pendingForType = pendingForType.difference({index});
+              continue;
+            }
+
             final matchedComputerId = match.matchedComputerId;
             if (match.score >= kAutoConsolidateScore &&
                 matchedComputerId != null &&
@@ -455,11 +476,13 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
   /// state update.
   ///
   /// For [DuplicateAction.consolidate], only indices whose
-  /// `DiveMatchResult.score >= 0.7` are consolidated; weaker matches remain
-  /// pending. For other actions, every pending index is affected.
+  /// `DiveMatchResult.score >= 0.7` AND whose
+  /// `DiveMatchResult.matchedExistingSource` is false are consolidated;
+  /// weaker matches and exact-source-hit re-downloads remain pending. For
+  /// other actions, every pending index is affected.
   ///
   /// No-op if the type has no pending indices or (for consolidate) no
-  /// probable matches.
+  /// eligible matches.
   void applyBulkAction(ImportEntityType type, DuplicateAction action) {
     assert(
       _adapter.supportedDuplicateActions.contains(action),
@@ -477,7 +500,12 @@ class ImportWizardNotifier extends StateNotifier<ImportWizardState> {
       if (matchResults == null) return;
       affected = pending.where((i) {
         final match = matchResults[i];
-        return match != null && match.score >= 0.7;
+        // A matchedExistingSource hit is a re-download of data the matched
+        // dive already has -- never a valid consolidate target, no matter
+        // the score.
+        return match != null &&
+            match.score >= 0.7 &&
+            !match.matchedExistingSource;
       }).toSet();
     } else {
       affected = pending;

@@ -4369,6 +4369,13 @@ class DiveRepository {
         sql.write('AND d.diver_id = ? ');
         variables.add(Variable<Object>(diverId));
       }
+      // Deterministic row order: primary source first, then most recent.
+      // getSourceKeysByDiveId itself unions ALL keys regardless of order,
+      // but getSourceUuidByDiveId's reduction below relies on insertion
+      // order into the per-dive LinkedHashSet to deterministically prefer
+      // the primary source's UUID (falling back to the most recent
+      // secondary) instead of an arbitrary one.
+      sql.write('ORDER BY s.is_primary DESC, s.created_at DESC');
 
       final rows = await _db
           .customSelect(sql.toString(), variables: variables)
@@ -4405,9 +4412,15 @@ class DiveRepository {
   ///
   /// Used by the import duplicate checker to short-circuit content fuzzy
   /// matching for dives that already have a known source UUID. Thin wrapper
-  /// over [getSourceKeysByDiveId] so the two queries cannot drift apart; any
-  /// one of a dive's UUIDs (across all of its sources) is returned since
-  /// callers only ever use this for exact-match lookups. Dives with no
+  /// over [getSourceKeysByDiveId] so the two queries cannot drift apart:
+  /// when a dive has multiple data sources (multi-computer), the primary
+  /// row's UUID wins; otherwise the most recently created row's UUID is
+  /// used. This is deterministic (not "any" UUID) because
+  /// [getSourceKeysByDiveId]'s underlying query orders rows by
+  /// `is_primary DESC, created_at DESC` and per-dive keys are collected into
+  /// a `LinkedHashSet`, which preserves that insertion order -- the first
+  /// UUID-shaped key encountered below is always the primary's (or, absent
+  /// a primary UUID, the most recent secondary's). Dives with no
   /// source_uuid on any row are absent from the map.
   ///
   /// When [diverId] is provided, the result is restricted to that diver's

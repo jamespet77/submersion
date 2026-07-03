@@ -123,6 +123,18 @@ class DiveMatchResult {
   /// never be auto-suggested for consolidation — that's a plain duplicate).
   final String? matchedComputerId;
 
+  /// True when [diveId] was matched via an exact hit against one of the
+  /// matched dive's EXISTING `dive_data_sources` keys (fingerprint or
+  /// source UUID) — see `DiveRepository.getSourceKeysByDiveId`.
+  ///
+  /// This means the downloaded dive's data is ALREADY present on [diveId]
+  /// as a source (primary or previously-consolidated secondary); it is a
+  /// re-download, not a new source. The import wizard must default this to
+  /// [DuplicateAction.skip] and must never auto-default (or offer as a
+  /// bulk/manual consolidate target) [DuplicateAction.consolidate] for such
+  /// a match, regardless of [matchedComputerId] or [score].
+  final bool matchedExistingSource;
+
   const DiveMatchResult({
     required this.diveId,
     required this.score,
@@ -131,6 +143,7 @@ class DiveMatchResult {
     this.durationDifferenceSeconds,
     this.siteName,
     this.matchedComputerId,
+    this.matchedExistingSource = false,
   });
 
   /// Returns true if this is a probable duplicate (score >= 0.7).
