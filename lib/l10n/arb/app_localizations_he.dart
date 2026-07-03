@@ -2929,6 +2929,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_combine_undone => 'המיזוג בוטל';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'ראשי';
+
+  @override
   String get diveLog_consolidate_confirm => 'לשמור כצלילה אחת עם שני המחשבים';
 
   @override
@@ -4737,12 +4740,6 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'מהירות הפעלה';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'ראשי';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'מחשבי צלילה';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

@@ -5091,6 +5091,12 @@ abstract class AppLocalizations {
   /// **'Combine undone'**
   String get diveLog_combine_undone;
 
+  /// No description provided for @diveLog_computerSource_badge_primary.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary'**
+  String get diveLog_computerSource_badge_primary;
+
   /// No description provided for @diveLog_consolidate_confirm.
   ///
   /// In en, this message translates to:
@@ -8203,18 +8209,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Playback speed'**
   String get diveLog_playback_tooltip_speed;
-
-  /// No description provided for @diveLog_profileSelector_badge_primary.
-  ///
-  /// In en, this message translates to:
-  /// **'Primary'**
-  String get diveLog_profileSelector_badge_primary;
-
-  /// No description provided for @diveLog_profileSelector_label_diveComputers.
-  ///
-  /// In en, this message translates to:
-  /// **'Dive Computers'**
-  String get diveLog_profileSelector_label_diveComputers;
 
   /// No description provided for @diveLog_profile_axisDepth.
   ///

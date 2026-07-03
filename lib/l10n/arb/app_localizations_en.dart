@@ -2961,6 +2961,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_combine_undone => 'Combine undone';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Primary';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Keep as one dive with both computers';
 
@@ -4783,12 +4786,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Playback speed';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Primary';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'Dive Computers';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

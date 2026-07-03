@@ -3022,6 +3022,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_combine_undone => 'Kombination rückgängig gemacht';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Primär';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Als ein Tauchgang mit beiden Computern behalten';
 
@@ -4868,12 +4871,6 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Wiedergabegeschwindigkeit';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Primär';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'Tauchcomputer';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

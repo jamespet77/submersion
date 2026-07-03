@@ -3003,6 +3003,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_combine_undone => 'Összevonás visszavonva';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Elsodleges';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Megtartás egyetlen merülésként mindkét számítógéppel';
 
@@ -4856,13 +4859,6 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Lejatszasi sebesseg';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Elsodleges';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers =>
-      'Merulesszamitogepek';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

@@ -3011,6 +3011,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_combine_undone => 'Combinación deshecha';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Principal';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Mantener como una sola inmersión con ambos ordenadores';
 
@@ -4868,13 +4871,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Velocidad de reproducción';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Principal';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers =>
-      'Ordenadores de buceo';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

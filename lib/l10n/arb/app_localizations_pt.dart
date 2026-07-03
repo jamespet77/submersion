@@ -3015,6 +3015,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get diveLog_combine_undone => 'Combinação desfeita';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Principal';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Manter como um único mergulho com os dois computadores';
 
@@ -4873,13 +4876,6 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Velocidade de reproducao';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Principal';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers =>
-      'Computadores de Mergulho';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

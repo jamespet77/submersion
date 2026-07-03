@@ -2992,6 +2992,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_combine_undone => 'Samenvoeging ongedaan gemaakt';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Primair';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Bewaren als één duik met beide computers';
 
@@ -4835,12 +4838,6 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Afspeelsnelheid';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Primair';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'Duikcomputers';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

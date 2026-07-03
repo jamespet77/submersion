@@ -3016,6 +3016,9 @@ class AppLocalizationsIt extends AppLocalizations {
   String get diveLog_combine_undone => 'Unione annullata';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'Primario';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'Mantieni come un\'unica immersione con entrambi i computer';
 
@@ -4875,13 +4878,6 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'Velocita di riproduzione';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'Primario';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers =>
-      'Computer subacquei';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

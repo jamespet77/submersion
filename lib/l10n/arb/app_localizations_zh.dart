@@ -2864,6 +2864,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_combine_undone => '已撤消合并';
 
   @override
+  String get diveLog_computerSource_badge_primary => '主要';
+
+  @override
   String get diveLog_consolidate_confirm => '保留为一次潜水，包含两台电脑';
 
   @override
@@ -4633,12 +4636,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => '回放速度';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => '主要';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => '潜水电脑';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

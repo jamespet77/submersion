@@ -2945,6 +2945,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_combine_undone => 'تم التراجع عن الدمج';
 
   @override
+  String get diveLog_computerSource_badge_primary => 'أساسي';
+
+  @override
   String get diveLog_consolidate_confirm =>
       'الاحتفاظ بها كغوصة واحدة بجهازي كمبيوتر';
 
@@ -4759,12 +4762,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diveLog_playback_tooltip_speed => 'سرعة التشغيل';
-
-  @override
-  String get diveLog_profileSelector_badge_primary => 'أساسي';
-
-  @override
-  String get diveLog_profileSelector_label_diveComputers => 'حواسيب الغوص';
 
   @override
   String diveLog_profile_axisDepth(Object unit) {

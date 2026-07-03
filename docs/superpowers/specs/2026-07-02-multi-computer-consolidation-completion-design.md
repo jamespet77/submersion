@@ -1,7 +1,7 @@
 # Multi-Computer Dive Consolidation — Completion Design
 
 **Date:** 2026-07-02
-**Status:** Approved design, pending implementation plan
+**Status:** Implemented (see docs/superpowers/plans/2026-07-02-multi-computer-consolidation-completion.md)
 **Related:** #449 (sequential combine — explicitly excluded consolidation),
 `docs/superpowers/specs/2026-03-19-multi-computer-dive-consolidation-design.md` (v1.5 foundation),
 `docs/superpowers/specs/2026-07-02-combine-dives-design.md` (sequential combine)

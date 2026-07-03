@@ -366,6 +366,71 @@ class DiveConsolidationService {
       // consolidation-output rows for the verbatim re-inserts below to
       // collide with.
       final mergedId = snapshot.mergedDiveId;
+
+      // Tombstone the consolidation-created child rows (ids NOT in the
+      // snapshot) before deleting them. The target dive survives the undo,
+      // so peers that already pulled the consolidation will never cascade
+      // these rows away -- child-table sync merges are upserts, and without
+      // explicit tombstones a peer keeps the consolidation-output copies
+      // forever (caught by consolidation_sync_roundtrip_test.dart). Rows
+      // that ARE in the snapshot are re-inserted verbatim below and need no
+      // tombstone -- their upsert on the peer carries the restored state.
+      final snapshotIds = <String, Set<String>>{
+        'diveProfiles': {for (final r in snapshot.profileRows) r.id},
+        'diveTanks': {for (final r in snapshot.tankRows) r.id},
+        'diveProfileEvents': {for (final r in snapshot.eventRows) r.id},
+        'gasSwitches': {for (final r in snapshot.gasSwitchRows) r.id},
+        'tankPressureProfiles': {
+          for (final r in snapshot.tankPressureRows) r.id,
+        },
+        'diveDataSources': {for (final r in snapshot.dataSourceRows) r.id},
+      };
+      final currentChildIds = <String, List<String>>{
+        'diveProfiles': [
+          for (final r in await (_db.select(
+            _db.diveProfiles,
+          )..where((t) => t.diveId.equals(mergedId))).get())
+            r.id,
+        ],
+        'diveTanks': [
+          for (final r in await (_db.select(
+            _db.diveTanks,
+          )..where((t) => t.diveId.equals(mergedId))).get())
+            r.id,
+        ],
+        'diveProfileEvents': [
+          for (final r in await (_db.select(
+            _db.diveProfileEvents,
+          )..where((t) => t.diveId.equals(mergedId))).get())
+            r.id,
+        ],
+        'gasSwitches': [
+          for (final r in await (_db.select(
+            _db.gasSwitches,
+          )..where((t) => t.diveId.equals(mergedId))).get())
+            r.id,
+        ],
+        'tankPressureProfiles': [
+          for (final r in await (_db.select(
+            _db.tankPressureProfiles,
+          )..where((t) => t.diveId.equals(mergedId))).get())
+            r.id,
+        ],
+        'diveDataSources': [
+          for (final r in await (_db.select(
+            _db.diveDataSources,
+          )..where((t) => t.diveId.equals(mergedId))).get())
+            r.id,
+        ],
+      };
+      for (final entry in currentChildIds.entries) {
+        final keep = snapshotIds[entry.key] ?? const <String>{};
+        for (final id in entry.value) {
+          if (keep.contains(id)) continue;
+          await _sync.logDeletion(entityType: entry.key, recordId: id);
+        }
+      }
+
       await _db.batch((batch) {
         batch.deleteWhere(_db.diveProfiles, (t) => t.diveId.equals(mergedId));
         batch.deleteWhere(_db.diveTanks, (t) => t.diveId.equals(mergedId));
