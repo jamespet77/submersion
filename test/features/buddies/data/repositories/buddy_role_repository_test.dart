@@ -405,6 +405,32 @@ void main() {
       },
     );
 
+    test(
+      'setRolesForBuddy rejects non-professional roles without writing',
+      () async {
+        final buddy = await repository.createBuddy(buddyFixture('Alice'));
+        final now = DateTime.now();
+
+        await expectLater(
+          repository.setRolesForBuddy(buddy.id, [
+            BuddyRoleCredential(
+              id: '',
+              buddyId: buddy.id,
+              role: BuddyRole.buddy,
+              createdAt: now,
+              updatedAt: now,
+            ),
+          ]),
+          throwsArgumentError,
+        );
+
+        final rows = await (db.select(
+          db.buddyRoles,
+        )..where((t) => t.buddyId.equals(buddy.id))).get();
+        expect(rows, isEmpty, reason: 'a rejected call must write nothing');
+      },
+    );
+
     test('buddyRolesProvider and allBuddyRolesProvider read through the '
         'repository', () async {
       final buddy = await repository.createBuddy(buddyFixture('Alice'));

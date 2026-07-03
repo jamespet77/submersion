@@ -69,6 +69,19 @@ class BuddyRoleRepository {
     String buddyId,
     List<BuddyRoleCredential> roles,
   ) async {
+    // Reject non-professional input loudly: writing e.g. BuddyRole.buddy
+    // would create a row this repository's reads hide and its delete loop
+    // never manages -- invisible and undeletable through this API.
+    final unsupported = roles
+        .where((r) => !kProfessionalBuddyRoles.contains(r.role))
+        .toList();
+    if (unsupported.isNotEmpty) {
+      throw ArgumentError(
+        'setRolesForBuddy only manages professional roles '
+        '(${kProfessionalBuddyRoles.map((r) => r.name).join(', ')}); got: '
+        '${unsupported.map((r) => r.role.name).join(', ')}',
+      );
+    }
     final byRole = <BuddyRole, BuddyRoleCredential>{};
     for (final role in roles) {
       byRole[role.role] = role;
