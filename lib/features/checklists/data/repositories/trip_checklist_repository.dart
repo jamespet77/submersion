@@ -233,9 +233,11 @@ class TripChecklistRepository {
           final id = _uuid.v4();
           final dueDate = item.dueOffsetDays == null
               ? null
-              : trip.startDate
-                    .subtract(Duration(days: item.dueOffsetDays!))
-                    .millisecondsSinceEpoch;
+              : DateTime(
+                  trip.startDate.year,
+                  trip.startDate.month,
+                  trip.startDate.day - item.dueOffsetDays!,
+                ).millisecondsSinceEpoch;
           await _db
               .into(_db.tripChecklistItems)
               .insert(
@@ -306,7 +308,16 @@ class TripChecklistRepository {
         int? offset;
         final due = item.dueDate;
         if (due != null) {
-          final days = tripStartDate.difference(due).inDays;
+          // Date-only difference so results are stable across DST
+          // transitions: two DateTimes at local midnight always differ by
+          // a whole number of calendar days.
+          final startDay = DateTime(
+            tripStartDate.year,
+            tripStartDate.month,
+            tripStartDate.day,
+          );
+          final dueDay = DateTime(due.year, due.month, due.day);
+          final days = startDay.difference(dueDay).inDays;
           offset = days >= 0 ? days : null;
         }
         return domain.ChecklistTemplateItem(
