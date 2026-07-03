@@ -1562,6 +1562,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get checklists_item_dueOffsetLabel => 'Jours avant le début du voyage';
 
   @override
+  String get checklists_item_dueOffsetInvalid => 'Saisissez 0 jour ou plus';
+
+  @override
   String get checklists_item_overdue => 'En retard';
 
   @override

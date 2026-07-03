@@ -1558,6 +1558,9 @@ class AppLocalizationsEs extends AppLocalizations {
       'Días antes del inicio del viaje';
 
   @override
+  String get checklists_item_dueOffsetInvalid => 'Ingresa 0 o más días';
+
+  @override
   String get checklists_item_overdue => 'Vencido';
 
   @override

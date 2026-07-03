@@ -448,6 +448,7 @@
   "checklists_item_notesLabel": "Notizen",
   "checklists_item_dueDateLabel": "Fälligkeitsdatum",
   "checklists_item_dueOffsetLabel": "Tage vor Reisebeginn",
+  "checklists_item_dueOffsetInvalid": "Geben Sie 0 oder mehr Tage ein",
   "checklists_item_overdue": "Überfällig",
   "checklists_item_edit": "Eintrag bearbeiten",
   "checklists_item_delete": "Eintrag löschen",

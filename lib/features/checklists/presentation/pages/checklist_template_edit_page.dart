@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:uuid/uuid.dart';
 
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/features/checklists/domain/entities/checklist_template.dart';
 import 'package:submersion/features/checklists/presentation/providers/checklist_providers.dart';
+import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
 /// Create/edit page for a checklist template and its items.
@@ -121,6 +123,13 @@ class _ChecklistTemplateEditPageState
                   decoration: InputDecoration(
                     labelText: context.l10n.checklists_item_dueOffsetLabel,
                   ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) return null;
+                    final parsed = int.tryParse(value.trim());
+                    return (parsed == null || parsed < 0)
+                        ? context.l10n.checklists_item_dueOffsetInvalid
+                        : null;
+                  },
                 ),
               ],
             ),
@@ -137,7 +146,7 @@ class _ChecklistTemplateEditPageState
               final category = categoryController.text.trim();
               Navigator.of(context).pop(
                 ChecklistTemplateItem(
-                  id: item?.id ?? '',
+                  id: item?.id ?? const Uuid().v4(),
                   templateId: widget.templateId ?? '',
                   title: titleController.text.trim(),
                   category: category.isEmpty ? null : category,
@@ -167,9 +176,11 @@ class _ChecklistTemplateEditPageState
     final navigator = Navigator.of(context);
     String templateId;
     if (_existing == null) {
+      final diverId = await ref.read(validatedCurrentDiverIdProvider.future);
       final created = await repository.createTemplate(
         ChecklistTemplate(
           id: '',
+          diverId: diverId,
           name: _nameController.text.trim(),
           description: _descriptionController.text.trim(),
           createdAt: DateTime.now(),
@@ -249,7 +260,7 @@ class _ChecklistTemplateEditPageState
                     children: [
                       for (var i = 0; i < _items.length; i++)
                         ListTile(
-                          key: ValueKey('item-$i-${_items[i].title}'),
+                          key: ValueKey(_items[i].id),
                           title: Text(_items[i].title),
                           subtitle: _items[i].category == null
                               ? null

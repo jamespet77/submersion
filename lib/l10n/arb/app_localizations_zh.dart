@@ -1469,6 +1469,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get checklists_item_dueOffsetLabel => '旅行开始前的天数';
 
   @override
+  String get checklists_item_dueOffsetInvalid => '请输入0天或以上';
+
+  @override
   String get checklists_item_overdue => '已逾期';
 
   @override

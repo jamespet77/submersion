@@ -448,6 +448,7 @@
   "checklists_item_notesLabel": "ملاحظات",
   "checklists_item_dueDateLabel": "تاريخ الاستحقاق",
   "checklists_item_dueOffsetLabel": "عدد الأيام قبل بدء الرحلة",
+  "checklists_item_dueOffsetInvalid": "أدخل 0 يومًا أو أكثر",
   "checklists_item_overdue": "متأخر",
   "checklists_item_edit": "تعديل العنصر",
   "checklists_item_delete": "حذف العنصر",

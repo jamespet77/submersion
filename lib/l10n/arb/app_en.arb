@@ -973,6 +973,7 @@
   "checklists_item_notesLabel": "Notes",
   "checklists_item_dueDateLabel": "Due date",
   "checklists_item_dueOffsetLabel": "Days before trip start",
+  "checklists_item_dueOffsetInvalid": "Enter 0 or more days",
   "checklists_item_overdue": "Overdue",
   "checklists_item_edit": "Edit item",
   "checklists_item_delete": "Delete item",

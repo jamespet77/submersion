@@ -448,6 +448,7 @@
   "checklists_item_notesLabel": "הערות",
   "checklists_item_dueDateLabel": "תאריך יעד",
   "checklists_item_dueOffsetLabel": "ימים לפני תחילת הטיול",
+  "checklists_item_dueOffsetInvalid": "הזן 0 ימים או יותר",
   "checklists_item_overdue": "באיחור",
   "checklists_item_edit": "ערוך פריט",
   "checklists_item_delete": "מחק פריט",

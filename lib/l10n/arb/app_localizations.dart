@@ -2712,6 +2712,12 @@ abstract class AppLocalizations {
   /// **'Days before trip start'**
   String get checklists_item_dueOffsetLabel;
 
+  /// No description provided for @checklists_item_dueOffsetInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter 0 or more days'**
+  String get checklists_item_dueOffsetInvalid;
+
   /// No description provided for @checklists_item_overdue.
   ///
   /// In en, this message translates to:

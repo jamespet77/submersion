@@ -1504,6 +1504,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get checklists_item_dueOffsetLabel => 'ימים לפני תחילת הטיול';
 
   @override
+  String get checklists_item_dueOffsetInvalid => 'הזן 0 ימים או יותר';
+
+  @override
   String get checklists_item_overdue => 'באיחור';
 
   @override

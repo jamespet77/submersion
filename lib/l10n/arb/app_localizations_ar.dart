@@ -1517,6 +1517,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checklists_item_dueOffsetLabel => 'عدد الأيام قبل بدء الرحلة';
 
   @override
+  String get checklists_item_dueOffsetInvalid => 'أدخل 0 يومًا أو أكثر';
+
+  @override
   String get checklists_item_overdue => 'متأخر';
 
   @override

@@ -1548,6 +1548,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get checklists_item_dueOffsetLabel => 'Nappal az út kezdete előtt';
 
   @override
+  String get checklists_item_dueOffsetInvalid => 'Adjon meg 0 vagy több napot';
+
+  @override
   String get checklists_item_overdue => 'Lejárt';
 
   @override

@@ -448,6 +448,7 @@
   "checklists_item_notesLabel": "Notes",
   "checklists_item_dueDateLabel": "Date d'échéance",
   "checklists_item_dueOffsetLabel": "Jours avant le début du voyage",
+  "checklists_item_dueOffsetInvalid": "Saisissez 0 jour ou plus",
   "checklists_item_overdue": "En retard",
   "checklists_item_edit": "Modifier l'élément",
   "checklists_item_delete": "Supprimer l'élément",

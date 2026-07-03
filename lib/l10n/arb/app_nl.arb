@@ -448,6 +448,7 @@
   "checklists_item_notesLabel": "Notities",
   "checklists_item_dueDateLabel": "Vervaldatum",
   "checklists_item_dueOffsetLabel": "Dagen voor start reis",
+  "checklists_item_dueOffsetInvalid": "Voer 0 of meer dagen in",
   "checklists_item_overdue": "Te laat",
   "checklists_item_edit": "Item bewerken",
   "checklists_item_delete": "Item verwijderen",

@@ -448,6 +448,7 @@
   "checklists_item_notesLabel": "Megjegyzések",
   "checklists_item_dueDateLabel": "Határidő",
   "checklists_item_dueOffsetLabel": "Nappal az út kezdete előtt",
+  "checklists_item_dueOffsetInvalid": "Adjon meg 0 vagy több napot",
   "checklists_item_overdue": "Lejárt",
   "checklists_item_edit": "Tétel szerkesztése",
   "checklists_item_delete": "Tétel törlése",

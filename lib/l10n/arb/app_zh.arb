@@ -542,6 +542,7 @@
   "checklists_item_notesLabel": "备注",
   "checklists_item_dueDateLabel": "截止日期",
   "checklists_item_dueOffsetLabel": "旅行开始前的天数",
+  "checklists_item_dueOffsetInvalid": "请输入0天或以上",
   "checklists_item_overdue": "已逾期",
   "checklists_item_edit": "编辑事项",
   "checklists_item_delete": "删除事项",

@@ -1555,6 +1555,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get checklists_item_dueOffsetLabel => 'Dias antes do início da viagem';
 
   @override
+  String get checklists_item_dueOffsetInvalid => 'Insira 0 ou mais dias';
+
+  @override
   String get checklists_item_overdue => 'Atrasado';
 
   @override
