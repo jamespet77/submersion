@@ -1049,6 +1049,25 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
     );
   }
 
+  /// Resolves computerId -> display name for a dive's data sources, using
+  /// the same fallback chain as the Data Sources section: model, then
+  /// serial, then the localized "Unknown Computer" label. Sources without a
+  /// computerId (manual entries, edited profiles) are skipped — callers key
+  /// off computerId, so there's nothing to attach the name to.
+  Map<String, String> _computerDisplayNames(
+    BuildContext context,
+    List<DiveDataSource> dataSources,
+  ) {
+    return {
+      for (final source in dataSources)
+        if (source.computerId != null)
+          source.computerId!:
+              source.computerModel ??
+              source.computerSerial ??
+              context.l10n.diveLog_sources_unknownComputer,
+    };
+  }
+
   Widget _buildProfileSection(BuildContext context, WidgetRef ref, Dive dive) {
     // Get profile analysis (async to avoid blocking UI with Buhlmann computation)
     final analysis = ref.watch(profileAnalysisProvider(dive.id)).valueOrNull;
@@ -1107,6 +1126,16 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
         .watch(profilesBySourceProvider(dive.id))
         .valueOrNull;
 
+    // Data sources drive the real computer display names and the true
+    // primary source (reused from the Data Sources section's provider).
+    final dataSources =
+        ref.watch(diveDataSourcesProvider(dive.id)).valueOrNull ?? const [];
+    final computerNames = _computerDisplayNames(context, dataSources);
+    final truePrimaryComputerIds = <String>{
+      for (final source in dataSources)
+        if (source.computerId != null && source.isPrimary) source.computerId!,
+    };
+
     // Build multi-computer data when 2+ sources exist
     final multiComputerProfiles =
         profilesBySource != null && profilesBySource.length >= 2
@@ -1135,13 +1164,21 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
       var idx = 0;
       for (final computerId in multiComputerProfiles.keys) {
         final color = computerColorAt(idx);
-        final isPrimary = idx == 0;
+        // Prefer the data sources' real isPrimary flag; only fall back to
+        // map order (idx == 0) when no source row is marked primary yet
+        // (e.g. data sources still loading), so the bar always has exactly
+        // one primary chip.
+        final isPrimary = truePrimaryComputerIds.isNotEmpty
+            ? truePrimaryComputerIds.contains(computerId)
+            : idx == 0;
         computerLineColors[computerId] = color;
         if (isPrimary) primaryComputers.add(computerId);
         toggleItems.add(
           ComputerToggleItem(
             computerId: computerId,
-            label: computerId,
+            label:
+                computerNames[computerId] ??
+                context.l10n.diveLog_sources_unknownComputer,
             isPrimary: isPrimary,
             isEnabled: effectiveVisible?.contains(computerId) ?? true,
             color: color,
@@ -1326,6 +1363,7 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                         visibleComputers: effectiveVisible,
                         computerLineColors: computerLineColors,
                         primaryComputers: primaryComputers,
+                        computerNames: computerNames,
                         playbackTimestamp: playbackState.isActive
                             ? playbackState.currentTimestamp
                             : null,
@@ -3770,6 +3808,16 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
   ) {
     final tankPressuresAsync = ref.watch(tankPressuresProvider(dive.id));
     final tankPressures = tankPressuresAsync.valueOrNull;
+    final dataSources =
+        ref.watch(diveDataSourcesProvider(dive.id)).valueOrNull ?? const [];
+    final computerNames = _computerDisplayNames(context, dataSources);
+    final primaryComputerId = dataSources
+        .where((s) => s.isPrimary)
+        .map((s) => s.computerId)
+        .firstOrNull;
+    // Only badge tanks once there's more than one source to disambiguate —
+    // a single-source dive never needs attribution.
+    final showTankSourceBadges = dataSources.length >= 2;
 
     return Card(
       child: Padding(
@@ -3836,6 +3884,23 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                 modDepth,
                 mndDepth,
               );
+              // Shown when this tank's readings came from a non-primary
+              // computer on a multi-source dive, so divers can tell which
+              // instrument's pressure log a tank's numbers came from.
+              final showSourceBadge =
+                  showTankSourceBadges &&
+                  tank.computerId != null &&
+                  tank.computerId != primaryComputerId;
+              final trailingChildren = <Widget>[
+                if (showSourceBadge)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FieldAttributionBadge(
+                      sourceName: computerNames[tank.computerId],
+                    ),
+                  ),
+                if (tankLabel != null) Text(tankLabel),
+              ];
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(MdiIcons.divingScubaTank),
@@ -3854,7 +3919,12 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                     ),
                   ],
                 ),
-                trailing: tankLabel != null ? Text(tankLabel) : null,
+                trailing: trailingChildren.isEmpty
+                    ? null
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: trailingChildren,
+                      ),
               );
             }),
           ],

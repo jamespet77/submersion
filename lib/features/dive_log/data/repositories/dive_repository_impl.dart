@@ -2364,6 +2364,7 @@ class DiveRepository {
                   : null,
               order: t.tankOrder,
               presetName: t.presetName,
+              computerId: t.computerId,
             ),
           )
           .toList(),
@@ -2729,6 +2730,7 @@ class DiveRepository {
               : null,
           order: t.tankOrder,
           presetName: t.presetName,
+          computerId: t.computerId,
         );
       }).toList(),
       profile: profileRows
