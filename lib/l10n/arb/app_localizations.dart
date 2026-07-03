@@ -6194,6 +6194,18 @@ abstract class AppLocalizations {
   /// **'Dive #'**
   String get diveLog_edit_label_diveNumber;
 
+  /// Label for the optional dive name field in the dive edit form
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get diveLog_edit_label_diveName;
+
+  /// Placeholder shown in the empty dive name field
+  ///
+  /// In en, this message translates to:
+  /// **'Optional name for this dive'**
+  String get diveLog_edit_diveNamePlaceholder;
+
   /// No description provided for @diveLog_edit_hint_diveNumber.
   ///
   /// In en, this message translates to:
@@ -7352,6 +7364,12 @@ abstract class AppLocalizations {
   /// **'OTU'**
   String get diveLog_legend_label_otu;
 
+  /// No description provided for @diveLog_legend_label_photoMarkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get diveLog_legend_label_photoMarkers;
+
   /// No description provided for @diveLog_legend_label_ppHe.
   ///
   /// In en, this message translates to:
@@ -8269,6 +8287,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Dive profile chart, pinch to zoom'**
   String get diveLog_profile_semantics_chart;
+
+  /// No description provided for @diveLog_profile_semantics_photoMarker.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo marker'**
+  String get diveLog_profile_semantics_photoMarker;
 
   /// No description provided for @diveLog_profile_tooltip_moreOptions.
   ///
@@ -18133,6 +18157,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'OTU (O2 Tolerance Units)'**
   String get settings_appearance_metric_otu;
+
+  /// No description provided for @settings_appearance_metric_photoMarkers.
+  ///
+  /// In en, this message translates to:
+  /// **'Photo Markers'**
+  String get settings_appearance_metric_photoMarkers;
 
   /// No description provided for @settings_appearance_metricsEnabledCount.
   ///

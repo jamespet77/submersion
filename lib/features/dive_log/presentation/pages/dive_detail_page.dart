@@ -55,6 +55,7 @@ import 'package:submersion/features/dive_log/presentation/widgets/compact_deco_s
 import 'package:submersion/features/dive_log/presentation/widgets/compact_tissue_loading_card.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/computer_toggle_bar.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/dive_profile_chart.dart';
+import 'package:submersion/features/dive_log/presentation/widgets/photo_marker_layout.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/playback_controls.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/playback_stats_panel.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/range_selection_overlay.dart';
@@ -656,12 +657,22 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  dive.site?.name ?? context.l10n.diveLog_listPage_unknownSite,
+                  dive.effectiveName ??
+                      dive.site?.name ??
+                      context.l10n.diveLog_listPage_unknownSite,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                   overflow: TextOverflow.ellipsis,
                 ),
+                if (dive.effectiveName != null && dive.site != null)
+                  Text(
+                    dive.site!.name,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 if (dive.site?.locationString.isNotEmpty == true)
                   Text(
                     dive.site!.locationString,
@@ -819,10 +830,18 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      dive.site?.name ??
+                      dive.effectiveName ??
+                          dive.site?.name ??
                           context.l10n.diveLog_listPage_unknownSite,
                       style: Theme.of(context).textTheme.titleLarge,
                     ),
+                    if (dive.effectiveName != null && dive.site != null)
+                      Text(
+                        dive.site!.name,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
                     if (dive.site?.locationString.isNotEmpty == true)
                       Text(
                         dive.site!.locationString,
@@ -1101,6 +1120,15 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
       tankPressures: tankPressures,
     );
 
+    final photoMedia =
+        ref.watch(mediaForDiveProvider(dive.id)).valueOrNull ?? const [];
+    final photoMarkers = dive.profile.isEmpty
+        ? const <PhotoChartMarker>[]
+        : photoMarkersFromMedia(
+            photoMedia,
+            maxProfileSeconds: dive.profile.last.timestamp,
+          );
+
     // Get profiles grouped by source for multi-computer toggle bar
     final profilesBySource = ref
         .watch(profilesBySourceProvider(dive.id))
@@ -1302,6 +1330,9 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                           analysis,
                         ),
                         markers: markers,
+                        photoMarkers: photoMarkers.isEmpty
+                            ? null
+                            : photoMarkers,
                         showMaxDepthMarker: showMaxDepthMarker,
                         showPressureThresholdMarkers:
                             showPressureThresholdMarkers,
@@ -4897,6 +4928,15 @@ class _FullscreenProfilePageState
       showPressureThresholds: showPressureThresholdMarkers,
     );
 
+    final photoMedia =
+        ref.watch(mediaForDiveProvider(dive.id)).valueOrNull ?? const [];
+    final photoMarkers = dive.profile.isEmpty
+        ? const <PhotoChartMarker>[]
+        : photoMarkersFromMedia(
+            photoMedia,
+            maxProfileSeconds: dive.profile.last.timestamp,
+          );
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: isLandscape
@@ -4971,6 +5011,7 @@ class _FullscreenProfilePageState
                         widget.analysis,
                       ),
                       markers: markers,
+                      photoMarkers: photoMarkers.isEmpty ? null : photoMarkers,
                       showMaxDepthMarker: showMaxDepthMarker,
                       showPressureThresholdMarkers:
                           showPressureThresholdMarkers,

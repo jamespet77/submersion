@@ -86,6 +86,7 @@ class DiverSettingsRepository {
               showNdlOnProfile: Value(s.showNdlOnProfile),
               lastStopDepth: Value(s.lastStopDepth),
               decoStopIncrement: Value(s.decoStopIncrement),
+              ascentGasSet: Value(s.ascentGasSet.index),
               o2Narcotic: Value(s.o2Narcotic),
               endLimit: Value(s.endLimit),
               defaultNdlSource: Value(s.defaultNdlSource.toInt()),
@@ -134,6 +135,7 @@ class DiverSettingsRepository {
               defaultShowCns: Value(s.defaultShowCns),
               defaultShowOtu: Value(s.defaultShowOtu),
               defaultShowGasSwitchMarkers: Value(s.defaultShowGasSwitchMarkers),
+              defaultShowPhotoMarkers: Value(s.defaultShowPhotoMarkers),
               defaultShowGasTimeline: Value(s.defaultShowGasTimeline),
               defaultShowAscentRateLine: Value(s.defaultShowAscentRateLine),
               notificationsEnabled: Value(s.notificationsEnabled),
@@ -221,6 +223,7 @@ class DiverSettingsRepository {
           showNdlOnProfile: Value(settings.showNdlOnProfile),
           lastStopDepth: Value(settings.lastStopDepth),
           decoStopIncrement: Value(settings.decoStopIncrement),
+          ascentGasSet: Value(settings.ascentGasSet.index),
           o2Narcotic: Value(settings.o2Narcotic),
           endLimit: Value(settings.endLimit),
           defaultNdlSource: Value(settings.defaultNdlSource.toInt()),
@@ -271,6 +274,7 @@ class DiverSettingsRepository {
           defaultShowGasSwitchMarkers: Value(
             settings.defaultShowGasSwitchMarkers,
           ),
+          defaultShowPhotoMarkers: Value(settings.defaultShowPhotoMarkers),
           defaultShowGasTimeline: Value(settings.defaultShowGasTimeline),
           defaultShowAscentRateLine: Value(settings.defaultShowAscentRateLine),
           notificationsEnabled: Value(settings.notificationsEnabled),
@@ -396,6 +400,10 @@ class DiverSettingsRepository {
       showNdlOnProfile: row.showNdlOnProfile,
       lastStopDepth: row.lastStopDepth,
       decoStopIncrement: row.decoStopIncrement,
+      ascentGasSet:
+          row.ascentGasSet >= 0 && row.ascentGasSet < AscentGasSet.values.length
+          ? AscentGasSet.values[row.ascentGasSet]
+          : AscentGasSet.allCarried,
       o2Narcotic: row.o2Narcotic,
       endLimit: row.endLimit,
       defaultNdlSource: MetricDataSource.fromInt(row.defaultNdlSource),
@@ -439,6 +447,7 @@ class DiverSettingsRepository {
       defaultShowCns: row.defaultShowCns,
       defaultShowOtu: row.defaultShowOtu,
       defaultShowGasSwitchMarkers: row.defaultShowGasSwitchMarkers,
+      defaultShowPhotoMarkers: row.defaultShowPhotoMarkers,
       defaultShowGasTimeline: row.defaultShowGasTimeline,
       defaultShowAscentRateLine: row.defaultShowAscentRateLine,
       notificationsEnabled: row.notificationsEnabled,

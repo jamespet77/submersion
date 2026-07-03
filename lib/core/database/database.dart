@@ -131,6 +131,9 @@ class Dives extends Table {
   TextColumn get id => text()();
   TextColumn get diverId => text().nullable().references(Divers, #id)();
   IntColumn get diveNumber => integer().nullable()();
+  // User-defined dive name (#400). Null = never named; display falls back
+  // to the site name.
+  TextColumn get name => text().nullable()();
   IntColumn get diveDateTime =>
       integer()(); // Unix timestamp (legacy, kept for compatibility)
   IntColumn get entryTime =>
@@ -807,6 +810,10 @@ class DiverSettings extends Table {
       boolean().withDefault(const Constant(true))();
   RealColumn get lastStopDepth => real().withDefault(const Constant(3.0))();
   RealColumn get decoStopIncrement => real().withDefault(const Constant(3.0))();
+  // coverage:ignore-start
+  /// Index of AscentGasSet (0 = allCarried). Drives the ideal-gas ascent set.
+  IntColumn get ascentGasSet => integer().withDefault(const Constant(0))();
+  // coverage:ignore-end
   BoolColumn get o2Narcotic => boolean().withDefault(const Constant(true))();
   RealColumn get endLimit => real().withDefault(const Constant(30.0))();
   BoolColumn get useDiveComputerCnsData =>
@@ -904,6 +911,10 @@ class DiverSettings extends Table {
   // coverage:ignore-start
   BoolColumn get defaultShowAscentRateLine =>
       boolean().withDefault(const Constant(false))();
+  // coverage:ignore-end
+  // coverage:ignore-start
+  BoolColumn get defaultShowPhotoMarkers =>
+      boolean().withDefault(const Constant(true))();
   // coverage:ignore-end
   // Notification settings (v26)
   BoolColumn get notificationsEnabled =>
@@ -1735,7 +1746,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 94;
+  static const int currentSchemaVersion = 97;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -1833,6 +1844,9 @@ class AppDatabase extends _$AppDatabase {
     92,
     93,
     94,
+    95,
+    96,
+    97,
   ];
 
   /// Tables that carry a per-row Hybrid Logical Clock for cross-device conflict
@@ -4349,10 +4363,57 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 93) await reportProgress();
         if (from < 94) {
+          // Guarded by sqlite_master so minimal-schema migration tests without
+          // diver_settings are unaffected.
+          final dsTable = await customSelect(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='diver_settings'",
+          ).get();
+          if (dsTable.isNotEmpty) {
+            await m.addColumn(diverSettings, diverSettings.ascentGasSet);
+          }
+        }
+        if (from < 94) await reportProgress();
+        if (from < 95) {
+          // Dive naming (#400): optional user-defined dive name. Guarded by a
+          // PRAGMA check so an interrupted upgrade that already added the
+          // column does not fail on a duplicate ALTER, and so minimal-schema
+          // migration tests without a dives table are unaffected (empty
+          // table_info means no dives table).
+          final diveCols = await customSelect(
+            "PRAGMA table_info('dives')",
+          ).get();
+          final hasName = diveCols.any((c) => c.read<String>('name') == 'name');
+          if (diveCols.isNotEmpty && !hasName) {
+            await customStatement('ALTER TABLE dives ADD COLUMN name TEXT');
+          }
+        }
+        if (from < 95) await reportProgress();
+        if (from < 96) {
+          // Persisted default for the "Photo Markers" profile overlay
+          // (issue #162). Guarded like v91: skip when diver_settings does
+          // not exist (minimal-schema migration tests) or the column is
+          // already present (interrupted upgrade).
+          final cols = await customSelect(
+            "PRAGMA table_info('diver_settings')",
+          ).get();
+          if (cols.isNotEmpty) {
+            final existing = cols.map((c) => c.read<String>('name')).toSet();
+            if (!existing.contains('default_show_photo_markers')) {
+              await customStatement(
+                'ALTER TABLE diver_settings '
+                'ADD COLUMN default_show_photo_markers '
+                'INTEGER NOT NULL DEFAULT 1',
+              );
+            }
+          }
+        }
+        if (from < 96) await reportProgress();
+        if (from < 97) {
           // Buddy professional credentials + structured instructor link on
           // certifications (issue #395). PRAGMA-guarded so a healthy database
           // no-ops and an interrupted upgrade does not fail on a duplicate
-          // ALTER. createTable is IF NOT EXISTS.
+          // ALTER. createTable is IF NOT EXISTS. (v97: renumbered from v94
+          // after main claimed 94-96 while the branch was in review.)
           final certCols = await customSelect(
             "PRAGMA table_info('certifications')",
           ).get();
@@ -4369,7 +4430,7 @@ class AppDatabase extends _$AppDatabase {
           }
           await m.createTable(buddyRoles);
         }
-        if (from < 94) await reportProgress();
+        if (from < 97) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys

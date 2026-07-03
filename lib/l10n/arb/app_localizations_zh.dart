@@ -3493,6 +3493,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_edit_label_diveNumber => '潜水编号';
 
   @override
+  String get diveLog_edit_label_diveName => '名称';
+
+  @override
+  String get diveLog_edit_diveNamePlaceholder => '此次潜水的可选名称';
+
+  @override
   String get diveLog_edit_hint_diveNumber => '留空则自动分配';
 
   @override
@@ -4150,6 +4156,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_legend_label_otu => 'OTU';
 
   @override
+  String get diveLog_legend_label_photoMarkers => '照片';
+
+  @override
   String get diveLog_legend_label_ppHe => '氦分压';
 
   @override
@@ -4668,6 +4677,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_profile_semantics_chart => '潜水轮廓图，双指缩放';
+
+  @override
+  String get diveLog_profile_semantics_photoMarker => '照片标记';
 
   @override
   String get diveLog_profile_tooltip_moreOptions => '更多图表选项';
@@ -10118,6 +10130,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_appearance_metric_otu => 'OTU (O2 耐受单位)';
+
+  @override
+  String get settings_appearance_metric_photoMarkers => '照片标记';
 
   @override
   String settings_appearance_metricsEnabledCount(int count, int total) {

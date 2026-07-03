@@ -122,6 +122,9 @@ class MockSettingsNotifier extends StateNotifier<AppSettings>
   Future<void> setEndLimit(double value) async =>
       state = state.copyWith(endLimit: value);
   @override
+  Future<void> setAscentGasSet(AscentGasSet value) async =>
+      state = state.copyWith(ascentGasSet: value);
+  @override
   Future<void> setDefaultNdlSource(MetricDataSource value) async =>
       state = state.copyWith(defaultNdlSource: value);
   @override
@@ -239,6 +242,9 @@ class MockSettingsNotifier extends StateNotifier<AppSettings>
   @override
   Future<void> setDefaultShowGasSwitchMarkers(bool value) async =>
       state = state.copyWith(defaultShowGasSwitchMarkers: value);
+  @override
+  Future<void> setDefaultShowPhotoMarkers(bool value) async =>
+      state = state.copyWith(defaultShowPhotoMarkers: value);
   @override
   Future<void> setDefaultShowGasTimeline(bool value) async =>
       state = state.copyWith(defaultShowGasTimeline: value);

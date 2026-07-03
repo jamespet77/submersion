@@ -3198,6 +3198,7 @@ class SyncDataSerializer {
       'showNdlOnProfile': true,
       'lastStopDepth': 3.0,
       'decoStopIncrement': 3.0,
+      'ascentGasSet': 0,
       // Appearance settings
       'showDepthColoredDiveCards': false,
       'cardColorAttribute': 'none',
@@ -3213,6 +3214,8 @@ class SyncDataSerializer {
       // seed it so payloads predating the column hydrate instead of throwing in
       // DiverSetting.fromJson.
       'defaultShowAscentRateLine': false,
+      // Non-nullable bool added in v96; seed payloads predating the column.
+      'defaultShowPhotoMarkers': true,
       // Override with actual data (existing values take precedence)
       ...data,
     };

@@ -36,7 +36,7 @@ buddy model itself have not caught up.
   records (no retroactive matching/backfill).
 - No removal of manual text entry anywhere; it keeps working as today.
 
-## Data Model (schema v94)
+## Data Model (schema v97)
 
 ### New table: `buddy_roles`
 
@@ -75,13 +75,13 @@ set-null-on-delete semantics — mirroring `courses.instructorId`
 (`database.dart:1534`). Existing `instructor_name` / `instructor_number`
 text columns are unchanged and carry the snapshot.
 
-### Migration v94
+### Migration v97
 
 - PRAGMA-guarded `ALTER TABLE certifications ADD COLUMN instructor_id`
   (idempotent, v87/v90/v91 pattern).
 - `m.createTable(buddyRoles)` (v92 pattern).
-- Bump `currentSchemaVersion` to 94; append `94` to `migrationVersions`.
-- Test: `test/core/database/migration_v94_buddy_roles_test.dart`.
+- Bump `currentSchemaVersion` to 97; append `97` to `migrationVersions`.
+- Test: `test/core/database/migration_v97_buddy_roles_test.dart`.
 
 ## Sync
 
@@ -192,7 +192,7 @@ autofills the instructor number from the credential.
 
 ## Testing (TDD)
 
-- `migration_v94_buddy_roles_test.dart`: table creation, column add,
+- `migration_v97_buddy_roles_test.dart`: table creation, column add,
   idempotency on re-run.
 - Repository tests **with foreign keys ON**: buddy_roles CRUD, upsert
   dedup, cascade on buddy delete, certification set-null on buddy

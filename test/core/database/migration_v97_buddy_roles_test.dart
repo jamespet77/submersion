@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/database/database.dart';
 
 void main() {
-  test('fresh v94 schema has buddy_roles table and '
+  test('fresh v97 schema has buddy_roles table and '
       'certifications.instructor_id', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
@@ -36,9 +36,9 @@ void main() {
     expect(certColNames, contains('instructor_id'));
   });
 
-  test('v94 migration adds instructor_id to a v93 certifications table '
+  test('v97 migration adds instructor_id to a pre-v97 certifications table '
       'and is idempotent', () async {
-    // Simulate the guarded ALTER against a pre-v94 table shape.
+    // Simulate the guarded ALTER against a pre-v97 table shape.
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
     await db.customStatement('''
@@ -67,12 +67,12 @@ void main() {
     expect(await hasColumn(), isTrue);
   });
 
-  test('real onUpgrade from v93 adds instructor_id and creates buddy_roles, '
+  test('real onUpgrade from v96 adds instructor_id and creates buddy_roles, '
       'preserving rows', () async {
     final nativeDb = NativeDatabase.memory(
       setup: (rawDb) {
-        rawDb.execute('PRAGMA user_version = 93');
-        // Minimal pre-v94 shapes: certifications without instructor_id, a
+        rawDb.execute('PRAGMA user_version = 96');
+        // Minimal pre-v97 shapes: certifications without instructor_id, a
         // buddies table for the new FKs to reference, and NO buddy_roles.
         rawDb.execute('''
           CREATE TABLE buddies (
@@ -104,7 +104,7 @@ void main() {
     final db = AppDatabase(nativeDb);
     addTearDown(() => db.close());
 
-    // Touch the DB so the real onUpgrade v94 block runs.
+    // Touch the DB so the real onUpgrade v97 block runs.
     final certCols = await db
         .customSelect("PRAGMA table_info('certifications')")
         .get();
@@ -141,8 +141,8 @@ void main() {
     expect(row.data['instructor_id'], isNull);
   });
 
-  test('schema version is 94 and the migration list includes it', () {
-    expect(AppDatabase.currentSchemaVersion, 94);
-    expect(AppDatabase.migrationVersions, contains(94));
+  test('schema version is at least 97 and the migration list includes it', () {
+    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(97));
+    expect(AppDatabase.migrationVersions, contains(97));
   });
 }
