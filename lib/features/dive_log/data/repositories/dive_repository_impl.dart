@@ -823,6 +823,7 @@ class DiveRepository {
               tankMaterial: Value(tank.material?.name),
               tankName: Value(tank.name),
               presetName: Value(tank.presetName),
+              computerId: Value(tank.computerId),
             ),
           );
         }
@@ -1097,6 +1098,7 @@ class DiveRepository {
                   tankMaterial: Value(tank.material?.name),
                   tankName: Value(tank.name),
                   presetName: Value(tank.presetName),
+                  computerId: Value(tank.computerId),
                 ),
               );
           await _syncRepository.markRecordPending(
@@ -4030,6 +4032,7 @@ class DiveRepository {
     tankMaterial: Value(t.material?.name),
     tankName: Value(t.name),
     presetName: Value(t.presetName),
+    computerId: Value(t.computerId),
   );
 
   /// Append [tanks] to each dive (fresh ids, appended after existing tanks).

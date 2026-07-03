@@ -1079,4 +1079,96 @@ void main() {
       },
     );
   });
+
+  group('tank computerId persistence through entity round-trips', () {
+    Future<void> insertComputer(String id) async {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db
+          .into(db.diveComputers)
+          .insert(
+            DiveComputersCompanion(
+              id: Value(id),
+              name: Value('Computer $id'),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+          );
+    }
+
+    Future<String?> tankComputerId(String tankId) async {
+      final row = await (db.select(
+        db.diveTanks,
+      )..where((t) => t.id.equals(tankId))).getSingle();
+      return row.computerId;
+    }
+
+    domain.DiveTank attributedTank(String id, {String? computerId}) =>
+        domain.DiveTank(
+          id: id,
+          gasMix: const domain.GasMix(o2: 21, he: 0),
+          startPressure: 200,
+          endPressure: 100,
+          order: 0,
+          computerId: computerId,
+        );
+
+    test('createDive persists tank attribution', () async {
+      await insertComputer('comp-x');
+      await repository.createDive(
+        domain.Dive(
+          id: 'dive-rt-1',
+          dateTime: DateTime.utc(2026, 7, 2, 9),
+          tanks: [attributedTank('tank-rt-1', computerId: 'comp-x')],
+        ),
+      );
+      expect(await tankComputerId('tank-rt-1'), 'comp-x');
+    });
+
+    test('updateDive persists attribution on newly added tanks', () async {
+      await insertComputer('comp-x');
+      await repository.createDive(
+        domain.Dive(
+          id: 'dive-rt-2',
+          dateTime: DateTime.utc(2026, 7, 2, 10),
+          tanks: [attributedTank('tank-rt-2a')],
+        ),
+      );
+      await repository.updateDive(
+        domain.Dive(
+          id: 'dive-rt-2',
+          dateTime: DateTime.utc(2026, 7, 2, 10),
+          tanks: [
+            attributedTank('tank-rt-2a'),
+            attributedTank('tank-rt-2b', computerId: 'comp-x'),
+          ],
+        ),
+      );
+      expect(await tankComputerId('tank-rt-2b'), 'comp-x');
+    });
+
+    test('updateDive does not clobber existing row attribution', () async {
+      await insertComputer('comp-x');
+      await repository.createDive(
+        domain.Dive(
+          id: 'dive-rt-3',
+          dateTime: DateTime.utc(2026, 7, 2, 11),
+          tanks: [attributedTank('tank-rt-3')],
+        ),
+      );
+      // Attribution stamped by a consolidation-style direct row write.
+      await (db.update(db.diveTanks)..where((t) => t.id.equals('tank-rt-3')))
+          .write(const DiveTanksCompanion(computerId: Value('comp-x')));
+
+      // An entity round-trip that lost the attribution (legacy caller)
+      // must not null the column on the existing row.
+      await repository.updateDive(
+        domain.Dive(
+          id: 'dive-rt-3',
+          dateTime: DateTime.utc(2026, 7, 2, 11),
+          tanks: [attributedTank('tank-rt-3')],
+        ),
+      );
+      expect(await tankComputerId('tank-rt-3'), 'comp-x');
+    });
+  });
 }
