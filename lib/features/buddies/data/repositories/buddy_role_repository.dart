@@ -22,20 +22,31 @@ class BuddyRoleRepository {
       _db.tableUpdates(TableUpdateQuery.onTable(_db.buddyRoles));
 
   /// Professional credentials for one buddy.
+  ///
+  /// Rows whose `role` string doesn't match a known [kProfessionalBuddyRoles]
+  /// value are skipped rather than coerced (issue #395 follow-up): a future
+  /// app version may add a role value this build doesn't understand yet, and
+  /// coercing it would let [setRolesForBuddy] delete it on the next save.
   Future<List<BuddyRoleCredential>> getRolesForBuddy(String buddyId) async {
     final rows =
         await (_db.select(_db.buddyRoles)
               ..where((t) => t.buddyId.equals(buddyId))
               ..orderBy([(t) => OrderingTerm.asc(t.role)]))
             .get();
-    return rows.map(_mapRowToRoleCredential).toList();
+    return rows
+        .where((row) => _isProfessionalRole(row.role))
+        .map(_mapRowToRoleCredential)
+        .toList();
   }
 
   /// All credentials keyed by buddy id, for pickers annotating many buddies.
+  ///
+  /// See [getRolesForBuddy] for why unrecognized role rows are skipped.
   Future<Map<String, List<BuddyRoleCredential>>> getAllRoles() async {
     final rows = await _db.select(_db.buddyRoles).get();
     final map = <String, List<BuddyRoleCredential>>{};
     for (final row in rows) {
+      if (!_isProfessionalRole(row.role)) continue;
       map.putIfAbsent(row.buddyId, () => []).add(_mapRowToRoleCredential(row));
     }
     return map;
@@ -44,6 +55,16 @@ class BuddyRoleRepository {
   /// Replace the credential set for [buddyId]. Dedupes by role (last entry
   /// wins) and preserves the existing row id for roles that stay, so sync
   /// peers see an update rather than delete+insert.
+  ///
+  /// Only manages rows whose role is a known professional role
+  /// ([kProfessionalBuddyRoles]); rows with any other role value (e.g. a
+  /// future app version's role this build doesn't recognize yet) are left
+  /// completely untouched -- no delete, no update, no tombstone.
+  ///
+  /// No-op updates (identical credentialNumber/agency/notes) are skipped
+  /// entirely so an unrelated buddy save doesn't stamp a fresh HLC and win
+  /// last-write-wins over a real concurrent credential edit on another
+  /// device. The whole sequence runs in one transaction.
   Future<void> setRolesForBuddy(
     String buddyId,
     List<BuddyRoleCredential> roles,
@@ -53,68 +74,89 @@ class BuddyRoleRepository {
       byRole[role.role] = role;
     }
     final now = DateTime.now().millisecondsSinceEpoch;
-    final existing = await (_db.select(
-      _db.buddyRoles,
-    )..where((t) => t.buddyId.equals(buddyId))).get();
-    final existingByRole = {for (final row in existing) row.role: row};
+    var wroteAny = false;
 
-    // Delete roles no longer present.
-    for (final row in existing) {
-      if (!byRole.keys.any((r) => r.name == row.role)) {
-        await (_db.delete(
-          _db.buddyRoles,
-        )..where((t) => t.id.equals(row.id))).go();
-        await _syncRepository.logDeletion(
-          entityType: 'buddyRoles',
-          recordId: row.id,
-        );
-      }
-    }
+    await _db.transaction(() async {
+      final existing = await (_db.select(
+        _db.buddyRoles,
+      )..where((t) => t.buddyId.equals(buddyId))).get();
+      final existingByRole = {for (final row in existing) row.role: row};
 
-    // Upsert kept/new roles.
-    for (final credential in byRole.values) {
-      final existingRow = existingByRole[credential.role.name];
-      if (existingRow != null) {
-        await (_db.update(
-          _db.buddyRoles,
-        )..where((t) => t.id.equals(existingRow.id))).write(
-          BuddyRolesCompanion(
-            credentialNumber: Value(credential.credentialNumber),
-            agency: Value(credential.agency?.name),
-            notes: Value(credential.notes),
-            updatedAt: Value(now),
-          ),
-        );
-        await _syncRepository.markRecordPending(
-          entityType: 'buddyRoles',
-          recordId: existingRow.id,
-          localUpdatedAt: now,
-        );
-      } else {
-        final id = credential.id.isEmpty ? _uuid.v4() : credential.id;
-        await _db
-            .into(_db.buddyRoles)
-            .insert(
-              BuddyRolesCompanion(
-                id: Value(id),
-                buddyId: Value(buddyId),
-                role: Value(credential.role.name),
-                credentialNumber: Value(credential.credentialNumber),
-                agency: Value(credential.agency?.name),
-                notes: Value(credential.notes),
-                createdAt: Value(now),
-                updatedAt: Value(now),
-              ),
-            );
-        await _syncRepository.markRecordPending(
-          entityType: 'buddyRoles',
-          recordId: id,
-          localUpdatedAt: now,
-        );
+      // Delete professional roles no longer present. Non-professional rows
+      // (unrecognized role strings) are never touched here.
+      for (final row in existing) {
+        if (!_isProfessionalRole(row.role)) continue;
+        if (!byRole.keys.any((r) => r.name == row.role)) {
+          await (_db.delete(
+            _db.buddyRoles,
+          )..where((t) => t.id.equals(row.id))).go();
+          await _syncRepository.logDeletion(
+            entityType: 'buddyRoles',
+            recordId: row.id,
+          );
+          wroteAny = true;
+        }
       }
+
+      // Upsert kept/new roles.
+      for (final credential in byRole.values) {
+        final existingRow = existingByRole[credential.role.name];
+        if (existingRow != null) {
+          final unchanged =
+              existingRow.credentialNumber == credential.credentialNumber &&
+              existingRow.agency == credential.agency?.name &&
+              existingRow.notes == credential.notes;
+          if (unchanged) continue;
+
+          await (_db.update(
+            _db.buddyRoles,
+          )..where((t) => t.id.equals(existingRow.id))).write(
+            BuddyRolesCompanion(
+              credentialNumber: Value(credential.credentialNumber),
+              agency: Value(credential.agency?.name),
+              notes: Value(credential.notes),
+              updatedAt: Value(now),
+            ),
+          );
+          await _syncRepository.markRecordPending(
+            entityType: 'buddyRoles',
+            recordId: existingRow.id,
+            localUpdatedAt: now,
+          );
+          wroteAny = true;
+        } else {
+          final id = credential.id.isEmpty ? _uuid.v4() : credential.id;
+          await _db
+              .into(_db.buddyRoles)
+              .insert(
+                BuddyRolesCompanion(
+                  id: Value(id),
+                  buddyId: Value(buddyId),
+                  role: Value(credential.role.name),
+                  credentialNumber: Value(credential.credentialNumber),
+                  agency: Value(credential.agency?.name),
+                  notes: Value(credential.notes),
+                  createdAt: Value(now),
+                  updatedAt: Value(now),
+                ),
+              );
+          await _syncRepository.markRecordPending(
+            entityType: 'buddyRoles',
+            recordId: id,
+            localUpdatedAt: now,
+          );
+          wroteAny = true;
+        }
+      }
+    });
+
+    if (wroteAny) {
+      SyncEventBus.notifyLocalChange();
     }
-    SyncEventBus.notifyLocalChange();
   }
+
+  bool _isProfessionalRole(String roleName) =>
+      kProfessionalBuddyRoles.any((r) => r.name == roleName);
 
   BuddyRoleCredential _mapRowToRoleCredential(BuddyRoleRow row) {
     return BuddyRoleCredential(

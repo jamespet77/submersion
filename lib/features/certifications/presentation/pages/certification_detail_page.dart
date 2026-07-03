@@ -140,7 +140,8 @@ class _CertificationDetailContent extends ConsumerWidget {
 
           // Instructor info
           if (certification.instructorName != null ||
-              certification.instructorNumber != null) ...[
+              certification.instructorNumber != null ||
+              certification.instructorId != null) ...[
             _buildInstructorSection(context, ref),
             const SizedBox(height: 16),
           ],
@@ -552,6 +553,14 @@ class _CertificationDetailContent extends ConsumerWidget {
     final linkedBuddy = instructorId != null
         ? ref.watch(buddyByIdProvider(instructorId)).value
         : null;
+    // Fall back to the linked buddy's name when the snapshot text fields
+    // were cleared (e.g. after a data-quality fix-up); if there's still
+    // nothing to show, hide the section entirely.
+    final displayName = certification.instructorName ?? linkedBuddy?.name;
+
+    if (displayName == null && certification.instructorNumber == null) {
+      return const SizedBox.shrink();
+    }
 
     return Card(
       child: Padding(
@@ -566,7 +575,7 @@ class _CertificationDetailContent extends ConsumerWidget {
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
-            if (certification.instructorName != null)
+            if (displayName != null)
               linkedBuddy != null
                   ? ListTile(
                       contentPadding: EdgeInsets.zero,
@@ -577,7 +586,7 @@ class _CertificationDetailContent extends ConsumerWidget {
                       title: Text(
                         context.l10n.certifications_detail_label_instructorName,
                       ),
-                      subtitle: Text(certification.instructorName!),
+                      subtitle: Text(displayName),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         if (embedded) {
@@ -592,7 +601,7 @@ class _CertificationDetailContent extends ConsumerWidget {
                       label: context
                           .l10n
                           .certifications_detail_label_instructorName,
-                      value: certification.instructorName!,
+                      value: displayName,
                     ),
             if (certification.instructorNumber != null)
               _InfoRow(
