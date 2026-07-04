@@ -32,6 +32,10 @@ class DataSourcesSection extends StatefulWidget {
   /// Called with the reading ID when the user confirms "Unlink".
   final void Function(String readingId)? onUnlink;
 
+  /// Called with the reading ID when the user chooses "Split into
+  /// separate dive" (confirmation happens in the caller).
+  final void Function(String readingId)? onSplit;
+
   /// Called when the user taps a source card to temporarily view it.
   final void Function(String sourceId)? onTapSource;
 
@@ -44,6 +48,7 @@ class DataSourcesSection extends StatefulWidget {
     this.viewedSourceId,
     this.onSetPrimary,
     this.onUnlink,
+    this.onSplit,
     this.onTapSource,
   });
 
@@ -101,6 +106,9 @@ class _DataSourcesSectionState extends State<DataSourcesSection> {
               : null,
           onUnlink: widget.onUnlink != null
               ? () => widget.onUnlink!(source.id)
+              : null,
+          onSplit: widget.onSplit != null && isMultiSource
+              ? () => widget.onSplit!(source.id)
               : null,
           onTap: widget.onTapSource != null
               ? () => widget.onTapSource!(source.id)
@@ -271,6 +279,7 @@ class _DataSourceCard extends StatelessWidget {
   final bool isViewing;
   final VoidCallback? onSetPrimary;
   final VoidCallback? onUnlink;
+  final VoidCallback? onSplit;
   final VoidCallback? onTap;
 
   const _DataSourceCard({
@@ -280,6 +289,7 @@ class _DataSourceCard extends StatelessWidget {
     required this.isViewing,
     this.onSetPrimary,
     this.onUnlink,
+    this.onSplit,
     this.onTap,
   });
 
@@ -333,7 +343,8 @@ class _DataSourceCard extends StatelessWidget {
       );
     }
 
-    final hasOverflowMenu = onSetPrimary != null || onUnlink != null;
+    final hasOverflowMenu =
+        onSetPrimary != null || onUnlink != null || onSplit != null;
 
     return GestureDetector(
       onTap: onTap,
@@ -405,24 +416,41 @@ class _DataSourceCard extends StatelessWidget {
                             onSetPrimary?.call();
                           case _SourceMenuAction.unlink:
                             onUnlink?.call();
+                          case _SourceMenuAction.split:
+                            onSplit?.call();
                         }
                       },
                       itemBuilder: (context) => [
                         if (!source.isPrimary && onSetPrimary != null)
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: _SourceMenuAction.setPrimary,
                             child: ListTile(
-                              leading: Icon(Icons.star_outline),
-                              title: Text('Set as primary'),
+                              leading: const Icon(Icons.star_outline),
+                              title: Text(
+                                context.l10n.diveLog_sources_menu_setPrimary,
+                              ),
                               contentPadding: EdgeInsets.zero,
                             ),
                           ),
                         if (onUnlink != null)
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: _SourceMenuAction.unlink,
                             child: ListTile(
-                              leading: Icon(Icons.link_off),
-                              title: Text('Unlink'),
+                              leading: const Icon(Icons.link_off),
+                              title: Text(
+                                context.l10n.diveLog_sources_menu_unlink,
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                          ),
+                        if (onSplit != null)
+                          PopupMenuItem(
+                            value: _SourceMenuAction.split,
+                            child: ListTile(
+                              leading: const Icon(Icons.call_split),
+                              title: Text(
+                                context.l10n.diveLog_sources_menu_split,
+                              ),
                               contentPadding: EdgeInsets.zero,
                             ),
                           ),
@@ -607,7 +635,7 @@ class _DetailsGrid extends StatelessWidget {
 // Shared Widgets
 // ---------------------------------------------------------------------------
 
-enum _SourceMenuAction { setPrimary, unlink }
+enum _SourceMenuAction { setPrimary, unlink, split }
 
 /// A small badge chip with customizable background color.
 class _Badge extends StatelessWidget {

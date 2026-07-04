@@ -412,6 +412,7 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                   diveId: dive.id,
                   readingId: readingId,
                 ),
+                onSplit: (readingId) => _confirmAndSplit(dive, readingId),
               );
             },
           ),
