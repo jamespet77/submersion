@@ -16,6 +16,8 @@ import 'package:submersion/features/dive_log/domain/entities/dive_summary.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_weight.dart'
     as domain;
 import 'package:submersion/features/dive_log/domain/entities/gas_switch.dart';
+import 'package:submersion/features/dive_log/domain/entities/source_profile.dart'
+    as domain;
 import 'package:submersion/features/dive_log/domain/entities/profile_event.dart';
 import 'package:submersion/features/dive_log/domain/services/profile_event_mapper.dart';
 import 'package:submersion/core/constants/sort_options.dart';
@@ -522,37 +524,124 @@ class DiveRepository {
           source = row.computerId ?? 'original';
         }
 
-        result
-            .putIfAbsent(source, () => [])
-            .add(
-              domain.DiveProfilePoint(
-                timestamp: row.timestamp,
-                depth: row.depth,
-                temperature: row.temperature,
-                heartRate: row.heartRate,
-                heartRateSource: row.heartRateSource,
-                setpoint: row.setpoint,
-                ppO2: row.ppO2,
-                o2Sensor1: row.o2Sensor1,
-                o2Sensor2: row.o2Sensor2,
-                o2Sensor3: row.o2Sensor3,
-                o2Sensor4: row.o2Sensor4,
-                o2Sensor5: row.o2Sensor5,
-                o2Sensor6: row.o2Sensor6,
-                cns: row.cns,
-                ndl: row.ndl,
-                ceiling: row.ceiling,
-                ascentRate: row.ascentRate,
-                rbt: row.rbt,
-                decoType: row.decoType,
-                tts: row.tts,
-              ),
-            );
+        result.putIfAbsent(source, () => []).add(_profilePointFromRow(row));
       }
       return result;
     } catch (e, stackTrace) {
       _log.error(
         'Failed to get profiles by source for dive: $diveId',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      return {};
+    }
+  }
+
+  domain.DiveProfilePoint _profilePointFromRow(DiveProfile row) {
+    return domain.DiveProfilePoint(
+      timestamp: row.timestamp,
+      depth: row.depth,
+      temperature: row.temperature,
+      heartRate: row.heartRate,
+      heartRateSource: row.heartRateSource,
+      setpoint: row.setpoint,
+      ppO2: row.ppO2,
+      o2Sensor1: row.o2Sensor1,
+      o2Sensor2: row.o2Sensor2,
+      o2Sensor3: row.o2Sensor3,
+      o2Sensor4: row.o2Sensor4,
+      o2Sensor5: row.o2Sensor5,
+      o2Sensor6: row.o2Sensor6,
+      cns: row.cns,
+      ndl: row.ndl,
+      ceiling: row.ceiling,
+      ascentRate: row.ascentRate,
+      rbt: row.rbt,
+      decoType: row.decoType,
+      tts: row.tts,
+    );
+  }
+
+  /// Get profile samples grouped by owning data source.
+  ///
+  /// Keys are dive_data_sources ids, primary source first. Rows with a null
+  /// computerId belong to the primary source (schema convention). Rows whose
+  /// computerId matches no source also fall back to the primary source so no
+  /// data is ever dropped or bucketed under an invented key. When an edited
+  /// profile exists, the primary source carries only the edited rows
+  /// (isEdited: true).
+  Future<Map<String, domain.SourceProfile>> getProfilesByDataSource(
+    String diveId,
+  ) async {
+    try {
+      final sourceRows =
+          await (_db.select(_db.diveDataSources)
+                ..where((t) => t.diveId.equals(diveId))
+                ..orderBy([
+                  (t) => OrderingTerm.desc(t.isPrimary),
+                  (t) => OrderingTerm.asc(t.createdAt),
+                ]))
+              .get();
+      if (sourceRows.isEmpty) return {};
+
+      final primary = sourceRows.first;
+      final sourceIdByComputer = <String, String>{
+        for (final s in sourceRows)
+          if (s.computerId != null) s.computerId!: s.id,
+      };
+
+      final rows =
+          await (_db.select(_db.diveProfiles)
+                ..where((t) => t.diveId.equals(diveId))
+                ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
+              .get();
+
+      // A row belongs to the primary source's "family" when its computerId
+      // is null (schema convention for primary/manual/edited rows) or is the
+      // primary's own computer. Only family rows participate in
+      // edited-profile detection: an edit demotes the family originals to
+      // isPrimary=false and writes edited rows with isPrimary=true, whereas
+      // secondary computers' rows are ALWAYS isPrimary=false and must never
+      // be mistaken for demoted originals.
+      bool isPrimaryFamily(DiveProfile r) =>
+          r.computerId == null || r.computerId == primary.computerId;
+
+      final familyRows = rows.where(isPrimaryFamily);
+      final hasEditedProfile =
+          familyRows.any((r) => r.isPrimary) &&
+          familyRows.any((r) => !r.isPrimary);
+
+      final grouped = <String, List<domain.DiveProfilePoint>>{
+        for (final s in sourceRows) s.id: [],
+      };
+      var primaryIsEdited = false;
+
+      for (final row in rows) {
+        final owner = row.computerId == null
+            ? primary.id
+            : (sourceIdByComputer[row.computerId!] ?? primary.id);
+        if (hasEditedProfile && isPrimaryFamily(row)) {
+          // Edited rows (isPrimary=true) replace the primary source's
+          // originals; skip the demoted originals entirely.
+          if (!row.isPrimary) continue;
+          primaryIsEdited = true;
+        }
+        grouped[owner]!.add(_profilePointFromRow(row));
+      }
+
+      return {
+        for (final s in sourceRows)
+          if (grouped[s.id]!.isNotEmpty || s.id == primary.id)
+            s.id: domain.SourceProfile(
+              sourceId: s.id,
+              computerId: s.computerId,
+              isEdited: s.id == primary.id && primaryIsEdited,
+              points: grouped[s.id]!,
+            ),
+      };
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to get profiles by data source for dive: $diveId',
         error: e,
         stackTrace: stackTrace,
       );
