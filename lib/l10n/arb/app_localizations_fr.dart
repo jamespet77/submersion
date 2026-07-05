@@ -10449,6 +10449,16 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'gaz mini $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'demi-tour à $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Densité du gaz $value g/L au-dessus de la limite stricte';
   }
@@ -10461,6 +10471,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Gaz hypoxique à $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'Le bloc finit sous le minimum rock bottom de $pressure';
   }
 
   @override

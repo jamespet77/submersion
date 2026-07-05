@@ -10216,6 +10216,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'الحد الأدنى للغاز $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'العودة عند $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'كثافة الغاز $value g/L تتجاوز الحد الأقصى';
   }
@@ -10228,6 +10238,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'غاز ناقص الأكسجين عند $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'تنتهي الأسطوانة تحت الحد الأدنى الآمن $pressure';
   }
 
   @override

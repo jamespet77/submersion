@@ -17720,6 +17720,18 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 issue} other{{count} issues}}'**
   String plannerCanvas_chip_issues(int count);
 
+  /// No description provided for @plannerCanvas_gas_minGas.
+  ///
+  /// In en, this message translates to:
+  /// **'min gas {pressure}'**
+  String plannerCanvas_gas_minGas(String pressure);
+
+  /// No description provided for @plannerCanvas_gas_turnAt.
+  ///
+  /// In en, this message translates to:
+  /// **'turn @ {pressure}'**
+  String plannerCanvas_gas_turnAt(String pressure);
+
   /// No description provided for @plannerCanvas_issue_gasDensityCritical.
   ///
   /// In en, this message translates to:
@@ -17737,6 +17749,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hypoxic gas at {depth} (ppO₂ {value} bar)'**
   String plannerCanvas_issue_hypoxic(String depth, String value);
+
+  /// No description provided for @plannerCanvas_issue_minGas.
+  ///
+  /// In en, this message translates to:
+  /// **'Tank ends below the rock-bottom minimum of {pressure}'**
+  String plannerCanvas_issue_minGas(String pressure);
 
   /// No description provided for @plannerCanvas_issue_noBailout.
   ///

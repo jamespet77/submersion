@@ -5677,6 +5677,18 @@
       "count": { "type": "int" }
     }
   },
+  "plannerCanvas_gas_minGas": "min gas {pressure}",
+  "@plannerCanvas_gas_minGas": {
+    "placeholders": {
+      "pressure": { "type": "String" }
+    }
+  },
+  "plannerCanvas_gas_turnAt": "turn @ {pressure}",
+  "@plannerCanvas_gas_turnAt": {
+    "placeholders": {
+      "pressure": { "type": "String" }
+    }
+  },
   "plannerCanvas_issue_gasDensityCritical": "Gas density {value} g/L over hard limit",
   "@plannerCanvas_issue_gasDensityCritical": {
     "placeholders": {
@@ -5694,6 +5706,12 @@
     "placeholders": {
       "depth": { "type": "String" },
       "value": { "type": "String" }
+    }
+  },
+  "plannerCanvas_issue_minGas": "Tank ends below the rock-bottom minimum of {pressure}",
+  "@plannerCanvas_issue_minGas": {
+    "placeholders": {
+      "pressure": { "type": "String" }
     }
   },
   "plannerCanvas_issue_noBailout": "CCR decompression plan carries no bailout gas",

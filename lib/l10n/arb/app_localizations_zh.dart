@@ -9963,6 +9963,16 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return '最低气量 $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return '$pressure 时折返';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return '气体密度 $value g/L 超过硬性上限';
   }
@@ -9975,6 +9985,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return '$depth 处为低氧气体（ppO₂ $value bar）';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return '气瓶终压低于最低保底气量 $pressure';
   }
 
   @override

@@ -64,6 +64,10 @@ String planIssueMessage(
       return l10n.plannerCanvas_issue_noDecoGas;
     case PlanIssueType.noBailoutCarried:
       return l10n.plannerCanvas_issue_noBailout;
+    case PlanIssueType.minGasViolation:
+      return l10n.plannerCanvas_issue_minGas(
+        units.formatPressure(issue.threshold ?? 0),
+      );
   }
 }
 

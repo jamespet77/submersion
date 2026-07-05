@@ -10386,6 +10386,16 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'min. gáz $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'fordulás $pressure-nál';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Gázsűrűség $value g/L a szigorú határ felett';
   }
@@ -10398,6 +10408,11 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Hipoxiás gáz $depth mélységben (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'A palack a rock-bottom minimum ($pressure) alatt végez';
   }
 
   @override
