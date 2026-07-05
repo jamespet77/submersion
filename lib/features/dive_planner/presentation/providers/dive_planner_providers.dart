@@ -522,8 +522,5 @@ final planIsValidProvider = Provider<bool>((ref) {
 /// Currently selected segment for editing.
 final selectedSegmentIdProvider = StateProvider<String?>((ref) => null);
 
-/// Currently selected tab index in planner page.
-final plannerTabIndexProvider = StateProvider<int>((ref) => 0);
-
 /// Whether the simple plan dialog is shown.
 final showSimplePlanDialogProvider = StateProvider<bool>((ref) => false);

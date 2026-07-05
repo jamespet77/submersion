@@ -82,7 +82,6 @@ class _PlanTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final date = MaterialLocalizations.of(
       context,
     ).formatShortDate(summary.updatedAt);
