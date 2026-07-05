@@ -23,12 +23,21 @@ Future<void> showSavedPlansSheet(BuildContext context) {
   );
 }
 
-/// Lists saved plans (newest first) with open, duplicate, and delete.
-class SavedPlansSheet extends ConsumerWidget {
+/// Lists saved plans (newest first) with open, duplicate, share, delete,
+/// import, and a multi-select compare mode.
+class SavedPlansSheet extends ConsumerStatefulWidget {
   const SavedPlansSheet({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SavedPlansSheet> createState() => _SavedPlansSheetState();
+}
+
+class _SavedPlansSheetState extends ConsumerState<SavedPlansSheet> {
+  bool _selecting = false;
+  final _selected = <String>{};
+
+  @override
+  Widget build(BuildContext context) {
     final summaries = ref.watch(divePlanSummariesProvider);
     final theme = Theme.of(context);
     final units = UnitFormatter(ref.watch(settingsProvider));
@@ -51,6 +60,22 @@ class SavedPlansSheet extends ConsumerWidget {
                     style: theme.textTheme.titleMedium,
                   ),
                 ),
+                if ((plans?.length ?? 0) >= 2)
+                  TextButton.icon(
+                    icon: Icon(
+                      _selecting ? Icons.close : Icons.compare_arrows,
+                      size: 18,
+                    ),
+                    label: Text(
+                      _selecting
+                          ? context.l10n.common_action_cancel
+                          : context.l10n.plannerCanvas_compare_action,
+                    ),
+                    onPressed: () => setState(() {
+                      _selecting = !_selecting;
+                      _selected.clear();
+                    }),
+                  ),
                 TextButton.icon(
                   icon: const Icon(Icons.file_open, size: 18),
                   label: Text(context.l10n.plannerCanvas_share_import),
@@ -79,8 +104,41 @@ class SavedPlansSheet extends ConsumerWidget {
                 child: ListView.builder(
                   shrinkWrap: true,
                   itemCount: plans.length,
-                  itemBuilder: (context, i) =>
-                      _PlanTile(summary: plans[i], units: units),
+                  itemBuilder: (context, i) => _selecting
+                      ? CheckboxListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(plans[i].name),
+                          value: _selected.contains(plans[i].id),
+                          onChanged: (checked) => setState(() {
+                            if (checked ?? false) {
+                              if (_selected.length < 3) {
+                                _selected.add(plans[i].id);
+                              }
+                            } else {
+                              _selected.remove(plans[i].id);
+                            }
+                          }),
+                        )
+                      : _PlanTile(summary: plans[i], units: units),
+                ),
+              ),
+            if (_selecting)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: FilledButton(
+                  onPressed: _selected.length >= 2
+                      ? () {
+                          final ids = _selected.join(',');
+                          Navigator.of(context).pop();
+                          GoRouter.of(
+                            context,
+                          ).go('/planning/dive-planner/compare?ids=$ids');
+                        }
+                      : null,
+                  child: Text(
+                    '${context.l10n.plannerCanvas_compare_action}'
+                    ' (${_selected.length})',
+                  ),
                 ),
               ),
           ],

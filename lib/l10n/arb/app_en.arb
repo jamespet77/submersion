@@ -5677,6 +5677,9 @@
       "count": { "type": "int" }
     }
   },
+  "plannerCanvas_compare_action": "Compare",
+  "plannerCanvas_compare_needTwo": "Select at least two plans to compare",
+  "plannerCanvas_compare_title": "Compare plans",
   "plannerCanvas_contingency_base": "Base",
   "plannerCanvas_contingency_depthDelta": "Extra depth",
   "plannerCanvas_contingency_lostGas": "Lost {gas}",

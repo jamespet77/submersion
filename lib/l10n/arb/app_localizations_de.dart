@@ -10410,6 +10410,16 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_compare_action => 'Compare';
+
+  @override
+  String get plannerCanvas_compare_needTwo =>
+      'Select at least two plans to compare';
+
+  @override
+  String get plannerCanvas_compare_title => 'Compare plans';
+
+  @override
   String get plannerCanvas_contingency_base => 'Basis';
 
   @override

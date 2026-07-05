@@ -17720,6 +17720,24 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 issue} other{{count} issues}}'**
   String plannerCanvas_chip_issues(int count);
 
+  /// No description provided for @plannerCanvas_compare_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare'**
+  String get plannerCanvas_compare_action;
+
+  /// No description provided for @plannerCanvas_compare_needTwo.
+  ///
+  /// In en, this message translates to:
+  /// **'Select at least two plans to compare'**
+  String get plannerCanvas_compare_needTwo;
+
+  /// No description provided for @plannerCanvas_compare_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare plans'**
+  String get plannerCanvas_compare_title;
+
   /// No description provided for @plannerCanvas_contingency_base.
   ///
   /// In en, this message translates to:
