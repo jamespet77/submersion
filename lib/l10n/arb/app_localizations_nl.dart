@@ -10316,6 +10316,10 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_issue_noBailout =>
+      'CCR-decompressieplan heeft geen bailoutgas aan boord';
+
+  @override
   String get plannerCanvas_issue_noDecoGas =>
       'Decompressie vereist maar geen decogas meegenomen';
 

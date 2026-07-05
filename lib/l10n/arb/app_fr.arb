@@ -3206,6 +3206,7 @@
   "plannerCanvas_issue_gasDensityCritical": "Densité du gaz {value} g/L au-dessus de la limite stricte",
   "plannerCanvas_issue_gasDensityHigh": "Densité du gaz {value} g/L au-dessus de la limite recommandée",
   "plannerCanvas_issue_hypoxic": "Gaz hypoxique à {depth} (ppO₂ {value} bar)",
+  "plannerCanvas_issue_noBailout": "Le plan de décompression CCR n'emporte aucun gaz de bailout",
   "plannerCanvas_issue_noDecoGas": "Décompression requise mais aucun gaz de déco emporté",
   "plannerCanvas_results_noDeco": "Aucune décompression requise",
   "plannerCanvas_saved_deleteConfirmBody": "Supprimer définitivement « {name} » ?",

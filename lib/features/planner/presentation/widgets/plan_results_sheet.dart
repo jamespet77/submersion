@@ -61,6 +61,8 @@ String planIssueMessage(
       return l10n.divePlanner_warning_gasOut;
     case PlanIssueType.ndlExceededNoDecoGas:
       return l10n.plannerCanvas_issue_noDecoGas;
+    case PlanIssueType.noBailoutCarried:
+      return l10n.plannerCanvas_issue_noBailout;
   }
 }
 

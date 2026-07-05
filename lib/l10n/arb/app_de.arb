@@ -3240,6 +3240,7 @@
   "plannerCanvas_issue_gasDensityCritical": "Gasdichte {value} g/L über hartem Limit",
   "plannerCanvas_issue_gasDensityHigh": "Gasdichte {value} g/L über empfohlenem Limit",
   "plannerCanvas_issue_hypoxic": "Hypoxisches Gas bei {depth} (ppO₂ {value} bar)",
+  "plannerCanvas_issue_noBailout": "CCR-Dekompressionsplan führt kein Bailout-Gas mit",
   "plannerCanvas_issue_noDecoGas": "Dekompression erforderlich, aber kein Deko-Gas mitgeführt",
   "plannerCanvas_results_noDeco": "Keine Dekompression erforderlich",
   "plannerCanvas_saved_deleteConfirmBody": "„{name}“ endgültig löschen?",

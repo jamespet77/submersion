@@ -10389,6 +10389,10 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_issue_noBailout =>
+      'CCR-Dekompressionsplan führt kein Bailout-Gas mit';
+
+  @override
   String get plannerCanvas_issue_noDecoGas =>
       'Dekompression erforderlich, aber kein Deko-Gas mitgeführt';
 

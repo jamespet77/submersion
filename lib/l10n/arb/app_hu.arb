@@ -3206,6 +3206,7 @@
   "plannerCanvas_issue_gasDensityCritical": "Gázsűrűség {value} g/L a szigorú határ felett",
   "plannerCanvas_issue_gasDensityHigh": "Gázsűrűség {value} g/L az ajánlott határ felett",
   "plannerCanvas_issue_hypoxic": "Hipoxiás gáz {depth} mélységben (ppO₂ {value} bar)",
+  "plannerCanvas_issue_noBailout": "A CCR dekompressziós terv nem tartalmaz bailout gázt",
   "plannerCanvas_issue_noDecoGas": "Dekompresszió szükséges, de nincs deco gáz",
   "plannerCanvas_results_noDeco": "Nincs szükség dekompresszióra",
   "plannerCanvas_saved_deleteConfirmBody": "Véglegesen törli a(z) „{name}” tervet?",

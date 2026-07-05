@@ -17684,6 +17684,12 @@ abstract class AppLocalizations {
   /// **'Hypoxic gas at {depth} (ppO₂ {value} bar)'**
   String plannerCanvas_issue_hypoxic(String depth, String value);
 
+  /// No description provided for @plannerCanvas_issue_noBailout.
+  ///
+  /// In en, this message translates to:
+  /// **'CCR decompression plan carries no bailout gas'**
+  String get plannerCanvas_issue_noBailout;
+
   /// No description provided for @plannerCanvas_issue_noDecoGas.
   ///
   /// In en, this message translates to:

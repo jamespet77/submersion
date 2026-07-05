@@ -3206,6 +3206,7 @@
   "plannerCanvas_issue_gasDensityCritical": "Densità del gas {value} g/L oltre il limite massimo",
   "plannerCanvas_issue_gasDensityHigh": "Densità del gas {value} g/L oltre il limite consigliato",
   "plannerCanvas_issue_hypoxic": "Gas ipossico a {depth} (ppO₂ {value} bar)",
+  "plannerCanvas_issue_noBailout": "Il piano di decompressione CCR non prevede gas di bailout",
   "plannerCanvas_issue_noDecoGas": "Decompressione necessaria ma nessun gas deco a bordo",
   "plannerCanvas_results_noDeco": "Nessuna decompressione necessaria",
   "plannerCanvas_saved_deleteConfirmBody": "Eliminare definitivamente «{name}»?",
