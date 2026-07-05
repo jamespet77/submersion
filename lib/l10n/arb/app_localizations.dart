@@ -17720,6 +17720,48 @@ abstract class AppLocalizations {
   /// **'{count, plural, =1{1 issue} other{{count} issues}}'**
   String plannerCanvas_chip_issues(int count);
 
+  /// No description provided for @plannerCanvas_contingency_base.
+  ///
+  /// In en, this message translates to:
+  /// **'Base'**
+  String get plannerCanvas_contingency_base;
+
+  /// No description provided for @plannerCanvas_contingency_depthDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra depth'**
+  String get plannerCanvas_contingency_depthDelta;
+
+  /// No description provided for @plannerCanvas_contingency_lostGas.
+  ///
+  /// In en, this message translates to:
+  /// **'Lost {gas}'**
+  String plannerCanvas_contingency_lostGas(String gas);
+
+  /// No description provided for @plannerCanvas_contingency_timeDelta.
+  ///
+  /// In en, this message translates to:
+  /// **'Extra minutes'**
+  String get plannerCanvas_contingency_timeDelta;
+
+  /// No description provided for @plannerCanvas_contingency_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Contingencies'**
+  String get plannerCanvas_contingency_title;
+
+  /// No description provided for @plannerCanvas_contingency_turnFraction.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn fraction'**
+  String get plannerCanvas_contingency_turnFraction;
+
+  /// No description provided for @plannerCanvas_contingency_turnRule.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn pressure rule'**
+  String get plannerCanvas_contingency_turnRule;
+
   /// No description provided for @plannerCanvas_gas_minGas.
   ///
   /// In en, this message translates to:
@@ -17839,6 +17881,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Stop'**
   String get plannerCanvas_table_stop;
+
+  /// No description provided for @plannerCanvas_turnRule_allUsable.
+  ///
+  /// In en, this message translates to:
+  /// **'All usable'**
+  String get plannerCanvas_turnRule_allUsable;
+
+  /// No description provided for @plannerCanvas_turnRule_custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get plannerCanvas_turnRule_custom;
+
+  /// No description provided for @plannerCanvas_turnRule_halves.
+  ///
+  /// In en, this message translates to:
+  /// **'Halves'**
+  String get plannerCanvas_turnRule_halves;
+
+  /// No description provided for @plannerCanvas_turnRule_none.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get plannerCanvas_turnRule_none;
+
+  /// No description provided for @plannerCanvas_turnRule_thirds.
+  ///
+  /// In en, this message translates to:
+  /// **'Thirds'**
+  String get plannerCanvas_turnRule_thirds;
 
   /// No description provided for @planning_appBar_title.
   ///

@@ -36,6 +36,7 @@ class PlanCanvasChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final series = ref.watch(planCanvasSeriesProvider);
+    final ghost = ref.watch(deviationGhostSeriesProvider);
     final scrubTime = ref.watch(scrubTimeProvider);
     final theme = Theme.of(context);
     final settings = ref.watch(settingsProvider);
@@ -58,6 +59,7 @@ class PlanCanvasChart extends ConsumerWidget {
                 context,
                 ref,
                 series,
+                ghost,
                 scrubTime,
                 maxDepthDisplay,
                 maxTime,
@@ -85,6 +87,7 @@ class PlanCanvasChart extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     PlanCanvasSeries series,
+    PlanCanvasSeries? ghost,
     double? scrubTime,
     double maxDepthDisplay,
     double maxTime,
@@ -186,10 +189,32 @@ class PlanCanvasChart extends ConsumerWidget {
       ),
       extraLinesData: ExtraLinesData(verticalLines: verticalLines),
       minX: 0,
-      maxX: maxTime > 0 ? maxTime * 1.05 : 10,
-      minY: maxDepthDisplay > 0 ? -maxDepthDisplay * 1.1 : -10,
+      maxX: () {
+        var t = maxTime;
+        if (ghost != null && ghost.maxTimeSeconds / 60 > t) {
+          t = ghost.maxTimeSeconds / 60;
+        }
+        return t > 0 ? t * 1.05 : 10.0;
+      }(),
+      minY: () {
+        var d = maxDepthDisplay;
+        if (ghost != null && units.convertDepth(ghost.maxDepth) > d) {
+          d = units.convertDepth(ghost.maxDepth);
+        }
+        return d > 0 ? -d * 1.1 : -10.0;
+      }(),
       maxY: 0,
       lineBarsData: [
+        // Ghosted contingency profile (grey dashed, under everything).
+        if (ghost != null && ghost.profile.length >= 2)
+          LineChartBarData(
+            spots: ghost.profile.map(toSpot).toList(),
+            isCurved: false,
+            color: theme.colorScheme.outline.withValues(alpha: 0.6),
+            barWidth: 1.5,
+            dashArray: const [5, 4],
+            dotData: const FlDotData(show: false),
+          ),
         // Ceiling overlay (dashed, drawn under the profile line).
         if (ceilingSpots.length >= 2)
           LineChartBarData(

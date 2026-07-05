@@ -11,6 +11,8 @@ import 'package:submersion/features/planner/domain/entities/dive_plan.dart'
     as domain;
 import 'package:submersion/features/planner/presentation/providers/plan_canvas_providers.dart';
 import 'package:submersion/features/planner/presentation/widgets/ccr_settings_section.dart';
+import 'package:submersion/features/planner/presentation/widgets/contingency_chips.dart';
+import 'package:submersion/features/planner/presentation/widgets/contingency_settings_section.dart';
 import 'package:submersion/features/planner/presentation/widgets/plan_canvas_chart.dart';
 import 'package:submersion/features/planner/presentation/widgets/plan_results_sheet.dart';
 import 'package:submersion/features/planner/presentation/widgets/plan_status_chips.dart';
@@ -179,6 +181,10 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: PlanStatusChips(onIssuesTap: _openResultsSheet),
                 ),
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(12, 6, 12, 0),
+                  child: ContingencyChips(),
+                ),
                 const SizedBox(height: 8),
                 Expanded(
                   child: ListView(
@@ -232,6 +238,7 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
               if (ref.watch(divePlanNotifierProvider).mode ==
                   domain.PlanMode.ccr)
                 const CcrSettingsSection(),
+              const ContingencySettingsSection(),
               const SizedBox(height: 12),
               const PlanTankList(),
               const SizedBox(height: 12),
@@ -252,6 +259,10 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: PlanStatusChips(onIssuesTap: () {}),
+              ),
+              const Padding(
+                padding: EdgeInsets.fromLTRB(16, 6, 16, 0),
+                child: ContingencyChips(),
               ),
               SizedBox(
                 height: 260,
@@ -316,6 +327,7 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
                 if (ref.watch(divePlanNotifierProvider).mode ==
                     domain.PlanMode.ccr)
                   const CcrSettingsSection(),
+                const ContingencySettingsSection(),
               ],
             ),
           ),

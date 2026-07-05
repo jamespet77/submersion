@@ -10386,6 +10386,29 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Alap';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Extra mélység';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '$gas elveszett';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Extra percek';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Vészhelyzeti tervek';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Fordulási hányad';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => 'Fordulónyomás-szabály';
+
+  @override
   String plannerCanvas_gas_minGas(String pressure) {
     return 'min. gáz $pressure';
   }
@@ -10464,6 +10487,21 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Megálló';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'Minden felhasználható';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Egyéni';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Felek';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'Nincs';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Harmadok';
 
   @override
   String get planning_appBar_title => 'Tervezes';

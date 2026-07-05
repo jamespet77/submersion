@@ -124,6 +124,7 @@ class PlanResultsSheet extends ConsumerWidget {
           _SectionHeader(context.l10n.plannerCanvas_bailout_title),
           _BailoutSection(outcome: bailout, units: units),
         ],
+        ...?_contingencySections(context, ref, units),
         const SizedBox(height: 20),
         _SectionHeader(context.l10n.divePlanner_label_warnings),
         if (outcome.issues.isEmpty)
@@ -141,6 +142,55 @@ class PlanResultsSheet extends ConsumerWidget {
             _IssueRow(issue: issue, units: units),
       ],
     );
+  }
+
+  /// Deviation and lost-gas mini tables; null when there is nothing to show.
+  List<Widget>? _contingencySections(
+    BuildContext context,
+    WidgetRef ref,
+    UnitFormatter units,
+  ) {
+    final deviations = ref.watch(planDeviationsProvider);
+    final lostGas = ref.watch(planLostGasProvider);
+    if (deviations.isEmpty && lostGas.isEmpty) return null;
+    final state = ref.read(divePlanNotifierProvider);
+    final theme = Theme.of(context);
+
+    String deviationLabel(String key) {
+      final depth =
+          '+${units.formatDepth(state.deviationDepthDelta, decimals: 0)}';
+      final time = '+${state.deviationTimeMinutes}\u2032';
+      return switch (key) {
+        'deeper' => depth,
+        'longer' => time,
+        _ => '$depth $time',
+      };
+    }
+
+    Widget subHeader(String text) => Padding(
+      padding: const EdgeInsets.only(top: 10, bottom: 4),
+      child: Text(
+        text,
+        style: theme.textTheme.labelMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+
+    return [
+      const SizedBox(height: 20),
+      _SectionHeader(context.l10n.plannerCanvas_contingency_title),
+      for (final deviation in deviations) ...[
+        subHeader(deviationLabel(deviation.key)),
+        _RuntimeTable(outcome: deviation.outcome, units: units),
+      ],
+      for (final lost in lostGas) ...[
+        subHeader(
+          context.l10n.plannerCanvas_contingency_lostGas(lost.tank.gasMix.name),
+        ),
+        _RuntimeTable(outcome: lost.outcome, units: units),
+      ],
+    ];
   }
 
   Widget _grip(ThemeData theme) => Center(
@@ -285,6 +335,25 @@ class _GasRow extends StatelessWidget {
               ),
             ],
           ),
+          if (usage.turnPressureBar != null || usage.minGasBar != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                [
+                  if (usage.turnPressureBar != null)
+                    context.l10n.plannerCanvas_gas_turnAt(
+                      units.formatPressure(usage.turnPressureBar),
+                    ),
+                  if (usage.minGasBar != null)
+                    context.l10n.plannerCanvas_gas_minGas(
+                      units.formatPressure(usage.minGasBar),
+                    ),
+                ].join(' \u00b7 '),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+            ),
           const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(3),

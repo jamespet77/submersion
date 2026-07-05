@@ -5677,6 +5677,18 @@
       "count": { "type": "int" }
     }
   },
+  "plannerCanvas_contingency_base": "Base",
+  "plannerCanvas_contingency_depthDelta": "Extra depth",
+  "plannerCanvas_contingency_lostGas": "Lost {gas}",
+  "@plannerCanvas_contingency_lostGas": {
+    "placeholders": {
+      "gas": { "type": "String" }
+    }
+  },
+  "plannerCanvas_contingency_timeDelta": "Extra minutes",
+  "plannerCanvas_contingency_title": "Contingencies",
+  "plannerCanvas_contingency_turnFraction": "Turn fraction",
+  "plannerCanvas_contingency_turnRule": "Turn pressure rule",
   "plannerCanvas_gas_minGas": "min gas {pressure}",
   "@plannerCanvas_gas_minGas": {
     "placeholders": {
@@ -5744,6 +5756,11 @@
   "plannerCanvas_table_gas": "Gas",
   "plannerCanvas_table_runtime": "RT",
   "plannerCanvas_table_stop": "Stop",
+  "plannerCanvas_turnRule_allUsable": "All usable",
+  "plannerCanvas_turnRule_custom": "Custom",
+  "plannerCanvas_turnRule_halves": "Halves",
+  "plannerCanvas_turnRule_none": "None",
+  "plannerCanvas_turnRule_thirds": "Thirds",
   "planning_appBar_title": "Planning",
   "planning_card_decoCalculator_description": "Calculate no-decompression limits, required deco stops, and CNS/OTU exposure for multi-level dive profiles.",
   "planning_card_decoCalculator_subtitle": "Plan dives with decompression stops",

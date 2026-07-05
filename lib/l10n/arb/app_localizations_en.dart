@@ -10249,6 +10249,29 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Base';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Extra depth';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return 'Lost $gas';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Extra minutes';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Contingencies';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Turn fraction';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => 'Turn pressure rule';
+
+  @override
   String plannerCanvas_gas_minGas(String pressure) {
     return 'min gas $pressure';
   }
@@ -10327,6 +10350,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Stop';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'All usable';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Custom';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Halves';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'None';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Thirds';
 
   @override
   String get planning_appBar_title => 'Planning';

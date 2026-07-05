@@ -10149,6 +10149,29 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'בסיס';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'עומק נוסף';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return 'אבדן $gas';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'דקות נוספות';
+
+  @override
+  String get plannerCanvas_contingency_title => 'תוכניות חירום';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'שבר פנייה';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => 'כלל לחץ פנייה';
+
+  @override
   String plannerCanvas_gas_minGas(String pressure) {
     return 'גז מינימלי $pressure';
   }
@@ -10227,6 +10250,21 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'עצירה';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'הכול שמיש';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'מותאם אישית';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'חצאים';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'ללא';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'שלישים';
 
   @override
   String get planning_appBar_title => 'תכנון';
