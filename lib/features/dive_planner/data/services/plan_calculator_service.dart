@@ -3,8 +3,10 @@ import 'package:uuid/uuid.dart';
 import 'package:submersion/core/deco/ascent/ascent_gas_plan.dart';
 import 'package:submersion/core/deco/buhlmann_algorithm.dart';
 import 'package:submersion/core/deco/constants/buhlmann_coefficients.dart';
+import 'package:submersion/core/deco/entities/dive_environment.dart';
 import 'package:submersion/core/deco/entities/tissue_compartment.dart';
 import 'package:submersion/core/deco/o2_toxicity_calculator.dart';
+import 'package:submersion/core/utils/gas_compressibility.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_planner/domain/entities/plan_result.dart';
 import 'package:submersion/features/dive_planner/domain/entities/plan_segment.dart';
@@ -64,6 +66,7 @@ class PlanCalculatorService {
     required double sacRate,
     double reservePressure = DivePlanState.kDefaultReservePressureBar,
     List<TissueCompartment>? initialTissueState,
+    DiveEnvironment environment = DiveEnvironment.standard,
   }) {
     if (segments.isEmpty) {
       return PlanResult.empty();
@@ -74,6 +77,7 @@ class PlanCalculatorService {
       gfLow: gfLow / 100.0,
       gfHigh: gfHigh / 100.0,
       ascentRate: defaultAscentRate,
+      environment: environment,
     );
 
     // Load tissue state for repetitive dives
@@ -99,6 +103,8 @@ class PlanCalculatorService {
       gasUsageByTank[tank.id] = _GasUsageTracker(
         startPressure: tank.startPressure,
         volume: tank.volume ?? 11.0, // Default AL80 if not specified
+        o2Percent: tank.gasMix.o2,
+        hePercent: tank.gasMix.he,
       );
     }
 
@@ -447,10 +453,12 @@ class PlanCalculatorService {
   List<TissueCompartment> calculateSurfaceInterval({
     required List<TissueCompartment> startState,
     required Duration interval,
+    DiveEnvironment environment = DiveEnvironment.standard,
   }) {
     final algorithm = BuhlmannAlgorithm(
       gfLow: gfLow / 100.0,
       gfHigh: gfHigh / 100.0,
+      environment: environment,
     );
 
     algorithm.setCompartments(startState);
@@ -604,21 +612,52 @@ class PlanCalculatorService {
 class _GasUsageTracker {
   final double? startPressure;
   final double volume;
+  final double o2Percent;
+  final double hePercent;
   double gasUsedLiters = 0;
 
-  _GasUsageTracker({this.startPressure, required this.volume});
+  // Memoized remaining pressure. The bisection solver is read up to three times
+  // per tank at plan finalization (directly and via gasUsedBar/percentUsed);
+  // keying the cache on gasUsedLiters makes it self-invalidating, so no manual
+  // reset is needed in addGasUsed.
+  double? _cachedRemaining;
+  double? _cachedForLiters;
+
+  _GasUsageTracker({
+    this.startPressure,
+    required this.volume,
+    this.o2Percent = 21.0,
+    this.hePercent = 0.0,
+  });
 
   void addGasUsed(double liters) {
     gasUsedLiters += liters;
   }
 
-  /// Convert liters used to bar used.
-  double get gasUsedBar => volume > 0 ? gasUsedLiters / volume : 0;
-
-  /// Calculate remaining pressure.
+  /// Remaining pressure honoring gas compressibility. Memoized on
+  /// [gasUsedLiters] so repeated reads (including via gasUsedBar/percentUsed)
+  /// don't rerun the bisection.
   double? get remainingPressure {
     if (startPressure == null) return null;
-    return startPressure! - gasUsedBar;
+    if (_cachedForLiters != gasUsedLiters) {
+      _cachedRemaining = pressureAfterConsuming(
+        tankSizeLiters: volume,
+        startPressureBar: startPressure!,
+        litersConsumed: gasUsedLiters,
+        o2Percent: o2Percent,
+        hePercent: hePercent,
+      );
+      _cachedForLiters = gasUsedLiters;
+    }
+    return _cachedRemaining;
+  }
+
+  /// Bar consumed (start minus compressibility-aware remaining).
+  double get gasUsedBar {
+    if (startPressure == null) {
+      return volume > 0 ? gasUsedLiters / volume : 0;
+    }
+    return startPressure! - (remainingPressure ?? 0);
   }
 
   /// Calculate percentage of tank used.

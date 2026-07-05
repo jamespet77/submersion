@@ -54,3 +54,44 @@ double gasVolume({
   );
   return tankSizeLiters * barToAtm(pressureBar) / z;
 }
+
+/// Cylinder pressure remaining after consuming [litersConsumed] surface
+/// liters, honoring compressibility. Solves
+/// gasVolume(start) - gasVolume(end) == litersConsumed by bisection.
+///
+/// Returns 0 when the demand exceeds the cylinder's content.
+double pressureAfterConsuming({
+  required double tankSizeLiters,
+  required double startPressureBar,
+  required double litersConsumed,
+  required double o2Percent,
+  double hePercent = 0,
+}) {
+  if (startPressureBar <= 0 || tankSizeLiters <= 0) return 0;
+  final startVolume = gasVolume(
+    tankSizeLiters: tankSizeLiters,
+    pressureBar: startPressureBar,
+    o2Percent: o2Percent,
+    hePercent: hePercent,
+  );
+  final target = startVolume - litersConsumed;
+  if (target <= 0) return 0;
+
+  double lo = 0.0;
+  double hi = startPressureBar;
+  for (int i = 0; i < 60; i++) {
+    final mid = (lo + hi) / 2;
+    final v = gasVolume(
+      tankSizeLiters: tankSizeLiters,
+      pressureBar: mid,
+      o2Percent: o2Percent,
+      hePercent: hePercent,
+    );
+    if (v > target) {
+      hi = mid;
+    } else {
+      lo = mid;
+    }
+  }
+  return (lo + hi) / 2;
+}

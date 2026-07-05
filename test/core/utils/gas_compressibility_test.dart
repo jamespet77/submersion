@@ -135,4 +135,65 @@ void main() {
       expect(vol24, closeTo(vol12 * 2, 0.001));
     });
   });
+
+  group('pressureAfterConsuming', () {
+    test('consuming zero keeps start pressure', () {
+      expect(
+        pressureAfterConsuming(
+          tankSizeLiters: 11.1,
+          startPressureBar: 207,
+          litersConsumed: 0,
+          o2Percent: 21,
+        ),
+        closeTo(207.0, 0.01),
+      );
+    });
+
+    test('matches python bisection for 500 L from an AL80', () {
+      final end = pressureAfterConsuming(
+        tankSizeLiters: 11.1,
+        startPressureBar: 207,
+        litersConsumed: 500,
+        o2Percent: 21,
+      );
+      // python3 (Task 8 Step 1): 155.28769781453377 (ideal: 161.358)
+      expect(end, closeTo(155.28769781453377, 0.05));
+    });
+
+    test('consuming everything returns 0', () {
+      expect(
+        pressureAfterConsuming(
+          tankSizeLiters: 11.1,
+          startPressureBar: 207,
+          litersConsumed: 99999,
+          o2Percent: 21,
+        ),
+        0.0,
+      );
+    });
+
+    test('round-trips with gasVolume', () {
+      const consumed = 800.0;
+      final end = pressureAfterConsuming(
+        tankSizeLiters: 12.0,
+        startPressureBar: 232,
+        litersConsumed: consumed,
+        o2Percent: 18,
+        hePercent: 45,
+      );
+      final startVol = gasVolume(
+        tankSizeLiters: 12.0,
+        pressureBar: 232,
+        o2Percent: 18,
+        hePercent: 45,
+      );
+      final endVol = gasVolume(
+        tankSizeLiters: 12.0,
+        pressureBar: end,
+        o2Percent: 18,
+        hePercent: 45,
+      );
+      expect(startVol - endVol, closeTo(consumed, 0.5));
+    });
+  });
 }
