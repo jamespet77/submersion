@@ -3605,6 +3605,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_detail_section_tags => 'Etiquetas';
 
   @override
+  String get diveLog_detail_section_cylinders => 'Tanques';
+
+  @override
   String get diveLog_detail_section_tanks => 'Tanques';
 
   @override
@@ -10630,7 +10633,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'Segmentacion por fase/tiempo, desglose por cilindro';
+      'Segmentacion SAC por fase/tiempo';
 
   @override
   String get diveDetailSection_details_name => 'Detalles';

@@ -3591,6 +3591,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_detail_section_tags => 'Cimkek';
 
   @override
+  String get diveLog_detail_section_cylinders => 'Palackok';
+
+  @override
   String get diveLog_detail_section_tanks => 'Palackok';
 
   @override
@@ -10614,7 +10617,7 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'Fázis/idő szegmentálás, palack lebontás';
+      'SAC szegmentálás fázis/idő szerint';
 
   @override
   String get diveDetailSection_details_name => 'Részletek';

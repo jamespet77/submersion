@@ -6056,6 +6056,12 @@ abstract class AppLocalizations {
   /// **'Tags'**
   String get diveLog_detail_section_tags;
 
+  /// No description provided for @diveLog_detail_section_cylinders.
+  ///
+  /// In en, this message translates to:
+  /// **'Cylinders'**
+  String get diveLog_detail_section_cylinders;
+
   /// No description provided for @diveLog_detail_section_tanks.
   ///
   /// In en, this message translates to:
@@ -18137,7 +18143,7 @@ abstract class AppLocalizations {
   /// No description provided for @diveDetailSection_sacSegments_description.
   ///
   /// In en, this message translates to:
-  /// **'Phase/time segmentation, cylinder breakdown'**
+  /// **'Phase/time SAC segmentation'**
   String get diveDetailSection_sacSegments_description;
 
   /// No description provided for @diveDetailSection_details_name.
@@ -18275,13 +18281,13 @@ abstract class AppLocalizations {
   /// No description provided for @diveDetailSection_tanks_name.
   ///
   /// In en, this message translates to:
-  /// **'Tanks'**
+  /// **'Cylinders'**
   String get diveDetailSection_tanks_name;
 
   /// No description provided for @diveDetailSection_tanks_description.
   ///
   /// In en, this message translates to:
-  /// **'Tank list, gas mixes, pressures, per-tank SAC'**
+  /// **'Cylinder list, gas mixes, pressures, MOD/MND, per-tank SAC'**
   String get diveDetailSection_tanks_description;
 
   /// No description provided for @diveDetailSection_buddies_name.

@@ -3530,6 +3530,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_detail_section_tags => 'الوسوم';
 
   @override
+  String get diveLog_detail_section_cylinders => 'الأسطوانات';
+
+  @override
   String get diveLog_detail_section_tanks => 'الأسطوانات';
 
   @override
@@ -10443,7 +10446,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'تقسيم المراحل/الوقت، تفصيل الأسطوانات';
+      'تقسيم SAC حسب المراحل/الوقت';
 
   @override
   String get diveDetailSection_details_name => 'التفاصيل';

@@ -3544,6 +3544,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_detail_section_tags => 'Tags';
 
   @override
+  String get diveLog_detail_section_cylinders => 'Cylinders';
+
+  @override
   String get diveLog_detail_section_tanks => 'Tanks';
 
   @override
@@ -10472,7 +10475,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'Phase/time segmentation, cylinder breakdown';
+      'Phase/time SAC segmentation';
 
   @override
   String get diveDetailSection_details_name => 'Details';
@@ -10548,11 +10551,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Weight breakdown, total weight';
 
   @override
-  String get diveDetailSection_tanks_name => 'Tanks';
+  String get diveDetailSection_tanks_name => 'Cylinders';
 
   @override
   String get diveDetailSection_tanks_description =>
-      'Tank list, gas mixes, pressures, per-tank SAC';
+      'Cylinder list, gas mixes, pressures, MOD/MND, per-tank SAC';
 
   @override
   String get diveDetailSection_buddies_name => 'Buddies';

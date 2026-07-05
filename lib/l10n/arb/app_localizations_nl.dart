@@ -3579,6 +3579,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_detail_section_tags => 'Tags';
 
   @override
+  String get diveLog_detail_section_cylinders => 'Flessen';
+
+  @override
   String get diveLog_detail_section_tanks => 'Flessen';
 
   @override
@@ -10564,7 +10567,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'Fase-/tijdsegmentatie, flesoverzicht';
+      'SAC-segmentatie per fase/tijd';
 
   @override
   String get diveDetailSection_details_name => 'Details';

@@ -3510,6 +3510,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_detail_section_tags => 'תגיות';
 
   @override
+  String get diveLog_detail_section_cylinders => 'בלונים';
+
+  @override
   String get diveLog_detail_section_tanks => 'בלונים';
 
   @override
@@ -10368,7 +10371,7 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'פילוח לפי שלב/זמן, פירוט בלונים';
+      'פילוח SAC לפי שלב/זמן';
 
   @override
   String get diveDetailSection_details_name => 'פרטים';
