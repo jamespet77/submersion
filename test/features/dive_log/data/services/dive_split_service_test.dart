@@ -514,4 +514,93 @@ void main() {
       expect(await fkViolations(), isEmpty);
     },
   );
+  test('splitting the primary moves its null-computerId family, preserving '
+      'edited-vs-original flags', () async {
+    await insertDive('dive-1', computerId: 'dc-a');
+    await insertSource('src-a', 'dive-1', 'dc-a', isPrimary: true);
+    await insertSource('src-b', 'dive-1', 'dc-b', isPrimary: false);
+    // Edited profile: demoted original (dc-a, isPrimary=false) plus the
+    // edited replacement (computerId NULL, isPrimary=true).
+    await insertProfileRow('dive-1', 'dc-a', isPrimary: false, depth: 21.7);
+    await insertProfileRow('dive-1', null, isPrimary: true, depth: 20.5);
+    await insertProfileRow('dive-1', 'dc-b', isPrimary: false, depth: 18.3);
+
+    final newDiveId = await service.split(diveId: 'dive-1', sourceId: 'src-a');
+
+    // Both family rows moved: the edited row stays primary on the new
+    // dive; the demoted original keeps its flag.
+    final newProfiles = await (db.select(
+      db.diveProfiles,
+    )..where((t) => t.diveId.equals(newDiveId))).get();
+    expect(newProfiles, hasLength(2));
+    expect(newProfiles.firstWhere((r) => r.isPrimary).depth, 20.5);
+    expect(newProfiles.firstWhere((r) => !r.isPrimary).depth, 21.7);
+
+    // The original dive keeps only the promoted source's rows, now
+    // primary.
+    final oldProfiles = await (db.select(
+      db.diveProfiles,
+    )..where((t) => t.diveId.equals('dive-1'))).get();
+    expect(oldProfiles.single.computerId, 'dc-b');
+    expect(oldProfiles.single.isPrimary, isTrue);
+
+    expect(await fkViolations(), isEmpty);
+  });
+
+  test('split copies the source surface interval and promotion refreshes the '
+      'remaining dive snapshot fields', () async {
+    await insertDive('dive-1', computerId: 'dc-a');
+    await db
+        .into(db.diveDataSources)
+        .insert(
+          DiveDataSourcesCompanion(
+            id: const Value('src-a'),
+            diveId: const Value('dive-1'),
+            computerId: const Value('dc-a'),
+            isPrimary: const Value(true),
+            surfaceInterval: const Value(3600),
+            decoAlgorithm: const Value('Buhlmann ZHL-16C'),
+            gradientFactorLow: const Value(50),
+            gradientFactorHigh: const Value(85),
+            importedAt: Value(DateTime.utc(2026, 1, 1)),
+            createdAt: Value(DateTime.utc(2026, 1, 1)),
+          ),
+        );
+    await db
+        .into(db.diveDataSources)
+        .insert(
+          DiveDataSourcesCompanion(
+            id: const Value('src-b'),
+            diveId: const Value('dive-1'),
+            computerId: const Value('dc-b'),
+            isPrimary: const Value(false),
+            surfaceInterval: const Value(5400),
+            decoAlgorithm: const Value('DSAT'),
+            gradientFactorLow: const Value(40),
+            gradientFactorHigh: const Value(95),
+            importedAt: Value(DateTime.utc(2026, 1, 2)),
+            createdAt: Value(DateTime.utc(2026, 1, 2)),
+          ),
+        );
+    await insertProfileRow('dive-1', 'dc-a', isPrimary: true, depth: 21.7);
+    await insertProfileRow('dive-1', 'dc-b', isPrimary: false, depth: 18.3);
+
+    final newDiveId = await service.split(diveId: 'dive-1', sourceId: 'src-a');
+
+    // The new dive carries the split source's snapshot.
+    final newDive = await (db.select(
+      db.dives,
+    )..where((t) => t.id.equals(newDiveId))).getSingle();
+    expect(newDive.surfaceIntervalSeconds, 3600);
+    expect(newDive.decoAlgorithm, 'Buhlmann ZHL-16C');
+
+    // The original dive's summary follows its promoted source.
+    final oldDive = await (db.select(
+      db.dives,
+    )..where((t) => t.id.equals('dive-1'))).getSingle();
+    expect(oldDive.surfaceIntervalSeconds, 5400);
+    expect(oldDive.decoAlgorithm, 'DSAT');
+    expect(oldDive.gradientFactorLow, 40);
+    expect(oldDive.gradientFactorHigh, 95);
+  });
 }

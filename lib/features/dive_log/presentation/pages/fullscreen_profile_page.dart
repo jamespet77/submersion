@@ -221,13 +221,19 @@ class _FullscreenProfilePageState extends ConsumerState<FullscreenProfilePage> {
     final sourceColorById = <String, Color>{
       for (final (index, s) in dataSources.indexed) s.id: sourceColorAt(index),
     };
+    // Overlay ids are session state and can briefly outlive their source
+    // rows (e.g. right after a split); skip any stale entries instead of
+    // crashing on the lookup.
+    final sourceById = {for (final s in dataSources) s.id: s};
     final overlays = <ChartSourceOverlay>[
       for (final id in overlayIds)
-        if (id != activeSource?.id && sourceProfiles[id] != null)
+        if (id != activeSource?.id &&
+            sourceProfiles[id] != null &&
+            sourceById[id] != null)
           ChartSourceOverlay(
             sourceId: id,
             name: resolveSourceName(
-              dataSources.firstWhere((s) => s.id == id),
+              sourceById[id]!,
               labels,
               edited: sourceProfiles[id]!.isEdited,
             ),

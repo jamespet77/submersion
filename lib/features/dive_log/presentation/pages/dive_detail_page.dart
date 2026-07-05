@@ -1148,13 +1148,19 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
         ? activeProfile.points
         : dive.profile;
 
+    // Overlay ids are session state and can briefly outlive their source
+    // rows (e.g. right after a split); skip any stale entries instead of
+    // crashing on the lookup.
+    final sourceById = {for (final s in dataSources) s.id: s};
     final overlays = <ChartSourceOverlay>[
       for (final id in overlayIds)
-        if (id != activeSource?.id && sourceProfiles[id] != null)
+        if (id != activeSource?.id &&
+            sourceProfiles[id] != null &&
+            sourceById[id] != null)
           ChartSourceOverlay(
             sourceId: id,
             name: resolveSourceName(
-              dataSources.firstWhere((s) => s.id == id),
+              sourceById[id]!,
               labels,
               edited: sourceProfiles[id]!.isEdited,
             ),
@@ -1436,7 +1442,9 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
               PlaybackControls(diveId: dive.id),
               const SizedBox(height: 12),
               PlaybackStatsPanel(
-                profile: dive.profile,
+                // The analysis is computed over the active source's series,
+                // so per-timestamp lookups must index the same profile.
+                profile: chartProfile,
                 currentTimestamp: playbackState.currentTimestamp,
                 units: units,
                 analysis: analysis,
@@ -1447,12 +1455,13 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                 Builder(
                   builder: (context) {
                     final timestamp = playbackState.currentTimestamp;
-                    // Find the closest profile index for the current playback time
+                    // Find the closest profile index for the current playback
+                    // time, over the same series the analysis indexes.
                     int closestIndex = 0;
-                    int closestDiff = (dive.profile[0].timestamp - timestamp)
+                    int closestDiff = (chartProfile[0].timestamp - timestamp)
                         .abs();
-                    for (int i = 1; i < dive.profile.length; i++) {
-                      final diff = (dive.profile[i].timestamp - timestamp)
+                    for (int i = 1; i < chartProfile.length; i++) {
+                      final diff = (chartProfile[i].timestamp - timestamp)
                           .abs();
                       if (diff < closestDiff) {
                         closestDiff = diff;
@@ -1473,7 +1482,7 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
               const SizedBox(height: 16),
               RangeStatsPanel(
                 diveId: dive.id,
-                profile: dive.profile,
+                profile: chartProfile,
                 units: units,
                 tanks: dive.tanks,
                 sacUnit: ref.watch(sacUnitProvider),

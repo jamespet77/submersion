@@ -96,6 +96,9 @@ class DiveSplitService {
                   exitTime: Value(
                     source.exitTime?.millisecondsSinceEpoch ?? diveRow.exitTime,
                   ),
+                  surfaceIntervalSeconds: Value(
+                    source.surfaceInterval ?? diveRow.surfaceIntervalSeconds,
+                  ),
                   cnsEnd: Value(source.cns ?? diveRow.cnsEnd),
                   decoAlgorithm: Value(
                     source.decoAlgorithm ?? diveRow.decoAlgorithm,
@@ -231,15 +234,23 @@ class DiveSplitService {
         );
       }
 
-      // 5. Profile rows: primary on the new dive. For a computer-less
-      // source only non-primary null rows move (user-edited primary rows
-      // stay with the original dive).
+      // 5. Profile rows. A primary source with a computer takes its whole
+      // family: its computer's rows AND the null-computerId rows (the
+      // schema's null-means-primary convention covers user-edited profiles
+      // and pre-consolidation samples), preserving each row's isPrimary
+      // flag so edited-vs-original semantics survive the split. Secondary
+      // sources take their computer's rows, promoted to primary on the new
+      // dive. A computer-less source moves only non-primary null rows
+      // (user-edited primary rows stay with the original dive).
       final profileRows =
           await (_db.select(_db.diveProfiles)..where(
                 (t) => source.computerId == null
                     ? t.diveId.equals(diveId) &
                           t.computerId.isNull() &
                           t.isPrimary.equals(false)
+                    : source.isPrimary
+                    ? t.diveId.equals(diveId) &
+                          (ownedBySource(t.computerId) | t.computerId.isNull())
                     : t.diveId.equals(diveId) & ownedBySource(t.computerId),
               ))
               .get();
@@ -252,7 +263,9 @@ class DiveSplitService {
                 .copyWith(
                   id: Value(_uuid.v4()),
                   diveId: Value(newDiveId),
-                  isPrimary: const Value(true),
+                  isPrimary: source.isPrimary
+                      ? Value(row.isPrimary)
+                      : const Value(true),
                 ),
           );
         }
@@ -384,7 +397,23 @@ class DiveSplitService {
           avgDepth: Value(promoted.avgDepth ?? diveRow.avgDepth),
           bottomTime: Value(promoted.duration ?? diveRow.bottomTime),
           waterTemp: Value(promoted.waterTemp ?? diveRow.waterTemp),
+          entryTime: Value(
+            promoted.entryTime?.millisecondsSinceEpoch ?? diveRow.entryTime,
+          ),
+          exitTime: Value(
+            promoted.exitTime?.millisecondsSinceEpoch ?? diveRow.exitTime,
+          ),
+          surfaceIntervalSeconds: Value(
+            promoted.surfaceInterval ?? diveRow.surfaceIntervalSeconds,
+          ),
           cnsEnd: Value(promoted.cns ?? diveRow.cnsEnd),
+          decoAlgorithm: Value(promoted.decoAlgorithm ?? diveRow.decoAlgorithm),
+          gradientFactorLow: Value(
+            promoted.gradientFactorLow ?? diveRow.gradientFactorLow,
+          ),
+          gradientFactorHigh: Value(
+            promoted.gradientFactorHigh ?? diveRow.gradientFactorHigh,
+          ),
         );
       }
 
