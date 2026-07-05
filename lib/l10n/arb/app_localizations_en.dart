@@ -10235,6 +10235,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plannerCanvas_results_noDeco => 'No decompression required';
 
   @override
+  String plannerCanvas_saved_deleteConfirmBody(String name) {
+    return 'Permanently delete \"$name\"?';
+  }
+
+  @override
+  String get plannerCanvas_saved_deleteConfirmTitle => 'Delete plan?';
+
+  @override
+  String get plannerCanvas_saved_duplicate => 'Duplicate';
+
+  @override
+  String get plannerCanvas_saved_empty => 'No saved plans yet';
+
+  @override
+  String get plannerCanvas_saved_title => 'Saved plans';
+
+  @override
   String plannerCanvas_scrub_readout(String minutes, String depth) {
     return 'RT $minutes′ · $depth';
   }

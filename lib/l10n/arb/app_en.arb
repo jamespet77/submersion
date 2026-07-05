@@ -5668,6 +5668,16 @@
   },
   "plannerCanvas_issue_noDecoGas": "Decompression required but no deco gas carried",
   "plannerCanvas_results_noDeco": "No decompression required",
+  "plannerCanvas_saved_deleteConfirmBody": "Permanently delete \"{name}\"?",
+  "@plannerCanvas_saved_deleteConfirmBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "plannerCanvas_saved_deleteConfirmTitle": "Delete plan?",
+  "plannerCanvas_saved_duplicate": "Duplicate",
+  "plannerCanvas_saved_empty": "No saved plans yet",
+  "plannerCanvas_saved_title": "Saved plans",
   "plannerCanvas_scrub_readout": "RT {minutes}′ · {depth}",
   "@plannerCanvas_scrub_readout": {
     "placeholders": {

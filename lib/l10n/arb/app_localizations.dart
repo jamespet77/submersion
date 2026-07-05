@@ -17696,6 +17696,36 @@ abstract class AppLocalizations {
   /// **'No decompression required'**
   String get plannerCanvas_results_noDeco;
 
+  /// No description provided for @plannerCanvas_saved_deleteConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Permanently delete \"{name}\"?'**
+  String plannerCanvas_saved_deleteConfirmBody(String name);
+
+  /// No description provided for @plannerCanvas_saved_deleteConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete plan?'**
+  String get plannerCanvas_saved_deleteConfirmTitle;
+
+  /// No description provided for @plannerCanvas_saved_duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'Duplicate'**
+  String get plannerCanvas_saved_duplicate;
+
+  /// No description provided for @plannerCanvas_saved_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No saved plans yet'**
+  String get plannerCanvas_saved_empty;
+
+  /// No description provided for @plannerCanvas_saved_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved plans'**
+  String get plannerCanvas_saved_title;
+
   /// No description provided for @plannerCanvas_scrub_readout.
   ///
   /// In en, this message translates to:
