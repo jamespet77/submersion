@@ -2,9 +2,12 @@ import 'dart:math' as math;
 
 import 'package:submersion/core/deco/ascent/ascent_gas_plan.dart';
 import 'package:submersion/core/deco/constants/buhlmann_coefficients.dart';
+import 'package:submersion/core/deco/entities/breathing_config.dart';
 import 'package:submersion/core/deco/entities/deco_status.dart';
+import 'package:submersion/core/deco/entities/dive_environment.dart';
 import 'package:submersion/core/deco/entities/profile_gas_segment.dart';
 import 'package:submersion/core/deco/entities/tissue_compartment.dart';
+import 'package:submersion/core/deco/schedule_policy.dart';
 
 /// Bühlmann ZH-L16C decompression algorithm implementation.
 ///
@@ -31,6 +34,9 @@ class BuhlmannAlgorithm {
   /// Ascent rate in meters per minute
   final double ascentRate;
 
+  /// Physical environment (surface pressure, water density).
+  final DiveEnvironment environment;
+
   /// Current tissue compartments state
   List<TissueCompartment> _compartments;
 
@@ -47,17 +53,23 @@ class BuhlmannAlgorithm {
     this.lastStopDepth = 3.0,
     this.stopIncrement = 3.0,
     this.ascentRate = 9.0,
-  }) : _compartments = _createSurfaceSaturatedCompartments();
+    this.environment = DiveEnvironment.standard,
+  }) : _compartments = _createSurfaceSaturatedCompartments(environment);
 
   /// Get current compartments state (read-only copy).
   List<TissueCompartment> get compartments => List.unmodifiable(_compartments);
 
   /// Create compartments saturated at surface.
-  static List<TissueCompartment> _createSurfaceSaturatedCompartments() {
+  static List<TissueCompartment> _createSurfaceSaturatedCompartments(
+    DiveEnvironment environment,
+  ) {
     final compartments = <TissueCompartment>[];
 
-    // Surface N2 tension = inspired N2 at surface
-    final surfaceN2 = calculateInspiredN2(surfacePressureBar, airN2Fraction);
+    // Surface N2 tension = inspired N2 at the site's surface pressure.
+    final surfaceN2 = calculateInspiredN2(
+      environment.surfacePressureBar,
+      airN2Fraction,
+    );
 
     for (int i = 0; i < zhl16CompartmentCount; i++) {
       compartments.add(
@@ -80,7 +92,7 @@ class BuhlmannAlgorithm {
 
   /// Reset compartments to surface-saturated state.
   void reset() {
-    _compartments = _createSurfaceSaturatedCompartments();
+    _compartments = _createSurfaceSaturatedCompartments(environment);
     _gfLowCeilingAnchor = 0.0;
   }
 
@@ -90,6 +102,23 @@ class BuhlmannAlgorithm {
       _compartments = List.from(compartments);
       _gfLowCeilingAnchor = 0.0;
       _updateGfAnchor();
+    }
+  }
+
+  /// Deepest GF-low ceiling reached so far this dive (meters).
+  double get gfLowCeilingAnchor => _gfLowCeilingAnchor;
+
+  /// Restore a previously captured tissue state (compartments + GF anchor).
+  /// Unlike [setCompartments], this does NOT re-derive the anchor: pass the
+  /// anchor captured alongside the compartments so mid-dive state (e.g. the
+  /// DecoModel facade) round-trips exactly.
+  void restoreState(
+    List<TissueCompartment> compartments, {
+    double gfLowCeilingAnchor = 0.0,
+  }) {
+    if (compartments.length == zhl16CompartmentCount) {
+      _compartments = List.from(compartments);
+      _gfLowCeilingAnchor = gfLowCeilingAnchor;
     }
   }
 
@@ -105,10 +134,19 @@ class BuhlmannAlgorithm {
     required int durationSeconds,
     double fN2 = airN2Fraction,
     double fHe = 0.0,
+    BreathingConfig? breathing,
   }) {
-    final ambientPressure = calculateAmbientPressure(depthMeters);
-    final inspiredN2 = calculateInspiredN2(ambientPressure, fN2);
-    final inspiredHe = calculateInspiredHe(ambientPressure, fHe);
+    final ambientPressure = environment.pressureAtDepth(depthMeters);
+    final double inspiredN2;
+    final double inspiredHe;
+    if (breathing != null) {
+      final inspired = breathing.inspiredAt(ambientPressure);
+      inspiredN2 = inspired.pN2;
+      inspiredHe = inspired.pHe;
+    } else {
+      inspiredN2 = calculateInspiredN2(ambientPressure, fN2);
+      inspiredHe = calculateInspiredHe(ambientPressure, fHe);
+    }
     final durationMinutes = durationSeconds / 60.0;
 
     final newCompartments = <TissueCompartment>[];
@@ -144,10 +182,16 @@ class BuhlmannAlgorithm {
   void _updateGfAnchor() {
     double ceiling = 0;
     for (final comp in _compartments) {
-      final c = comp.ceiling(gf: gfLow);
+      final c = _ceilingMetersFor(comp, gfLow);
       if (c > ceiling) ceiling = c;
     }
     if (ceiling > _gfLowCeilingAnchor) _gfLowCeilingAnchor = ceiling;
+  }
+
+  /// Compartment ceiling in meters under this algorithm's environment.
+  double _ceilingMetersFor(TissueCompartment comp, double gf) {
+    final meters = environment.depthAtPressure(comp.ceilingPressureBar(gf: gf));
+    return meters < 0 ? 0 : meters;
   }
 
   /// Schreiner equation for gas loading/unloading.
@@ -177,7 +221,7 @@ class BuhlmannAlgorithm {
     final gf = _interpolateGf(currentDepth);
 
     for (final comp in _compartments) {
-      final ceiling = comp.ceiling(gf: gf);
+      final ceiling = _ceilingMetersFor(comp, gf);
       if (ceiling > maxCeiling) {
         maxCeiling = ceiling;
       }
@@ -217,7 +261,7 @@ class BuhlmannAlgorithm {
   double _calculateSurfaceTargetCeiling() {
     double maxCeiling = 0;
     for (final comp in _compartments) {
-      final ceiling = comp.ceiling(gf: gfHigh);
+      final ceiling = _ceilingMetersFor(comp, gfHigh);
       if (ceiling > maxCeiling) {
         maxCeiling = ceiling;
       }
@@ -237,6 +281,7 @@ class BuhlmannAlgorithm {
     double fN2 = airN2Fraction,
     double fHe = 0.0,
     int maxNdl = 999 * 60,
+    BreathingConfig? breathing,
   }) {
     // Check if already in deco using GF High (surface target).
     // NDL is about whether we can ascend directly to the surface.
@@ -264,6 +309,7 @@ class BuhlmannAlgorithm {
         durationSeconds: mid,
         fN2: fN2,
         fHe: fHe,
+        breathing: breathing,
       );
 
       // Check if this creates a deco obligation using GF High
@@ -293,8 +339,16 @@ class BuhlmannAlgorithm {
     double fN2 = airN2Fraction,
     double fHe = 0.0,
     AscentGasPlan? ascentGas,
+    SchedulePolicy? policy,
   }) {
     final plan = ascentGas ?? FixedAscentGas(fN2: fN2, fHe: fHe);
+    final p =
+        policy ??
+        SchedulePolicy(
+          stopIncrement: stopIncrement,
+          lastStopDepth: lastStopDepth,
+          ascentRate: ascentRate,
+        );
     final stops = <DecoStop>[];
 
     final savedCompartments = List<TissueCompartment>.from(_compartments);
@@ -307,13 +361,22 @@ class BuhlmannAlgorithm {
       return stops; // No deco required
     }
 
-    double currentStopDepth = (ceiling / stopIncrement).ceil() * stopIncrement;
+    double currentStopDepth =
+        (ceiling / p.stopIncrement).ceil() * p.stopIncrement;
 
     // Travel to first stop may cross a gas MOD: _simulateAscent splits it.
-    _simulateAscent(currentDepth, currentStopDepth, plan);
+    _simulateAscent(currentDepth, currentStopDepth, plan, p);
 
-    while (currentStopDepth >= lastStopDepth) {
-      final int stopTime = _calculateStopTime(currentStopDepth, plan);
+    AscentGas previousGas = plan.gasForDepth(currentDepth);
+    while (currentStopDepth >= p.lastStopDepth) {
+      final stopGas = plan.gasForDepth(currentStopDepth);
+      final switched =
+          stopGas.fN2 != previousGas.fN2 || stopGas.fHe != previousGas.fHe;
+
+      int stopTime = _calculateStopTime(currentStopDepth, plan, p);
+      if (switched && p.gasSwitchStopSeconds > 0) {
+        stopTime = math.max(stopTime, p.gasSwitchStopSeconds);
+      }
 
       if (stopTime > 0) {
         stops.add(
@@ -321,21 +384,26 @@ class BuhlmannAlgorithm {
             depthMeters: currentStopDepth,
             durationSeconds: stopTime,
             isDeepStop: currentStopDepth > 9,
+            // Derived from the FINAL stop time (a gas-switch minimum may extend
+            // it past the natural clearance) using the same gas sequence
+            // _loadStopMinutes applies, so the annotation cannot diverge from
+            // the break gas actually loaded onto the tissues.
+            airBreakSeconds: _breakSecondsForStop(
+              currentStopDepth,
+              stopTime,
+              plan,
+              p,
+            ),
           ),
         );
 
-        final stopGas = plan.gasForDepth(currentStopDepth);
-        calculateSegment(
-          depthMeters: currentStopDepth,
-          durationSeconds: stopTime,
-          fN2: stopGas.fN2,
-          fHe: stopGas.fHe,
-        );
+        _loadStopMinutes(currentStopDepth, stopTime, plan, p);
       }
+      previousGas = stopGas;
 
-      final nextStop = currentStopDepth - stopIncrement;
-      if (nextStop >= lastStopDepth) {
-        _simulateAscent(currentStopDepth, nextStop, plan);
+      final nextStop = currentStopDepth - p.stopIncrement;
+      if (nextStop >= p.lastStopDepth) {
+        _simulateAscent(currentStopDepth, nextStop, plan, p);
       }
       currentStopDepth = nextStop;
     }
@@ -347,32 +415,78 @@ class BuhlmannAlgorithm {
     return stops;
   }
 
-  /// Calculate time required at a stop depth, breathing the plan's gas there.
-  int _calculateStopTime(double stopDepth, AscentGasPlan ascentGas) {
-    final gas = ascentGas.gasForDepth(stopDepth);
-    final nextStopDepth = stopDepth <= lastStopDepth
+  /// Gas to breathe during minute [minuteIndex] of a stop at [stopDepth]:
+  /// the plan's stop gas, interrupted by air breaks per policy when the
+  /// stop gas is effectively pure O2 and the plan offers a break gas.
+  AscentGas _gasForStopMinute(
+    double stopDepth,
+    int minuteIndex,
+    AscentGasPlan plan,
+    SchedulePolicy policy,
+  ) {
+    final primary = plan.gasForDepth(stopDepth);
+    final breaks = policy.airBreaks;
+    final isPureO2 = (primary.fN2 + primary.fHe) < 0.01;
+    if (breaks == null || !isPureO2) return primary;
+    final breakGas = plan.breakGasForDepth(stopDepth);
+    if (breakGas == null) return primary;
+    final cycle = breaks.o2Seconds + breaks.breakSeconds;
+    final posInCycle = (minuteIndex * 60) % cycle;
+    return posInCycle < breaks.o2Seconds ? primary : breakGas;
+  }
+
+  /// Whether O2 air breaks apply at [stopDepth]: the plan's stop gas is
+  /// effectively pure O2, the policy defines a break cycle, and the plan offers
+  /// a non-O2 break gas here. When false, the stop breathes one gas throughout.
+  bool _airBreaksActive(
+    double stopDepth,
+    AscentGasPlan plan,
+    SchedulePolicy policy,
+  ) {
+    final primary = plan.gasForDepth(stopDepth);
+    return policy.airBreaks != null &&
+        (primary.fN2 + primary.fHe) < 0.01 &&
+        plan.breakGasForDepth(stopDepth) != null;
+  }
+
+  /// Calculate time required at a stop depth, breathing the plan's gas there
+  /// (with air breaks per policy).
+  ///
+  /// This method only COMPUTES the stop time; the loop loads minutes onto the
+  /// tissues to search for the clearance time, but the caller
+  /// (calculateDecoSchedule) applies the stop's loading once via
+  /// _loadStopMinutes. Snapshot the entry state and restore it before
+  /// returning so those search minutes do not persist and get double-counted.
+  int _calculateStopTime(
+    double stopDepth,
+    AscentGasPlan ascentGas,
+    SchedulePolicy policy,
+  ) {
+    final nextStopDepth = stopDepth <= policy.lastStopDepth
         ? 0.0
-        : stopDepth - stopIncrement;
+        : stopDepth - policy.stopIncrement;
     int stopTime = 0;
     const maxStopTime = 120 * 60;
 
-    // This method only COMPUTES the stop time; the loop loads minutes onto the
-    // tissues to search for the clearance time, but the caller
-    // (calculateDecoSchedule) applies the stop's loading once via
-    // calculateSegment(stopTime). Snapshot the entry state and restore it before
-    // returning so those search minutes do not persist and get double-counted.
     final entryCompartments = List<TissueCompartment>.from(_compartments);
     final entryAnchor = _gfLowCeilingAnchor;
 
     while (stopTime < maxStopTime) {
+      final minuteGas = _gasForStopMinute(
+        stopDepth,
+        stopTime ~/ 60,
+        ascentGas,
+        policy,
+      );
+
       final testCompartments = List<TissueCompartment>.from(_compartments);
       final testAnchor = _gfLowCeilingAnchor;
 
       calculateSegment(
         depthMeters: stopDepth,
         durationSeconds: 60,
-        fN2: gas.fN2,
-        fHe: gas.fHe,
+        fN2: minuteGas.fN2,
+        fHe: minuteGas.fHe,
       );
 
       // Leave the stop once the diver may ascend to the NEXT (shallower) stop:
@@ -390,6 +504,7 @@ class BuhlmannAlgorithm {
       _compartments = testCompartments;
       _gfLowCeilingAnchor = testAnchor;
 
+      // Leaving mid-break is fine: the cleared check is gas-independent.
       if (ceiling <= nextStopDepth) {
         break;
       }
@@ -397,8 +512,8 @@ class BuhlmannAlgorithm {
       calculateSegment(
         depthMeters: stopDepth,
         durationSeconds: 60,
-        fN2: gas.fN2,
-        fHe: gas.fHe,
+        fN2: minuteGas.fN2,
+        fHe: minuteGas.fHe,
       );
       stopTime += 60;
     }
@@ -407,7 +522,89 @@ class BuhlmannAlgorithm {
     _compartments = entryCompartments;
     _gfLowCeilingAnchor = entryAnchor;
 
-    return ((stopTime + 59) ~/ 60) * 60;
+    return stopTime;
+  }
+
+  /// The gas breathed over a stop of [stopSeconds] at [stopDepth], as
+  /// (gas, seconds) chunks: one per whole minute plus a final sub-minute
+  /// remainder. Every chunk — the remainder included — uses _gasForStopMinute
+  /// for the minute it falls in, so a non-whole-minute stop time (possible when
+  /// a gas-switch minimum is not a whole number of minutes) still follows the
+  /// air-break cycle. Both tissue loading (_loadStopMinutes) and the annotation
+  /// (_breakSecondsForStop) consume this one sequence so they cannot diverge.
+  /// Only meaningful when _airBreaksActive is true.
+  List<({AscentGas gas, int seconds})> _stopGasChunks(
+    double stopDepth,
+    int stopSeconds,
+    AscentGasPlan plan,
+    SchedulePolicy policy,
+  ) {
+    final chunks = <({AscentGas gas, int seconds})>[];
+    final wholeMinutes = stopSeconds ~/ 60;
+    for (int minute = 0; minute < wholeMinutes; minute++) {
+      chunks.add((
+        gas: _gasForStopMinute(stopDepth, minute, plan, policy),
+        seconds: 60,
+      ));
+    }
+    final remainder = stopSeconds % 60;
+    if (remainder > 0) {
+      chunks.add((
+        gas: _gasForStopMinute(stopDepth, wholeMinutes, plan, policy),
+        seconds: remainder,
+      ));
+    }
+    return chunks;
+  }
+
+  /// Seconds of a stop of [stopSeconds] at [stopDepth] spent breathing a break
+  /// gas rather than the primary stop gas, from the same chunk sequence
+  /// _loadStopMinutes applies. Zero unless air breaks are active here.
+  int _breakSecondsForStop(
+    double stopDepth,
+    int stopSeconds,
+    AscentGasPlan plan,
+    SchedulePolicy policy,
+  ) {
+    if (!_airBreaksActive(stopDepth, plan, policy)) return 0;
+    final primary = plan.gasForDepth(stopDepth);
+    int seconds = 0;
+    for (final chunk in _stopGasChunks(stopDepth, stopSeconds, plan, policy)) {
+      final onBreak =
+          chunk.gas.fN2 != primary.fN2 || chunk.gas.fHe != primary.fHe;
+      if (onBreak) seconds += chunk.seconds;
+    }
+    return seconds;
+  }
+
+  /// Apply a stop's tissue loading using the same gas sequence the stop-time
+  /// search used. When air breaks are not in play the gas cannot vary, so load
+  /// in ONE Schreiner call — bit-identical to the legacy single-segment
+  /// application, so pinned TTS tests stay exact.
+  void _loadStopMinutes(
+    double stopDepth,
+    int stopSeconds,
+    AscentGasPlan plan,
+    SchedulePolicy policy,
+  ) {
+    if (!_airBreaksActive(stopDepth, plan, policy)) {
+      final primary = plan.gasForDepth(stopDepth);
+      calculateSegment(
+        depthMeters: stopDepth,
+        durationSeconds: stopSeconds,
+        fN2: primary.fN2,
+        fHe: primary.fHe,
+      );
+      return;
+    }
+    for (final chunk in _stopGasChunks(stopDepth, stopSeconds, plan, policy)) {
+      calculateSegment(
+        depthMeters: stopDepth,
+        durationSeconds: chunk.seconds,
+        fN2: chunk.gas.fN2,
+        fHe: chunk.gas.fHe,
+      );
+    }
   }
 
   /// Simulate ascent between depths, splitting the leg at every gas-switch
@@ -418,6 +615,7 @@ class BuhlmannAlgorithm {
     double fromDepth,
     double toDepth,
     AscentGasPlan ascentGas,
+    SchedulePolicy policy,
   ) {
     if (fromDepth <= toDepth) return;
 
@@ -425,18 +623,23 @@ class BuhlmannAlgorithm {
     double segTop = fromDepth;
     for (final switchDepth in switches) {
       // switches is descending; each is strictly between toDepth and fromDepth.
-      _ascendLeg(segTop, switchDepth, ascentGas);
+      _ascendLeg(segTop, switchDepth, ascentGas, policy);
       segTop = switchDepth;
     }
-    _ascendLeg(segTop, toDepth, ascentGas);
+    _ascendLeg(segTop, toDepth, ascentGas, policy);
   }
 
   /// Load one un-split ascent sub-leg on the gas eligible at its deeper end.
-  void _ascendLeg(double fromDepth, double toDepth, AscentGasPlan ascentGas) {
+  void _ascendLeg(
+    double fromDepth,
+    double toDepth,
+    AscentGasPlan ascentGas,
+    SchedulePolicy policy,
+  ) {
     if (fromDepth <= toDepth) return;
     final gas = ascentGas.gasForDepth(fromDepth);
     final depthChange = fromDepth - toDepth;
-    final ascentTimeSeconds = (depthChange / ascentRate * 60).round();
+    final ascentTimeSeconds = (depthChange / policy.ascentRate * 60).round();
     final avgDepth = (fromDepth + toDepth) / 2.0;
 
     calculateSegment(
@@ -459,11 +662,14 @@ class BuhlmannAlgorithm {
     double fN2 = airN2Fraction,
     double fHe = 0.0,
     AscentGasPlan? ascentGas,
+    SchedulePolicy? policy,
   }) {
     final plan = ascentGas ?? FixedAscentGas(fN2: fN2, fHe: fHe);
+    final rate = policy?.ascentRate ?? ascentRate;
     final stops = calculateDecoSchedule(
       currentDepth: currentDepth,
       ascentGas: plan,
+      policy: policy,
     );
 
     int tts = 0;
@@ -473,13 +679,13 @@ class BuhlmannAlgorithm {
 
     double depth = currentDepth;
     for (final stop in stops) {
-      final ascentTime = ((depth - stop.depthMeters) / ascentRate * 60).round();
+      final ascentTime = ((depth - stop.depthMeters) / rate * 60).round();
       tts += ascentTime;
       depth = stop.depthMeters;
     }
 
     if (depth > 0) {
-      tts += (depth / ascentRate * 60).round();
+      tts += (depth / rate * 60).round();
     }
 
     return tts;
@@ -497,9 +703,16 @@ class BuhlmannAlgorithm {
     double fHe = 0.0,
     int safetyStopTimeAccumulated = 0,
     AscentGasPlan? ascentGas,
+    BreathingConfig? breathing,
+    SchedulePolicy? policy,
   }) {
     final plan = ascentGas ?? FixedAscentGas(fN2: fN2, fHe: fHe);
-    final ndl = calculateNdl(depthMeters: currentDepth, fN2: fN2, fHe: fHe);
+    final ndl = calculateNdl(
+      depthMeters: currentDepth,
+      fN2: fN2,
+      fHe: fHe,
+      breathing: breathing,
+    );
 
     // Only calculate ceiling/stops when actually in deco (NDL < 0).
     // The GF-interpolated ceiling is for ascent planning during deco,
@@ -508,7 +721,11 @@ class BuhlmannAlgorithm {
         ? calculateCeiling(currentDepth: currentDepth)
         : 0.0;
     final stops = ndl < 0
-        ? calculateDecoSchedule(currentDepth: currentDepth, ascentGas: plan)
+        ? calculateDecoSchedule(
+            currentDepth: currentDepth,
+            ascentGas: plan,
+            policy: policy,
+          )
         : <DecoStop>[];
 
     // TTS is the MANDATORY time to surface only: the ascent plus any required
@@ -522,11 +739,15 @@ class BuhlmannAlgorithm {
     if (ndl < 0) {
       // In deco: full obligation (ascent + deco stops). The mandatory deco
       // stops supersede any recommended safety stop, so it is not reported.
-      tts = calculateTts(currentDepth: currentDepth, ascentGas: plan);
+      tts = calculateTts(
+        currentDepth: currentDepth,
+        ascentGas: plan,
+        policy: policy,
+      );
       safetyStop = 0;
     } else {
       // No deco obligation: TTS is just the direct ascent to the surface.
-      tts = (currentDepth / ascentRate * 60).round();
+      tts = (currentDepth / (policy?.ascentRate ?? ascentRate) * 60).round();
 
       // Report the recommended safety stop separately: a 3-minute stop, minus
       // time already accumulated in the 3-6 m safety-stop zone during the ascent
@@ -548,7 +769,8 @@ class BuhlmannAlgorithm {
       gfHigh: gfHigh,
       decoStops: stops,
       currentDepthMeters: currentDepth,
-      ambientPressureBar: calculateAmbientPressure(currentDepth),
+      ambientPressureBar: environment.pressureAtDepth(currentDepth),
+      surfacePressureBar: environment.surfacePressureBar,
     );
   }
 
@@ -665,6 +887,7 @@ class BuhlmannAlgorithm {
             durationSeconds: duration,
             fN2: gas.fN2,
             fHe: gas.fHe,
+            breathing: _breathingFor(gas),
           );
 
           // Accumulate time if average depth was in the safety-stop zone,
@@ -678,13 +901,15 @@ class BuhlmannAlgorithm {
         }
       }
 
+      final sampleGas = _activeGasAtTimestamp(timestamps[i], gasSegments);
       results.add(
         getDecoStatus(
           currentDepth: depths[i],
-          fN2: _activeGasAtTimestamp(timestamps[i], gasSegments).fN2,
-          fHe: _activeGasAtTimestamp(timestamps[i], gasSegments).fHe,
+          fN2: sampleGas.fN2,
+          fHe: sampleGas.fHe,
           safetyStopTimeAccumulated: safetyStopTimeAccumulated,
           ascentGas: ascentGasPlan,
+          breathing: _breathingFor(sampleGas),
         ),
       );
     }
@@ -706,6 +931,19 @@ class BuhlmannAlgorithm {
     final progress =
         (targetTimestamp - startTimestamp) / (endTimestamp - startTimestamp);
     return startDepth + ((endDepth - startDepth) * progress);
+  }
+
+  /// Breathing config for a profile gas segment: constant-ppO2 CCR when the
+  /// segment carries a setpoint (fN2/fHe describe the diluent), else null
+  /// (open-circuit fractions).
+  BreathingConfig? _breathingFor(ProfileGasSegment gas) {
+    final setpoint = gas.setpoint;
+    if (setpoint == null) return null;
+    return ClosedCircuit(
+      setpoint: setpoint,
+      diluentFO2: 1.0 - gas.fN2 - gas.fHe,
+      diluentFHe: gas.fHe,
+    );
   }
 
   ProfileGasSegment _activeGasAtTimestamp(
