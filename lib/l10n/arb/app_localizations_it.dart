@@ -10362,6 +10362,11 @@ class AppLocalizationsIt extends AppLocalizations {
   String get onboarding_welcome_title => 'Benvenuto in Submersion';
 
   @override
+  String plannerCanvas_scrub_readout(String minutes, String depth) {
+    return 'RT $minutes′ · $depth';
+  }
+
+  @override
   String get planning_appBar_title => 'Pianificazione';
 
   @override

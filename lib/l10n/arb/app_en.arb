@@ -5635,6 +5635,13 @@
       }
     }
   },
+  "plannerCanvas_scrub_readout": "RT {minutes}′ · {depth}",
+  "@plannerCanvas_scrub_readout": {
+    "placeholders": {
+      "minutes": { "type": "String" },
+      "depth": { "type": "String" }
+    }
+  },
   "planning_appBar_title": "Planning",
   "planning_card_decoCalculator_description": "Calculate no-decompression limits, required deco stops, and CNS/OTU exposure for multi-level dive profiles.",
   "planning_card_decoCalculator_subtitle": "Plan dives with decompression stops",

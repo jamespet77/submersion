@@ -17654,6 +17654,12 @@ abstract class AppLocalizations {
   /// **'Welcome to Submersion'**
   String get onboarding_welcome_title;
 
+  /// No description provided for @plannerCanvas_scrub_readout.
+  ///
+  /// In en, this message translates to:
+  /// **'RT {minutes}′ · {depth}'**
+  String plannerCanvas_scrub_readout(String minutes, String depth);
+
   /// No description provided for @planning_appBar_title.
   ///
   /// In en, this message translates to:

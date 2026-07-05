@@ -9913,6 +9913,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get onboarding_welcome_title => '欢迎使用 Submersion';
 
   @override
+  String plannerCanvas_scrub_readout(String minutes, String depth) {
+    return 'RT $minutes′ · $depth';
+  }
+
+  @override
   String get planning_appBar_title => '计划';
 
   @override
