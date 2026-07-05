@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:submersion/core/deco/ascent/ascent_gas_plan.dart';
 import 'package:submersion/core/deco/constants/buhlmann_coefficients.dart';
 import 'package:submersion/core/deco/entities/deco_status.dart';
+import 'package:submersion/core/deco/entities/dive_environment.dart';
 import 'package:submersion/core/deco/entities/profile_gas_segment.dart';
 import 'package:submersion/core/deco/entities/tissue_compartment.dart';
 
@@ -31,6 +32,9 @@ class BuhlmannAlgorithm {
   /// Ascent rate in meters per minute
   final double ascentRate;
 
+  /// Physical environment (surface pressure, water density).
+  final DiveEnvironment environment;
+
   /// Current tissue compartments state
   List<TissueCompartment> _compartments;
 
@@ -47,17 +51,23 @@ class BuhlmannAlgorithm {
     this.lastStopDepth = 3.0,
     this.stopIncrement = 3.0,
     this.ascentRate = 9.0,
-  }) : _compartments = _createSurfaceSaturatedCompartments();
+    this.environment = DiveEnvironment.standard,
+  }) : _compartments = _createSurfaceSaturatedCompartments(environment);
 
   /// Get current compartments state (read-only copy).
   List<TissueCompartment> get compartments => List.unmodifiable(_compartments);
 
   /// Create compartments saturated at surface.
-  static List<TissueCompartment> _createSurfaceSaturatedCompartments() {
+  static List<TissueCompartment> _createSurfaceSaturatedCompartments(
+    DiveEnvironment environment,
+  ) {
     final compartments = <TissueCompartment>[];
 
-    // Surface N2 tension = inspired N2 at surface
-    final surfaceN2 = calculateInspiredN2(surfacePressureBar, airN2Fraction);
+    // Surface N2 tension = inspired N2 at the site's surface pressure.
+    final surfaceN2 = calculateInspiredN2(
+      environment.surfacePressureBar,
+      airN2Fraction,
+    );
 
     for (int i = 0; i < zhl16CompartmentCount; i++) {
       compartments.add(
@@ -80,7 +90,7 @@ class BuhlmannAlgorithm {
 
   /// Reset compartments to surface-saturated state.
   void reset() {
-    _compartments = _createSurfaceSaturatedCompartments();
+    _compartments = _createSurfaceSaturatedCompartments(environment);
     _gfLowCeilingAnchor = 0.0;
   }
 
@@ -90,6 +100,23 @@ class BuhlmannAlgorithm {
       _compartments = List.from(compartments);
       _gfLowCeilingAnchor = 0.0;
       _updateGfAnchor();
+    }
+  }
+
+  /// Deepest GF-low ceiling reached so far this dive (meters).
+  double get gfLowCeilingAnchor => _gfLowCeilingAnchor;
+
+  /// Restore a previously captured tissue state (compartments + GF anchor).
+  /// Unlike [setCompartments], this does NOT re-derive the anchor: pass the
+  /// anchor captured alongside the compartments so mid-dive state (e.g. the
+  /// DecoModel facade) round-trips exactly.
+  void restoreState(
+    List<TissueCompartment> compartments, {
+    double gfLowCeilingAnchor = 0.0,
+  }) {
+    if (compartments.length == zhl16CompartmentCount) {
+      _compartments = List.from(compartments);
+      _gfLowCeilingAnchor = gfLowCeilingAnchor;
     }
   }
 
@@ -106,7 +133,7 @@ class BuhlmannAlgorithm {
     double fN2 = airN2Fraction,
     double fHe = 0.0,
   }) {
-    final ambientPressure = calculateAmbientPressure(depthMeters);
+    final ambientPressure = environment.pressureAtDepth(depthMeters);
     final inspiredN2 = calculateInspiredN2(ambientPressure, fN2);
     final inspiredHe = calculateInspiredHe(ambientPressure, fHe);
     final durationMinutes = durationSeconds / 60.0;
@@ -144,10 +171,16 @@ class BuhlmannAlgorithm {
   void _updateGfAnchor() {
     double ceiling = 0;
     for (final comp in _compartments) {
-      final c = comp.ceiling(gf: gfLow);
+      final c = _ceilingMetersFor(comp, gfLow);
       if (c > ceiling) ceiling = c;
     }
     if (ceiling > _gfLowCeilingAnchor) _gfLowCeilingAnchor = ceiling;
+  }
+
+  /// Compartment ceiling in meters under this algorithm's environment.
+  double _ceilingMetersFor(TissueCompartment comp, double gf) {
+    final meters = environment.depthAtPressure(comp.ceilingPressureBar(gf: gf));
+    return meters < 0 ? 0 : meters;
   }
 
   /// Schreiner equation for gas loading/unloading.
@@ -177,7 +210,7 @@ class BuhlmannAlgorithm {
     final gf = _interpolateGf(currentDepth);
 
     for (final comp in _compartments) {
-      final ceiling = comp.ceiling(gf: gf);
+      final ceiling = _ceilingMetersFor(comp, gf);
       if (ceiling > maxCeiling) {
         maxCeiling = ceiling;
       }
@@ -217,7 +250,7 @@ class BuhlmannAlgorithm {
   double _calculateSurfaceTargetCeiling() {
     double maxCeiling = 0;
     for (final comp in _compartments) {
-      final ceiling = comp.ceiling(gf: gfHigh);
+      final ceiling = _ceilingMetersFor(comp, gfHigh);
       if (ceiling > maxCeiling) {
         maxCeiling = ceiling;
       }
@@ -548,7 +581,8 @@ class BuhlmannAlgorithm {
       gfHigh: gfHigh,
       decoStops: stops,
       currentDepthMeters: currentDepth,
-      ambientPressureBar: calculateAmbientPressure(currentDepth),
+      ambientPressureBar: environment.pressureAtDepth(currentDepth),
+      surfacePressureBar: environment.surfacePressureBar,
     );
   }
 
