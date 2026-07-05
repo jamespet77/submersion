@@ -15,6 +15,11 @@ abstract class AscentGasPlan {
   /// selected gas changes, sorted deep-to-shallow (descending). An ascent leg
   /// is split at each so it never breathes a gas impermissible at its depth.
   List<double> switchDepthsBetween(double deeperDepth, double shallowerDepth);
+
+  /// Best gas to breathe during an air break at [depthMeters] — the highest
+  /// O2 eligible gas that is NOT effectively pure O2. Null when the plan has
+  /// no such alternative (no air breaks possible).
+  AscentGas? breakGasForDepth(double depthMeters) => null;
 }
 
 /// Today's behavior: one gas the whole way up. Used by single-gas dives and the
@@ -103,4 +108,17 @@ class OptimalOcAscentGas extends AscentGasPlan {
 
   AvailableGas _deepestUsable() =>
       _gases.reduce((a, b) => a.fO2 <= b.fO2 ? a : b);
+
+  @override
+  AscentGas? breakGasForDepth(double depthMeters) {
+    AvailableGas? best;
+    for (final g in _gases) {
+      if (g.fO2 >= 0.9) continue; // skip O2 itself
+      if (depthMeters <= g.maxPpO2Mod + 1e-9) {
+        if (best == null || _prefer(g, best)) best = g;
+      }
+    }
+    if (best == null) return null;
+    return AscentGas(fN2: best.fN2, fHe: best.fHe);
+  }
 }

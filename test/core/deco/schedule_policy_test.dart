@@ -1,0 +1,107 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/deco/ascent/ascent_gas_plan.dart';
+import 'package:submersion/core/deco/buhlmann_algorithm.dart';
+import 'package:submersion/core/deco/schedule_policy.dart';
+
+/// Loads a deco-obligated dive: air, 45 m for 25 min.
+BuhlmannAlgorithm _loadedAlgo() {
+  final algo = BuhlmannAlgorithm(gfLow: 0.4, gfHigh: 0.8);
+  algo.calculateSegment(depthMeters: 45, durationSeconds: 25 * 60);
+  return algo;
+}
+
+AscentGasPlan _airPlusO2() => OptimalOcAscentGas(
+  maxPpO2: 1.6,
+  gases: const [
+    AvailableGas(fN2: 0.7902, fHe: 0.0, maxPpO2Mod: 66.0),
+    AvailableGas(fN2: 0.0, fHe: 0.0, maxPpO2Mod: 6.0), // pure O2
+  ],
+);
+
+void main() {
+  test('null policy reproduces legacy schedule exactly', () {
+    final a = _loadedAlgo();
+    final b = _loadedAlgo();
+    final legacy = a.calculateDecoSchedule(currentDepth: 45);
+    final viaPolicy = b.calculateDecoSchedule(
+      currentDepth: 45,
+      policy: const SchedulePolicy(),
+    );
+    expect(viaPolicy.length, legacy.length);
+    for (int i = 0; i < legacy.length; i++) {
+      expect(viaPolicy[i].depthMeters, legacy[i].depthMeters);
+      expect(viaPolicy[i].durationSeconds, legacy[i].durationSeconds);
+    }
+  });
+
+  test('last stop at 6 m removes the 3 m stop', () {
+    final algo = _loadedAlgo();
+    final stops = algo.calculateDecoSchedule(
+      currentDepth: 45,
+      policy: const SchedulePolicy(lastStopDepth: 6.0),
+    );
+    expect(stops.every((s) => s.depthMeters >= 6.0), isTrue);
+    expect(stops.last.depthMeters, 6.0);
+  });
+
+  test('gas-switch stop time enforces a minimum stop at the switch', () {
+    final algo = _loadedAlgo();
+    final plan = _airPlusO2();
+    final stops = algo.calculateDecoSchedule(
+      currentDepth: 45,
+      ascentGas: plan,
+      policy: const SchedulePolicy(gasSwitchStopSeconds: 120),
+    );
+    // The first stop at or above 6 m (the O2 switch) lasts >= 120 s.
+    final switchStop = stops.firstWhere((s) => s.depthMeters <= 6.0);
+    expect(switchStop.durationSeconds, greaterThanOrEqualTo(120));
+  });
+
+  test('air breaks lengthen O2 stops and are annotated', () {
+    int totalDeco(SchedulePolicy policy) {
+      final algo = BuhlmannAlgorithm(gfLow: 0.4, gfHigh: 0.8);
+      algo.calculateSegment(depthMeters: 45, durationSeconds: 45 * 60);
+      final stops = algo.calculateDecoSchedule(
+        currentDepth: 45,
+        ascentGas: _airPlusO2(),
+        policy: policy,
+      );
+      return stops.fold(0, (sum, s) => sum + s.durationSeconds);
+    }
+
+    const withBreaks = SchedulePolicy(
+      airBreaks: AirBreakPolicy(o2Seconds: 12 * 60, breakSeconds: 6 * 60),
+    );
+    final baseline = totalDeco(const SchedulePolicy());
+    final broken = totalDeco(withBreaks);
+    // Breathing back gas during breaks off-gasses slower -> longer deco.
+    expect(broken, greaterThan(baseline));
+
+    final algo = BuhlmannAlgorithm(gfLow: 0.4, gfHigh: 0.8);
+    algo.calculateSegment(depthMeters: 45, durationSeconds: 45 * 60);
+    final stops = algo.calculateDecoSchedule(
+      currentDepth: 45,
+      ascentGas: _airPlusO2(),
+      policy: withBreaks,
+    );
+    // Breaks land on whichever O2 stop exceeds the 12-min threshold
+    // (typically the long 3 m stop, not the short 6 m one).
+    final o2Stops = stops.where((s) => s.depthMeters <= 6.0).toList();
+    final totalBreaks = o2Stops.fold<int>(
+      0,
+      (sum, s) => sum + s.airBreakSeconds,
+    );
+    expect(totalBreaks, greaterThan(0));
+    final annotated = o2Stops.firstWhere((s) => s.airBreakSeconds > 0);
+    expect(annotated.airBreakSeconds, lessThan(annotated.durationSeconds));
+  });
+
+  test('breakGasForDepth: OptimalOcAscentGas offers a non-O2 gas', () {
+    final plan = _airPlusO2();
+    final atSix = plan.breakGasForDepth(6.0);
+    expect(atSix, isNotNull);
+    expect(atSix!.fN2, closeTo(0.7902, 1e-9));
+    // FixedAscentGas has no alternative gas.
+    expect(FixedAscentGas(fN2: 0.7902).breakGasForDepth(6.0), isNull);
+  });
+}

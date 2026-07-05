@@ -235,11 +235,16 @@ class DecoStop extends Equatable {
   /// Whether this is a deep stop (below 9m)
   final bool isDeepStop;
 
+  /// Seconds of this stop spent on the break gas (air breaks). Included in
+  /// [durationSeconds]. Zero when no air breaks occurred.
+  final int airBreakSeconds;
+
   const DecoStop({
     required this.depthMeters,
     required this.durationSeconds,
     this.gasName,
     this.isDeepStop = false,
+    this.airBreakSeconds = 0,
   });
 
   /// Duration formatted as minutes
@@ -264,5 +269,6 @@ class DecoStop extends Equatable {
     durationSeconds,
     gasName,
     isDeepStop,
+    airBreakSeconds,
   ];
 }
