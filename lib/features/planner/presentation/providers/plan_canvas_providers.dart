@@ -32,7 +32,11 @@ final planOutcomeProvider = Provider<PlanOutcome>((ref) {
     surfaceInterval: state.surfaceInterval,
     gfLow: state.gfLow / 100.0,
     gfHigh: state.gfHigh / 100.0,
-    environment: DiveEnvironment.forConditions(altitudeMeters: state.altitude),
+    // Match the engine: altitude <= 0 is unset (legacy 1.0 bar), so the seed
+    // is off-gassed at the same surface pressure the plan is computed at.
+    environment: DiveEnvironment.forConditions(
+      altitudeMeters: (state.altitude ?? 0) > 0 ? state.altitude : null,
+    ),
   );
   return engine.compute(divePlanFromState(state), startState: startState);
 });
