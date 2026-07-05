@@ -62,10 +62,11 @@ void main() {
     test(
       'no gasLow warning when reserve entered as psi is below remaining',
       () {
-        // This profile ends with ~35 bar (~508 psi) remaining.
-        // A user entering 500 psi as reserve (≈ 34.47 bar) should see
-        // NO warning, because 35 bar remaining > 34.47 bar reserve.
-        final result = calculateWithReserve(psiToBar(500));
+        // This profile ends with ~25.6 bar (~371 psi) remaining once gas
+        // compressibility is accounted for. A user entering 350 psi as
+        // reserve (≈ 24.13 bar) should see NO warning, because
+        // 25.6 bar remaining > 24.13 bar reserve.
+        final result = calculateWithReserve(psiToBar(350));
         final gasLowWarnings = result.warnings
             .where((w) => w.type == PlanWarningType.gasLow)
             .toList();
@@ -76,7 +77,7 @@ void main() {
     );
 
     test('gasLow warning when reserve entered as psi is above remaining', () {
-      // Same profile (~508 psi remaining). A user entering 600 psi as
+      // Same profile (~371 psi remaining). A user entering 600 psi as
       // reserve (≈ 41.37 bar) should trigger a warning.
       final reserveBar = psiToBar(600);
       final result = calculateWithReserve(reserveBar);
@@ -106,8 +107,9 @@ void main() {
     );
 
     test('no gasLow warning when bar reserve is below remaining', () {
-      // With 35 bar remaining, a 30 bar reserve should produce no warning.
-      final result = calculateWithReserve(30);
+      // With ~25.6 bar remaining (compressibility-aware), a 20 bar reserve
+      // should produce no warning.
+      final result = calculateWithReserve(20);
       final gasLowWarnings = result.warnings
           .where((w) => w.type == PlanWarningType.gasLow)
           .toList();
@@ -117,7 +119,7 @@ void main() {
     });
 
     test('gasLow warning when bar reserve is above remaining', () {
-      // With 35 bar remaining, a 40 bar reserve should trigger a warning.
+      // With ~25.6 bar remaining, a 40 bar reserve should trigger a warning.
       final result = calculateWithReserve(40);
       final gasLowWarnings = result.warnings
           .where((w) => w.type == PlanWarningType.gasLow)

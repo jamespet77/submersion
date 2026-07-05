@@ -5,6 +5,7 @@ import 'package:submersion/core/deco/buhlmann_algorithm.dart';
 import 'package:submersion/core/deco/constants/buhlmann_coefficients.dart';
 import 'package:submersion/core/deco/entities/tissue_compartment.dart';
 import 'package:submersion/core/deco/o2_toxicity_calculator.dart';
+import 'package:submersion/core/utils/gas_compressibility.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_planner/domain/entities/plan_result.dart';
 import 'package:submersion/features/dive_planner/domain/entities/plan_segment.dart';
@@ -99,6 +100,8 @@ class PlanCalculatorService {
       gasUsageByTank[tank.id] = _GasUsageTracker(
         startPressure: tank.startPressure,
         volume: tank.volume ?? 11.0, // Default AL80 if not specified
+        o2Percent: tank.gasMix.o2,
+        hePercent: tank.gasMix.he,
       );
     }
 
@@ -604,21 +607,39 @@ class PlanCalculatorService {
 class _GasUsageTracker {
   final double? startPressure;
   final double volume;
+  final double o2Percent;
+  final double hePercent;
   double gasUsedLiters = 0;
 
-  _GasUsageTracker({this.startPressure, required this.volume});
+  _GasUsageTracker({
+    this.startPressure,
+    required this.volume,
+    this.o2Percent = 21.0,
+    this.hePercent = 0.0,
+  });
 
   void addGasUsed(double liters) {
     gasUsedLiters += liters;
   }
 
-  /// Convert liters used to bar used.
-  double get gasUsedBar => volume > 0 ? gasUsedLiters / volume : 0;
-
-  /// Calculate remaining pressure.
+  /// Remaining pressure honoring gas compressibility.
   double? get remainingPressure {
     if (startPressure == null) return null;
-    return startPressure! - gasUsedBar;
+    return pressureAfterConsuming(
+      tankSizeLiters: volume,
+      startPressureBar: startPressure!,
+      litersConsumed: gasUsedLiters,
+      o2Percent: o2Percent,
+      hePercent: hePercent,
+    );
+  }
+
+  /// Bar consumed (start minus compressibility-aware remaining).
+  double get gasUsedBar {
+    if (startPressure == null) {
+      return volume > 0 ? gasUsedLiters / volume : 0;
+    }
+    return startPressure! - (remainingPressure ?? 0);
   }
 
   /// Calculate percentage of tank used.
