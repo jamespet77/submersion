@@ -135,104 +135,112 @@ class _SourceChip extends StatelessWidget {
     final theme = Theme.of(context);
     final l10n = context.l10n;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: item.isActive
-            ? item.color.withValues(alpha: 0.15)
-            : Colors.transparent,
-        border: Border.all(
+    // The whole pill activates the source; the eye and menu buttons sit
+    // inside it and win their own taps. Icon buttons are tightly
+    // constrained (no Material minimum tap-target inflation) so the pill
+    // hugs the label height.
+    return Material(
+      color: item.isActive
+          ? item.color.withValues(alpha: 0.15)
+          : Colors.transparent,
+      shape: StadiumBorder(
+        side: BorderSide(
           color: item.isActive ? item.color : theme.colorScheme.outlineVariant,
         ),
-        borderRadius: BorderRadius.circular(16),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          InkWell(
-            onTap: item.isActive ? null : onActivate,
-            borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: item.color,
-                      shape: BoxShape.circle,
-                    ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: item.isActive ? null : onActivate,
+        child: SizedBox(
+          height: 28,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 10, right: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: item.color,
+                    shape: BoxShape.circle,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    item.label,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: item.isActive
-                          ? theme.colorScheme.onSurface
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: item.isActive ? FontWeight.w600 : null,
-                    ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  item.label,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: item.isActive
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: item.isActive ? FontWeight.w600 : null,
                   ),
-                  if (item.isPrimary) ...[
-                    const SizedBox(width: 4),
-                    Icon(Icons.star, size: 12, color: item.color),
-                  ],
+                ),
+                if (item.isPrimary) ...[
+                  const SizedBox(width: 4),
+                  Icon(Icons.star, size: 12, color: item.color),
                 ],
-              ),
-            ),
-          ),
-          if (!item.isActive)
-            IconButton(
-              icon: Icon(
-                item.isOverlaid
-                    ? Icons.visibility
-                    : Icons.visibility_off_outlined,
-                size: 16,
-                color: item.isOverlaid
-                    ? item.color
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-              tooltip: l10n.diveLog_sources_overlayTooltip,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-              padding: EdgeInsets.zero,
-              onPressed: item.hasProfile ? onToggleOverlay : null,
-            ),
-          PopupMenuButton<SourceMenuAction>(
-            icon: const Icon(Icons.more_vert, size: 16),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 28),
-            onSelected: onMenuAction,
-            itemBuilder: (context) => [
-              if (!item.isPrimary)
-                PopupMenuItem(
-                  value: SourceMenuAction.setPrimary,
-                  child: ListTile(
-                    leading: const Icon(Icons.star_outline),
-                    title: Text(l10n.diveLog_sources_menu_setPrimary),
-                    contentPadding: EdgeInsets.zero,
+                const SizedBox(width: 2),
+                if (!item.isActive)
+                  IconButton(
+                    icon: Icon(
+                      item.isOverlaid
+                          ? Icons.visibility
+                          : Icons.visibility_off_outlined,
+                      size: 16,
+                      color: item.isOverlaid
+                          ? item.color
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                    tooltip: l10n.diveLog_sources_overlayTooltip,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 26,
+                      height: 26,
+                    ),
+                    padding: EdgeInsets.zero,
+                    onPressed: item.hasProfile ? onToggleOverlay : null,
+                  ),
+                PopupMenuButton<SourceMenuAction>(
+                  onSelected: onMenuAction,
+                  itemBuilder: (context) => [
+                    if (!item.isPrimary)
+                      PopupMenuItem(
+                        value: SourceMenuAction.setPrimary,
+                        child: ListTile(
+                          leading: const Icon(Icons.star_outline),
+                          title: Text(l10n.diveLog_sources_menu_setPrimary),
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                      ),
+                    PopupMenuItem(
+                      value: SourceMenuAction.unlink,
+                      child: ListTile(
+                        leading: const Icon(Icons.link_off),
+                        title: Text(l10n.diveLog_sources_menu_unlink),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: SourceMenuAction.split,
+                      child: ListTile(
+                        leading: const Icon(Icons.call_split),
+                        title: Text(l10n.diveLog_sources_menu_split),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
+                  // A plain child (not `icon:`) avoids PopupMenuButton's
+                  // internal IconButton and its minimum tap-target size.
+                  child: const SizedBox(
+                    width: 24,
+                    height: 26,
+                    child: Icon(Icons.more_vert, size: 16),
                   ),
                 ),
-              PopupMenuItem(
-                value: SourceMenuAction.unlink,
-                child: ListTile(
-                  leading: const Icon(Icons.link_off),
-                  title: Text(l10n.diveLog_sources_menu_unlink),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              PopupMenuItem(
-                value: SourceMenuAction.split,
-                child: ListTile(
-                  leading: const Icon(Icons.call_split),
-                  title: Text(l10n.diveLog_sources_menu_split),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
