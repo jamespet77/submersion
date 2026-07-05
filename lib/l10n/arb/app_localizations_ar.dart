@@ -10173,50 +10173,50 @@ class AppLocalizationsAr extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count issues',
-      one: '1 issue',
+      other: '$count مشكلات',
+      one: 'مشكلة واحدة',
     );
     return '$_temp0';
   }
 
   @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
-    return 'Gas density $value g/L over hard limit';
+    return 'كثافة الغاز $value g/L تتجاوز الحد الأقصى';
   }
 
   @override
   String plannerCanvas_issue_gasDensityHigh(String value) {
-    return 'Gas density $value g/L over recommended limit';
+    return 'كثافة الغاز $value g/L تتجاوز الحد الموصى به';
   }
 
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
-    return 'Hypoxic gas at $depth (ppO₂ $value bar)';
+    return 'غاز ناقص الأكسجين عند $depth (ppO₂ $value bar)';
   }
 
   @override
   String get plannerCanvas_issue_noDecoGas =>
-      'Decompression required but no deco gas carried';
+      'يلزم تخفيف الضغط ولكن لا يوجد غاز تخفيف';
 
   @override
-  String get plannerCanvas_results_noDeco => 'No decompression required';
+  String get plannerCanvas_results_noDeco => 'لا يلزم تخفيف الضغط';
 
   @override
   String plannerCanvas_saved_deleteConfirmBody(String name) {
-    return 'Permanently delete \"$name\"?';
+    return 'حذف \"$name\" نهائيًا؟';
   }
 
   @override
-  String get plannerCanvas_saved_deleteConfirmTitle => 'Delete plan?';
+  String get plannerCanvas_saved_deleteConfirmTitle => 'حذف الخطة؟';
 
   @override
-  String get plannerCanvas_saved_duplicate => 'Duplicate';
+  String get plannerCanvas_saved_duplicate => 'تكرار';
 
   @override
-  String get plannerCanvas_saved_empty => 'No saved plans yet';
+  String get plannerCanvas_saved_empty => 'لا توجد خطط محفوظة بعد';
 
   @override
-  String get plannerCanvas_saved_title => 'Saved plans';
+  String get plannerCanvas_saved_title => 'الخطط المحفوظة';
 
   @override
   String plannerCanvas_scrub_readout(String minutes, String depth) {
@@ -10224,16 +10224,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get plannerCanvas_table_depth => 'Depth';
+  String get plannerCanvas_table_depth => 'العمق';
 
   @override
-  String get plannerCanvas_table_gas => 'Gas';
+  String get plannerCanvas_table_gas => 'الغاز';
 
   @override
   String get plannerCanvas_table_runtime => 'RT';
 
   @override
-  String get plannerCanvas_table_stop => 'Stop';
+  String get plannerCanvas_table_stop => 'توقف';
 
   @override
   String get planning_appBar_title => 'التخطيط';

@@ -10106,50 +10106,50 @@ class AppLocalizationsHe extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count issues',
-      one: '1 issue',
+      other: '$count בעיות',
+      one: 'בעיה אחת',
     );
     return '$_temp0';
   }
 
   @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
-    return 'Gas density $value g/L over hard limit';
+    return 'צפיפות הגז $value g/L מעל הגבול המרבי';
   }
 
   @override
   String plannerCanvas_issue_gasDensityHigh(String value) {
-    return 'Gas density $value g/L over recommended limit';
+    return 'צפיפות הגז $value g/L מעל הגבול המומלץ';
   }
 
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
-    return 'Hypoxic gas at $depth (ppO₂ $value bar)';
+    return 'גז היפוקסי ב-$depth (ppO₂ $value bar)';
   }
 
   @override
   String get plannerCanvas_issue_noDecoGas =>
-      'Decompression required but no deco gas carried';
+      'נדרשת דקומפרסיה אך לא נלקח גז דקו';
 
   @override
-  String get plannerCanvas_results_noDeco => 'No decompression required';
+  String get plannerCanvas_results_noDeco => 'לא נדרשת דקומפרסיה';
 
   @override
   String plannerCanvas_saved_deleteConfirmBody(String name) {
-    return 'Permanently delete \"$name\"?';
+    return 'למחוק לצמיתות את \"$name\"?';
   }
 
   @override
-  String get plannerCanvas_saved_deleteConfirmTitle => 'Delete plan?';
+  String get plannerCanvas_saved_deleteConfirmTitle => 'למחוק את התוכנית?';
 
   @override
-  String get plannerCanvas_saved_duplicate => 'Duplicate';
+  String get plannerCanvas_saved_duplicate => 'שכפול';
 
   @override
-  String get plannerCanvas_saved_empty => 'No saved plans yet';
+  String get plannerCanvas_saved_empty => 'אין עדיין תוכניות שמורות';
 
   @override
-  String get plannerCanvas_saved_title => 'Saved plans';
+  String get plannerCanvas_saved_title => 'תוכניות שמורות';
 
   @override
   String plannerCanvas_scrub_readout(String minutes, String depth) {
@@ -10157,16 +10157,16 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
-  String get plannerCanvas_table_depth => 'Depth';
+  String get plannerCanvas_table_depth => 'עומק';
 
   @override
-  String get plannerCanvas_table_gas => 'Gas';
+  String get plannerCanvas_table_gas => 'גז';
 
   @override
   String get plannerCanvas_table_runtime => 'RT';
 
   @override
-  String get plannerCanvas_table_stop => 'Stop';
+  String get plannerCanvas_table_stop => 'עצירה';
 
   @override
   String get planning_appBar_title => 'תכנון';

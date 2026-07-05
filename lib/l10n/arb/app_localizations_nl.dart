@@ -10294,50 +10294,50 @@ class AppLocalizationsNl extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count issues',
-      one: '1 issue',
+      other: '$count problemen',
+      one: '1 probleem',
     );
     return '$_temp0';
   }
 
   @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
-    return 'Gas density $value g/L over hard limit';
+    return 'Gasdichtheid $value g/L boven harde limiet';
   }
 
   @override
   String plannerCanvas_issue_gasDensityHigh(String value) {
-    return 'Gas density $value g/L over recommended limit';
+    return 'Gasdichtheid $value g/L boven aanbevolen limiet';
   }
 
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
-    return 'Hypoxic gas at $depth (ppO₂ $value bar)';
+    return 'Hypoxisch gas op $depth (ppO₂ $value bar)';
   }
 
   @override
   String get plannerCanvas_issue_noDecoGas =>
-      'Decompression required but no deco gas carried';
+      'Decompressie vereist maar geen decogas meegenomen';
 
   @override
-  String get plannerCanvas_results_noDeco => 'No decompression required';
+  String get plannerCanvas_results_noDeco => 'Geen decompressie vereist';
 
   @override
   String plannerCanvas_saved_deleteConfirmBody(String name) {
-    return 'Permanently delete \"$name\"?';
+    return '\'$name\' definitief verwijderen?';
   }
 
   @override
-  String get plannerCanvas_saved_deleteConfirmTitle => 'Delete plan?';
+  String get plannerCanvas_saved_deleteConfirmTitle => 'Plan verwijderen?';
 
   @override
-  String get plannerCanvas_saved_duplicate => 'Duplicate';
+  String get plannerCanvas_saved_duplicate => 'Dupliceren';
 
   @override
-  String get plannerCanvas_saved_empty => 'No saved plans yet';
+  String get plannerCanvas_saved_empty => 'Nog geen opgeslagen plannen';
 
   @override
-  String get plannerCanvas_saved_title => 'Saved plans';
+  String get plannerCanvas_saved_title => 'Opgeslagen plannen';
 
   @override
   String plannerCanvas_scrub_readout(String minutes, String depth) {
@@ -10345,7 +10345,7 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
-  String get plannerCanvas_table_depth => 'Depth';
+  String get plannerCanvas_table_depth => 'Diepte';
 
   @override
   String get plannerCanvas_table_gas => 'Gas';

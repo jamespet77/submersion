@@ -10343,50 +10343,50 @@ class AppLocalizationsHu extends AppLocalizations {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count issues',
-      one: '1 issue',
+      other: '$count probléma',
+      one: '1 probléma',
     );
     return '$_temp0';
   }
 
   @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
-    return 'Gas density $value g/L over hard limit';
+    return 'Gázsűrűség $value g/L a szigorú határ felett';
   }
 
   @override
   String plannerCanvas_issue_gasDensityHigh(String value) {
-    return 'Gas density $value g/L over recommended limit';
+    return 'Gázsűrűség $value g/L az ajánlott határ felett';
   }
 
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
-    return 'Hypoxic gas at $depth (ppO₂ $value bar)';
+    return 'Hipoxiás gáz $depth mélységben (ppO₂ $value bar)';
   }
 
   @override
   String get plannerCanvas_issue_noDecoGas =>
-      'Decompression required but no deco gas carried';
+      'Dekompresszió szükséges, de nincs deco gáz';
 
   @override
-  String get plannerCanvas_results_noDeco => 'No decompression required';
+  String get plannerCanvas_results_noDeco => 'Nincs szükség dekompresszióra';
 
   @override
   String plannerCanvas_saved_deleteConfirmBody(String name) {
-    return 'Permanently delete \"$name\"?';
+    return 'Véglegesen törli a(z) „$name” tervet?';
   }
 
   @override
-  String get plannerCanvas_saved_deleteConfirmTitle => 'Delete plan?';
+  String get plannerCanvas_saved_deleteConfirmTitle => 'Törli a tervet?';
 
   @override
-  String get plannerCanvas_saved_duplicate => 'Duplicate';
+  String get plannerCanvas_saved_duplicate => 'Duplikálás';
 
   @override
-  String get plannerCanvas_saved_empty => 'No saved plans yet';
+  String get plannerCanvas_saved_empty => 'Még nincsenek mentett tervek';
 
   @override
-  String get plannerCanvas_saved_title => 'Saved plans';
+  String get plannerCanvas_saved_title => 'Mentett tervek';
 
   @override
   String plannerCanvas_scrub_readout(String minutes, String depth) {
@@ -10394,16 +10394,16 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
-  String get plannerCanvas_table_depth => 'Depth';
+  String get plannerCanvas_table_depth => 'Mélység';
 
   @override
-  String get plannerCanvas_table_gas => 'Gas';
+  String get plannerCanvas_table_gas => 'Gáz';
 
   @override
   String get plannerCanvas_table_runtime => 'RT';
 
   @override
-  String get plannerCanvas_table_stop => 'Stop';
+  String get plannerCanvas_table_stop => 'Megálló';
 
   @override
   String get planning_appBar_title => 'Tervezes';
