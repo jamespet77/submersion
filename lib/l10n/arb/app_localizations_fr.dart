@@ -17052,6 +17052,79 @@ class AppLocalizationsFr extends AppLocalizations {
   String get gasCalculators_rockBottom_yourSac => 'Votre SAC';
 
   @override
+  String get gpsLogger_androidNotificationText =>
+      'Enregistrement de votre trace de surface';
+
+  @override
+  String get gpsLogger_androidNotificationTitle =>
+      'Enregistreur GPS Submersion';
+
+  @override
+  String get gpsLogger_deleteTrackMessage =>
+      'Supprime la trace GPS enregistrée. Les positions déjà attribuées aux plongées sont conservées.';
+
+  @override
+  String get gpsLogger_deleteTrackTitle => 'Supprimer la trace ?';
+
+  @override
+  String get gpsLogger_interruptedNotice =>
+      'Un enregistrement précédent a été interrompu. La trace a été sauvegardée.';
+
+  @override
+  String gpsLogger_lastFix(String age, String accuracy) {
+    return 'Dernière position il y a $age ($accuracy)';
+  }
+
+  @override
+  String get gpsLogger_locationOff =>
+      'Les services de localisation sont désactivés.';
+
+  @override
+  String get gpsLogger_matchButton => 'Associer les plongées aux journaux GPS';
+
+  @override
+  String gpsLogger_matchResult(int count) {
+    return '$count plongées positionnées';
+  }
+
+  @override
+  String get gpsLogger_matchResultNone =>
+      'Aucune plongée ne correspond à une trace enregistrée';
+
+  @override
+  String get gpsLogger_noFixYet => 'En attente du signal GPS';
+
+  @override
+  String get gpsLogger_noTracks =>
+      'Aucune trace GPS enregistrée pour le moment';
+
+  @override
+  String get gpsLogger_permissionDenied =>
+      'L\'autorisation de localisation est requise pour enregistrer une trace GPS. Activez-la dans les réglages du système.';
+
+  @override
+  String gpsLogger_recordingStatus(int count) {
+    return 'Enregistrement - $count points';
+  }
+
+  @override
+  String get gpsLogger_reviewSites => 'Vérifier les correspondances de sites';
+
+  @override
+  String get gpsLogger_startButton => 'Démarrer l\'enregistrement';
+
+  @override
+  String get gpsLogger_stopButton => 'Arrêter l\'enregistrement';
+
+  @override
+  String gpsLogger_trackSubtitle(int count, String duration) {
+    return '$count points, $duration';
+  }
+
+  @override
+  String get gpsLogger_tracksHeader => 'Traces enregistrées';
+
+  @override
   String get maps_heatMap_hide => 'Masquer la carte de chaleur';
 
   @override
@@ -17421,6 +17494,16 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get tools_gas_title => 'Calculateurs de gaz';
+
+  @override
+  String get tools_gpsLogger_description =>
+      'Enregistrez votre position pendant une journée de plongée et associez automatiquement les plongées importées à des positions GPS.';
+
+  @override
+  String get tools_gpsLogger_subtitle => 'Enregistrer une trace de surface';
+
+  @override
+  String get tools_gpsLogger_title => 'Enregistreur GPS';
 
   @override
   String get tools_title => 'Outils';

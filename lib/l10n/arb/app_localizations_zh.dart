@@ -16164,6 +16164,71 @@ class AppLocalizationsZh extends AppLocalizations {
   String get gasCalculators_rockBottom_yourSac => '您的 SAC';
 
   @override
+  String get gpsLogger_androidNotificationText => '正在记录水面轨迹';
+
+  @override
+  String get gpsLogger_androidNotificationTitle => 'Submersion GPS 记录器';
+
+  @override
+  String get gpsLogger_deleteTrackMessage => '将删除已记录的 GPS 轨迹。已标注到潜水记录的位置会保留。';
+
+  @override
+  String get gpsLogger_deleteTrackTitle => '删除轨迹？';
+
+  @override
+  String get gpsLogger_interruptedNotice => '上次记录被中断，轨迹已保存。';
+
+  @override
+  String gpsLogger_lastFix(String age, String accuracy) {
+    return '上次定位于 $age 前（$accuracy）';
+  }
+
+  @override
+  String get gpsLogger_locationOff => '定位服务已关闭。';
+
+  @override
+  String get gpsLogger_matchButton => '将潜水与 GPS 记录匹配';
+
+  @override
+  String gpsLogger_matchResult(int count) {
+    return '已定位 $count 次潜水';
+  }
+
+  @override
+  String get gpsLogger_matchResultNone => '没有潜水与已记录的轨迹匹配';
+
+  @override
+  String get gpsLogger_noFixYet => '正在等待 GPS 定位';
+
+  @override
+  String get gpsLogger_noTracks => '尚未记录 GPS 轨迹';
+
+  @override
+  String get gpsLogger_permissionDenied => '记录 GPS 轨迹需要位置权限。请在系统设置中启用。';
+
+  @override
+  String gpsLogger_recordingStatus(int count) {
+    return '记录中 - $count 个点';
+  }
+
+  @override
+  String get gpsLogger_reviewSites => '查看潜点匹配';
+
+  @override
+  String get gpsLogger_startButton => '开始记录';
+
+  @override
+  String get gpsLogger_stopButton => '停止记录';
+
+  @override
+  String gpsLogger_trackSubtitle(int count, String duration) {
+    return '$count 个点，$duration';
+  }
+
+  @override
+  String get gpsLogger_tracksHeader => '已记录的轨迹';
+
+  @override
   String get maps_heatMap_hide => '隐藏热力图';
 
   @override
@@ -16520,6 +16585,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tools_gas_title => '气体计算器';
+
+  @override
+  String get tools_gpsLogger_description => '在潜水日记录你的位置，自动将导入的潜水与 GPS 位置匹配。';
+
+  @override
+  String get tools_gpsLogger_subtitle => '记录水面轨迹';
+
+  @override
+  String get tools_gpsLogger_title => 'GPS 记录器';
 
   @override
   String get tools_title => '工具';

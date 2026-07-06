@@ -16944,6 +16944,76 @@ class AppLocalizationsHu extends AppLocalizations {
   String get gasCalculators_rockBottom_yourSac => 'Sajat SAC';
 
   @override
+  String get gpsLogger_androidNotificationText =>
+      'Felszíni útvonal rögzítése folyamatban';
+
+  @override
+  String get gpsLogger_androidNotificationTitle => 'Submersion GPS-naplózó';
+
+  @override
+  String get gpsLogger_deleteTrackMessage =>
+      'Törli a rögzített GPS-útvonalat. A merülésekhez már hozzárendelt pozíciók megmaradnak.';
+
+  @override
+  String get gpsLogger_deleteTrackTitle => 'Útvonal törlése?';
+
+  @override
+  String get gpsLogger_interruptedNotice =>
+      'Egy korábbi rögzítés megszakadt. Az útvonal mentésre került.';
+
+  @override
+  String gpsLogger_lastFix(String age, String accuracy) {
+    return 'Utolsó pozíció $age ezelőtt ($accuracy)';
+  }
+
+  @override
+  String get gpsLogger_locationOff => 'A helymeghatározás ki van kapcsolva.';
+
+  @override
+  String get gpsLogger_matchButton => 'Merülések párosítása GPS-naplókkal';
+
+  @override
+  String gpsLogger_matchResult(int count) {
+    return '$count merülés pozicionálva';
+  }
+
+  @override
+  String get gpsLogger_matchResultNone =>
+      'Egyik merülés sem illeszkedik rögzített útvonalhoz';
+
+  @override
+  String get gpsLogger_noFixYet => 'Várakozás GPS-jelre';
+
+  @override
+  String get gpsLogger_noTracks => 'Még nincs rögzített GPS-útvonal';
+
+  @override
+  String get gpsLogger_permissionDenied =>
+      'GPS-útvonal rögzítéséhez helymeghatározási engedély szükséges. Engedélyezd a rendszerbeállításokban.';
+
+  @override
+  String gpsLogger_recordingStatus(int count) {
+    return 'Rögzítés - $count pont';
+  }
+
+  @override
+  String get gpsLogger_reviewSites => 'Merülőhely-párosítások áttekintése';
+
+  @override
+  String get gpsLogger_startButton => 'Rögzítés indítása';
+
+  @override
+  String get gpsLogger_stopButton => 'Rögzítés leállítása';
+
+  @override
+  String gpsLogger_trackSubtitle(int count, String duration) {
+    return '$count pont, $duration';
+  }
+
+  @override
+  String get gpsLogger_tracksHeader => 'Rögzített útvonalak';
+
+  @override
   String get maps_heatMap_hide => 'Hoterkep elrejtese';
 
   @override
@@ -17312,6 +17382,16 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get tools_gas_title => 'Gaz szamologepek';
+
+  @override
+  String get tools_gpsLogger_description =>
+      'Rögzítsd a pozíciódat a merülőnap során, és párosítsd automatikusan az importált merüléseket GPS-helyekhez.';
+
+  @override
+  String get tools_gpsLogger_subtitle => 'Felszíni útvonal rögzítése';
+
+  @override
+  String get tools_gpsLogger_title => 'GPS-naplózó';
 
   @override
   String get tools_title => 'Eszkozok';

@@ -16849,6 +16849,76 @@ class AppLocalizationsNl extends AppLocalizations {
   String get gasCalculators_rockBottom_yourSac => 'Jouw SAC';
 
   @override
+  String get gpsLogger_androidNotificationText =>
+      'Je oppervlaktetrack wordt opgenomen';
+
+  @override
+  String get gpsLogger_androidNotificationTitle => 'Submersion GPS-logger';
+
+  @override
+  String get gpsLogger_deleteTrackMessage =>
+      'Verwijdert de opgenomen GPS-track. Posities die al aan duiken zijn toegekend blijven behouden.';
+
+  @override
+  String get gpsLogger_deleteTrackTitle => 'Track verwijderen?';
+
+  @override
+  String get gpsLogger_interruptedNotice =>
+      'Een eerdere opname is onderbroken. De track is opgeslagen.';
+
+  @override
+  String gpsLogger_lastFix(String age, String accuracy) {
+    return 'Laatste fix $age geleden ($accuracy)';
+  }
+
+  @override
+  String get gpsLogger_locationOff => 'Locatievoorzieningen staan uit.';
+
+  @override
+  String get gpsLogger_matchButton => 'Duiken koppelen aan GPS-logs';
+
+  @override
+  String gpsLogger_matchResult(int count) {
+    return '$count duiken gepositioneerd';
+  }
+
+  @override
+  String get gpsLogger_matchResultNone =>
+      'Geen duiken komen overeen met een opgenomen track';
+
+  @override
+  String get gpsLogger_noFixYet => 'Wachten op GPS-fix';
+
+  @override
+  String get gpsLogger_noTracks => 'Nog geen GPS-tracks opgenomen';
+
+  @override
+  String get gpsLogger_permissionDenied =>
+      'Locatietoestemming is vereist om een GPS-track op te nemen. Schakel deze in bij de systeeminstellingen.';
+
+  @override
+  String gpsLogger_recordingStatus(int count) {
+    return 'Opname - $count punten';
+  }
+
+  @override
+  String get gpsLogger_reviewSites => 'Duikstek-koppelingen controleren';
+
+  @override
+  String get gpsLogger_startButton => 'Opname starten';
+
+  @override
+  String get gpsLogger_stopButton => 'Opname stoppen';
+
+  @override
+  String gpsLogger_trackSubtitle(int count, String duration) {
+    return '$count punten, $duration';
+  }
+
+  @override
+  String get gpsLogger_tracksHeader => 'Opgenomen tracks';
+
+  @override
   String get maps_heatMap_hide => 'Heatmap verbergen';
 
   @override
@@ -17215,6 +17285,16 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get tools_gas_title => 'Gascalculators';
+
+  @override
+  String get tools_gpsLogger_description =>
+      'Registreer je positie tijdens een duikdag en koppel geïmporteerde duiken automatisch aan GPS-locaties.';
+
+  @override
+  String get tools_gpsLogger_subtitle => 'Neem een oppervlaktetrack op';
+
+  @override
+  String get tools_gpsLogger_title => 'GPS-logger';
 
   @override
   String get tools_title => 'Gereedschap';
