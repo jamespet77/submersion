@@ -1,5 +1,5 @@
 name: submersion_ocr
-description: On-device OCR (positioned text) for Submersion. Apple Vision on iOS/macOS, Windows.Media.Ocr on Windows.
+description: On-device OCR (positioned text) for Submersion. Apple Vision on iOS/macOS, ML Kit on Android, Windows.Media.Ocr on Windows.
 version: 0.1.0
 publish_to: none
 
@@ -19,6 +19,9 @@ dev_dependencies:
 flutter:
   plugin:
     platforms:
+      android:
+        package: app.submersion.ocr
+        pluginClass: SubmersionOcrPlugin
       ios:
         pluginClass: SubmersionOcrPlugin
         sharedDarwinSource: true
