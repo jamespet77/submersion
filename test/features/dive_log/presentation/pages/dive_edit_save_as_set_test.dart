@@ -71,9 +71,7 @@ void main() {
           child: const MaterialApp(
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            home: Scaffold(
-              body: DiveEditPage(diveId: 'd1', embedded: true),
-            ),
+            home: Scaffold(body: DiveEditPage(diveId: 'd1', embedded: true)),
           ),
         ),
       );

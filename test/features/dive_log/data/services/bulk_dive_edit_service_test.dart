@@ -256,13 +256,10 @@ void main() {
     await diveRepo.bulkAddEquipment(['d1'], ['origEq']);
 
     await service.apply(
-      BulkEditRequest(
-        diveIds: const ['d1'],
+      const BulkEditRequest(
+        diveIds: ['d1'],
         ops: [
-          const EquipmentOp(
-            mode: BulkCollectionMode.add,
-            equipmentIds: ['newEq'],
-          ),
+          EquipmentOp(mode: BulkCollectionMode.add, equipmentIds: ['newEq']),
         ],
       ),
     );
@@ -279,14 +276,11 @@ void main() {
       await diveRepo.bulkAddEquipment(['d1'], ['keep', 'drop']);
 
       final snap = await service.apply(
-        BulkEditRequest(
-          diveIds: const ['d1'],
+        const BulkEditRequest(
+          diveIds: ['d1'],
           ops: [
-            const EquipmentOp(
-              mode: BulkCollectionMode.add,
-              equipmentIds: ['added'],
-            ),
-            const EquipmentOp(
+            EquipmentOp(mode: BulkCollectionMode.add, equipmentIds: ['added']),
+            EquipmentOp(
               mode: BulkCollectionMode.remove,
               equipmentIds: ['drop'],
             ),
