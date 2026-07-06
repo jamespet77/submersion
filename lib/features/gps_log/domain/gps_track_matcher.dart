@@ -1,4 +1,4 @@
-import 'entities/gps_track.dart';
+import 'package:submersion/features/gps_log/domain/entities/gps_track.dart';
 
 typedef TrackPosition = ({double latitude, double longitude});
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'entities/gps_track.dart';
+import 'package:submersion/features/gps_log/domain/entities/gps_track.dart';
 
 /// Encodes points as a gzipped JSON array of
 /// [wallClockEpochSeconds, lat, lon, accuracyMeters] tuples.
