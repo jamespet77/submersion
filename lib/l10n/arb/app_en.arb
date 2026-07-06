@@ -5678,6 +5678,30 @@
       "count": { "type": "int" }
     }
   },
+  "plannerCanvas_contingency_base": "Base",
+  "plannerCanvas_contingency_depthDelta": "Extra depth",
+  "plannerCanvas_contingency_lostGas": "Lost {gas}",
+  "@plannerCanvas_contingency_lostGas": {
+    "placeholders": {
+      "gas": { "type": "String" }
+    }
+  },
+  "plannerCanvas_contingency_timeDelta": "Extra minutes",
+  "plannerCanvas_contingency_title": "Contingencies",
+  "plannerCanvas_contingency_turnFraction": "Turn fraction",
+  "plannerCanvas_contingency_turnRule": "Turn pressure rule",
+  "plannerCanvas_gas_minGas": "min gas {pressure}",
+  "@plannerCanvas_gas_minGas": {
+    "placeholders": {
+      "pressure": { "type": "String" }
+    }
+  },
+  "plannerCanvas_gas_turnAt": "turn @ {pressure}",
+  "@plannerCanvas_gas_turnAt": {
+    "placeholders": {
+      "pressure": { "type": "String" }
+    }
+  },
   "plannerCanvas_issue_gasDensityCritical": "Gas density {value} g/L over hard limit",
   "@plannerCanvas_issue_gasDensityCritical": {
     "placeholders": {
@@ -5695,6 +5719,12 @@
     "placeholders": {
       "depth": { "type": "String" },
       "value": { "type": "String" }
+    }
+  },
+  "plannerCanvas_issue_minGas": "Tank ends below the rock-bottom minimum of {pressure}",
+  "@plannerCanvas_issue_minGas": {
+    "placeholders": {
+      "pressure": { "type": "String" }
     }
   },
   "plannerCanvas_issue_noBailout": "CCR decompression plan carries no bailout gas",
@@ -5727,6 +5757,11 @@
   "plannerCanvas_table_gas": "Gas",
   "plannerCanvas_table_runtime": "RT",
   "plannerCanvas_table_stop": "Stop",
+  "plannerCanvas_turnRule_allUsable": "All usable",
+  "plannerCanvas_turnRule_custom": "Custom",
+  "plannerCanvas_turnRule_halves": "Halves",
+  "plannerCanvas_turnRule_none": "None",
+  "plannerCanvas_turnRule_thirds": "Thirds",
   "planning_appBar_title": "Planning",
   "planning_card_decoCalculator_description": "Calculate no-decompression limits, required deco stops, and CNS/OTU exposure for multi-level dive profiles.",
   "planning_card_decoCalculator_subtitle": "Plan dives with decompression stops",

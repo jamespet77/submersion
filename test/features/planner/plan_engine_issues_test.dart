@@ -256,6 +256,73 @@ void main() {
       );
     });
   });
+
+  group('PlanEngine turn pressure and rock-bottom', () {
+    test('thirds rule turns at start minus a third of usable', () {
+      final plan = _airPlan(depth: 30.0, minutes: 10).copyWith(
+        turnPressureRule: domain.TurnPressureRule.thirds,
+        reservePressure: 50.0,
+        tanks: const [
+          DiveTank(
+            id: 'tank-1',
+            volume: 24.0,
+            startPressure: 200,
+            gasMix: _air,
+          ),
+        ],
+      );
+      final outcome = engine.compute(plan);
+      // usable = 150; turn = 200 - 50 = 150.
+      expect(outcome.tankUsages.single.turnPressureBar, closeTo(150.0, 1e-9));
+    });
+
+    test('no rule, no turn pressure', () {
+      final outcome = engine.compute(_airPlan(depth: 30.0, minutes: 10));
+      expect(outcome.tankUsages.single.turnPressureBar, isNull);
+    });
+
+    test('rock-bottom violation fires when the tank survives but short', () {
+      // AL80 at 40 m for 18 min ends with gas remaining, but below the
+      // ~124 bar two-diver stressed rock bottom for that depth.
+      final outcome = engine.compute(
+        _airPlan(
+          depth: 40.0,
+          minutes: 18,
+          tanks: const [
+            DiveTank(
+              id: 'tank-1',
+              volume: 11.1,
+              startPressure: 207,
+              gasMix: _air,
+            ),
+          ],
+        ),
+      );
+      final usage = outcome.tankUsages.single;
+      expect(usage.minGasBar, isNotNull);
+      expect(usage.remainingPressure!, greaterThan(0));
+      expect(usage.remainingPressure!, lessThan(usage.minGasBar!));
+      expect(_types(outcome), contains(PlanIssueType.minGasViolation));
+    });
+
+    test('rock-bottom satisfied on a big tank', () {
+      final outcome = engine.compute(
+        _airPlan(
+          depth: 30.0,
+          minutes: 10,
+          tanks: const [
+            DiveTank(
+              id: 'tank-1',
+              volume: 24.0,
+              startPressure: 232,
+              gasMix: _air,
+            ),
+          ],
+        ),
+      );
+      expect(_types(outcome), isNot(contains(PlanIssueType.minGasViolation)));
+    });
+  });
 }
 
 /// A tissue state the Buhlmann engine cannot consume — used to prove the

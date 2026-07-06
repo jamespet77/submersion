@@ -10403,6 +10403,40 @@ class AppLocalizationsEs extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Base';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Profundidad extra';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '$gas perdido';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Minutos extra';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Contingencias';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Fracción de retorno';
+
+  @override
+  String get plannerCanvas_contingency_turnRule =>
+      'Regla de presión de retorno';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'gas mínimo $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'retorno a $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Densidad del gas $value g/L sobre el límite máximo';
   }
@@ -10415,6 +10449,11 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Gas hipóxico a $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'La botella termina por debajo del mínimo rock bottom de $pressure';
   }
 
   @override
@@ -10466,6 +10505,21 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Parada';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'Todo utilizable';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Personalizada';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Mitades';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'Ninguna';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Tercios';
 
   @override
   String get planning_appBar_title => 'Planificacion';

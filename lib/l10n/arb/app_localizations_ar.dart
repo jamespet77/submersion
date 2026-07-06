@@ -10220,6 +10220,39 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'أساسي';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'عمق إضافي';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return 'فقدان $gas';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'دقائق إضافية';
+
+  @override
+  String get plannerCanvas_contingency_title => 'خطط الطوارئ';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'نسبة العودة';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => 'قاعدة ضغط العودة';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'الحد الأدنى للغاز $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'العودة عند $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'كثافة الغاز $value g/L تتجاوز الحد الأقصى';
   }
@@ -10232,6 +10265,11 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'غاز ناقص الأكسجين عند $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'تنتهي الأسطوانة تحت الحد الأدنى الآمن $pressure';
   }
 
   @override
@@ -10283,6 +10321,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'توقف';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'كل القابل للاستخدام';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'مخصص';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'أنصاف';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'بدون';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'أثلاث';
 
   @override
   String get planning_appBar_title => 'التخطيط';

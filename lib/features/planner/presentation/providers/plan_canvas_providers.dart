@@ -4,6 +4,7 @@ import 'package:submersion/features/dive_planner/domain/entities/plan_segment.da
 import 'package:submersion/features/dive_planner/presentation/providers/dive_planner_providers.dart';
 import 'package:submersion/features/planner/domain/entities/plan_outcome.dart';
 import 'package:submersion/features/planner/domain/services/bailout_solver.dart';
+import 'package:submersion/features/planner/domain/services/contingency_service.dart';
 import 'package:submersion/features/planner/domain/services/dive_plan_state_mapper.dart';
 import 'package:submersion/features/planner/domain/services/plan_engine.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
@@ -98,13 +99,21 @@ class PlanCanvasSeries {
 final planCanvasSeriesProvider = Provider<PlanCanvasSeries>((ref) {
   final state = ref.watch(divePlanNotifierProvider);
   final outcome = ref.watch(planOutcomeProvider);
+  return buildCanvasSeries(segments: state.segments, outcome: outcome);
+});
 
-  final segments = List<PlanSegment>.from(state.segments)
+/// Builds the chart series for any (segments, outcome) pair — the live plan
+/// or a contingency variant (ghost overlay).
+PlanCanvasSeries buildCanvasSeries({
+  required List<PlanSegment> segments,
+  required PlanOutcome outcome,
+}) {
+  final sorted = List<PlanSegment>.from(segments)
     ..sort((a, b) => a.order.compareTo(b.order));
 
   final profile = <CanvasPoint>[];
   var t = 0.0;
-  for (final segment in segments) {
+  for (final segment in sorted) {
     if (profile.isEmpty || profile.last.depth != segment.startDepth) {
       profile.add(CanvasPoint(t, segment.startDepth));
     }
@@ -117,9 +126,9 @@ final planCanvasSeriesProvider = Provider<PlanCanvasSeries>((ref) {
   final stopLabels = <CanvasMarker>[];
   double? previousFO2;
   double? previousFHe;
-  if (segments.isNotEmpty) {
-    previousFO2 = segments.last.gasMix.o2 / 100.0;
-    previousFHe = segments.last.gasMix.he / 100.0;
+  if (sorted.isNotEmpty) {
+    previousFO2 = sorted.last.gasMix.o2 / 100.0;
+    previousFHe = sorted.last.gasMix.he / 100.0;
   }
   for (final stop in outcome.stops) {
     profile.add(
@@ -191,7 +200,7 @@ final planCanvasSeriesProvider = Provider<PlanCanvasSeries>((ref) {
     maxTimeSeconds: outcome.runtimeSeconds.toDouble(),
     maxDepth: outcome.maxDepth,
   );
-});
+}
 
 /// Worst-case bailout for the current CCR plan; null for OC plans or when
 /// no bailout-role tank is carried. Recomputed live with the plan.
@@ -199,4 +208,51 @@ final planBailoutProvider = Provider<BailoutOutcome?>((ref) {
   final state = ref.watch(divePlanNotifierProvider);
   final solver = BailoutSolver(config: ref.watch(planEngineConfigProvider));
   return solver.solve(divePlanFromState(state));
+});
+
+/// Deviation (deeper/longer/both) outcomes for the current plan.
+/// Whether the results sheet's contingency section is expanded. The full
+/// deviation + lost-gas tables (3 engine runs + one per deco/stage tank) are
+/// only computed while this is true, so a collapsed sheet costs nothing.
+final contingenciesExpandedProvider = StateProvider<bool>((_) => false);
+
+final planDeviationsProvider = Provider<List<DeviationOutcome>>((ref) {
+  if (!ref.watch(contingenciesExpandedProvider)) return const [];
+  final state = ref.watch(divePlanNotifierProvider);
+  final service = ContingencyService(
+    config: ref.watch(planEngineConfigProvider),
+  );
+  return service.deviations(divePlanFromState(state));
+});
+
+/// Lost-gas outcomes for the current OC plan.
+final planLostGasProvider = Provider<List<LostGasOutcome>>((ref) {
+  if (!ref.watch(contingenciesExpandedProvider)) return const [];
+  final state = ref.watch(divePlanNotifierProvider);
+  final service = ContingencyService(
+    config: ref.watch(planEngineConfigProvider),
+  );
+  return service.lostGas(divePlanFromState(state));
+});
+
+/// Which deviation is ghosted on the chart ('deeper'|'longer'|'both'; null =
+/// none).
+final selectedDeviationProvider = StateProvider<String?>((_) => null);
+
+/// Chart series for the selected deviation, drawn as a ghost overlay. Runs
+/// ONLY the one selected variant (not the full deviation set), so ghosting a
+/// contingency from the chips costs a single engine run.
+final deviationGhostSeriesProvider = Provider<PlanCanvasSeries?>((ref) {
+  final key = ref.watch(selectedDeviationProvider);
+  if (key == null) return null;
+  final state = ref.watch(divePlanNotifierProvider);
+  final service = ContingencyService(
+    config: ref.watch(planEngineConfigProvider),
+  );
+  final deviation = service.deviationFor(divePlanFromState(state), key);
+  if (deviation == null) return null;
+  return buildCanvasSeries(
+    segments: deviation.plan.segments,
+    outcome: deviation.outcome,
+  );
 });

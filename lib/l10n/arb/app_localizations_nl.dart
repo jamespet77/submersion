@@ -10341,6 +10341,39 @@ class AppLocalizationsNl extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Basis';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Extra diepte';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '$gas verloren';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Extra minuten';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Noodplannen';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Keerfractie';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => 'Keerdruk-regel';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'min. gas $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'keer om bij $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Gasdichtheid $value g/L boven harde limiet';
   }
@@ -10353,6 +10386,11 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Hypoxisch gas op $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'Fles eindigt onder het rock-bottom-minimum van $pressure';
   }
 
   @override
@@ -10404,6 +10442,21 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Stop';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'Alles bruikbaar';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Aangepast';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Helften';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'Geen';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Derden';
 
   @override
   String get planning_appBar_title => 'Planning';

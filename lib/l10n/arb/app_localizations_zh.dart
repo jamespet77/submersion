@@ -9966,6 +9966,39 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => '基准';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => '额外深度';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '失去 $gas';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => '额外分钟';
+
+  @override
+  String get plannerCanvas_contingency_title => '应急计划';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => '折返比例';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => '折返压力规则';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return '最低气量 $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return '$pressure 时折返';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return '气体密度 $value g/L 超过硬性上限';
   }
@@ -9978,6 +10011,11 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return '$depth 处为低氧气体（ppO₂ $value bar）';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return '气瓶终压低于最低保底气量 $pressure';
   }
 
   @override
@@ -10027,6 +10065,21 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => '停留';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => '全部可用';
+
+  @override
+  String get plannerCanvas_turnRule_custom => '自定义';
+
+  @override
+  String get plannerCanvas_turnRule_halves => '对半';
+
+  @override
+  String get plannerCanvas_turnRule_none => '无';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => '三分之一';
 
   @override
   String get planning_appBar_title => '计划';

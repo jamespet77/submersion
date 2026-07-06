@@ -29,6 +29,9 @@ class PlanEngineConfig {
   /// CCR loop + counterlung volume, for descent diluent consumption.
   final double loopVolumeLiters;
 
+  /// Rock-bottom sizing: how many divers share the emergency ascent.
+  final double buddyFactor;
+
   const PlanEngineConfig({
     this.ppO2Working = 1.4,
     this.ppO2Deco = 1.6,
@@ -38,6 +41,7 @@ class PlanEngineConfig {
     this.otuLimit = 300.0,
     this.o2MetabolicRateLpm = 1.0,
     this.loopVolumeLiters = 6.0,
+    this.buddyFactor = 2.0,
   });
 }
 
@@ -453,9 +457,53 @@ class PlanEngine {
                 : 0.0,
             reserveViolation:
                 remaining != null && remaining < plan.reservePressure,
+            turnPressureBar: _turnPressureFor(plan, tank),
+            minGasBar: _minGasFor(plan, tank, environment),
           );
         }(),
     ];
+  }
+
+  /// Turn pressure per the plan's rule; bottom tanks with a start pressure
+  /// only. `usable = start - reserve`; turn when the rule's fraction of the
+  /// usable gas is consumed.
+  double? _turnPressureFor(domain.DivePlan plan, DiveTank tank) {
+    final rule = plan.turnPressureRule;
+    final start = tank.startPressure;
+    if (rule == null || start == null || tank.role != TankRole.backGas) {
+      return null;
+    }
+    final usable = (start - plan.reservePressure).clamp(0.0, start);
+    final fraction = switch (rule) {
+      domain.TurnPressureRule.allUsable => 1.0,
+      domain.TurnPressureRule.halves => 0.5,
+      domain.TurnPressureRule.thirds => 1.0 / 3.0,
+      domain.TurnPressureRule.custom => plan.turnPressureFraction ?? 1.0 / 3.0,
+    };
+    return start - usable * fraction;
+  }
+
+  /// Rock-bottom minimum gas: a stressed, buddy-shared emergency exit from
+  /// the plan's max depth — one minute at depth plus a direct ascent at the
+  /// plan rate — expressed as bar on this tank (bottom tanks, OC only).
+  double? _minGasFor(
+    domain.DivePlan plan,
+    DiveTank tank,
+    DiveEnvironment environment,
+  ) {
+    if (plan.mode == domain.PlanMode.ccr) return null;
+    if (tank.role != TankRole.backGas || tank.startPressure == null) {
+      return null;
+    }
+    final maxDepth = plan.maxDepth;
+    if (maxDepth <= 0) return null;
+    final sac = plan.sacStressedEffective * config.buddyFactor;
+    final ascentMinutes = maxDepth / plan.ascentRate;
+    final liters =
+        sac * environment.pressureAtDepth(maxDepth) +
+        sac * ascentMinutes * environment.pressureAtDepth(maxDepth / 2.0);
+    final volume = tank.volume ?? 11.0;
+    return volume > 0 ? liters / volume : null;
   }
 
   List<PlanIssue> _computeIssues(
@@ -645,6 +693,21 @@ class PlanEngine {
             segmentId: usage.tankId,
             value: remaining,
             threshold: plan.reservePressure,
+          ),
+        );
+      }
+      final minGas = usage.minGasBar;
+      if (minGas != null && remaining > 0 && remaining < minGas) {
+        issues.add(
+          PlanIssue(
+            type: PlanIssueType.minGasViolation,
+            severity: PlanIssueSeverity.alert,
+            message:
+                'Tank ends below the rock-bottom minimum of '
+                '${minGas.toStringAsFixed(0)} bar',
+            segmentId: usage.tankId,
+            value: remaining,
+            threshold: minGas,
           ),
         );
       }

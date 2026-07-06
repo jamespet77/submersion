@@ -10390,6 +10390,39 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Alap';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Extra mélység';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '$gas elveszett';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Extra percek';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Vészhelyzeti tervek';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Fordulási hányad';
+
+  @override
+  String get plannerCanvas_contingency_turnRule => 'Fordulónyomás-szabály';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'min. gáz $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'fordulás $pressure-nál';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Gázsűrűség $value g/L a szigorú határ felett';
   }
@@ -10402,6 +10435,11 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Hipoxiás gáz $depth mélységben (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'A palack a rock-bottom minimum ($pressure) alatt végez';
   }
 
   @override
@@ -10453,6 +10491,21 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Megálló';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'Minden felhasználható';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Egyéni';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Felek';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'Nincs';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Harmadok';
 
   @override
   String get planning_appBar_title => 'Tervezes';

@@ -10453,6 +10453,40 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Base';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Profondeur en plus';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '$gas perdu';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Minutes en plus';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Plans de secours';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Fraction de demi-tour';
+
+  @override
+  String get plannerCanvas_contingency_turnRule =>
+      'Règle de pression de demi-tour';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'gaz mini $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'demi-tour à $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Densité du gaz $value g/L au-dessus de la limite stricte';
   }
@@ -10465,6 +10499,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Gaz hypoxique à $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'Le bloc finit sous le minimum rock bottom de $pressure';
   }
 
   @override
@@ -10516,6 +10555,21 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Palier';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'Tout utilisable';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Personnalisée';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Moitiés';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'Aucune';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Tiers';
 
   @override
   String get planning_appBar_title => 'Planification';

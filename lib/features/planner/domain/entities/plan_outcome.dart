@@ -20,6 +20,7 @@ enum PlanIssueType {
   gasOut,
   ndlExceededNoDecoGas,
   noBailoutCarried,
+  minGasViolation,
 }
 
 /// One issue found while computing a plan.
@@ -137,12 +138,20 @@ class PlanTankUsage extends Equatable {
   final double percentUsed;
   final bool reserveViolation;
 
+  /// Turn pressure per the plan's turn-pressure rule (bottom tanks only).
+  final double? turnPressureBar;
+
+  /// Rock-bottom minimum gas for a stressed shared ascent (bottom tanks).
+  final double? minGasBar;
+
   const PlanTankUsage({
     required this.tankId,
     required this.litersUsed,
     this.remainingPressure,
     required this.percentUsed,
     this.reserveViolation = false,
+    this.turnPressureBar,
+    this.minGasBar,
   });
 
   @override
@@ -152,6 +161,8 @@ class PlanTankUsage extends Equatable {
     remainingPressure,
     percentUsed,
     reserveViolation,
+    turnPressureBar,
+    minGasBar,
   ];
 }
 

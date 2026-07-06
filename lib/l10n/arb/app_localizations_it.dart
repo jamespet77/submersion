@@ -10418,6 +10418,40 @@ class AppLocalizationsIt extends AppLocalizations {
   }
 
   @override
+  String get plannerCanvas_contingency_base => 'Base';
+
+  @override
+  String get plannerCanvas_contingency_depthDelta => 'Profondità extra';
+
+  @override
+  String plannerCanvas_contingency_lostGas(String gas) {
+    return '$gas perso';
+  }
+
+  @override
+  String get plannerCanvas_contingency_timeDelta => 'Minuti extra';
+
+  @override
+  String get plannerCanvas_contingency_title => 'Contingenze';
+
+  @override
+  String get plannerCanvas_contingency_turnFraction => 'Frazione di rientro';
+
+  @override
+  String get plannerCanvas_contingency_turnRule =>
+      'Regola pressione di rientro';
+
+  @override
+  String plannerCanvas_gas_minGas(String pressure) {
+    return 'gas minimo $pressure';
+  }
+
+  @override
+  String plannerCanvas_gas_turnAt(String pressure) {
+    return 'rientro a $pressure';
+  }
+
+  @override
   String plannerCanvas_issue_gasDensityCritical(String value) {
     return 'Densità del gas $value g/L oltre il limite massimo';
   }
@@ -10430,6 +10464,11 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String plannerCanvas_issue_hypoxic(String depth, String value) {
     return 'Gas ipossico a $depth (ppO₂ $value bar)';
+  }
+
+  @override
+  String plannerCanvas_issue_minGas(String pressure) {
+    return 'La bombola termina sotto il minimo rock bottom di $pressure';
   }
 
   @override
@@ -10482,6 +10521,21 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get plannerCanvas_table_stop => 'Sosta';
+
+  @override
+  String get plannerCanvas_turnRule_allUsable => 'Tutto utilizzabile';
+
+  @override
+  String get plannerCanvas_turnRule_custom => 'Personalizzata';
+
+  @override
+  String get plannerCanvas_turnRule_halves => 'Metà';
+
+  @override
+  String get plannerCanvas_turnRule_none => 'Nessuna';
+
+  @override
+  String get plannerCanvas_turnRule_thirds => 'Terzi';
 
   @override
   String get planning_appBar_title => 'Pianificazione';
