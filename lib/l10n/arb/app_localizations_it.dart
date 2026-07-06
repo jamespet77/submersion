@@ -4655,6 +4655,31 @@ class AppLocalizationsIt extends AppLocalizations {
       'Importa dal computer subacqueo';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Scansiona logbook cartaceo';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Lettura della pagina...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Scegli foto';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Scatta foto';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Non è stato possibile leggere molto da questa pagina - campi lasciati vuoti';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'Il riconoscimento del testo non è disponibile. Installa Tesseract per scansionare i logbook cartacei (ad esempio: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'L\'immersione è stata salvata, ma non è stato possibile allegare la pagina scansionata';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Registra immersione manualmente';
 

@@ -4673,6 +4673,31 @@ class AppLocalizationsFr extends AppLocalizations {
       'Importer depuis l\'ordinateur';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Scanner un carnet papier';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Lecture de la page...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Choisir une photo';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Prendre une photo';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Peu de texte lisible sur cette page - champs laissés vides';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'La reconnaissance de texte n\'est pas disponible. Installez Tesseract pour scanner les carnets papier (par exemple : sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'La plongée a été enregistrée, mais l\'ajout de la page scannée a échoué';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Enregistrer manuellement';
 

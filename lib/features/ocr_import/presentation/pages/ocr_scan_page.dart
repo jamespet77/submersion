@@ -14,6 +14,7 @@ import 'package:submersion/features/ocr_import/domain/services/unit_context.dart
 import 'package:submersion/features/ocr_import/presentation/controllers/scan_flow_controller.dart';
 import 'package:submersion/features/ocr_import/presentation/providers/ocr_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
+import 'package:submersion/l10n/l10n_extension.dart';
 
 /// Scan a paper logbook page: acquire a photo, run on-device OCR, and
 /// open the dive edit form prefilled with whatever was extracted.
@@ -69,11 +70,7 @@ class _OcrScanPageState extends ConsumerState<OcrScanPage> {
       if (!mounted) return;
       if (_isEmptyBeyondPhoto(prefill)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "Couldn't read much from this page - fields left blank",
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.ocrImport_scanPage_nothingRead)),
         );
       }
       context.pushReplacement('/dives/new', extra: prefill);
@@ -102,25 +99,25 @@ class _OcrScanPageState extends ConsumerState<OcrScanPage> {
   Widget build(BuildContext context) {
     final availability = ref.watch(ocrAvailabilityProvider);
     return Scaffold(
-      appBar: AppBar(title: const Text('Scan Paper Log')),
+      appBar: AppBar(
+        title: Text(context.l10n.diveLog_listPage_bottomSheet_scanPaperLog),
+      ),
       body: Center(
         child: switch ((availability.value ?? true, _processing)) {
           (false, _) => Padding(
             padding: const EdgeInsets.all(32),
             child: Text(
-              'Text recognition is not available. Install Tesseract to '
-              'scan paper logs (for example: sudo apt install '
-              'tesseract-ocr).',
+              context.l10n.ocrImport_scanPage_engineMissing,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
           ),
-          (_, true) => const Column(
+          (_, true) => Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Reading page...'),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
+              Text(context.l10n.ocrImport_scanPage_processing),
             ],
           ),
           _ => Column(
@@ -136,19 +133,19 @@ class _OcrScanPageState extends ConsumerState<OcrScanPage> {
                 FilledButton.icon(
                   onPressed: _pickFromCamera,
                   icon: const Icon(Icons.photo_camera_outlined),
-                  label: const Text('Take Photo'),
+                  label: Text(context.l10n.ocrImport_scanPage_takePhoto),
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   onPressed: _pickFromGallery,
                   icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text('Choose Photo'),
+                  label: Text(context.l10n.ocrImport_scanPage_pickPhoto),
                 ),
               ] else
                 FilledButton.icon(
                   onPressed: _pickFromGallery,
                   icon: const Icon(Icons.photo_library_outlined),
-                  label: const Text('Choose Photo'),
+                  label: Text(context.l10n.ocrImport_scanPage_pickPhoto),
                 ),
             ],
           ),

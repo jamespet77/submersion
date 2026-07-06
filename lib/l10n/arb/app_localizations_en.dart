@@ -4569,6 +4569,30 @@ class AppLocalizationsEn extends AppLocalizations {
       'Import from Computer';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog => 'Scan Paper Log';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Reading page...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Choose Photo';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Take Photo';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Couldn\'t read much from this page - fields left blank';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'Text recognition is not available. Install Tesseract to scan paper logs (for example: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'The dive was saved, but attaching the scanned page failed';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually => 'Log Dive Manually';
 
   @override

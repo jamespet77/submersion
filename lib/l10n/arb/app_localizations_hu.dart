@@ -4635,6 +4635,31 @@ class AppLocalizationsHu extends AppLocalizations {
       'Importalas meruloszamitogebol';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Papir naplo beolvasasa';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Oldal beolvasasa...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Foto kivalasztasa';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Foto keszitese';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Nem sikerult sokat kiolvasni az oldalbol - a mezok uresen maradtak';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'A szovegfelismeres nem erheto el. Telepitse a Tesseract-ot a papir naplok beolvasasahoz (peldaul: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'A merules mentve, de a beolvasott oldal csatolasa nem sikerult';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Merules manualis rogzitese';
 

@@ -4144,10 +4144,9 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
           } catch (_) {
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
+                SnackBar(
                   content: Text(
-                    'The dive was saved, but attaching the scanned page '
-                    'failed',
+                    context.l10n.ocrImport_editPage_photoAttachFailed,
                   ),
                 ),
               );

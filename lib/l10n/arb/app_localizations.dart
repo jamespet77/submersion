@@ -7838,6 +7838,48 @@ abstract class AppLocalizations {
   /// **'Import from Computer'**
   String get diveLog_listPage_bottomSheet_importFromComputer;
 
+  /// No description provided for @diveLog_listPage_bottomSheet_scanPaperLog.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Paper Log'**
+  String get diveLog_listPage_bottomSheet_scanPaperLog;
+
+  /// No description provided for @ocrImport_scanPage_processing.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading page...'**
+  String get ocrImport_scanPage_processing;
+
+  /// No description provided for @ocrImport_scanPage_pickPhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose Photo'**
+  String get ocrImport_scanPage_pickPhoto;
+
+  /// No description provided for @ocrImport_scanPage_takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get ocrImport_scanPage_takePhoto;
+
+  /// No description provided for @ocrImport_scanPage_nothingRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t read much from this page - fields left blank'**
+  String get ocrImport_scanPage_nothingRead;
+
+  /// No description provided for @ocrImport_scanPage_engineMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Text recognition is not available. Install Tesseract to scan paper logs (for example: sudo apt install tesseract-ocr).'**
+  String get ocrImport_scanPage_engineMissing;
+
+  /// No description provided for @ocrImport_editPage_photoAttachFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The dive was saved, but attaching the scanned page failed'**
+  String get ocrImport_editPage_photoAttachFailed;
+
   /// No description provided for @diveLog_listPage_bottomSheet_logManually.
   ///
   /// In en, this message translates to:

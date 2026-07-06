@@ -4649,6 +4649,31 @@ class AppLocalizationsDe extends AppLocalizations {
       'Vom Tauchcomputer importieren';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Papier-Logbuch scannen';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Seite wird gelesen...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Foto auswählen';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Foto aufnehmen';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Auf dieser Seite war wenig lesbar - Felder bleiben leer';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'Texterkennung ist nicht verfügbar. Installieren Sie Tesseract, um Papier-Logbücher zu scannen (zum Beispiel: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'Der Tauchgang wurde gespeichert, aber das Anhängen der gescannten Seite ist fehlgeschlagen';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Tauchgang manuell erfassen';
 

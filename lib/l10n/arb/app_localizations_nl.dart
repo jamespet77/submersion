@@ -4617,6 +4617,31 @@ class AppLocalizationsNl extends AppLocalizations {
       'Importeren van duikcomputer';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Papieren logboek scannen';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Pagina wordt gelezen...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Foto kiezen';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Foto maken';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Er kon weinig van deze pagina worden gelezen - velden blijven leeg';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'Tekstherkenning is niet beschikbaar. Installeer Tesseract om papieren logboeken te scannen (bijvoorbeeld: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'De duik is opgeslagen, maar het bijvoegen van de gescande pagina is mislukt';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Duik handmatig loggen';
 

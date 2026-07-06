@@ -4524,6 +4524,31 @@ class AppLocalizationsHe extends AppLocalizations {
       'ייבוא ממחשב צלילה';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'סריקת יומן צלילה מנייר';
+
+  @override
+  String get ocrImport_scanPage_processing => 'קורא את העמוד...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'בחירת תמונה';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'צילום תמונה';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'לא ניתן היה לקרוא הרבה מהעמוד הזה - השדות נותרו ריקים';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'זיהוי טקסט אינו זמין. התקינו את Tesseract כדי לסרוק יומנים מנייר (לדוגמה: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'הצלילה נשמרה, אך צירוף העמוד הסרוק נכשל';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually => 'רישום צלילה ידנית';
 
   @override
