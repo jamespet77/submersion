@@ -43,10 +43,14 @@ OcrTextBlock? bindValue(
 
     final dx = candidate.center.dx - l.center.dx;
     final dy = candidate.center.dy - l.center.dy;
+    // Right-of uses the edge gap, not center distance: a wide value block
+    // ("Pinnacle, Sodwana Bay") starts right next to the label even though
+    // its center is far away.
+    final gap = candidate.boundingBox.left - l.boundingBox.right;
 
     double score;
-    if (dx > 0 && dy.abs() < 1.5 * h && dx < 12 * h) {
-      score = dx; // right-of: strongly preferred
+    if (gap > -h && gap < 12 * h && dy.abs() < 1.5 * h) {
+      score = gap.abs(); // right-of: strongly preferred
     } else if (dy > 0 && dy < 3 * h && dx.abs() < 6 * h) {
       score = 2 * h + dy + dx.abs(); // below
     } else if (dy < 0 && dy > -3 * h && dx.abs() < 6 * h) {
