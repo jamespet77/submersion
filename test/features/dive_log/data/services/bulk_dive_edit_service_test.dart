@@ -271,6 +271,36 @@ void main() {
   });
 
   test(
+    'apply handles simultaneous add + remove ops for one collection',
+    () async {
+      // The tri-state editor decomposes into an AddOp + a RemoveOp; both must
+      // apply in one request and undo must restore the prior membership.
+      await seed('d1');
+      await diveRepo.bulkAddEquipment(['d1'], ['keep', 'drop']);
+
+      final snap = await service.apply(
+        BulkEditRequest(
+          diveIds: const ['d1'],
+          ops: [
+            const EquipmentOp(
+              mode: BulkCollectionMode.add,
+              equipmentIds: ['added'],
+            ),
+            const EquipmentOp(
+              mode: BulkCollectionMode.remove,
+              equipmentIds: ['drop'],
+            ),
+          ],
+        ),
+      );
+      expect((await equipOf('d1')).toSet(), {'keep', 'added'});
+
+      await service.undo(snap);
+      expect((await equipOf('d1')).toSet(), {'keep', 'drop'});
+    },
+  );
+
+  test(
     'apply with no dives returns an empty snapshot; undo is a no-op',
     () async {
       final snap = await service.apply(const BulkEditRequest(diveIds: []));
