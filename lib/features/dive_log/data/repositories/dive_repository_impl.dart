@@ -319,6 +319,88 @@ class DiveRepository {
     }
   }
 
+  /// Dives lacking an entry GPS position, as (id, start, end) timestamps for
+  /// GPS-track matching. Times are wall-clock-as-UTC epoch milliseconds.
+  Future<List<({String id, int startMs, int? endMs})>> getDivesMissingEntryGps({
+    List<String>? limitToIds,
+  }) async {
+    // An explicit empty id set means "match nothing" — skip the query.
+    if (limitToIds != null && limitToIds.isEmpty) return [];
+    try {
+      final query = _db.select(_db.dives)
+        ..where((t) {
+          var cond = t.entryLatitude.isNull() & t.entryLongitude.isNull();
+          if (limitToIds != null) cond = cond & t.id.isIn(limitToIds);
+          return cond;
+        });
+      final rows = await query.get();
+      return [
+        for (final r in rows)
+          (
+            id: r.id,
+            startMs: r.entryTime ?? r.diveDateTime,
+            endMs:
+                r.exitTime ??
+                (r.runtime != null
+                    ? (r.entryTime ?? r.diveDateTime) + r.runtime! * 1000
+                    : null),
+          ),
+      ];
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to get dives missing entry GPS',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
+  /// Stamps GPS coordinates onto a dive (GPS-track matching). Callers must
+  /// only target dives missing GPS: this write does not re-check, so the
+  /// matching sweep can batch-verify candidates once up front.
+  Future<void> setDiveGps(
+    String diveId, {
+    double? entryLatitude,
+    double? entryLongitude,
+    double? exitLatitude,
+    double? exitLongitude,
+  }) async {
+    try {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await (_db.update(_db.dives)..where((t) => t.id.equals(diveId))).write(
+        DivesCompanion(
+          entryLatitude: entryLatitude != null
+              ? Value(entryLatitude)
+              : const Value.absent(),
+          entryLongitude: entryLongitude != null
+              ? Value(entryLongitude)
+              : const Value.absent(),
+          exitLatitude: exitLatitude != null
+              ? Value(exitLatitude)
+              : const Value.absent(),
+          exitLongitude: exitLongitude != null
+              ? Value(exitLongitude)
+              : const Value.absent(),
+          updatedAt: Value(now),
+        ),
+      );
+      await _syncRepository.markRecordPending(
+        entityType: 'dives',
+        recordId: diveId,
+        localUpdatedAt: now,
+      );
+      SyncEventBus.notifyLocalChange();
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to set GPS on dive: $diveId',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
   /// Dives that have entry or exit GPS but no assigned site.
   /// When [limitToIds] is provided, restricts to that id set (post-download
   /// seed); otherwise returns the whole eligible backlog.
