@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:submersion/core/providers/provider.dart';
@@ -7,6 +8,14 @@ import 'package:submersion/features/universal_import/presentation/providers/univ
 /// Step 0: File selection with drag-and-drop area and file picker button.
 class FileSelectionStep extends ConsumerWidget {
   const FileSelectionStep({super.key});
+
+  static bool get _isDesktop {
+    if (kIsWeb) return false;
+    final platform = defaultTargetPlatform;
+    return platform == TargetPlatform.windows ||
+        platform == TargetPlatform.macOS ||
+        platform == TargetPlatform.linux;
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +43,7 @@ class FileSelectionStep extends ConsumerWidget {
                     ? context.l10n.universalImport_label_detecting
                     : hasFile
                     ? context.l10n.universalImport_action_changeFile
-                    : context.l10n.universalImport_action_selectFile,
+                    : context.l10n.universalImport_action_selectFiles,
               ),
               onPressed: state.isLoading
                   ? null
@@ -43,6 +52,21 @@ class FileSelectionStep extends ConsumerWidget {
                         .pickFiles(),
             ),
           ),
+          if (_isDesktop) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.folder_open),
+                label: Text(context.l10n.universalImport_action_chooseFolder),
+                onPressed: state.isLoading
+                    ? null
+                    : () => ref
+                          .read(universalImportNotifierProvider.notifier)
+                          .pickFolder(),
+              ),
+            ),
+          ],
           if (state.error != null) ...[
             const SizedBox(height: 16),
             _ErrorBanner(message: state.error!),

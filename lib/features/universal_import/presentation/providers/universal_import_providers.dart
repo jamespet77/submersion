@@ -287,6 +287,60 @@ class UniversalImportNotifier extends StateNotifier<UniversalImportState> {
     state = state.copyWith(wasLoadedExternally: true);
   }
 
+  /// Desktop only: pick a folder and recursively gather importable files.
+  Future<void> pickFolder() async {
+    state = state.copyWith(
+      isLoading: true,
+      clearError: true,
+      currentStep: ImportWizardStep.fileSelection,
+    );
+
+    try {
+      final dirPath = await FilePicker.getDirectoryPath();
+      if (dirPath == null) {
+        state = state.copyWith(isLoading: false);
+        return;
+      }
+
+      final paths = await scanFolderForImportableFiles(dirPath);
+      if (paths.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'No importable files found in the selected folder',
+        );
+        return;
+      }
+
+      if (paths.length == 1) {
+        // Single hit: behave exactly like a single-file pick.
+        final bytes = await File(paths.first).readAsBytes();
+        final detection = await _detectFormat(bytes);
+        state = state.copyWith(
+          isLoading: false,
+          files: [
+            PickedImportFile(
+              name: paths.first.split(Platform.pathSeparator).last,
+              path: paths.first,
+              bytes: bytes,
+              detection: detection,
+              status: ImportFileStatus.pending,
+            ),
+          ],
+          detectionResult: detection,
+          currentStep: ImportWizardStep.sourceConfirmation,
+        );
+        return;
+      }
+
+      await _loadBatchFromPaths(paths);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to scan folder: $e',
+      );
+    }
+  }
+
   // -- Step 1: Source Confirmation --
 
   /// Store a pending source-app and format override chosen by the user.
