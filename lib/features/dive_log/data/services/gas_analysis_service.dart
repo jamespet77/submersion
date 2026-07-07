@@ -37,6 +37,7 @@ class GasAnalysisService {
   }) {
     if (profile.isEmpty || gasSwitches.isEmpty) return null;
 
+    final resolvedPressures = _resolveTankPressureSeries(tanks, tankPressures);
     final segments = <SacSegment>[];
     final diveEndTimestamp = profile.last.timestamp;
 
@@ -77,7 +78,7 @@ class GasAnalysisService {
       final sacRate = _calculateSegmentSac(
         profile: segmentProfile,
         tank: tank,
-        tankPressures: tankPressures?[tank.id],
+        tankPressures: resolvedPressures[tank.id],
         startTime: startTime,
         endTime: endTime,
       );
@@ -122,6 +123,8 @@ class GasAnalysisService {
     List<GasSwitchWithTank>? gasSwitches,
   }) {
     if (profile.length < 10) return null;
+
+    final resolvedPressures = _resolveTankPressureSeries(tanks, tankPressures);
 
     // Find max depth
     final maxDepth = profile.map((p) => p.depth).reduce(math.max);
@@ -190,7 +193,7 @@ class GasAnalysisService {
       final sacRate = _calculateSegmentSac(
         profile: segmentProfile,
         tank: tank,
-        tankPressures: tankPressures?[tank.id],
+        tankPressures: resolvedPressures[tank.id],
         startTime: seg.start,
         endTime: seg.end,
       );
@@ -234,6 +237,13 @@ class GasAnalysisService {
   }) {
     final results = <CylinderSac>[];
 
+    // Resolve each tank's time-series pressure, tolerating series that were
+    // re-keyed under a stale tank id (see [_resolveTankPressureSeries]).
+    final resolvedPressures = _resolveTankPressureSeries(
+      dive.tanks,
+      tankPressures,
+    );
+
     for (final tank in dive.tanks) {
       // Determine when this tank was in use
       final usageRange = _getTankUsageRange(
@@ -266,14 +276,15 @@ class GasAnalysisService {
             usageProfile.length;
       }
 
-      // Check if we have time-series pressure data for this tank
-      final hasTsData = tankPressures?.containsKey(tank.id) ?? false;
-      final tsPressures = tankPressures?[tank.id];
+      // Check if we have time-series pressure data for this tank (matched by
+      // id, or adopted from a re-keyed/orphaned series).
+      final tsPressures = resolvedPressures[tank.id];
+      final hasTsData = tsPressures != null;
 
       // Calculate SAC rate
       double? sacRate;
 
-      if (hasTsData && tsPressures != null && tsPressures.length >= 2) {
+      if (tsPressures != null && tsPressures.length >= 2) {
         // Enhanced calculation using time-series data
         sacRate = _calculateSacFromTimeSeries(
           pressurePoints: tsPressures,
@@ -285,13 +296,20 @@ class GasAnalysisService {
         );
       } else if (tank.startPressure != null &&
           tank.endPressure != null &&
-          avgDepthDuringUse != null) {
-        // Basic calculation from start/end pressures with Z-factor correction
+          (avgDepthDuringUse ?? dive.avgDepth) != null) {
+        // Basic calculation from start/end pressures with Z-factor correction.
+        //
+        // Fall back to the dive's average depth when there are no profile
+        // samples in the usage window (older or manually-logged dives store a
+        // summary avgDepth but no depth profile). Without this the ambient
+        // pressure correction below could not run and SAC by cylinder would be
+        // blank for every profileless dive (issue #510).
+        final effectiveAvgDepth = avgDepthDuringUse ?? dive.avgDepth!;
         final pressureUsed = tank.startPressure! - tank.endPressure!;
         if (pressureUsed > 0) {
           final durationMin = (usageRange.end - usageRange.start) / 60.0;
           if (durationMin > 0) {
-            final ambientPressureAtm = (avgDepthDuringUse / 10.0) + 1.0;
+            final ambientPressureAtm = (effectiveAvgDepth / 10.0) + 1.0;
             if (tank.volume != null) {
               sacRate = _zCorrectedSacRate(
                 tankVolume: tank.volume!,
@@ -336,6 +354,51 @@ class GasAnalysisService {
   // ─────────────────────────────────────────────────────────────────────────
   // Private Helper Methods
   // ─────────────────────────────────────────────────────────────────────────
+
+  /// Map each tank to its time-series pressure, tolerating a re-keyed series.
+  ///
+  /// A dive's transmitter pressure is stored in `tank_pressure_profiles` keyed
+  /// by tank id. A reparse, re-import, or multi-computer consolidation can
+  /// regenerate the dive's tanks with fresh UUIDs while the pressure rows keep
+  /// the old tank id (issue #276). The overall SAC curve already tolerates this
+  /// (`combineMultiTankPressures`); this does the same for per-cylinder SAC so
+  /// it does not silently go blank on those dives (issue #510).
+  ///
+  /// Exact id matches win. Any remaining series whose key matches no current
+  /// tank ("orphaned") is adopted by a still-unmatched tank, in tank order, so
+  /// the single-transmitter case (one tank, one orphaned series) is always
+  /// resolved and multi-tank is a stable best effort.
+  static Map<String, List<TankPressurePoint>> _resolveTankPressureSeries(
+    List<DiveTank> tanks,
+    Map<String, List<TankPressurePoint>>? tankPressures,
+  ) {
+    final resolved = <String, List<TankPressurePoint>>{};
+    if (tankPressures == null || tankPressures.isEmpty) return resolved;
+
+    final tankIds = {for (final t in tanks) t.id};
+
+    for (final tank in tanks) {
+      final series = tankPressures[tank.id];
+      if (series != null) resolved[tank.id] = series;
+    }
+
+    final orphanSeries = [
+      for (final entry in tankPressures.entries)
+        if (!tankIds.contains(entry.key)) entry.value,
+    ];
+    if (orphanSeries.isEmpty) return resolved;
+
+    final unmatchedTanks = [
+      for (final tank in tanks)
+        if (!resolved.containsKey(tank.id)) tank,
+    ]..sort((a, b) => a.order.compareTo(b.order));
+
+    for (var i = 0; i < unmatchedTanks.length && i < orphanSeries.length; i++) {
+      resolved[unmatchedTanks[i].id] = orphanSeries[i];
+    }
+
+    return resolved;
+  }
 
   /// Compute SAC rate using Z-factor corrected gas volumes.
   ///
