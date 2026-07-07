@@ -35,12 +35,16 @@ class MediaEnrichmentBackfillService implements StartupMaintenanceTask {
   @override
   String get name => 'photo-enrichment-backfill';
 
+  /// [StartupMaintenanceTask] entry point; delegates to [backfill], discarding
+  /// the count the runner has no use for.
+  @override
+  Future<void> run() => backfill();
+
   /// Computes and saves enrichment for every dive-linked media item that lacks
   /// it, on dives that have a profile. Best-effort per dive: an error on one
   /// dive is logged and does not abort the rest. Returns the number of media
-  /// items enriched (the [StartupMaintenanceTask] contract ignores the value).
-  @override
-  Future<int> run() async {
+  /// items enriched.
+  Future<int> backfill() async {
     final diveIds = await _mediaRepository.diveIdsNeedingEnrichmentBackfill();
     if (diveIds.isEmpty) return 0;
 

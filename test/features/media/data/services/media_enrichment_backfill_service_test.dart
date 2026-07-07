@@ -81,7 +81,7 @@ void main() {
     // Photo taken 60s into the dive -> interpolated depth ~10m.
     await linkPhoto(id: 'photo-1', diveId: 'dive-1', takenAt: photoAt(60));
 
-    final count = await service.run();
+    final count = await service.backfill();
     expect(count, 1);
 
     final enrichment = await enrichmentFor('dive-1', 'photo-1');
@@ -91,12 +91,24 @@ void main() {
     expect(enrichment.matchConfidence, isNot(MatchConfidence.noProfile));
   });
 
+  test(
+    'run() (StartupMaintenanceTask entry point) performs the backfill',
+    () async {
+      await createProfiledDive();
+      await linkPhoto(id: 'photo-1', diveId: 'dive-1', takenAt: photoAt(60));
+
+      await service.run();
+
+      expect(await enrichmentFor('dive-1', 'photo-1'), isNotNull);
+    },
+  );
+
   test('is idempotent: a second run enriches nothing', () async {
     await createProfiledDive();
     await linkPhoto(id: 'photo-1', diveId: 'dive-1', takenAt: photoAt(60));
 
-    expect(await service.run(), 1);
-    expect(await service.run(), 0);
+    expect(await service.backfill(), 1);
+    expect(await service.backfill(), 0);
   });
 
   test('leaves an already-enriched photo untouched', () async {
@@ -114,7 +126,7 @@ void main() {
       ),
     );
 
-    expect(await service.run(), 0);
+    expect(await service.backfill(), 0);
     final enrichment = await enrichmentFor('dive-1', 'photo-1');
     // Untouched: the pre-existing (sentinel) values survive.
     expect(enrichment!.depthMeters, 99.0);
@@ -131,7 +143,7 @@ void main() {
       takenAt: photoAt(30),
     );
 
-    expect(await service.run(), 0);
+    expect(await service.backfill(), 0);
     expect(await enrichmentFor('dive-noprofile', 'photo-np'), isNull);
   });
 
@@ -144,7 +156,7 @@ void main() {
       mediaType: MediaType.video,
     );
 
-    expect(await service.run(), 1);
+    expect(await service.backfill(), 1);
     expect(await enrichmentFor('dive-1', 'clip-1'), isNotNull);
   });
 
@@ -159,8 +171,8 @@ void main() {
 
     // Signature-only dive is never a candidate, so nothing is enriched and a
     // second run still finds nothing (no perpetual re-scan).
-    expect(await service.run(), 0);
-    expect(await service.run(), 0);
+    expect(await service.backfill(), 0);
+    expect(await service.backfill(), 0);
     expect(await enrichmentFor('dive-1', 'sig-1'), isNull);
   });
 }
