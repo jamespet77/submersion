@@ -79,4 +79,16 @@ void main() {
     expect(cloud.bytesOf(libraryEpochFileName), isNull);
     expect(cloud.bytesOf(libraryMovedFileName), isNull);
   });
+
+  test(
+    'wipeAllSyncData is best-effort: a delete failure does not throw',
+    () async {
+      cloud.seedFile(ChangesetLogLayout.manifestName('dev1'), b('m1'));
+      cloud.seedFile(libraryEpochFileName, b('epoch'));
+      cloud.failDeletes = true; // offline/denied provider
+
+      // Every delete throws, but the wipe swallows and logs each one.
+      await buildService().wipeAllSyncData(cloud);
+    },
+  );
 }

@@ -160,56 +160,14 @@ class TroubleshootSyncPage extends ConsumerWidget {
   }
 
   /// Destructive full-backend wipe: guarded by typing the word WIPE so it
-  /// cannot be triggered by a single mis-tap.
+  /// cannot be triggered by a single mis-tap. The confirmation controller is
+  /// owned by [_WipeConfirmDialog]'s State (never disposed inline after
+  /// showDialog, which would be used again during the dialog's exit animation).
   Future<void> _confirmWipeAll(BuildContext context, WidgetRef ref) async {
-    final controller = TextEditingController();
     final ok = await showDialog<bool>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          final armed = controller.text.trim() == 'WIPE';
-          return AlertDialog(
-            title: const Text('Wipe all sync data?'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'This deletes EVERY device’s sync data from this backend, '
-                  'including the library markers. Every device must '
-                  're-establish sync from scratch. Your dive data is not '
-                  'affected.\n\nType WIPE to confirm.',
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: controller,
-                  autofocus: true,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'WIPE',
-                  ),
-                  onChanged: (_) => setState(() {}),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: armed ? () => Navigator.pop(context, true) : null,
-                style: FilledButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                ),
-                child: const Text('Wipe everything'),
-              ),
-            ],
-          );
-        },
-      ),
+      builder: (context) => const _WipeConfirmDialog(),
     );
-    controller.dispose();
     if (ok != true) return;
     await ref.read(syncStateProvider.notifier).wipeAllCloudSyncData();
     if (context.mounted) {
@@ -217,5 +175,68 @@ class TroubleshootSyncPage extends ConsumerWidget {
         context,
       ).showSnackBar(const SnackBar(content: Text('Wiped all sync data')));
     }
+  }
+}
+
+/// Typed-confirmation dialog for the destructive full-backend wipe. Owns its
+/// [TextEditingController] so it is disposed with the widget, not inline after
+/// showDialog (which the dialog's exit animation would then rebuild against).
+class _WipeConfirmDialog extends StatefulWidget {
+  const _WipeConfirmDialog();
+
+  @override
+  State<_WipeConfirmDialog> createState() => _WipeConfirmDialogState();
+}
+
+class _WipeConfirmDialogState extends State<_WipeConfirmDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final armed = _controller.text.trim() == 'WIPE';
+    return AlertDialog(
+      title: const Text('Wipe all sync data?'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'This deletes EVERY device’s sync data from this backend, '
+            'including the library markers. Every device must re-establish '
+            'sync from scratch. Your dive data is not affected.\n\n'
+            'Type WIPE to confirm.',
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'WIPE',
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: armed ? () => Navigator.pop(context, true) : null,
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
+          child: const Text('Wipe everything'),
+        ),
+      ],
+    );
   }
 }
