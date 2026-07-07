@@ -4651,6 +4651,31 @@ class AppLocalizationsEs extends AppLocalizations {
       'Importar desde ordenador de buceo';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Escanear registro en papel';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Leyendo la página...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Elegir foto';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Tomar foto';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'No se pudo leer mucho de esta página - los campos quedaron vacíos';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'El reconocimiento de texto no está disponible. Instala Tesseract para escanear registros en papel (por ejemplo: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'La inmersión se guardó, pero no se pudo adjuntar la página escaneada';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Registrar inmersion manualmente';
 

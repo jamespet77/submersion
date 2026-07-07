@@ -4428,6 +4428,28 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_listPage_bottomSheet_importFromComputer => '从电脑导入';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog => '扫描纸质潜水日志';
+
+  @override
+  String get ocrImport_scanPage_processing => '正在读取页面...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => '选择照片';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => '拍摄照片';
+
+  @override
+  String get ocrImport_scanPage_nothingRead => '无法从此页面读取太多内容 - 字段留空';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      '文本识别不可用。请安装 Tesseract 以扫描纸质日志（例如：sudo apt install tesseract-ocr）。';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed => '潜水已保存，但附加扫描页面失败';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually => '手动记录潜水';
 
   @override

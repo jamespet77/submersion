@@ -4655,6 +4655,31 @@ class AppLocalizationsPt extends AppLocalizations {
       'Importar do computador de mergulho';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'Digitalizar registro em papel';
+
+  @override
+  String get ocrImport_scanPage_processing => 'Lendo a página...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'Escolher foto';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'Tirar foto';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'Não foi possível ler muito desta página - campos deixados em branco';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'O reconhecimento de texto não está disponível. Instale o Tesseract para digitalizar registros em papel (por exemplo: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'O mergulho foi salvo, mas não foi possível anexar a página digitalizada';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually =>
       'Registrar mergulho manualmente';
 

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart' hide Visibility;
 import 'package:go_router/go_router.dart';
 import 'package:submersion/core/icons/mdi_icons.dart';
@@ -33,6 +35,8 @@ import 'package:submersion/features/trips/presentation/providers/trip_providers.
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/trips/presentation/widgets/trip_picker.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive_prefill.dart';
+import 'package:submersion/features/media/presentation/providers/photo_picker_providers.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_custom_field.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_weight.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_data_source.dart';
@@ -103,6 +107,10 @@ class DiveEditPage extends ConsumerStatefulWidget {
   /// Callback when user cancels editing (used in embedded mode).
   final VoidCallback? onCancel;
 
+  /// Initial values for create mode (e.g. from the OCR scan flow).
+  /// Ignored when editing an existing dive or in bulk mode.
+  final DivePrefill? prefill;
+
   const DiveEditPage({
     super.key,
     this.diveId,
@@ -110,6 +118,7 @@ class DiveEditPage extends ConsumerStatefulWidget {
     this.embedded = false,
     this.onSaved,
     this.onCancel,
+    this.prefill,
   }) : assert(
          diveId == null || bulkDiveIds == null,
          'diveId and bulkDiveIds are mutually exclusive',
@@ -308,7 +317,11 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     } else {
       // For new dives, capture GPS in the background to suggest nearby sites
       _captureLocationForNearby();
-      _suggestNextDiveNumber();
+      if (widget.prefill?.diveNumber == null) {
+        // The async suggestion would overwrite a prefilled number.
+        _suggestNextDiveNumber();
+      }
+      _applyPrefill();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _suppressDirty = false;
       });
@@ -378,6 +391,84 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
           }
         });
       }
+    }
+  }
+
+  void _applyPrefill() {
+    final p = widget.prefill;
+    if (p == null) return;
+    final units = UnitFormatter(ref.read(settingsProvider));
+    if (p.diveNumber != null) {
+      _diveNumberController.text = p.diveNumber.toString();
+    }
+    if (p.dateTime != null) {
+      _entryDate = p.dateTime!;
+      if (p.hasTimeOfDay) {
+        _entryTime = TimeOfDay.fromDateTime(p.dateTime!);
+      }
+    }
+    if (p.durationMinutes != null) {
+      _durationController.text = p.durationMinutes.toString();
+    }
+    if (p.maxDepthMeters != null) {
+      _maxDepthController.text = units
+          .convertDepth(p.maxDepthMeters!)
+          .toStringAsFixed(1);
+    }
+    if (p.waterTempCelsius != null) {
+      _waterTempController.text = units
+          .convertTemperature(p.waterTempCelsius!)
+          .toStringAsFixed(0);
+    }
+    if (p.airTempCelsius != null) {
+      _airTempController.text = units
+          .convertTemperature(p.airTempCelsius!)
+          .toStringAsFixed(0);
+    }
+    if (p.notes != null) _notesController.text = p.notes!;
+    if (p.rating != null) _rating = p.rating!;
+    if (p.site != null) _selectedSite = p.site;
+    if (p.weightKg != null) {
+      // Paper logs record a total; the carry type is unknown.
+      _weights = [
+        DiveWeight(
+          id: _uuid.v4(),
+          diveId: widget.diveId ?? '',
+          weightType: WeightType.mixed,
+          amountKg: p.weightKg!,
+        ),
+      ];
+    }
+    // Expand sections that received prefilled content so the user can
+    // review what the scan extracted without hunting for it.
+    if (p.notes != null || p.rating != null) {
+      _expanded['experience'] = true;
+    }
+    if (p.waterTempCelsius != null || p.airTempCelsius != null) {
+      _expanded['conditions'] = true;
+    }
+    if (p.startPressureBar != null ||
+        p.endPressureBar != null ||
+        p.o2Percent != null ||
+        p.cylinderVolumeLiters != null) {
+      final base = _tanks.isNotEmpty ? _tanks.first : null;
+      _tanks = [
+        DiveTank(
+          id: base?.id ?? _uuid.v4(),
+          volume: p.cylinderVolumeLiters ?? base?.volume,
+          workingPressure: base?.workingPressure,
+          startPressure: p.startPressureBar ?? base?.startPressure,
+          endPressure: p.endPressureBar ?? base?.endPressure,
+          gasMix: p.o2Percent != null
+              ? GasMix(o2: p.o2Percent!)
+              : (base?.gasMix ?? const GasMix()),
+          role: base?.role ?? TankRole.backGas,
+          material: base?.material,
+          order: 0,
+          presetName: base?.presetName,
+        ),
+        ..._tanks.skip(1),
+      ];
     }
   }
 
@@ -4317,6 +4408,8 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
         notes: _notesController.text,
         rating: _rating > 0 ? _rating : null,
         site: _selectedSite,
+        importSource:
+            widget.prefill?.importSource ?? _existingDive?.importSource,
         trip: _selectedTrip,
         diveCenter: _selectedDiveCenter,
         courseId: _selectedCourse?.id,
@@ -4402,6 +4495,31 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       } else {
         final savedDive = await notifier.addDive(dive);
         savedDiveId = savedDive.id;
+
+        // Attach the scanned logbook page photo (OCR flow). Failure must
+        // never block the save.
+        final photoPath = widget.prefill?.photoPath;
+        if (photoPath != null) {
+          try {
+            await ref
+                .read(mediaImportServiceProvider)
+                .importLocalFileForDive(
+                  sourceFile: File(photoPath),
+                  diveId: savedDive.id,
+                  takenAt: dive.dateTime,
+                );
+          } catch (_) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    context.l10n.ocrImport_editPage_photoAttachFailed,
+                  ),
+                ),
+              );
+            }
+          }
+        }
 
         // Auto-fetch weather for new dives with coordinates
         if (_selectedSite != null && _selectedSite!.hasCoordinates) {

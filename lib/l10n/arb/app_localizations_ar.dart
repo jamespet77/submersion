@@ -4546,6 +4546,31 @@ class AppLocalizationsAr extends AppLocalizations {
       'استيراد من حاسوب الغوص';
 
   @override
+  String get diveLog_listPage_bottomSheet_scanPaperLog =>
+      'مسح دفتر السجل الورقي';
+
+  @override
+  String get ocrImport_scanPage_processing => 'جارٍ قراءة الصفحة...';
+
+  @override
+  String get ocrImport_scanPage_pickPhoto => 'اختيار صورة';
+
+  @override
+  String get ocrImport_scanPage_takePhoto => 'التقاط صورة';
+
+  @override
+  String get ocrImport_scanPage_nothingRead =>
+      'تعذرت قراءة الكثير من هذه الصفحة - تُركت الحقول فارغة';
+
+  @override
+  String get ocrImport_scanPage_engineMissing =>
+      'التعرف على النص غير متوفر. ثبّت Tesseract لمسح السجلات الورقية (مثلاً: sudo apt install tesseract-ocr).';
+
+  @override
+  String get ocrImport_editPage_photoAttachFailed =>
+      'تم حفظ الغطسة، لكن فشل إرفاق الصفحة الممسوحة';
+
+  @override
   String get diveLog_listPage_bottomSheet_logManually => 'تسجيل غوصة يدويا';
 
   @override
