@@ -4678,6 +4678,7 @@
   "universalImport_triage_parsing": "Analisando arquivo {current} de {total}…",
   "universalImport_triage_cancelParsing": "Cancelar",
   "universalImport_triage_allExcluded": "Nenhum dos arquivos selecionados pode ser importado em conjunto. Arquivos CSV devem ser importados um de cada vez.",
+  "universalImport_triage_noneImportable": "Nenhum dos arquivos selecionados pode ser importado.",
   "universalImport_review_inBatchDuplicate": "Duplicata de outro mergulho neste lote de importação.",
   "universalImport_summary_filesTitle": "Arquivos",
   "universalImport_summary_fileImported": "{count, plural, =1{1 mergulho importado} other{{count} mergulhos importados}}",

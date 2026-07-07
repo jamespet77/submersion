@@ -4678,6 +4678,7 @@
   "universalImport_triage_parsing": "Datei {current} von {total} wird gelesen…",
   "universalImport_triage_cancelParsing": "Abbrechen",
   "universalImport_triage_allExcluded": "Keine der ausgewählten Dateien kann gemeinsam importiert werden. CSV-Dateien müssen einzeln importiert werden.",
+  "universalImport_triage_noneImportable": "Keine der ausgewählten Dateien kann importiert werden.",
   "universalImport_review_inBatchDuplicate": "Duplikat eines anderen Tauchgangs in diesem Import-Stapel.",
   "universalImport_summary_filesTitle": "Dateien",
   "universalImport_summary_fileImported": "{count, plural, =1{1 Tauchgang importiert} other{{count} Tauchgänge importiert}}",

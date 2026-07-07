@@ -15527,6 +15527,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Keine der ausgewählten Dateien kann gemeinsam importiert werden. CSV-Dateien müssen einzeln importiert werden.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'Keine der ausgewählten Dateien kann importiert werden.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'Duplikat eines anderen Tauchgangs in diesem Import-Stapel.';
 

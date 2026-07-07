@@ -8616,6 +8616,7 @@
   "universalImport_triage_parsing": "Parsing file {current} of {total}…",
   "universalImport_triage_cancelParsing": "Cancel",
   "universalImport_triage_allExcluded": "None of the selected files can be imported together. CSV files must be imported one at a time.",
+  "universalImport_triage_noneImportable": "None of the selected files can be imported.",
   "universalImport_review_inBatchDuplicate": "Duplicate of another dive in this import batch.",
   "universalImport_summary_filesTitle": "Files",
   "universalImport_summary_fileImported": "{count, plural, =1{1 dive imported} other{{count} dives imported}}",
@@ -8747,6 +8748,9 @@
   },
   "@universalImport_triage_allExcluded":   {
       "description": "Shown when every selected file was excluded from the batch"
+  },
+  "@universalImport_triage_noneImportable":   {
+      "description": "Shown when no selected file can be imported and none were excluded specifically because they are CSV (format-neutral variant of universalImport_triage_allExcluded)"
   },
   "@universalImport_review_inBatchDuplicate":   {
       "description": "Expanded duplicate card body when the match is another dive in the same import batch"

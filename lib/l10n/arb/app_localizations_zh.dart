@@ -14784,6 +14784,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get universalImport_triage_allExcluded => '所选文件无法一起导入。CSV 文件必须逐个导入。';
 
   @override
+  String get universalImport_triage_noneImportable => '所选文件均无法导入。';
+
+  @override
   String get universalImport_review_inBatchDuplicate => '与此导入批次中的另一次潜水重复。';
 
   @override

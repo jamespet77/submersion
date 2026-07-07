@@ -15263,6 +15263,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'لا يمكن استيراد الملفات المحددة معًا. يجب استيراد ملفات CSV واحدًا تلو الآخر.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'لا يمكن استيراد أي من الملفات المحددة.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'نسخة مكررة من غطسة أخرى في دفعة الاستيراد هذه.';
 

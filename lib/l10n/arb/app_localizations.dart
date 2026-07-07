@@ -26263,6 +26263,12 @@ abstract class AppLocalizations {
   /// **'None of the selected files can be imported together. CSV files must be imported one at a time.'**
   String get universalImport_triage_allExcluded;
 
+  /// Shown when no selected file can be imported and none were excluded specifically because they are CSV (format-neutral variant of universalImport_triage_allExcluded)
+  ///
+  /// In en, this message translates to:
+  /// **'None of the selected files can be imported.'**
+  String get universalImport_triage_noneImportable;
+
   /// Expanded duplicate card body when the match is another dive in the same import batch
   ///
   /// In en, this message translates to:

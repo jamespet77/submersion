@@ -15559,6 +15559,10 @@ class AppLocalizationsIt extends AppLocalizations {
       'Nessuno dei file selezionati può essere importato insieme. I file CSV devono essere importati uno alla volta.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'Nessuno dei file selezionati può essere importato.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'Duplicato di un\'altra immersione in questo lotto di importazione.';
 

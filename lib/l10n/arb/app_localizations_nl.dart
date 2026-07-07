@@ -15429,6 +15429,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Geen van de geselecteerde bestanden kan samen worden geïmporteerd. CSV-bestanden moeten één voor één worden geïmporteerd.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'Geen van de geselecteerde bestanden kan worden geïmporteerd.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'Duplicaat van een andere duik in deze importbatch.';
 

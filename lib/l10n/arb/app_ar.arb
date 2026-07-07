@@ -4678,6 +4678,7 @@
   "universalImport_triage_parsing": "جارٍ تحليل الملف {current} من {total}…",
   "universalImport_triage_cancelParsing": "إلغاء",
   "universalImport_triage_allExcluded": "لا يمكن استيراد الملفات المحددة معًا. يجب استيراد ملفات CSV واحدًا تلو الآخر.",
+  "universalImport_triage_noneImportable": "لا يمكن استيراد أي من الملفات المحددة.",
   "universalImport_review_inBatchDuplicate": "نسخة مكررة من غطسة أخرى في دفعة الاستيراد هذه.",
   "universalImport_summary_filesTitle": "الملفات",
   "universalImport_summary_fileImported": "{count, plural, =1{تم استيراد غطسة واحدة} other{تم استيراد {count} غطسات}}",

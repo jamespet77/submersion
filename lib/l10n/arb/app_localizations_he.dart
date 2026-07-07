@@ -15153,6 +15153,10 @@ class AppLocalizationsHe extends AppLocalizations {
       'לא ניתן לייבא יחד את הקבצים שנבחרו. יש לייבא קובצי CSV אחד אחד.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'לא ניתן לייבא אף אחד מהקבצים שנבחרו.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'כפילות של צלילה אחרת באצוות הייבוא הזו.';
 

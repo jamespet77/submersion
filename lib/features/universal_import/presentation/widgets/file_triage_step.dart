@@ -40,6 +40,16 @@ class FileTriageStep extends ConsumerWidget {
         )
         .length;
 
+    // The "all excluded" copy is CSV-specific ("import one at a time"), so only
+    // use it when a CSV was actually excluded; otherwise (only unsupported or
+    // failed files) show a format-neutral message.
+    final hasExcludedCsv = state.files.any(
+      (f) => f.status == ImportFileStatus.excludedCsv,
+    );
+    final emptyMessage = hasExcludedCsv
+        ? l10n.universalImport_triage_allExcluded
+        : l10n.universalImport_triage_noneImportable;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -47,12 +57,12 @@ class FileTriageStep extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
           child: Text(
             // A parse failure (e.g. every file failed) sets state.error; show
-            // it instead of the generic "all excluded" message, which would
+            // it instead of the generic empty-state message, which would
             // misrepresent the cause.
             state.error ??
                 (readyCount > 0
                     ? l10n.universalImport_triage_readyCount(readyCount)
-                    : l10n.universalImport_triage_allExcluded),
+                    : emptyMessage),
             style: theme.textTheme.titleMedium?.copyWith(
               color: state.error != null ? theme.colorScheme.error : null,
             ),

@@ -15295,6 +15295,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'None of the selected files can be imported together. CSV files must be imported one at a time.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'None of the selected files can be imported.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'Duplicate of another dive in this import batch.';
 

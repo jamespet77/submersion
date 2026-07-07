@@ -4644,6 +4644,7 @@
   "universalImport_triage_parsing": "Analyse du fichier {current} sur {total}…",
   "universalImport_triage_cancelParsing": "Annuler",
   "universalImport_triage_allExcluded": "Aucun des fichiers sélectionnés ne peut être importé ensemble. Les fichiers CSV doivent être importés un par un.",
+  "universalImport_triage_noneImportable": "Aucun des fichiers sélectionnés ne peut être importé.",
   "universalImport_review_inBatchDuplicate": "Doublon d'une autre plongée dans ce lot d'importation.",
   "universalImport_summary_filesTitle": "Fichiers",
   "universalImport_summary_fileImported": "{count, plural, =1{1 plongée importée} other{{count} plongées importées}}",

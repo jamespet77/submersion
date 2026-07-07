@@ -4640,6 +4640,7 @@
   "universalImport_triage_parsing": "Analisi del file {current} di {total}…",
   "universalImport_triage_cancelParsing": "Annulla",
   "universalImport_triage_allExcluded": "Nessuno dei file selezionati può essere importato insieme. I file CSV devono essere importati uno alla volta.",
+  "universalImport_triage_noneImportable": "Nessuno dei file selezionati può essere importato.",
   "universalImport_review_inBatchDuplicate": "Duplicato di un'altra immersione in questo lotto di importazione.",
   "universalImport_summary_filesTitle": "File",
   "universalImport_summary_fileImported": "{count, plural, =1{1 immersione importata} other{{count} immersioni importate}}",

@@ -15517,6 +15517,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'A kiválasztott fájlok együtt nem importálhatók. A CSV-fájlokat egyenként kell importálni.';
 
   @override
+  String get universalImport_triage_noneImportable =>
+      'A kiválasztott fájlok egyike sem importálható.';
+
+  @override
   String get universalImport_review_inBatchDuplicate =>
       'Egy másik merülés duplikátuma ebben az importálási kötegben.';
 

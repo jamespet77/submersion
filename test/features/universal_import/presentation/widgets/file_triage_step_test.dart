@@ -53,7 +53,35 @@ void main() {
     expect(find.text('1 file ready to import'), findsOneWidget);
   });
 
-  testWidgets('shows "all excluded" when no file can join the batch', (
+  testWidgets(
+    'shows CSV-specific "all excluded" copy when a CSV was excluded',
+    (tester) async {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      container
+          .read(universalImportNotifierProvider.notifier)
+          .debugSetFilesForTest([
+            file('a.csv', ImportFormat.csv, ImportFileStatus.excludedCsv),
+            file('b.xyz', ImportFormat.unknown, ImportFileStatus.unsupported),
+          ]);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: Scaffold(body: FileTriageStep()),
+          ),
+        ),
+      );
+
+      // The CSV-specific guidance ("one at a time") is relevant here.
+      expect(find.textContaining('one at a time'), findsOneWidget);
+    },
+  );
+
+  testWidgets('shows format-neutral empty copy when nothing is CSV-excluded', (
     tester,
   ) async {
     final container = ProviderContainer();
@@ -61,8 +89,8 @@ void main() {
     container
         .read(universalImportNotifierProvider.notifier)
         .debugSetFilesForTest([
-          file('a.csv', ImportFormat.csv, ImportFileStatus.excludedCsv),
-          file('b.xyz', ImportFormat.unknown, ImportFileStatus.unsupported),
+          file('a.xyz', ImportFormat.unknown, ImportFileStatus.unsupported),
+          file('b.uddf', ImportFormat.uddf, ImportFileStatus.failed),
         ]);
 
     await tester.pumpWidget(
@@ -76,7 +104,12 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('None of the selected files'), findsOneWidget);
+    // No CSV was excluded, so the misleading "one at a time" copy must not show.
+    expect(
+      find.text('None of the selected files can be imported.'),
+      findsOneWidget,
+    );
+    expect(find.textContaining('one at a time'), findsNothing);
   });
 
   testWidgets('parsed and failed tiles render their status', (tester) async {

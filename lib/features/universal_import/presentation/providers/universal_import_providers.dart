@@ -43,9 +43,17 @@ export 'package:submersion/features/universal_import/presentation/providers/univ
 
 /// Manages the universal import wizard flow.
 class UniversalImportNotifier extends StateNotifier<UniversalImportState> {
-  UniversalImportNotifier(this._ref) : super(const UniversalImportState());
+  UniversalImportNotifier(
+    this._ref, {
+    BatchParseService batchParseService = const BatchParseService(),
+  }) : _batchParseService = batchParseService,
+       super(const UniversalImportState());
 
   final Ref _ref;
+
+  /// Injectable so tests can drive deterministic batch-parse outcomes
+  /// (progress, cancellation) without real file timing.
+  final BatchParseService _batchParseService;
 
   /// Build a [PresetRegistry] that includes both built-in and user-saved
   /// presets so auto-detection scores against all of them.
@@ -518,8 +526,7 @@ class UniversalImportNotifier extends StateNotifier<UniversalImportState> {
       parseCurrent: 0,
     );
 
-    const service = BatchParseService();
-    final result = await service.parseAll(
+    final result = await _batchParseService.parseAll(
       state.files,
       onProgress: (current, total) {
         state = state.copyWith(parseCurrent: current, parseTotal: total);
@@ -529,9 +536,20 @@ class UniversalImportNotifier extends StateNotifier<UniversalImportState> {
 
     if (result.cancelled) {
       // Stay on triage; reset parse bookkeeping so a re-run starts clean.
+      // Files already parsed this run must be reset to pending: their
+      // FilePayloads (result.parsed) are not retained in state, and
+      // parseAll skips non-pending files, so on a re-run they would be
+      // silently dropped from the merged import. Resetting makes a re-run
+      // re-parse and merge them.
+      final resetFiles = [
+        for (final f in result.files)
+          f.status == ImportFileStatus.parsed
+              ? f.copyWith(status: ImportFileStatus.pending, diveCount: 0)
+              : f,
+      ];
       state = state.copyWith(
         isLoading: false,
-        files: result.files,
+        files: resetFiles,
         parseCurrent: 0,
         parseTotal: 0,
         currentStep: ImportWizardStep.sourceConfirmation,

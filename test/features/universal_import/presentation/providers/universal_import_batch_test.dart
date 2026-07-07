@@ -12,6 +12,8 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/universal_import/data/models/import_enums.dart';
+import 'package:submersion/features/universal_import/data/models/picked_import_file.dart';
+import 'package:submersion/features/universal_import/data/services/batch_parse_service.dart';
 import 'package:submersion/features/universal_import/presentation/providers/universal_import_providers.dart';
 
 import '../../../../helpers/test_database.dart';
@@ -52,6 +54,27 @@ class _FakeFilePicker extends FilePickerPlatform
     String? initialDirectory,
   }) async {
     return nextDirectory;
+  }
+}
+
+/// Batch parse service that simulates the user cancelling right after the
+/// first file parsed: file 0 comes back [ImportFileStatus.parsed], the rest
+/// stay pending, and the payloads are NOT surfaced (mirroring the real
+/// service, which discards partial payloads on cancel).
+class _CancelAfterFirstParseService extends BatchParseService {
+  const _CancelAfterFirstParseService();
+
+  @override
+  Future<BatchParseResult> parseAll(
+    List<PickedImportFile> files, {
+    void Function(int current, int total)? onProgress,
+    bool Function()? isCancelled,
+  }) async {
+    final updated = [
+      files.first.copyWith(status: ImportFileStatus.parsed, diveCount: 3),
+      ...files.skip(1),
+    ];
+    return BatchParseResult(parsed: const [], files: updated, cancelled: true);
   }
 }
 
@@ -178,6 +201,51 @@ void main() {
       // Detection is cleared so the Confirm Source step's Next gate goes false
       // -- there is no payload to advance to.
       expect(notifier.state.detectionResult, isNull);
+    });
+
+    test('cancel resets already-parsed files to pending', () async {
+      // Wire a service that reports file 0 parsed then a cancel. The parsed
+      // payload is not retained anywhere, and parseAll skips non-pending files,
+      // so leaving file 0 as "parsed" would silently drop it from a re-run.
+      final prefs = await SharedPreferences.getInstance();
+      final cancelContainer = ProviderContainer(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          universalImportNotifierProvider.overrideWith(
+            (ref) => UniversalImportNotifier(
+              ref,
+              batchParseService: const _CancelAfterFirstParseService(),
+            ),
+          ),
+        ],
+      );
+      addTearDown(cancelContainer.dispose);
+      final cancelNotifier = cancelContainer.read(
+        universalImportNotifierProvider.notifier,
+      );
+
+      final a = await writeFile('a.uddf', _uddfA);
+      final b = await writeFile('b.uddf', _uddfB);
+      await cancelNotifier.loadFilesFromPaths([a, b]);
+      expect(cancelNotifier.state.isBatch, isTrue);
+
+      await cancelNotifier.confirmSource();
+
+      // Cancel stays on the confirm/triage step and never advances to review.
+      expect(
+        cancelNotifier.state.currentStep,
+        ImportWizardStep.sourceConfirmation,
+      );
+      expect(cancelNotifier.state.isLoading, isFalse);
+      // No file is left in `parsed`; a re-run starts truly clean.
+      expect(
+        cancelNotifier.state.files.any(
+          (f) => f.status == ImportFileStatus.parsed,
+        ),
+        isFalse,
+      );
+      expect(cancelNotifier.state.files.first.status, ImportFileStatus.pending);
+      expect(cancelNotifier.state.files.first.diveCount, 0);
     });
   });
 
