@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:photo_manager/photo_manager.dart' as pm;
 
-import 'package:submersion/core/util/wall_clock_utc.dart';
+import 'package:submersion/features/media/data/services/exif_date_parser.dart';
 import 'package:submersion/features/media/data/services/photo_picker_service.dart';
 import 'package:submersion/features/media/domain/value_objects/media_source_metadata.dart';
 
@@ -193,7 +193,9 @@ class PhotoPickerServiceMobile implements PhotoPickerService {
         {'assetId': assetId},
       );
       if (result == null) return null;
-      final takenAt = _parseExifDate(result['dateTimeOriginal']?.toString());
+      final takenAt = parseExifDateTimeOriginal(
+        result['dateTimeOriginal']?.toString(),
+      );
       final latitude = _asDouble(result['latitude']);
       final longitude = _asDouble(result['longitude']);
       return MediaSourceMetadata(
@@ -226,16 +228,6 @@ class PhotoPickerServiceMobile implements PhotoPickerService {
         return PhotoPermissionStatus.restricted;
     }
   }
-}
-
-DateTime? _parseExifDate(String? raw) {
-  if (raw == null || raw.isEmpty) return null;
-  final parts = raw.split(' ');
-  if (parts.length != 2) return null;
-  final dateParts = parts[0].split(':');
-  if (dateParts.length != 3) return null;
-  final iso = '${dateParts[0]}-${dateParts[1]}-${dateParts[2]}T${parts[1]}';
-  return parseExternalDateAsWallClockUtc(iso);
 }
 
 double? _asDouble(Object? value) {

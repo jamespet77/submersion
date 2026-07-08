@@ -229,15 +229,6 @@ class TripMediaScanner {
     final newAssets = assets
         .where((a) => !existingAssetIds.contains(a.id))
         .toList();
-    final primaryExtractedById = <String, ExtractedFile>{};
-    for (final asset in newAssets) {
-      final extracted = _toExtractedFile(asset);
-      final takenAt = extracted.metadata.takenAt;
-      if (takenAt != null &&
-          _isInRange(takenAt, tripWindowStart, tripWindowEnd)) {
-        primaryExtractedById[asset.id] = extracted;
-      }
-    }
 
     // Build DiveBounds from each dive (normalised to wall-clock-as-UTC).
     final bounds = dives.map((dive) {
@@ -248,6 +239,21 @@ class TripMediaScanner {
         exitTime: toWallClockUtc(rawExit),
       );
     }).toList();
+
+    final primaryExtractedById = <String, ExtractedFile>{};
+    for (final asset in newAssets) {
+      final extracted = _toExtractedFile(asset);
+      final takenAt = extracted.metadata.takenAt;
+      if (takenAt != null &&
+          _isInTripWindowOrDiveBuffer(
+            takenAt,
+            tripWindowStart,
+            tripWindowEnd,
+            bounds,
+          )) {
+        primaryExtractedById[asset.id] = extracted;
+      }
+    }
 
     final matcher = DivePhotoMatcher();
     final primarySelection = matcher.match(
@@ -260,6 +266,7 @@ class TripMediaScanner {
     final timezoneOffsets = locationTimezoneOffsets.isEmpty
         ? _fallbackTimezoneOffsets
         : locationTimezoneOffsets;
+    final sourceTimezoneOffsets = _fallbackTimezoneOffsets;
     final fallbackCandidates = newAssets
         .where((asset) => !primaryMatchedAssetIds.contains(asset.id))
         .where(
@@ -267,6 +274,7 @@ class TripMediaScanner {
             asset.createDateTime,
             bounds,
             timezoneOffsets,
+            sourceTimezoneOffsets,
           ),
         )
         .toList();
@@ -274,6 +282,7 @@ class TripMediaScanner {
       assets: fallbackCandidates,
       tripWindowStart: tripWindowStart,
       tripWindowEnd: tripWindowEnd,
+      bounds: bounds,
       assetMetadataResolver:
           assetMetadataResolver ??
           (asset) => _extractAssetFileMetadata(asset, photoPickerService),
@@ -421,23 +430,44 @@ class TripMediaScanner {
   static bool _isInRange(DateTime value, DateTime start, DateTime end) =>
       !value.isBefore(start) && !value.isAfter(end);
 
+  static bool _isInTripWindowOrDiveBuffer(
+    DateTime value,
+    DateTime tripWindowStart,
+    DateTime tripWindowEnd,
+    List<DiveBounds> bounds,
+  ) {
+    if (_isInRange(value, tripWindowStart, tripWindowEnd)) {
+      return true;
+    }
+    return _isInAnyDiveBuffer(value, bounds);
+  }
+
+  static bool _isInAnyDiveBuffer(DateTime value, List<DiveBounds> bounds) {
+    for (final dive in bounds) {
+      final earliest = dive.entryTime.subtract(DivePhotoMatcher.preBuffer);
+      final latest = dive.exitTime.add(DivePhotoMatcher.postBuffer);
+      if (_isInRange(value, earliest, latest)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static bool _couldMatchWithTimezoneShift(
     DateTime assetTime,
     List<DiveBounds> bounds,
     Set<Duration> likelyTimezoneOffsets,
+    Set<Duration> sourceTimezoneOffsets,
   ) {
-    if (likelyTimezoneOffsets.isEmpty) {
+    if (likelyTimezoneOffsets.isEmpty || sourceTimezoneOffsets.isEmpty) {
       return false;
     }
 
+    final assetWallClock = toWallClockUtc(assetTime);
     for (final tripOffset in likelyTimezoneOffsets) {
-      final shiftedAssetTime = toWallClockUtc(
-        assetTime.add(tripOffset - assetTime.timeZoneOffset),
-      );
-      for (final dive in bounds) {
-        final earliest = dive.entryTime.subtract(DivePhotoMatcher.preBuffer);
-        final latest = dive.exitTime.add(DivePhotoMatcher.postBuffer);
-        if (_isInRange(shiftedAssetTime, earliest, latest)) {
+      for (final sourceOffset in sourceTimezoneOffsets) {
+        final shiftedAssetTime = assetWallClock.add(tripOffset - sourceOffset);
+        if (_isInAnyDiveBuffer(shiftedAssetTime, bounds)) {
           return true;
         }
       }
@@ -470,6 +500,7 @@ class TripMediaScanner {
     required List<AssetInfo> assets,
     required DateTime tripWindowStart,
     required DateTime tripWindowEnd,
+    required List<DiveBounds> bounds,
     required Future<MediaSourceMetadata?> Function(AssetInfo asset)
     assetMetadataResolver,
   }) async {
@@ -479,7 +510,12 @@ class TripMediaScanner {
       final takenAt = metadata?.takenAt;
       if (metadata == null ||
           takenAt == null ||
-          !_isInRange(takenAt, tripWindowStart, tripWindowEnd)) {
+          !_isInTripWindowOrDiveBuffer(
+            takenAt,
+            tripWindowStart,
+            tripWindowEnd,
+            bounds,
+          )) {
         continue;
       }
       extractedById[asset.id] = ExtractedFile(
