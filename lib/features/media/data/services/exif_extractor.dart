@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:native_exif/native_exif.dart';
 
 import 'package:submersion/core/util/wall_clock_utc.dart';
+import 'package:submersion/features/media/data/services/exif_date_parser.dart';
 import 'package:submersion/features/media/domain/value_objects/media_source_metadata.dart';
 
 const _isolateThresholdBytes = 5 * 1024 * 1024;
@@ -59,7 +60,9 @@ Future<MediaSourceMetadata?> _extract(String path) async {
 
     if (attrs != null) {
       // DateTimeOriginal is returned as a string in "YYYY:MM:DD HH:MM:SS" format.
-      takenAt = _parseExifDate(attrs['DateTimeOriginal']?.toString());
+      takenAt = parseExifDateTimeOriginal(
+        attrs['DateTimeOriginal']?.toString(),
+      );
 
       // GPS values are returned as doubles by native_exif; refs are strings.
       final rawLat = attrs['GPSLatitude'];
@@ -99,21 +102,6 @@ int? _parseInt(Object? value) {
   if (value == null) return null;
   if (value is int) return value;
   return int.tryParse(value.toString());
-}
-
-DateTime? _parseExifDate(String? raw) {
-  if (raw == null) return null;
-  // EXIF format: "YYYY:MM:DD HH:MM:SS" (colons in date, not dashes).
-  // DateTime.parse cannot consume that, so rewrite into an ISO-8601-ish
-  // string and hand off to the shared wall-clock-UTC helper. The EXIF
-  // tag carries no timezone, so the helper's offset-less branch applies:
-  // the digits land in the same wall-clock-UTC frame as dive times.
-  final parts = raw.split(' ');
-  if (parts.length != 2) return null;
-  final dateParts = parts[0].split(':');
-  if (dateParts.length != 3) return null;
-  final iso = '${dateParts[0]}-${dateParts[1]}-${dateParts[2]}T${parts[1]}';
-  return parseExternalDateAsWallClockUtc(iso);
 }
 
 String _mimeFromExtension(String ext) {
