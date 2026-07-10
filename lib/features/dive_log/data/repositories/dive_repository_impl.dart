@@ -3758,6 +3758,16 @@ class DiveRepository {
 
   /// All profile samples for [diveId] across every source, ordered by
   /// timestamp (one SQL statement). Matches the shape of `Dive.profile`.
+  ///
+  /// Deliberately unfiltered, mirroring the `profileRows` query in
+  /// [getDiveById]: [getDiveForAnalysis] must feed the analysis pipeline the
+  /// exact same samples the pre-WS2 `diveProvider` -> `getDiveById` path did,
+  /// which the parity test locks in. This is intentionally NOT the
+  /// `isPrimary`-filtered view used by [getDiveProfile] /
+  /// [getProfilesByDataSource]: for an edited dive it still returns the demoted
+  /// originals alongside the edited rows, exactly as [getDiveById] does. Any
+  /// change to that merge semantics (e.g. dropping demoted originals) must be
+  /// made in both places together, and measured, rather than diverging here.
   Future<List<domain.DiveProfilePoint>> getMergedProfile(String diveId) async {
     final rows =
         await (_db.select(_db.diveProfiles)
