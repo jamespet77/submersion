@@ -203,25 +203,33 @@ void _bench(Database db, String term, bool asJson) {
     _pickTargets(db).diverId,
   ]);
   final hydrateIds = matched.take(20).map((r) => r['id'] as String).toList();
-  final sw = Stopwatch()..start();
-  for (final id in hydrateIds) {
-    db.select(
-      'SELECT * FROM dive_profiles WHERE dive_id = ? ORDER BY timestamp ASC',
-      [id],
-    );
-    db.select(
-      'SELECT * FROM tank_pressure_profiles WHERE dive_id = ? '
-      'ORDER BY timestamp ASC',
-      [id],
-    );
-    db.select('SELECT * FROM dive_tanks WHERE dive_id = ?', [id]);
+  // Measure with the same median-of-5 methodology as the per-query loop above
+  // so the median_ms/min_ms labels are accurate and comparable, not a single
+  // run reported under both keys.
+  final hydrateTimes = <int>[];
+  for (var i = 0; i < 5; i++) {
+    final sw = Stopwatch()..start();
+    for (final id in hydrateIds) {
+      db.select(
+        'SELECT * FROM dive_profiles WHERE dive_id = ? ORDER BY timestamp ASC',
+        [id],
+      );
+      db.select(
+        'SELECT * FROM tank_pressure_profiles WHERE dive_id = ? '
+        'ORDER BY timestamp ASC',
+        [id],
+      );
+      db.select('SELECT * FROM dive_tanks WHERE dive_id = ?', [id]);
+    }
+    sw.stop();
+    hydrateTimes.add(sw.elapsedMicroseconds);
   }
-  sw.stop();
+  hydrateTimes.sort();
   results.add({
     'query': 'search_hydration_first20 (${matched.length} matches total)',
     'rows': hydrateIds.length,
-    'median_ms': sw.elapsedMilliseconds.toDouble(),
-    'min_ms': sw.elapsedMilliseconds.toDouble(),
+    'median_ms': hydrateTimes[2] / 1000.0,
+    'min_ms': hydrateTimes.first / 1000.0,
   });
 
   if (asJson) {

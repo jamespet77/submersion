@@ -305,7 +305,11 @@ Future<List<String>> ensurePerformanceIndexes(GeneratedDatabase db) async {
     // the WAL. Checkpoint it now, inside the startup splash, so the NEXT
     // launch does not stall on WAL recovery (observed as a ~20 s zero-CPU
     // freeze on a 335 MB database). No-op outside WAL mode.
-    await db.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
+    //
+    // wal_checkpoint returns a row (busy, log, checkpointed), so use
+    // customSelect (matching DatabaseMigrationService) rather than
+    // customStatement, which is for non-row-returning statements.
+    await db.customSelect('PRAGMA wal_checkpoint(TRUNCATE)').get();
   }
   return created;
 }
