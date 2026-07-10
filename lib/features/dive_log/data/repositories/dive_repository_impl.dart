@@ -2392,10 +2392,22 @@ class DiveRepository {
       'd.max_depth IS NOT NULL AND d.max_depth > 0',
       'd.max_depth DESC, $_recencyTieBreak',
     );
-    final longestId = await winner(
-      '$_effectiveRuntimeSql > 0',
-      '$_effectiveRuntimeSql DESC, $_recencyTieBreak',
-    );
+    // Longest evaluates the effective-runtime expression (a correlated
+    // dive_profiles subquery) once in a derived table and filters/orders on
+    // the alias, rather than paying for the subquery twice (WHERE + ORDER BY)
+    // -- this is the dashboard hot path the PR is optimizing.
+    final longestRow = await _db
+        .customSelect(
+          'SELECT id FROM ('
+          'SELECT d.id AS id, $_effectiveRuntimeSql AS er, '
+          'COALESCE(d.entry_time, d.dive_date_time) AS recency, '
+          'd.dive_number AS dn FROM dives d WHERE 1 = 1 $diverFilter'
+          ') WHERE er > 0 ORDER BY er DESC, recency DESC, dn DESC LIMIT 1',
+          variables: vars,
+          readsFrom: {_db.dives, _db.diveProfiles},
+        )
+        .getSingleOrNull();
+    final longestId = longestRow?.read<String>('id');
     final coldestId = await winner(
       'd.water_temp IS NOT NULL',
       'd.water_temp ASC, $_recencyTieBreak',
