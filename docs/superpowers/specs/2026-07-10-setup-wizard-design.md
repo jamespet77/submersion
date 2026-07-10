@@ -161,20 +161,19 @@ Review → Import → Summary tail.
 Apply order on Finish (first-run):
 
 1. `diverListNotifier.addDiver(...)` — create the diver (`isDefault: true`).
-2. `setCurrentDiver(id)` — existing dual-write to SharedPreferences + the
-   `Settings` table.
-3. Bulk-write the draft settings to the new diver's `DiverSettings` row via a
-   new `SettingsNotifier.applySettings(AppSettings)` method (today the
-   notifier only has per-field setters; bulk apply avoids N sequential writes
-   and N rebuilds). Known cost: the settings-notifier change touches the four
-   mock files used by settings tests.
+   `DiverRepository.createDiver` also seeds a defaults `DiverSettings` row.
+2. Overwrite that row with the draft via
+   `DiverSettingsRepository.updateSettingsForDiver(id, draft)` — BEFORE the
+   diver becomes current. Switching the current diver fires an unawaited
+   `SettingsNotifier` reload that would race (and clobber) any post-switch
+   settings writes; writing first means the reload simply loads the drafted
+   row. No new `SettingsNotifier` API is needed, so no settings mocks change.
+3. `setCurrentDiver(id)` — existing dual-write to SharedPreferences + the
+   `Settings` table; the notifier reload now picks up the drafted settings.
 4. Apply backup choices via `backupSettingsProvider`: schedule (`setEnabled`,
    `setFrequency`) and, when a cloud provider was connected in the wizard and
    the user opted in, `cloudBackupEnabled`. These are device-level
    SharedPreferences-backed values (`BackupPreferences`), not per-diver rows.
-
-This ordering matters: `SettingsNotifier` reloads when the current diver
-changes, so settings must be written after the diver exists and is current.
 
 **Live actions vs. draft settings.** External handshakes cannot be drafted:
 sync provider connect (OAuth, iCloud availability, S3 validation), restore,
