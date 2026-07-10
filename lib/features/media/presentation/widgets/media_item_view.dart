@@ -89,7 +89,13 @@ class _MediaItemViewState extends ConsumerState<MediaItemView> {
     if (native is! UnavailableData) return native;
     // Media store fallback (design spec section 10): only engages when the
     // native source cannot produce bytes on this device and the row is
-    // confirmed uploaded. Any store failure keeps the native placeholder.
+    // confirmed uploaded. Rows without a confirmed upload skip the runtime
+    // entirely (no keychain read, no store construction). Any store failure
+    // keeps the native placeholder.
+    if (widget.item.contentHash == null ||
+        widget.item.remoteUploadedAt == null) {
+      return native;
+    }
     try {
       final runtime = await ref.read(mediaStoreRuntimeProvider.future);
       final remote = await runtime?.resolver.tryResolveRemote(
