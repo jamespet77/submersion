@@ -56,6 +56,17 @@ final mediaStorePoliciesProvider = Provider<MediaStorePolicies>(
   (ref) => MediaStorePolicies(),
 );
 
+final mediaTransferQueueRepositoryProvider =
+    Provider<MediaTransferQueueRepository>(
+      (ref) => MediaTransferQueueRepository(),
+    );
+
+/// Transfers view feed.
+final mediaTransferEntriesProvider =
+    StreamProvider<List<MediaTransferQueueEntry>>(
+      (ref) => ref.watch(mediaTransferQueueRepositoryProvider).watchEntries(),
+    );
+
 final mediaStoresRepositoryProvider = Provider<MediaStoresRepository>(
   (ref) => MediaStoresRepository(),
 );

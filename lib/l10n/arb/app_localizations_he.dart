@@ -17936,4 +17936,46 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get settings_mediaStorage_action_copyFromSync =>
       'העתק הגדרות מהסנכרון';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'העברות';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'הצג העברות';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'אין העברות';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'נסה שוב';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted => 'נקה שהושלמו';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'ממתין';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'מעלה';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'הושלם';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'נכשל';
+
+  @override
+  String get settings_mediaStorage_backfill_action => 'העלה ספריה קיימת';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count העלאות בתור';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload => 'העלה תמונות אוטומטית';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'העלה תמונות ברשת סלולרית';
 }

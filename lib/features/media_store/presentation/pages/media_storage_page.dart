@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
@@ -433,6 +434,13 @@ class _MediaStoragePageState extends ConsumerState<MediaStoragePage> {
             ),
             if (connected) ...[
               const SizedBox(height: 8),
+              ListTile(
+                key: const Key('media-s3-transfers'),
+                leading: const Icon(Icons.swap_vert),
+                title: Text(l10n.settings_mediaStorage_transfers_entry),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/media-storage/transfers'),
+              ),
               TextButton(
                 key: const Key('media-s3-disconnect'),
                 onPressed: _busy ? null : _disconnect,

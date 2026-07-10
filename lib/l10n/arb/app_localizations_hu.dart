@@ -18353,4 +18353,49 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get settings_mediaStorage_action_copyFromSync =>
       'Beállítások átvétele a szinkronizálásból';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'Átvitelek';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'Átvitelek megtekintése';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'Nincs átvitel';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'Újra';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted =>
+      'Befejezettek törlése';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'Várakozik';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'Feltöltés';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'Kész';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'Sikertelen';
+
+  @override
+  String get settings_mediaStorage_backfill_action =>
+      'Meglévő könyvtár feltöltése';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count feltöltés sorban';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload =>
+      'Fotók automatikus feltöltése';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'Fotók feltöltése mobilhálózaton';
 }

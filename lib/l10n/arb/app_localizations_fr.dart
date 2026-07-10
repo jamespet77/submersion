@@ -18467,4 +18467,50 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_mediaStorage_action_copyFromSync =>
       'Copier les réglages de Sync';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'Transferts';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'Voir les transferts';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'Aucun transfert';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'Réessayer';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted =>
+      'Effacer les terminés';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'En attente';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring =>
+      'Envoi en cours';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'Terminé';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'Échec';
+
+  @override
+  String get settings_mediaStorage_backfill_action =>
+      'Envoyer la bibliothèque existante';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count envois en file';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload =>
+      'Envoyer les photos automatiquement';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'Envoyer les photos en cellulaire';
 }

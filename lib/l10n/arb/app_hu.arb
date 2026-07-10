@@ -5183,5 +5183,18 @@
   "settings_mediaStorage_action_disconnect": "Leválasztás",
   "settings_mediaStorage_disconnect_confirm_title": "Leválasztja a médiatárat?",
   "settings_mediaStorage_disconnect_confirm_body": "Az eszköz nem tölt fel és nem tölt le több médiát. A bucketből semmi sem törlődik.",
-  "settings_mediaStorage_action_copyFromSync": "Beállítások átvétele a szinkronizálásból"
+  "settings_mediaStorage_action_copyFromSync": "Beállítások átvétele a szinkronizálásból",
+  "settings_mediaStorage_transfers_title": "Átvitelek",
+  "settings_mediaStorage_transfers_entry": "Átvitelek megtekintése",
+  "settings_mediaStorage_transfers_empty": "Nincs átvitel",
+  "settings_mediaStorage_transfers_retry": "Újra",
+  "settings_mediaStorage_transfers_clearCompleted": "Befejezettek törlése",
+  "settings_mediaStorage_transfers_state_pending": "Várakozik",
+  "settings_mediaStorage_transfers_state_transferring": "Feltöltés",
+  "settings_mediaStorage_transfers_state_done": "Kész",
+  "settings_mediaStorage_transfers_state_failed": "Sikertelen",
+  "settings_mediaStorage_backfill_action": "Meglévő könyvtár feltöltése",
+  "settings_mediaStorage_backfill_enqueued": "{count} feltöltés sorban",
+  "settings_mediaStorage_policy_autoUpload": "Fotók automatikus feltöltése",
+  "settings_mediaStorage_policy_photosOnCellular": "Fotók feltöltése mobilhálózaton"
 }
