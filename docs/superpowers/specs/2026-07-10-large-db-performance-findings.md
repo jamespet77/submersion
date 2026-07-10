@@ -100,6 +100,60 @@ search joins:   SEARCH db/dt/cf USING INDEX idx_dive_buddies/tags/custom_fields_
   console line is not evidence the heal did not run; check
   sqlite_master.
 - beforeOpen steady-state cost on an already-healed DB: one sqlite_master
-  read + no DDL (idempotency unit-tested; created list empty).
-- Post-WS0 UI re-baseline (runbook Layer 2): pending -- decides WS1 vs WS2
-  ordering.
+  read + no DDL (idempotency unit-tested; created list empty). Confirmed
+  in-app by startup instrumentation: `[startup] database: 3ms` on the
+  second profile launch.
+
+### Real-world heal cost (differs sharply from the fixture number)
+
+The fixture measured 534 ms because the file was warm in the OS page cache
+from the copy. On the real, cold 335 MB database the first (debug) launch
+froze ~20 s at the splash, and the NEXT (profile) launch froze ~20 s again
+with near-zero CPU across every thread (native `sample` evidence): the heal
+had written hundreds of MB of index pages into the WAL, and the next open
+paid WAL recovery/checkpoint -- pure disk I/O. Once checkpointed, the
+following launch was instant (total init 9 ms).
+
+Mitigation shipped in WS0: `PRAGMA wal_checkpoint(TRUNCATE)` immediately
+after a non-empty heal, so the entire cost is paid once, inside the first
+splash, and cannot leak into the next launch. Residual: the first-open
+stall itself (up to ~20 s cold on very large DBs) currently shows only the
+static splash -- progress UI is a product decision recorded below.
+
+## Post-WS0 UI re-baseline (profile mode, Apple M5 Pro, 2026-07-10)
+
+Captured with tools/vmcap.dart per the runbook; values are main-isolate CPU
+time attributed by the Dart profiler during the interaction.
+
+| Scenario | Measured | Target | Verdict |
+|---|---|---|---|
+| Startup (steady state) | 9 ms init + 1 s splash floor | < 2 s | MET (post-WS0) |
+| Search, one character | ~3.5 s CPU | < 500 ms | WS1 |
+| Detail open, dive 1006 (4,762 samples) | ~11 s CPU | < 500 ms | WS2 |
+| Ceiling-source toggle | ~0.85 s CPU per toggle | < 200 ms | WS3 |
+
+Signatures (what the profiler actually showed):
+
+- Search: sqlite3VdbeExec on the main isolate + per-query SQL string
+  building (_concatAll/_interpolate) + Map churn + mutex slow paths =
+  thousands of tiny queries. The N+1 hydration shape, not SQLite speed, is
+  now the cost. WS1 Phase A (bounded results, batched DiveSummary
+  hydration, input debounce) attacks exactly this.
+- Detail open: 23.7% raw allocation (TLAB) + pervasive dynamic-invocation
+  type checks = hydrating enormous object graphs (double full-profile read,
+  Buhlmann + residual CNS/tissue/OTU + weekly OTU lookback chains fully
+  hydrating dozens of prior dives). WS2's items map one-to-one.
+- Ceiling toggle: Skia dash-path measurement (SkContourMeasure::getSegment)
+  + full series rebuild = undecimated 4,762-point curves redrawn wholesale
+  per toggle. WS3 (decimation + per-series cache scoping) maps directly.
+
+## Recommended workstream order (evidence-based)
+
+1. WS1 search (small change, 3.5 s -> sub-500 ms expected; fires on every
+   keystroke so perceived cost is multiplied).
+2. WS2 detail load path (largest absolute cost, 11 s; also the
+   multi-computer complaint).
+3. WS3 chart scaling (0.85 s per toggle; also shrinks WS2's chart share).
+4. WS4 dashboard (startup steady-state already meets target post-WS0;
+   getAllDives remains a scaling liability, not the current bottleneck).
+5. WS5 DB isolate (unchanged: last, structural).

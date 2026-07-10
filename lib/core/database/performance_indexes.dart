@@ -301,6 +301,11 @@ Future<List<String>> ensurePerformanceIndexes(GeneratedDatabase db) async {
   if (created.isNotEmpty) {
     await db.customStatement('PRAGMA analysis_limit = 400');
     await db.customStatement('ANALYZE');
+    // A heal on a large database writes hundreds of MB of index pages into
+    // the WAL. Checkpoint it now, inside the startup splash, so the NEXT
+    // launch does not stall on WAL recovery (observed as a ~20 s zero-CPU
+    // freeze on a 335 MB database). No-op outside WAL mode.
+    await db.customStatement('PRAGMA wal_checkpoint(TRUNCATE)');
   }
   return created;
 }

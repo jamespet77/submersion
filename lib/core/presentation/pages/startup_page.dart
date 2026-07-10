@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -289,23 +290,44 @@ class _StartupWrapperState extends State<StartupWrapper>
       return;
     }
 
-    await DatabaseService.instance.initialize(
-      locationService: widget.locationService,
-      onMigrationProgress: onProgress,
-    );
-
-    await LocalCacheDatabaseService.instance.initialize();
-    await NotificationService.instance.initialize();
-    await initializeBackgroundService();
-
-    try {
-      await TileCacheService.instance.initialize();
-    } catch (e) {
-      debugPrint('Warning: Tile cache initialization failed: $e');
+    // Per-step wall-time attribution for startup stalls (large-DB perf
+    // program). Prints in debug/profile only.
+    Future<void> timedStep(String name, Future<void> Function() step) async {
+      final sw = Stopwatch()..start();
+      await step();
+      sw.stop();
+      if (!kReleaseMode) {
+        debugPrint('[startup] $name: ${sw.elapsedMilliseconds}ms');
+      }
     }
 
-    final speciesRepository = SpeciesRepository();
-    await speciesRepository.seedBuiltInSpecies();
+    await timedStep(
+      'database',
+      () => DatabaseService.instance.initialize(
+        locationService: widget.locationService,
+        onMigrationProgress: onProgress,
+      ),
+    );
+
+    await timedStep(
+      'localCache',
+      LocalCacheDatabaseService.instance.initialize,
+    );
+    await timedStep('notifications', NotificationService.instance.initialize);
+    await timedStep('backgroundService', initializeBackgroundService);
+
+    await timedStep('tileCache', () async {
+      try {
+        await TileCacheService.instance.initialize();
+      } catch (e) {
+        debugPrint('Warning: Tile cache initialization failed: $e');
+      }
+    });
+
+    await timedStep('speciesSeed', () async {
+      final speciesRepository = SpeciesRepository();
+      await speciesRepository.seedBuiltInSpecies();
+    });
   }
 
   Future<void> _runPreMigrationBackup({
