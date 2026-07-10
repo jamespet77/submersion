@@ -11,9 +11,11 @@ import 'package:submersion/core/services/media_store/media_object_store.dart';
 import 'package:submersion/core/services/media_store/media_store_attach_state.dart';
 import 'package:submersion/core/services/media_store/media_store_credentials_store.dart';
 import 'package:submersion/core/services/media_store/media_store_policies.dart';
+import 'package:submersion/core/services/media_store/network_status_service.dart';
 import 'package:submersion/core/services/media_store/s3_media_object_store.dart';
 import 'package:submersion/core/services/media_store/store_marker.dart';
 import 'package:submersion/features/media/data/resolvers/media_store_resolver.dart';
+import 'package:submersion/features/media/domain/entities/media_item.dart';
 import 'package:submersion/features/media/presentation/providers/media_providers.dart';
 import 'package:submersion/features/media/presentation/providers/media_resolver_providers.dart';
 import 'package:submersion/features/media_store/data/media_cache_store.dart';
@@ -92,8 +94,11 @@ final mediaStoreRuntimeProvider = FutureProvider<MediaStoreRuntime?>((
   );
   final resolver = MediaStoreResolver(store: store, cache: cache);
 
+  final mediaRepository = ref.watch(mediaRepositoryProvider);
+  final policies = ref.watch(mediaStorePoliciesProvider);
+  final network = NetworkStatusService();
   final pipeline = MediaUploadPipeline(
-    mediaRepository: ref.watch(mediaRepositoryProvider),
+    mediaRepository: mediaRepository,
     queue: MediaTransferQueueRepository(),
     store: store,
     registry: ref.watch(mediaSourceResolverRegistryProvider),
@@ -108,7 +113,26 @@ final mediaStoreRuntimeProvider = FutureProvider<MediaStoreRuntime?>((
       final marker = await StoreMarkerStore(store: store).read();
       return marker != null && marker.storeId == attachedId;
     },
+    gate: (entry) async {
+      // Network policies (design spec section 9): offline halts the
+      // drain; cellular defers anything the policy disallows.
+      final kind = await network.current();
+      if (kind == NetworkKind.offline) return WorkerGate.stopDraining;
+      if (kind == NetworkKind.cellular) {
+        final item = await mediaRepository.getMediaById(entry.mediaId);
+        final isVideo = item?.mediaType == MediaType.video;
+        final allowed = isVideo
+            ? await policies.videosOnCellular()
+            : await policies.photosOnCellular();
+        if (!allowed) return WorkerGate.deferEntry;
+      }
+      return WorkerGate.proceed;
+    },
   );
+  final connectivitySub = network.changes.listen((kind) {
+    if (kind != NetworkKind.offline) unawaited(worker.drain());
+  });
+  ref.onDispose(connectivitySub.cancel);
   unawaited(worker.drain());
 
   return MediaStoreRuntime(

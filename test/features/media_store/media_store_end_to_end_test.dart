@@ -156,4 +156,54 @@ void main() {
       isNull,
     );
   });
+
+  test('gate deferEntry postpones the entry without consuming attempts and '
+      'stopDraining halts the queue', () async {
+    final mediaRepository = MediaRepository();
+    final cache = MediaCacheStore(database: cacheDbA, root: rootA);
+    final queue = MediaTransferQueueRepository(database: cacheDbA);
+    final resolver = FakeLocalFileResolver();
+    final photo = File('${rootA.path}/gate.jpg')..writeAsBytesSync([7]);
+    resolver.data = FileData(file: photo);
+    final created = await mediaRepository.createMedia(
+      domain.MediaItem(
+        id: '',
+        mediaType: domain.MediaType.photo,
+        sourceType: MediaSourceType.localFile,
+        filePath: photo.path,
+        localPath: photo.path,
+        originalFilename: 'gate.jpg',
+        takenAt: DateTime(2026, 7, 1),
+        createdAt: DateTime(2026, 7, 1),
+        updatedAt: DateTime(2026, 7, 1),
+      ),
+    );
+    await queue.enqueueUpload(mediaId: created.id);
+
+    var gateResult = WorkerGate.deferEntry;
+    final worker = MediaStoreWorker(
+      queue: queue,
+      pipeline: MediaUploadPipeline(
+        mediaRepository: mediaRepository,
+        queue: queue,
+        store: bucket,
+        registry: MediaSourceResolverRegistry({
+          MediaSourceType.localFile: resolver,
+        }),
+        cache: cache,
+      ),
+      gate: (entry) async => gateResult,
+    );
+
+    await worker.drain();
+    final row = (await queue.allForTesting()).single;
+    expect(row.state, 'pending');
+    expect(row.attempts, 0);
+    expect(row.nextAttemptAt, isNotNull, reason: 'deferred, not failed');
+    expect(bucket.objects, isEmpty);
+
+    gateResult = WorkerGate.stopDraining;
+    await worker.drain();
+    expect(bucket.objects, isEmpty);
+  });
 }
