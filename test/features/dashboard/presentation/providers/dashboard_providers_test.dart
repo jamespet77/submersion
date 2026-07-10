@@ -190,4 +190,43 @@ void main() {
       expect(records.longestDive!.id, 'long-runtime');
     });
   });
+
+  group('dive count providers', () {
+    late DiveRepository repository;
+
+    setUp(() async {
+      await setUpTestDatabase();
+      repository = DiveRepository();
+    });
+    tearDown(() async => tearDownTestDatabase());
+
+    Future<ProviderContainer> seededContainer(List<Dive> dives) async {
+      for (final dive in dives) {
+        await repository.createDive(dive);
+      }
+      final container = ProviderContainer(
+        overrides: (await getBaseOverrides()).cast(),
+      );
+      addTearDown(container.dispose);
+      return container;
+    }
+
+    test('monthly and year-to-date counts include in-window dives and '
+        'exclude older ones', () async {
+      final now = DateTime.now();
+      final container = await seededContainer([
+        // Noon today: strictly after both the first-of-month and first-of-year
+        // boundaries regardless of the time the suite runs.
+        _diveWithEntryTime(DateTime(now.year, now.month, now.day, 12)),
+        // Mid last year: outside both windows.
+        _diveWithEntryTime(DateTime(now.year - 1, 6, 15)),
+      ]);
+
+      final monthly = await container.read(monthlyDiveCountProvider.future);
+      final ytd = await container.read(yearToDateDiveCountProvider.future);
+
+      expect(monthly, 1);
+      expect(ytd, 1);
+    });
+  });
 }

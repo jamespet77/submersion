@@ -238,6 +238,18 @@ void main() {
       expect(winners.mostVisitedSiteCount, 1);
     });
 
+    test('scopes record winners by diver id', () async {
+      await repository.createDive(
+        domain.Dive(id: 'd1', dateTime: DateTime(2026, 1, 1), maxDepth: 30),
+      );
+      // A non-matching diver id engages the diver_id filter and yields no
+      // winners even though a qualifying dive exists.
+      final winners = await repository.getPersonalRecordIds(diverId: 'nobody');
+      expect(winners.deepestId, isNull);
+      expect(winners.longestId, isNull);
+      expect(winners.mostVisitedSiteId, isNull);
+    });
+
     test('empty database produces no winners', () async {
       final winners = await repository.getPersonalRecordIds();
       expect(winners.deepestId, isNull);
