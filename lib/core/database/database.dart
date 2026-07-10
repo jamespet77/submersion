@@ -5024,19 +5024,14 @@ class AppDatabase extends _$AppDatabase {
         }
         await createMigrator().createTable(buddyRoles);
 
-        // v100 backstop: re-assert the dive plan tables and their indexes
-        // (same collision disease; all DDL idempotent).
+        // v100 backstop: re-assert the dive plan tables (same collision
+        // disease; createTable is idempotent). Their indexes
+        // (idx_dive_plan_tanks_plan_id / idx_dive_plan_segments_plan_id) are
+        // in the canonical performance-index set and created by
+        // ensurePerformanceIndexes below, so they are not re-declared here.
         await createMigrator().createTable(divePlans);
         await createMigrator().createTable(divePlanTanks);
         await createMigrator().createTable(divePlanSegments);
-        await customStatement('''
-          CREATE INDEX IF NOT EXISTS idx_dive_plan_tanks_plan_id
-          ON dive_plan_tanks(plan_id)
-        ''');
-        await customStatement('''
-          CREATE INDEX IF NOT EXISTS idx_dive_plan_segments_plan_id
-          ON dive_plan_segments(plan_id)
-        ''');
 
         // Performance indexes historically existed only in onUpgrade blocks,
         // so a database created fresh at a recent schema version -- or

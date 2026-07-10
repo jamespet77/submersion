@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart' show kReleaseMode, visibleForTesting;
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -43,11 +43,11 @@ typedef SchemaVersionProbe =
 /// Runs [step], measuring its wall time, and prints a
 /// `[startup] <name>: <ms>ms` attribution line in debug/profile builds.
 ///
-/// Extracted to library scope so the timing-and-log logic is unit-testable
-/// on its own; at the real call sites in [StartupWrapper] it wraps platform
-/// singletons that only run during app launch. [log] defaults to
-/// `!kReleaseMode` and is injectable so tests can exercise both branches.
-@visibleForTesting
+/// A top-level function (rather than a private closure) so the real startup
+/// call sites in [StartupWrapper] and unit tests can both reach it; at those
+/// call sites it wraps platform singletons that only run during app launch.
+/// [log] defaults to `!kReleaseMode` and is injectable so tests can exercise
+/// both branches.
 Future<void> timeStartupStep(
   String name,
   Future<void> Function() step, {
