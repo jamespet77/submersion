@@ -102,4 +102,39 @@ void main() {
     );
     expect(data, isNull);
   });
+
+  test('thumbnail requests serve the thumb object and cache it under the '
+      'thumb pool', () async {
+    final thumbBytes = 'tiny-thumb'.codeUnits;
+    final hash = 'a1${'9' * 62}';
+    store.objects[StoreKeys.thumbKey(hash)] = thumbBytes;
+
+    final data = await resolver.tryResolveRemote(
+      item(
+        hash: hash,
+        uploadedAt: DateTime(2026),
+      ).copyWith(remoteThumbUploadedAt: DateTime(2026)),
+      thumbnail: true,
+    );
+    expect(data, isA<FileData>());
+    expect(await (data! as FileData).file.readAsBytes(), thumbBytes);
+    expect(await cache.get(hash, MediaCacheKind.thumb), isNotNull);
+    expect(await cache.get(hash, MediaCacheKind.original), isNull);
+  });
+
+  test('thumbnail request falls back to the original when no thumb was '
+      'uploaded', () async {
+    final bytes = 'submersion'.codeUnits;
+    final tmp = File('${root.path}/seed2');
+    await tmp.writeAsBytes(bytes, flush: true);
+    final digest = await sha256OfFile(tmp);
+    store.objects[StoreKeys.objectKey(digest.hash, extension: 'jpg')] = bytes;
+
+    final data = await resolver.tryResolveRemote(
+      item(hash: digest.hash, uploadedAt: DateTime(2026)),
+      thumbnail: true, // no remoteThumbUploadedAt on the item
+    );
+    expect(data, isA<FileData>());
+    expect(await (data! as FileData).file.readAsBytes(), bytes);
+  });
 }

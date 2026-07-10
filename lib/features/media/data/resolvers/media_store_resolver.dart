@@ -20,18 +20,43 @@ class MediaStoreResolver {
   final MediaCacheStore _cache;
   final _log = LoggerService.forClass(MediaStoreResolver);
 
-  /// Phase 1 ignores [thumbnail] (no thumb objects yet); full originals
-  /// serve both roles. Phase 2 routes thumbnail requests to thumb keys.
+  /// Returns FileData when the bytes are cached or fetched (originals are
+  /// hash-verified); null when this item is not confirmed in the store or
+  /// any error occurs (the caller keeps its native UnavailableData).
   ///
-  /// Returns FileData when the bytes are cached or fetched-and-verified;
-  /// null when this item is not confirmed in the store or any error occurs
-  /// (the caller keeps its native UnavailableData).
+  /// Thumbnail requests route to the thumb object when one was uploaded
+  /// and degrade to the original otherwise (spec section 10).
   Future<MediaSourceData?> tryResolveRemote(
     MediaItem item, {
     required bool thumbnail,
   }) async {
     final hash = item.contentHash;
     if (hash == null || item.remoteUploadedAt == null) return null;
+    if (thumbnail && item.remoteThumbUploadedAt != null) {
+      final thumb = await _fetchThumb(item, hash);
+      if (thumb != null) return thumb;
+      // Fall through: a missing/broken thumb degrades to the original.
+    }
+    return _fetchOriginal(item, hash);
+  }
+
+  Future<MediaSourceData?> _fetchThumb(MediaItem item, String hash) async {
+    try {
+      final cached = await _cache.get(hash, MediaCacheKind.thumb);
+      if (cached != null) return FileData(file: cached);
+      final staging = await _cache.stagingFile();
+      await _store.getFile(StoreKeys.thumbKey(hash), staging);
+      // No hash verification: thumb bytes are derived; the key carries the
+      // original's hash purely for addressing.
+      final file = await _cache.put(hash, MediaCacheKind.thumb, staging);
+      return FileData(file: file);
+    } on Exception catch (e) {
+      _log.warning('Thumb fetch failed for ${item.id}: $e');
+      return null;
+    }
+  }
+
+  Future<MediaSourceData?> _fetchOriginal(MediaItem item, String hash) async {
     try {
       final cached = await _cache.get(hash, MediaCacheKind.original);
       if (cached != null) return FileData(file: cached);
