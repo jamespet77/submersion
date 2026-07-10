@@ -6,8 +6,11 @@ import 'package:submersion/features/setup_wizard/domain/setup_wizard_models.dart
 import 'package:submersion/features/setup_wizard/presentation/providers/setup_wizard_providers.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/appearance_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/backup_sync_step.dart';
+import 'package:submersion/features/setup_wizard/presentation/widgets/steps/existing_choice_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/finish_step.dart';
-import 'package:submersion/features/setup_wizard/presentation/widgets/steps/placeholder_step.dart';
+import 'package:submersion/features/setup_wizard/presentation/widgets/steps/open_folder_step.dart';
+import 'package:submersion/features/setup_wizard/presentation/widgets/steps/restore_step.dart';
+import 'package:submersion/features/setup_wizard/presentation/widgets/steps/sync_connect_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/profile_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/units_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/welcome_fork_step.dart';
@@ -135,7 +138,8 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
         return WizardStepDef(
           label: _stepLabel(id),
           canAdvance: setupWizardProvider(mode).select((_) => true),
-          builder: (_) => BackupSyncStep(mode: mode),
+          builder: (_) =>
+              BackupSyncStep(mode: mode, onLibraryFound: _offerAdoptPivot),
         );
       case SetupStepId.finish:
         return WizardStepDef(
@@ -149,30 +153,72 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
           label: '',
           hideBottomBar: true,
           canAdvance: setupWizardProvider(mode).select((_) => true),
-          builder: (_) => const PlaceholderStep(title: 'Bring your data'),
+          builder: (_) => ExistingChoiceStep(
+            mode: mode,
+            onChosen: () => _chooseAndAdvance(() {}),
+          ),
         );
       case SetupStepId.restore:
         return WizardStepDef(
           label: '',
           hideBottomBar: true,
           canAdvance: setupWizardProvider(mode).select((_) => true),
-          builder: (_) => const PlaceholderStep(title: 'Restore backup'),
+          builder: (_) => const RestoreStep(),
         );
       case SetupStepId.syncConnect:
         return WizardStepDef(
           label: '',
           hideBottomBar: true,
           canAdvance: setupWizardProvider(mode).select((_) => true),
-          builder: (_) => const PlaceholderStep(title: 'Connect and pull'),
+          builder: (_) => SyncConnectStep(
+            mode: mode,
+            onNoLibrary: () {
+              notifier.choosePath(SetupPath.fresh);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _animateTo(1);
+              });
+            },
+          ),
         );
       case SetupStepId.openFolder:
         return WizardStepDef(
           label: '',
           hideBottomBar: true,
           canAdvance: setupWizardProvider(mode).select((_) => true),
-          builder: (_) => const PlaceholderStep(title: 'Open existing folder'),
+          builder: (_) => const OpenFolderStep(),
         );
     }
+  }
+
+  /// Fresh-path pivot: a just-connected provider already holds a library.
+  Future<void> _offerAdoptPivot() async {
+    final l10n = context.l10n;
+    final adopt = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.setup_sync_libraryFound_title),
+        content: Text(l10n.setup_sync_libraryFound_message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.setup_sync_libraryFound_keepFresh),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.setup_sync_libraryFound_adopt),
+          ),
+        ],
+      ),
+    );
+    if (adopt != true || !mounted) return;
+    final notifier = ref.read(setupWizardProvider(widget.mode).notifier);
+    notifier.choosePath(SetupPath.existingData);
+    notifier.chooseSource(ExistingDataSource.cloudSync);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final steps = computeSteps(ref.read(setupWizardProvider(widget.mode)));
+      _animateTo(steps.length - 1);
+    });
   }
 
   SetupStepId _currentStepId() {
