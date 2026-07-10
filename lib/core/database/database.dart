@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:drift/drift.dart';
+
+import 'package:submersion/core/database/performance_indexes.dart';
 
 part 'database.g.dart';
 
@@ -5034,6 +5037,25 @@ class AppDatabase extends _$AppDatabase {
           CREATE INDEX IF NOT EXISTS idx_dive_plan_segments_plan_id
           ON dive_plan_segments(plan_id)
         ''');
+
+        // Performance indexes historically existed only in onUpgrade blocks,
+        // so a database created fresh at a recent schema version -- or
+        // arriving via restore or sync-adopt -- never got them, and per-dive
+        // child lookups degraded to full scans of million-row tables.
+        // Re-assert the canonical set on every open (IF NOT EXISTS: free
+        // after the first heal). ANALYZE runs inside only when something was
+        // actually created.
+        final createdIndexes = await ensurePerformanceIndexes(this);
+        assert(() {
+          if (createdIndexes.isNotEmpty) {
+            developer.log(
+              'Healed ${createdIndexes.length} performance indexes: '
+              '${createdIndexes.join(', ')}',
+              name: 'AppDatabase',
+            );
+          }
+          return true;
+        }());
       },
     );
   }

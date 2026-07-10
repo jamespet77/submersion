@@ -16,6 +16,8 @@
 /// which runs on the plain Dart VM.
 library;
 
+import 'package:drift/drift.dart';
+
 typedef PerformanceIndex = ({String name, String ddl});
 
 const List<PerformanceIndex> kPerformanceIndexes = [
@@ -266,3 +268,43 @@ const List<PerformanceIndex> kPerformanceIndexes = [
         'ON gps_track_points_local(track_id)',
   ),
 ];
+
+/// Creates any canonical index missing from [db], returning the names of
+/// indexes actually created (empty when the database was already healed).
+///
+/// A statement whose table or column does not exist is skipped: migration
+/// tests open minimal old-schema fixtures where most tables (or late-added
+/// columns) are absent, and beforeOpen must tolerate them. On any real
+/// database the full ladder has run before beforeOpen, so the whole set
+/// applies; the fresh-DB test fails loudly if a canonical entry stops
+/// matching the current schema, so skips cannot mask a stale list.
+///
+/// Runs ANALYZE (bounded by analysis_limit) only when something was created,
+/// so the query planner picks up the new indexes; every later open is a
+/// single sqlite_master read.
+Future<List<String>> ensurePerformanceIndexes(GeneratedDatabase db) async {
+  final rows = await db
+      .customSelect("SELECT name FROM sqlite_master WHERE type = 'index'")
+      .get();
+  final existing = rows.map((r) => r.read<String>('name')).toSet();
+
+  final created = <String>[];
+  for (final index in kPerformanceIndexes) {
+    if (existing.contains(index.name)) continue;
+    try {
+      await db.customStatement(index.ddl);
+      created.add(index.name);
+    } catch (e) {
+      final message = e.toString();
+      final schemaTooOld =
+          message.contains('no such table') ||
+          message.contains('no such column');
+      if (!schemaTooOld) rethrow;
+    }
+  }
+  if (created.isNotEmpty) {
+    await db.customStatement('PRAGMA analysis_limit = 400');
+    await db.customStatement('ANALYZE');
+  }
+  return created;
+}
