@@ -94,4 +94,43 @@ void main() {
     expect(divers, hasLength(1));
     expect(divers!.single.name, 'Eric');
   });
+
+  testWidgets('apply failure surfaces an error and re-enables the button', (
+    tester,
+  ) async {
+    var seeded = false;
+    await tester.pumpWidget(
+      testApp(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: Consumer(
+          builder: (context, ref, _) {
+            ref.watch(setupWizardProvider(SetupWizardMode.firstRun));
+            if (!seeded) {
+              seeded = true;
+              // Fresh path but no name -> applyFirstRun throws ArgumentError.
+              Future.microtask(
+                () => ref
+                    .read(
+                      setupWizardProvider(SetupWizardMode.firstRun).notifier,
+                    )
+                    .choosePath(SetupPath.fresh),
+              );
+            }
+            return const FinishStep(mode: SetupWizardMode.firstRun);
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Start logging'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Could not complete setup'), findsOneWidget);
+    // Button re-enabled so the user can retry.
+    final button = tester.widget<FilledButton>(
+      find.widgetWithText(FilledButton, 'Start logging'),
+    );
+    expect(button.onPressed, isNotNull);
+  });
 }

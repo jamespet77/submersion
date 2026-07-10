@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/data/repositories/sync_repository.dart';
+import 'package:submersion/core/services/cloud_storage/icloud_native_service.dart';
 import 'package:submersion/features/backup/domain/entities/backup_settings.dart';
 import 'package:submersion/features/settings/presentation/pages/s3_config_page.dart';
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
@@ -83,6 +85,11 @@ void main() {
           ...overrides,
           isApplePlatformProvider.overrideWithValue(false),
           dropboxConfiguredProvider.overrideWithValue(false),
+          // Simulate S3 having been activated on the config page so the
+          // post-return handler records it in the draft.
+          selectedCloudProviderTypeProvider.overrideWith(
+            (ref) => CloudProviderType.s3,
+          ),
         ],
         child: const BackupSyncStep(mode: SetupWizardMode.firstRun),
       ),
@@ -91,7 +98,68 @@ void main() {
 
     await tester.tap(find.text('S3'));
     await tester.pumpAndSettle();
-
     expect(find.byType(S3ConfigPage), findsOneWidget);
+
+    // Close the config page; the step reads the active provider and reflects
+    // it as connected.
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.text('Connected to S3'), findsOneWidget);
+  });
+
+  const connectedNames = {
+    CloudProviderType.icloud: 'iCloud',
+    CloudProviderType.dropbox: 'Dropbox',
+    CloudProviderType.s3: 'S3',
+    CloudProviderType.googledrive: 'Google Drive',
+  };
+  for (final entry in connectedNames.entries) {
+    testWidgets('settings mode shows connected UI for ${entry.value}', (
+      tester,
+    ) async {
+      final overrides = await getBaseOverrides();
+      await tester.pumpWidget(
+        testApp(
+          overrides: [
+            ...overrides,
+            isApplePlatformProvider.overrideWithValue(false),
+            dropboxConfiguredProvider.overrideWithValue(false),
+            selectedCloudProviderTypeProvider.overrideWith((ref) => entry.key),
+          ],
+          child: const BackupSyncStep(mode: SetupWizardMode.settings),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Connected to ${entry.value}'), findsOneWidget);
+      expect(find.text('Manage in Settings'), findsOneWidget);
+
+      // Toggling the cloud-copy switch drives setCloudBackupEnabled.
+      await tester.tap(find.text('Keep a backup copy in the cloud'));
+      await tester.pumpAndSettle();
+    });
+  }
+
+  testWidgets('iCloud card renders when the platform supports it', (
+    tester,
+  ) async {
+    final overrides = await getBaseOverrides();
+    await tester.pumpWidget(
+      testApp(
+        overrides: [
+          ...overrides,
+          isApplePlatformProvider.overrideWithValue(true),
+          iCloudAvailabilityProvider.overrideWith(
+            (ref) async => ICloudAvailability.available,
+          ),
+          dropboxConfiguredProvider.overrideWithValue(false),
+        ],
+        child: const BackupSyncStep(mode: SetupWizardMode.firstRun),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('iCloud'), findsOneWidget);
+    expect(find.text('S3'), findsOneWidget);
   });
 }

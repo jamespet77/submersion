@@ -11,15 +11,30 @@ import 'package:submersion/features/backup/presentation/providers/backup_provide
 import 'package:submersion/features/backup/presentation/widgets/restore_confirmation_dialog.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
+/// A chosen backup file: its absolute path and display name.
+typedef PickedBackupFile = ({String path, String name});
+
 /// Restores a backup file; exits the wizard via the existing
 /// RestoreCompletePage -> restartApp() flow.
 class RestoreStep extends ConsumerWidget {
-  const RestoreStep({super.key});
+  /// [pickBackupFile] is injectable so the restore flow can be exercised
+  /// without a real platform file picker; it defaults to file_picker.
+  const RestoreStep({super.key, this.pickBackupFile = _pickViaFilePicker});
+
+  final Future<PickedBackupFile?> Function() pickBackupFile;
+
+  static Future<PickedBackupFile?> _pickViaFilePicker() async {
+    final result = await FilePicker.pickFiles(type: FileType.any);
+    if (result == null || result.files.isEmpty) return null;
+    final file = result.files.single;
+    final path = file.path;
+    return path == null ? null : (path: path, name: file.name);
+  }
 
   Future<void> _pickAndRestore(BuildContext context, WidgetRef ref) async {
-    final FilePickerResult? result;
+    final PickedBackupFile? picked;
     try {
-      result = await FilePicker.pickFiles(type: FileType.any);
+      picked = await pickBackupFile();
     } on Exception catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(
@@ -28,14 +43,12 @@ class RestoreStep extends ConsumerWidget {
       }
       return;
     }
-    if (result == null || result.files.isEmpty) return;
-    final filePath = result.files.single.path;
-    if (filePath == null || !context.mounted) return;
+    if (picked == null || !context.mounted) return;
 
-    final file = File(filePath);
+    final file = File(picked.path);
     final record = BackupRecord(
       id: 'setup-wizard',
-      filename: result.files.single.name,
+      filename: picked.name,
       timestamp: await file.lastModified(),
       sizeBytes: await file.length(),
       location: BackupLocation.local,
@@ -52,7 +65,7 @@ class RestoreStep extends ConsumerWidget {
     if (mode != null) {
       await ref
           .read(backupOperationProvider.notifier)
-          .restoreFromFilePath(filePath, mode: mode);
+          .restoreFromFilePath(picked.path, mode: mode);
     }
   }
 
