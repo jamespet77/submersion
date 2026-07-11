@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:submersion/core/deco/ascent/ascent_gas_plan.dart';
+import 'package:submersion/core/deco/ascent/ccr_loop_ascent_gas.dart';
 import 'package:submersion/core/deco/constants/buhlmann_coefficients.dart';
 import 'package:submersion/core/deco/entities/breathing_config.dart';
 import 'package:submersion/core/deco/entities/deco_status.dart';
@@ -908,7 +909,7 @@ class BuhlmannAlgorithm {
           fN2: sampleGas.fN2,
           fHe: sampleGas.fHe,
           safetyStopTimeAccumulated: safetyStopTimeAccumulated,
-          ascentGas: ascentGasPlan,
+          ascentGas: ascentGasPlan ?? _loopAscentPlanFor(sampleGas),
           breathing: _breathingFor(sampleGas),
         ),
       );
@@ -941,6 +942,23 @@ class BuhlmannAlgorithm {
     if (setpoint == null) return null;
     return ClosedCircuit(
       setpoint: setpoint,
+      diluentFO2: 1.0 - gas.fN2 - gas.fHe,
+      diluentFHe: gas.fHe,
+    );
+  }
+
+  /// Ascent plan implied by a setpoint-bearing segment: the loop itself, held
+  /// at the segment's setpoint all the way to the surface, so the TTS/schedule
+  /// simulation keeps constant-ppO2 physics (inert fraction changes with depth
+  /// as ppO2 stays fixed). Null for open-circuit segments.
+  CcrLoopAscentGas? _loopAscentPlanFor(ProfileGasSegment gas) {
+    final setpoint = gas.setpoint;
+    if (setpoint == null) return null;
+    return CcrLoopAscentGas(
+      environment: environment,
+      setpointLow: setpoint,
+      setpointHigh: setpoint,
+      switchDepth: 0.0,
       diluentFO2: 1.0 - gas.fN2 - gas.fHe,
       diluentFHe: gas.fHe,
     );
