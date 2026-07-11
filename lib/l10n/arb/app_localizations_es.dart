@@ -104,6 +104,135 @@ class AppLocalizationsEs extends AppLocalizations {
       'No disponible en esta versión: usa S3 o la versión de la App Store';
 
   @override
+  String get settings_cloudSync_encryption_title =>
+      'Cifrado de extremo a extremo';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff =>
+      'Cifrar todos los datos de sincronización y las copias en la nube antes de subirlos';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider =>
+      'Selecciona primero un proveedor de nube';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'El cifrado está desactivado';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn =>
+      'El cifrado está activado';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      'Los datos de sincronización y las copias en la nube se cifran antes de subirse';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked =>
+      'Cifrado — se necesita la frase de acceso';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      'Introduce la frase de acceso para sincronizar en este dispositivo';
+
+  @override
+  String get settings_cloudSync_encryption_enable => 'Activar el cifrado';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase =>
+      'Introducir frase de acceso';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => 'Frase de acceso';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm =>
+      'Confirmar frase de acceso';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch =>
+      'Las frases de acceso no coinciden';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort =>
+      'Usa al menos 8 caracteres';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase =>
+      'Frase de acceso o código de recuperación incorrectos';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      'Todos los demás dispositivos deben actualizarse a la última versión de la app y volverán a descargar la biblioteca.';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      'Si pierdes la frase de acceso y el código de recuperación, los datos en la nube no se podrán recuperar. Los datos en tus dispositivos nunca corren riesgo.';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      'Eliminar las copias en la nube sin cifrar existentes';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle =>
+      'Código de recuperación';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      'Apunta este código y guárdalo en un lugar seguro. Es la única forma de volver a entrar si olvidas la frase de acceso.';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm =>
+      'He guardado mi código de recuperación';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase =>
+      'Cambiar frase de acceso';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase =>
+      'Frase de acceso actual';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase =>
+      'Nueva frase de acceso';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery =>
+      'Generar nuevo código de recuperación';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      'El código de recuperación anterior deja de funcionar de inmediato.';
+
+  @override
+  String get settings_cloudSync_encryption_disable => 'Desactivar el cifrado';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      'La biblioteca se volverá a subir sin cifrar y los demás dispositivos la descargarán de nuevo. Las copias cifradas existentes siguen siendo restaurables con la frase de acceso.';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle =>
+      'Introduce tu frase de acceso de cifrado';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint =>
+      'Frase de acceso o código de recuperación';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => 'Desbloquear';
+
+  @override
+  String get settings_cloudSync_encryption_continue => 'Continuar';
+
+  @override
+  String get settings_cloudSync_encryption_done => 'Hecho';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => 'Cancelar';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return 'Sincronización en pausa: la biblioteca se reemplazó desde una copia de seguridad en \"$deviceName\".';
   }
@@ -18501,4 +18630,261 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get diveLog_bulkEdit_membership_empty =>
       'Aún no hay elementos en las inmersiones seleccionadas';
+
+  @override
+  String get settings_mediaStorage_entry_title => 'Almacenamiento de medios';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle =>
+      'Guarda los originales de fotos y videos en tu propio almacenamiento en la nube';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured =>
+      'No hay un almacén de medios conectado en este dispositivo';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return 'Conectado a $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => 'Conexión correcta';
+
+  @override
+  String get settings_mediaStorage_saved => 'Almacén de medios conectado';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => 'Desconectar';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title =>
+      '¿Desconectar el almacén de medios?';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      'Este dispositivo deja de subir y descargar medios. No se elimina nada de tu bucket.';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync =>
+      'Copiar ajustes de Sincronización';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'Transferencias';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'Ver transferencias';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'Sin transferencias';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'Reintentar';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted =>
+      'Borrar completadas';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'En espera';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'Subiendo';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'Completado';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'Fallido';
+
+  @override
+  String get settings_mediaStorage_backfill_action =>
+      'Subir biblioteca existente';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count subidas en cola';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload =>
+      'Subir fotos automáticamente';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'Subir fotos con datos móviles';
+
+  @override
+  String get settings_mediaStorage_provider_label => 'Proveedor';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      'Usa tu conexión de Dropbox de la sincronización en la nube. Los medios se guardan en la carpeta de la app en Dropbox.';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      'Inicia sesión con Google. Los medios se guardan en el espacio privado de Drive de esta app.';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      'Los medios se guardan en el contenedor de iCloud de esta app y se sincronizan con tu Apple ID.';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return 'Conectar $provider';
+  }
+
+  @override
+  String get bodyWeight_addEntry => 'Añadir medición';
+
+  @override
+  String get bodyWeight_dateLabel => 'Fecha';
+
+  @override
+  String get bodyWeight_deleteTooltip => 'Eliminar entrada';
+
+  @override
+  String get bodyWeight_heightLabel => 'Altura (cm)';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return 'Peso ($unit)';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return 'Por cuánto aproximadamente ($unit)';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => 'Correcto';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => '¿Cómo fue tu lastre?';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => 'Sobrelastrado';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => 'Infralastrado';
+
+  @override
+  String get diverProfile_bodyWeight_empty => 'Sin registrar';
+
+  @override
+  String get diverProfile_bodyWeight_title => 'Peso corporal';
+
+  @override
+  String get equipment_edit_advanced_title => 'Avanzado';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure => 'Positivo: cuánto flota';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => 'Negativo si se hunde';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank =>
+      'Dejar vacío: los tanques usan sus propias especificaciones';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return 'Flotabilidad ($unit)';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return 'Peso en seco ($unit)';
+  }
+
+  @override
+  String get planner_gearWeights_accept => 'Usar como lastre planificado';
+
+  @override
+  String get planner_gearWeights_addGear => 'Añadir equipo';
+
+  @override
+  String get planner_gearWeights_empty =>
+      'Añade equipo para predecir tu lastre';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return 'Planificado: $weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return 'Predicción: $weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => 'Equipo y lastre';
+
+  @override
+  String get planner_gearWeights_useSet => 'Usar conjunto';
+
+  @override
+  String get tools_weight_addGear => 'Añadir equipo';
+
+  @override
+  String get tools_weight_addTank => 'Añadir tanque';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return 'Basado en $count inmersiones registradas';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => 'Cómo se calculó';
+
+  @override
+  String get tools_weight_confidence_high => 'Confianza alta';
+
+  @override
+  String get tools_weight_confidence_low => 'Confianza baja: estimación';
+
+  @override
+  String get tools_weight_confidence_medium => 'Confianza media';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '$delta respecto al equipo anterior';
+  }
+
+  @override
+  String get tools_weight_noGear =>
+      'Añade el equipo con el que vas a bucear para personalizar la predicción.';
+
+  @override
+  String get tools_weight_personalTerm => 'Base personal';
+
+  @override
+  String get tools_weight_placementTitle => 'Colocación sugerida';
+
+  @override
+  String get tools_weight_predictedWeight => 'Lastre previsto';
+
+  @override
+  String get tools_weight_saveToProfile => 'Guardar peso en el perfil';
+
+  @override
+  String get tools_weight_source_measured => 'medido de tus inmersiones';
+
+  @override
+  String get tools_weight_source_physics => 'física';
+
+  @override
+  String get tools_weight_source_typeDefault => 'estimación por defecto';
+
+  @override
+  String get tools_weight_source_userSpec =>
+      'de las especificaciones de tu equipo';
+
+  @override
+  String get tools_weight_tanks => 'Tanques';
+
+  @override
+  String get tools_weight_useSet => 'Usar conjunto';
+
+  @override
+  String get tools_weight_waterTerm => 'Tipo de agua';
 }

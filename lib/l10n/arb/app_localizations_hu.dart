@@ -105,6 +105,134 @@ class AppLocalizationsHu extends AppLocalizations {
       'Ebben a buildben nem érhető el – használj S3-at vagy az App Store-verziót';
 
   @override
+  String get settings_cloudSync_encryption_title =>
+      'Végpontok közötti titkosítás';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff =>
+      'Minden szinkronizálási adat és felhőmentés titkosítása feltöltés előtt';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider =>
+      'Előbb válasszon felhőszolgáltatót';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'A titkosítás ki van kapcsolva';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn =>
+      'A titkosítás be van kapcsolva';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      'A szinkronizálási adatok és a felhőmentések feltöltés előtt titkosítva lesznek';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked =>
+      'Titkosítva — jelmondat szükséges';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      'Adja meg a jelmondatot a szinkronizáláshoz ezen az eszközön';
+
+  @override
+  String get settings_cloudSync_encryption_enable => 'Titkosítás bekapcsolása';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase =>
+      'Jelmondat megadása';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => 'Jelmondat';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm =>
+      'Jelmondat megerősítése';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch =>
+      'A jelmondatok nem egyeznek';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort =>
+      'Legalább 8 karaktert használjon';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase =>
+      'Hibás jelmondat vagy helyreállítási kód';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      'Minden más eszközt a legújabb alkalmazásverzióra kell frissíteni, és újra letöltik a könyvtárat.';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      'Ha a jelmondat és a helyreállítási kód is elvész, a felhőben lévő adatok nem állíthatók helyre. Az eszközein lévő adatok soha nincsenek veszélyben.';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      'Meglévő titkosítatlan felhőmentések törlése';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle =>
+      'Helyreállítási kód';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      'Írja fel ezt a kódot, és őrizze biztonságos helyen. Ez az egyetlen visszaút, ha elfelejti a jelmondatot.';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm =>
+      'Elmentettem a helyreállítási kódomat';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase =>
+      'Jelmondat módosítása';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase =>
+      'Jelenlegi jelmondat';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase => 'Új jelmondat';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery =>
+      'Új helyreállítási kód létrehozása';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      'A régi helyreállítási kód azonnal érvénytelenné válik.';
+
+  @override
+  String get settings_cloudSync_encryption_disable => 'Titkosítás kikapcsolása';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      'A könyvtár titkosítatlanul lesz újra feltöltve, és a többi eszköz újra letölti. A meglévő titkosított mentések a jelmondattal továbbra is visszaállíthatók.';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle =>
+      'Adja meg a titkosítási jelmondatot';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint =>
+      'Jelmondat vagy helyreállítási kód';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => 'Feloldás';
+
+  @override
+  String get settings_cloudSync_encryption_continue => 'Folytatás';
+
+  @override
+  String get settings_cloudSync_encryption_done => 'Kész';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => 'Mégse';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return 'A szinkronizálás szünetel — a könyvtárat egy biztonsági másolatból cserélték itt: \"$deviceName\".';
   }
@@ -18441,4 +18569,261 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get diveLog_bulkEdit_membership_empty =>
       'Még nincsenek elemek a kiválasztott merüléseken';
+
+  @override
+  String get settings_mediaStorage_entry_title => 'Médiatárhely';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle =>
+      'Fotó- és videóeredetik tárolása saját felhőtárhelyen';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured =>
+      'Nincs médiatár csatlakoztatva ezen az eszközön';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return 'Csatlakoztatva: $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => 'Sikeres kapcsolat';
+
+  @override
+  String get settings_mediaStorage_saved => 'Médiatár csatlakoztatva';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => 'Leválasztás';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title =>
+      'Leválasztja a médiatárat?';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      'Az eszköz nem tölt fel és nem tölt le több médiát. A bucketből semmi sem törlődik.';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync =>
+      'Beállítások átvétele a szinkronizálásból';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'Átvitelek';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'Átvitelek megtekintése';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'Nincs átvitel';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'Újra';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted =>
+      'Befejezettek törlése';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'Várakozik';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'Feltöltés';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'Kész';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'Sikertelen';
+
+  @override
+  String get settings_mediaStorage_backfill_action =>
+      'Meglévő könyvtár feltöltése';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count feltöltés sorban';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload =>
+      'Fotók automatikus feltöltése';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'Fotók feltöltése mobilhálózaton';
+
+  @override
+  String get settings_mediaStorage_provider_label => 'Szolgáltató';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      'A felhőszinkronizálás Dropbox-kapcsolatát használja. A média a Dropbox alkalmazásmappájában tárolódik.';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      'Google-fiókkal jelentkezik be. A média az alkalmazás privát Drive-területén tárolódik.';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      'A média az alkalmazás iCloud-tárolójában tárolódik, és az Apple ID-n keresztül szinkronizálódik.';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return '$provider csatlakoztatása';
+  }
+
+  @override
+  String get bodyWeight_addEntry => 'Mérés hozzáadása';
+
+  @override
+  String get bodyWeight_dateLabel => 'Dátum';
+
+  @override
+  String get bodyWeight_deleteTooltip => 'Bejegyzés törlése';
+
+  @override
+  String get bodyWeight_heightLabel => 'Magasság (cm)';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return 'Testsúly ($unit)';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return 'Körülbelül mennyivel ($unit)';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => 'Megfelelő volt';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => 'Milyen volt a súlyozásod?';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => 'Túlsúlyozott';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => 'Alulsúlyozott';
+
+  @override
+  String get diverProfile_bodyWeight_empty => 'Nincs rögzítve';
+
+  @override
+  String get diverProfile_bodyWeight_title => 'Testsúly';
+
+  @override
+  String get equipment_edit_advanced_title => 'Speciális';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure =>
+      'Pozitív: mennyire úszik fel';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => 'Negatív, ha süllyed';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank =>
+      'Hagyd üresen - a palackok saját adataikat használják';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return 'Felhajtóerő ($unit)';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return 'Száraz tömeg ($unit)';
+  }
+
+  @override
+  String get planner_gearWeights_accept => 'Használat tervezett súlyként';
+
+  @override
+  String get planner_gearWeights_addGear => 'Felszerelés hozzáadása';
+
+  @override
+  String get planner_gearWeights_empty =>
+      'Adj hozzá felszerelést a súlyozás előrejelzéséhez';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return 'Tervezett: $weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return 'Előrejelzett: $weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => 'Felszerelés és súlyok';
+
+  @override
+  String get planner_gearWeights_useSet => 'Készlet használata';
+
+  @override
+  String get tools_weight_addGear => 'Felszerelés hozzáadása';
+
+  @override
+  String get tools_weight_addTank => 'Palack hozzáadása';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return '$count naplózott merülés alapján';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => 'Hogyan számoltuk ki';
+
+  @override
+  String get tools_weight_confidence_high => 'Nagy megbízhatóság';
+
+  @override
+  String get tools_weight_confidence_low => 'Alacsony megbízhatóság - becslés';
+
+  @override
+  String get tools_weight_confidence_medium => 'Közepes megbízhatóság';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '$delta az előző felszereléshez képest';
+  }
+
+  @override
+  String get tools_weight_noGear =>
+      'Add hozzá a merüléshez tervezett felszerelést az előrejelzés személyre szabásához.';
+
+  @override
+  String get tools_weight_personalTerm => 'Személyes alap';
+
+  @override
+  String get tools_weight_placementTitle => 'Javasolt elosztás';
+
+  @override
+  String get tools_weight_predictedWeight => 'Előrejelzett súly';
+
+  @override
+  String get tools_weight_saveToProfile => 'Súly mentése a profilba';
+
+  @override
+  String get tools_weight_source_measured => 'a merüléseidből mérve';
+
+  @override
+  String get tools_weight_source_physics => 'fizika';
+
+  @override
+  String get tools_weight_source_typeDefault => 'alapértelmezett becslés';
+
+  @override
+  String get tools_weight_source_userSpec => 'a felszerelésed adataiból';
+
+  @override
+  String get tools_weight_tanks => 'Palackok';
+
+  @override
+  String get tools_weight_useSet => 'Készlet használata';
+
+  @override
+  String get tools_weight_waterTerm => 'Víztípus';
 }

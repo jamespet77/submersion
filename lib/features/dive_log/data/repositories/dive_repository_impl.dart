@@ -238,6 +238,8 @@ class DiveRepository {
                   serviceIntervalDays: e.serviceIntervalDays,
                   notes: e.notes,
                   isActive: e.isActive,
+                  buoyancyKg: e.buoyancyKg,
+                  weightKg: e.weightKg,
                 ),
               );
         }
@@ -912,6 +914,8 @@ class DiveRepository {
               // Weight system fields
               weightAmount: Value(dive.weightAmount),
               weightType: Value(dive.weightType?.name),
+              weightingFeedback: Value(dive.weightingFeedback?.name),
+              weightingFeedbackKg: Value(dive.weightingFeedbackKg),
               // Favorite flag
               isFavorite: Value(dive.isFavorite),
               // CCR/SCR rebreather fields (v1.5)
@@ -1151,6 +1155,8 @@ class DiveRepository {
           // Weight system fields
           weightAmount: Value(dive.weightAmount),
           weightType: Value(dive.weightType?.name),
+          weightingFeedback: Value(dive.weightingFeedback?.name),
+          weightingFeedbackKg: Value(dive.weightingFeedbackKg),
           // Favorite flag
           isFavorite: Value(dive.isFavorite),
           // CCR/SCR rebreather fields (v1.5)
@@ -2676,6 +2682,13 @@ class DiveRepository {
               orElse: () => WeightType.belt,
             )
           : null,
+      weightingFeedback: row.weightingFeedback != null
+          ? WeightingFeedback.values.firstWhere(
+              (f) => f.name == row.weightingFeedback,
+              orElse: () => WeightingFeedback.correct,
+            )
+          : null,
+      weightingFeedbackKg: row.weightingFeedbackKg,
       // Weather conditions
       windSpeed: row.windSpeed,
       windDirection: row.windDirection != null
@@ -2836,6 +2849,8 @@ class DiveRepository {
         serviceIntervalDays: e.serviceIntervalDays,
         notes: e.notes,
         isActive: e.isActive,
+        buoyancyKg: e.buoyancyKg,
+        weightKg: e.weightKg,
       );
     }).toList();
 
@@ -3031,6 +3046,13 @@ class DiveRepository {
               orElse: () => WeightType.belt,
             )
           : null,
+      weightingFeedback: row.weightingFeedback != null
+          ? WeightingFeedback.values.firstWhere(
+              (f) => f.name == row.weightingFeedback,
+              orElse: () => WeightingFeedback.correct,
+            )
+          : null,
+      weightingFeedbackKg: row.weightingFeedbackKg,
       // Weather conditions
       windSpeed: row.windSpeed,
       windDirection: row.windDirection != null

@@ -225,6 +225,7 @@ class SyncData {
   final List<Map<String, dynamic>> media;
   final List<Map<String, dynamic>> buddies;
   final List<Map<String, dynamic>> buddyRoles;
+  final List<Map<String, dynamic>> mediaStores;
   final List<Map<String, dynamic>> diveBuddies;
   final List<Map<String, dynamic>> certifications;
   final List<Map<String, dynamic>> courses;
@@ -240,6 +241,8 @@ class SyncData {
   final List<Map<String, dynamic>> divePlans;
   final List<Map<String, dynamic>> divePlanTanks;
   final List<Map<String, dynamic>> divePlanSegments;
+  final List<Map<String, dynamic>> divePlanEquipment;
+  final List<Map<String, dynamic>> diverWeightEntries;
   final List<Map<String, dynamic>> tags;
   final List<Map<String, dynamic>> diveTags;
   final List<Map<String, dynamic>> diveDiveTypes;
@@ -276,6 +279,7 @@ class SyncData {
     this.media = const [],
     this.buddies = const [],
     this.buddyRoles = const [],
+    this.mediaStores = const [],
     this.diveBuddies = const [],
     this.certifications = const [],
     this.courses = const [],
@@ -291,6 +295,8 @@ class SyncData {
     this.divePlans = const [],
     this.divePlanTanks = const [],
     this.divePlanSegments = const [],
+    this.divePlanEquipment = const [],
+    this.diverWeightEntries = const [],
     this.tags = const [],
     this.diveTags = const [],
     this.diveDiveTypes = const [],
@@ -328,6 +334,7 @@ class SyncData {
     'media': media,
     'buddies': buddies,
     'buddyRoles': buddyRoles,
+    'mediaStores': mediaStores,
     'diveBuddies': diveBuddies,
     'certifications': certifications,
     'courses': courses,
@@ -343,6 +350,8 @@ class SyncData {
     'divePlans': divePlans,
     'divePlanTanks': divePlanTanks,
     'divePlanSegments': divePlanSegments,
+    'divePlanEquipment': divePlanEquipment,
+    'diverWeightEntries': diverWeightEntries,
     'tags': tags,
     'diveTags': diveTags,
     'diveDiveTypes': diveDiveTypes,
@@ -381,6 +390,7 @@ class SyncData {
       media: _parseList(json['media']),
       buddies: _parseList(json['buddies']),
       buddyRoles: _parseList(json['buddyRoles']),
+      mediaStores: _parseList(json['mediaStores']),
       diveBuddies: _parseList(json['diveBuddies']),
       certifications: _parseList(json['certifications']),
       courses: _parseList(json['courses']),
@@ -396,6 +406,8 @@ class SyncData {
       divePlans: _parseList(json['divePlans']),
       divePlanTanks: _parseList(json['divePlanTanks']),
       divePlanSegments: _parseList(json['divePlanSegments']),
+      divePlanEquipment: _parseList(json['divePlanEquipment']),
+      diverWeightEntries: _parseList(json['diverWeightEntries']),
       tags: _parseList(json['tags']),
       diveTags: _parseList(json['diveTags']),
       diveDiveTypes: _parseList(json['diveDiveTypes']),
@@ -566,6 +578,7 @@ class SyncDataSerializer {
     (key: 'media', table: _db.media, blob: true, full: null),
     (key: 'buddies', table: _db.buddies, blob: false, full: null),
     (key: 'buddyRoles', table: _db.buddyRoles, blob: false, full: null),
+    (key: 'mediaStores', table: _db.mediaStores, blob: false, full: null),
     (key: 'diveBuddies', table: _db.diveBuddies, blob: false, full: null),
     (key: 'certifications', table: _db.certifications, blob: true, full: null),
     (key: 'courses', table: _db.courses, blob: false, full: null),
@@ -608,6 +621,18 @@ class SyncDataSerializer {
     (
       key: 'divePlanSegments',
       table: _db.divePlanSegments,
+      blob: false,
+      full: null,
+    ),
+    (
+      key: 'divePlanEquipment',
+      table: null,
+      blob: false,
+      full: () => _exportDivePlanEquipment(null),
+    ),
+    (
+      key: 'diverWeightEntries',
+      table: _db.diverWeightEntries,
       blob: false,
       full: null,
     ),
@@ -948,6 +973,10 @@ class SyncDataSerializer {
         'buddyRoles',
         () => _exportBuddyRoles(hlcSince),
       ),
+      mediaStores: await _safeExport(
+        'mediaStores',
+        () => _exportMediaStores(hlcSince),
+      ),
       diveBuddies: await _safeExport(
         'diveBuddies',
         () => _exportDiveBuddies(hlcSince),
@@ -1001,6 +1030,14 @@ class SyncDataSerializer {
       divePlanSegments: await _safeExport(
         'divePlanSegments',
         () => _exportDivePlanSegments(hlcSince),
+      ),
+      divePlanEquipment: await _safeExport(
+        'divePlanEquipment',
+        () => _exportDivePlanEquipment(hlcSince),
+      ),
+      diverWeightEntries: await _safeExport(
+        'diverWeightEntries',
+        () => _exportDiverWeightEntries(hlcSince),
       ),
       tags: await _safeExport('tags', () => _exportTags(hlcSince)),
       diveTags: await _safeExport('diveTags', () => _exportDiveTags(hlcSince)),
@@ -1269,6 +1306,11 @@ class SyncDataSerializer {
           _db.buddyRoles,
         )..where((t) => t.id.equals(recordId))).getSingleOrNull();
         return row?.toJson();
+      case 'mediaStores':
+        final row = await (_db.select(
+          _db.mediaStores,
+        )..where((t) => t.id.equals(recordId))).getSingleOrNull();
+        return row?.toJson();
       case 'diveBuddies':
         final row = await (_db.select(
           _db.diveBuddies,
@@ -1344,6 +1386,20 @@ class SyncDataSerializer {
       case 'divePlanSegments':
         final row = await (_db.select(
           _db.divePlanSegments,
+        )..where((t) => t.id.equals(recordId))).getSingleOrNull();
+        return row?.toJson();
+      case 'divePlanEquipment':
+        final parts = _splitCompositeId(recordId);
+        if (parts.length != 2) return null;
+        final row =
+            await (_db.select(_db.divePlanEquipment)
+                  ..where((t) => t.planId.equals(parts[0]))
+                  ..where((t) => t.equipmentId.equals(parts[1])))
+                .getSingleOrNull();
+        return row?.toJson();
+      case 'diverWeightEntries':
+        final row = await (_db.select(
+          _db.diverWeightEntries,
         )..where((t) => t.id.equals(recordId))).getSingleOrNull();
         return row?.toJson();
       case 'tags':
@@ -1516,6 +1572,11 @@ class SyncDataSerializer {
           _db.buddyRoles,
         )..where((t) => t.id.isIn(idList))).get();
         return {for (final r in rows) r.id: r.toJson()};
+      case 'mediaStores':
+        final rows = await (_db.select(
+          _db.mediaStores,
+        )..where((t) => t.id.isIn(idList))).get();
+        return {for (final r in rows) r.id: r.toJson()};
       case 'diveCenters':
         final rows = await (_db.select(
           _db.diveCenters,
@@ -1564,6 +1625,11 @@ class SyncDataSerializer {
       case 'divePlanSegments':
         final rows = await (_db.select(
           _db.divePlanSegments,
+        )..where((t) => t.id.isIn(idList))).get();
+        return {for (final r in rows) r.id: r.toJson()};
+      case 'diverWeightEntries':
+        final rows = await (_db.select(
+          _db.diverWeightEntries,
         )..where((t) => t.id.isIn(idList))).get();
         return {for (final r in rows) r.id: r.toJson()};
       case 'diveTypes':
@@ -1745,6 +1811,13 @@ class SyncDataSerializer {
               BuddyRoleRow.fromJson(data).toCompanion(false),
             );
         return;
+      case 'mediaStores':
+        await _db
+            .into(_db.mediaStores)
+            .insertOnConflictUpdate(
+              MediaStore.fromJson(data).toCompanion(false),
+            );
+        return;
       case 'diveBuddies':
         await _db
             .into(_db.diveBuddies)
@@ -1843,6 +1916,20 @@ class SyncDataSerializer {
             .into(_db.divePlanSegments)
             .insertOnConflictUpdate(
               DivePlanSegment.fromJson(data).toCompanion(false),
+            );
+        return;
+      // Clockless composite-PK junction: plain data-class upsert
+      // (nullToAbsent). Do NOT add .toCompanion(false) here.
+      case 'divePlanEquipment':
+        await _db
+            .into(_db.divePlanEquipment)
+            .insertOnConflictUpdate(DivePlanEquipmentData.fromJson(data));
+        return;
+      case 'diverWeightEntries':
+        await _db
+            .into(_db.diverWeightEntries)
+            .insertOnConflictUpdate(
+              DiverWeightEntryRow.fromJson(data).toCompanion(false),
             );
         return;
       case 'tags':
@@ -2118,6 +2205,16 @@ class SyncDataSerializer {
           ),
         );
         return;
+      case 'mediaStores':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.mediaStores,
+            records
+                .map((r) => MediaStore.fromJson(r).toCompanion(false))
+                .toList(),
+          ),
+        );
+        return;
       case 'buddyRoles':
         await _db.batch(
           (b) => b.insertAllOnConflictUpdate(
@@ -2280,6 +2377,24 @@ class SyncDataSerializer {
             _db.divePlanSegments,
             records
                 .map((r) => DivePlanSegment.fromJson(r).toCompanion(false))
+                .toList(),
+          ),
+        );
+        return;
+      case 'divePlanEquipment':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.divePlanEquipment,
+            records.map((r) => DivePlanEquipmentData.fromJson(r)).toList(),
+          ),
+        );
+        return;
+      case 'diverWeightEntries':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diverWeightEntries,
+            records
+                .map((r) => DiverWeightEntryRow.fromJson(r).toCompanion(false))
                 .toList(),
           ),
         );
@@ -2528,6 +2643,19 @@ class SyncDataSerializer {
             '${row.read(_db.diveEquipment.diveId)}|'
                 '${row.read(_db.diveEquipment.equipmentId)}',
         };
+      case 'divePlanEquipment':
+        final query = _db.selectOnly(_db.divePlanEquipment)
+          ..addColumns([
+            _db.divePlanEquipment.planId,
+            _db.divePlanEquipment.equipmentId,
+          ]);
+        return {
+          for (final row in await query.get())
+            '${row.read(_db.divePlanEquipment.planId)}|'
+                '${row.read(_db.divePlanEquipment.equipmentId)}',
+        };
+      case 'diverWeightEntries':
+        return plain(_db.diverWeightEntries, _db.diverWeightEntries.id);
       case 'equipmentSetItems':
         final query = _db.selectOnly(_db.equipmentSetItems)
           ..addColumns([
@@ -2547,6 +2675,8 @@ class SyncDataSerializer {
         return plain(_db.buddies, _db.buddies.id);
       case 'buddyRoles':
         return plain(_db.buddyRoles, _db.buddyRoles.id);
+      case 'mediaStores':
+        return plain(_db.mediaStores, _db.mediaStores.id);
       case 'diveCenters':
         return plain(_db.diveCenters, _db.diveCenters.id);
       case 'trips':
@@ -2699,6 +2829,10 @@ class SyncDataSerializer {
         return _db.settings;
       case 'diveEquipment':
         return _db.diveEquipment;
+      case 'divePlanEquipment':
+        return _db.divePlanEquipment;
+      case 'diverWeightEntries':
+        return _db.diverWeightEntries;
       case 'equipmentSetItems':
         return _db.equipmentSetItems;
       case 'divers':
@@ -2709,6 +2843,8 @@ class SyncDataSerializer {
         return _db.buddies;
       case 'buddyRoles':
         return _db.buddyRoles;
+      case 'mediaStores':
+        return _db.mediaStores;
       case 'diveCenters':
         return _db.diveCenters;
       case 'trips':
@@ -2836,6 +2972,20 @@ class SyncDataSerializer {
               .go();
         }
         return;
+      case 'divePlanEquipment':
+        final planParts = _splitCompositeId(recordId);
+        if (planParts.length == 2) {
+          await (_db.delete(_db.divePlanEquipment)
+                ..where((t) => t.planId.equals(planParts[0]))
+                ..where((t) => t.equipmentId.equals(planParts[1])))
+              .go();
+        }
+        return;
+      case 'diverWeightEntries':
+        await (_db.delete(
+          _db.diverWeightEntries,
+        )..where((t) => t.id.equals(recordId))).go();
+        return;
       case 'diveWeights':
         await (_db.delete(
           _db.diveWeights,
@@ -2871,6 +3021,11 @@ class SyncDataSerializer {
       case 'buddies':
         await (_db.delete(
           _db.buddies,
+        )..where((t) => t.id.equals(recordId))).go();
+        return;
+      case 'mediaStores':
+        await (_db.delete(
+          _db.mediaStores,
         )..where((t) => t.id.equals(recordId))).go();
         return;
       case 'buddyRoles':
@@ -3149,6 +3304,38 @@ class SyncDataSerializer {
     return rows.map((r) => r.toJson()).toList();
   }
 
+  /// Clockless junction: incremental exports key off the parent plan's HLC
+  /// (the junction rows have no clock of their own).
+  Future<List<Map<String, dynamic>>> _exportDivePlanEquipment(
+    String? hlcSince,
+  ) async {
+    if (hlcSince != null) {
+      final modifiedPlans = await (_db.select(
+        _db.divePlans,
+      )..where((t) => t.hlc.isBiggerThanValue(hlcSince))).get();
+      final planIds = modifiedPlans.map((p) => p.id).toSet();
+      if (planIds.isEmpty) return [];
+
+      final rows = await (_db.select(
+        _db.divePlanEquipment,
+      )..where((t) => t.planId.isIn(planIds))).get();
+      return rows.map((r) => r.toJson()).toList();
+    }
+    final rows = await _db.select(_db.divePlanEquipment).get();
+    return rows.map((r) => r.toJson()).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> _exportDiverWeightEntries(
+    String? hlcSince,
+  ) async {
+    final query = _db.select(_db.diverWeightEntries);
+    if (hlcSince != null) {
+      query.where((t) => t.hlc.isBiggerThanValue(hlcSince));
+    }
+    final rows = await query.get();
+    return rows.map((r) => r.toJson()).toList();
+  }
+
   Future<List<Map<String, dynamic>>> _exportDiveWeights(
     String? hlcSince,
   ) async {
@@ -3241,6 +3428,17 @@ class SyncDataSerializer {
 
   Future<List<Map<String, dynamic>>> _exportBuddyRoles(String? hlcSince) async {
     final query = _db.select(_db.buddyRoles);
+    if (hlcSince != null) {
+      query.where((t) => t.hlc.isBiggerThanValue(hlcSince));
+    }
+    final rows = await query.get();
+    return rows.map((r) => r.toJson()).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> _exportMediaStores(
+    String? hlcSince,
+  ) async {
+    final query = _db.select(_db.mediaStores);
     if (hlcSince != null) {
       query.where((t) => t.hlc.isBiggerThanValue(hlcSince));
     }

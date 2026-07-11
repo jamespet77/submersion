@@ -104,6 +104,136 @@ class AppLocalizationsDe extends AppLocalizations {
       'In diesem Build nicht verfügbar – verwende S3 oder die App-Store-Version';
 
   @override
+  String get settings_cloudSync_encryption_title =>
+      'Ende-zu-Ende-Verschlüsselung';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff =>
+      'Alle Sync-Daten und Cloud-Backups vor dem Hochladen verschlüsseln';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider =>
+      'Zuerst einen Cloud-Anbieter auswählen';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'Verschlüsselung ist aus';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn =>
+      'Verschlüsselung ist aktiv';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      'Sync-Daten und Cloud-Backups werden vor dem Hochladen verschlüsselt';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked =>
+      'Verschlüsselt — Passphrase erforderlich';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      'Passphrase eingeben, um auf diesem Gerät zu synchronisieren';
+
+  @override
+  String get settings_cloudSync_encryption_enable =>
+      'Verschlüsselung aktivieren';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase =>
+      'Passphrase eingeben';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => 'Passphrase';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm =>
+      'Passphrase bestätigen';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch =>
+      'Passphrasen stimmen nicht überein';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort =>
+      'Mindestens 8 Zeichen verwenden';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase =>
+      'Falsche Passphrase oder falscher Wiederherstellungscode';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      'Alle anderen Geräte müssen auf die neueste App-Version aktualisiert werden und laden die Bibliothek erneut herunter.';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      'Gehen Passphrase und Wiederherstellungscode verloren, können die Daten in der Cloud nicht wiederhergestellt werden. Die Daten auf Ihren Geräten sind nie in Gefahr.';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      'Vorhandene unverschlüsselte Cloud-Backups löschen';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle =>
+      'Wiederherstellungscode';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      'Notieren Sie diesen Code und bewahren Sie ihn sicher auf. Er ist der einzige Weg zurück, falls Sie die Passphrase vergessen.';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm =>
+      'Ich habe meinen Wiederherstellungscode gespeichert';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase =>
+      'Passphrase ändern';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase =>
+      'Aktuelle Passphrase';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase => 'Neue Passphrase';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery =>
+      'Neuen Wiederherstellungscode erzeugen';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      'Der alte Wiederherstellungscode wird sofort ungültig.';
+
+  @override
+  String get settings_cloudSync_encryption_disable =>
+      'Verschlüsselung ausschalten';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      'Die Bibliothek wird unverschlüsselt neu hochgeladen und andere Geräte laden sie erneut herunter. Vorhandene verschlüsselte Backups bleiben mit der Passphrase wiederherstellbar.';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle =>
+      'Verschlüsselungs-Passphrase eingeben';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint =>
+      'Passphrase oder Wiederherstellungscode';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => 'Entsperren';
+
+  @override
+  String get settings_cloudSync_encryption_continue => 'Weiter';
+
+  @override
+  String get settings_cloudSync_encryption_done => 'Fertig';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => 'Abbrechen';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return 'Synchronisierung pausiert — die Bibliothek wurde aus einem Backup auf \"$deviceName\" ersetzt.';
   }
@@ -18460,4 +18590,263 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get diveLog_bulkEdit_membership_empty =>
       'Noch keine Elemente bei den ausgewählten Tauchgängen';
+
+  @override
+  String get settings_mediaStorage_entry_title => 'Medienspeicher';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle =>
+      'Foto- und Video-Originale im eigenen Cloud-Speicher ablegen';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured =>
+      'Kein Medienspeicher mit diesem Gerät verbunden';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return 'Verbunden mit $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => 'Verbindung erfolgreich';
+
+  @override
+  String get settings_mediaStorage_saved => 'Medienspeicher verbunden';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => 'Trennen';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title =>
+      'Medienspeicher trennen?';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      'Dieses Gerät lädt keine Medien mehr hoch oder herunter. In Ihrem Bucket wird nichts gelöscht.';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync =>
+      'Einstellungen von Sync übernehmen';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'Übertragungen';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'Übertragungen anzeigen';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'Keine Übertragungen';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'Erneut versuchen';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted =>
+      'Abgeschlossene entfernen';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'Wartend';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring =>
+      'Wird hochgeladen';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'Fertig';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'Fehlgeschlagen';
+
+  @override
+  String get settings_mediaStorage_backfill_action =>
+      'Vorhandene Bibliothek hochladen';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count Uploads eingereiht';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload =>
+      'Fotos automatisch hochladen';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'Fotos über Mobilfunk hochladen';
+
+  @override
+  String get settings_mediaStorage_provider_label => 'Anbieter';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      'Verwendet Ihre Dropbox-Verbindung aus der Cloud-Synchronisierung. Medien werden im Dropbox-App-Ordner gespeichert.';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      'Meldet sich mit Google an. Medien werden im privaten Drive-Bereich dieser App gespeichert.';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      'Medien werden im iCloud-Container dieser App gespeichert und über Ihre Apple-ID synchronisiert.';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return '$provider verbinden';
+  }
+
+  @override
+  String get bodyWeight_addEntry => 'Messung hinzufügen';
+
+  @override
+  String get bodyWeight_dateLabel => 'Datum';
+
+  @override
+  String get bodyWeight_deleteTooltip => 'Eintrag löschen';
+
+  @override
+  String get bodyWeight_heightLabel => 'Größe (cm)';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return 'Gewicht ($unit)';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return 'Um etwa wie viel ($unit)';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => 'Passte gut';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => 'Wie war deine Bleimenge?';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => 'Zu viel Blei';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => 'Zu wenig Blei';
+
+  @override
+  String get diverProfile_bodyWeight_empty => 'Nicht erfasst';
+
+  @override
+  String get diverProfile_bodyWeight_title => 'Körpergewicht';
+
+  @override
+  String get equipment_edit_advanced_title => 'Erweitert';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure =>
+      'Positiv: wie stark es auftreibt';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => 'Negativ, wenn es sinkt';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank =>
+      'Leer lassen - Flaschen nutzen eigene Spezifikationen';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return 'Auftrieb ($unit)';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return 'Trockengewicht ($unit)';
+  }
+
+  @override
+  String get planner_gearWeights_accept => 'Als geplantes Blei übernehmen';
+
+  @override
+  String get planner_gearWeights_addGear => 'Ausrüstung hinzufügen';
+
+  @override
+  String get planner_gearWeights_empty =>
+      'Ausrüstung hinzufügen, um dein Blei vorherzusagen';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return 'Geplant: $weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return 'Vorhergesagt: $weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => 'Ausrüstung & Blei';
+
+  @override
+  String get planner_gearWeights_useSet => 'Set verwenden';
+
+  @override
+  String get tools_weight_addGear => 'Ausrüstung hinzufügen';
+
+  @override
+  String get tools_weight_addTank => 'Flasche hinzufügen';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return 'Basierend auf $count geloggten Tauchgängen';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => 'So wurde das berechnet';
+
+  @override
+  String get tools_weight_confidence_high => 'Hohe Zuverlässigkeit';
+
+  @override
+  String get tools_weight_confidence_low =>
+      'Geringe Zuverlässigkeit - Schätzung';
+
+  @override
+  String get tools_weight_confidence_medium => 'Mittlere Zuverlässigkeit';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '$delta ggü. voriger Ausrüstung';
+  }
+
+  @override
+  String get tools_weight_noGear =>
+      'Füge die geplante Ausrüstung hinzu, um die Vorhersage zu personalisieren.';
+
+  @override
+  String get tools_weight_personalTerm => 'Persönliche Basis';
+
+  @override
+  String get tools_weight_placementTitle => 'Empfohlene Verteilung';
+
+  @override
+  String get tools_weight_predictedWeight => 'Vorhergesagtes Blei';
+
+  @override
+  String get tools_weight_saveToProfile => 'Gewicht im Profil speichern';
+
+  @override
+  String get tools_weight_source_measured => 'aus deinen Tauchgängen gemessen';
+
+  @override
+  String get tools_weight_source_physics => 'Physik';
+
+  @override
+  String get tools_weight_source_typeDefault => 'Standardschätzung';
+
+  @override
+  String get tools_weight_source_userSpec => 'aus deinen Ausrüstungsdaten';
+
+  @override
+  String get tools_weight_tanks => 'Flaschen';
+
+  @override
+  String get tools_weight_useSet => 'Set verwenden';
+
+  @override
+  String get tools_weight_waterTerm => 'Wasserart';
 }
