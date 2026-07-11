@@ -32048,12 +32048,6 @@ abstract class AppLocalizations {
   /// **'Tap to explore in 3D'**
   String get dive3d_previewHint;
 
-  /// No description provided for @dive3d_unavailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Interactive 3D is unavailable on this device'**
-  String get dive3d_unavailable;
-
   /// No description provided for @dive3d_resetView.
   ///
   /// In en, this message translates to:

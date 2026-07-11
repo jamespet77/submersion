@@ -5,9 +5,9 @@ import 'package:submersion/features/dive_3d/application/providers.dart';
 import 'package:submersion/features/dive_3d/domain/entities/dive_3d_scene_data.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/marker_layout.dart';
 import 'package:submersion/features/dive_3d/domain/metric_palette.dart';
-import 'package:submersion/features/dive_3d/presentation/renderer/preview_painter.dart';
+import 'package:submersion/features/dive_3d/presentation/scene_overlay.dart';
+import 'package:submersion/features/dive_3d/presentation/widgets/dive_3d_interactive_viewport.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/scene_readout_panel.dart';
-import 'package:submersion/features/dive_3d/presentation/widgets/scene_viewport.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/time_scrub_bar.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
@@ -31,7 +31,6 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
   late final AnimationController _player;
   SceneMetric _metric = SceneMetric.depth;
   Set<SceneOverlay> _overlays = SceneOverlay.values.toSet();
-  bool _glFailed = false;
 
   @override
   void initState() {
@@ -76,37 +75,13 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: _glFailed
-                            ? Column(
-                                children: [
-                                  Expanded(
-                                    child: CustomPaint(
-                                      painter: Dive3dPreviewPainter(
-                                        geometry: geometry,
-                                      ),
-                                      child: const SizedBox.expand(),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Text(
-                                      context.l10n.dive3d_unavailable,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : SceneViewport(
-                                geometry: geometry,
-                                scrubPosition: _position,
-                                visibleOverlays: _overlays,
-                                onMarkerTap: (marker) =>
-                                    _showMarkerSheet(context, marker),
-                                onInitFailure: () {
-                                  if (mounted) {
-                                    setState(() => _glFailed = true);
-                                  }
-                                },
-                              ),
+                        child: Dive3dInteractiveViewport(
+                          geometry: geometry,
+                          scrubPosition: _position,
+                          visibleOverlays: _overlays,
+                          onMarkerTap: (marker) =>
+                              _showMarkerSheet(context, marker),
+                        ),
                       ),
                       Positioned(
                         left: 12,

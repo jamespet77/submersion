@@ -18657,9 +18657,6 @@ class AppLocalizationsHe extends AppLocalizations {
   String get dive3d_previewHint => 'הקש כדי לחקור בתלת־ממד';
 
   @override
-  String get dive3d_unavailable => 'תלת־ממד אינטראקטיבי אינו זמין במכשיר זה';
-
-  @override
   String get dive3d_resetView => 'איפוס תצוגה';
 
   @override

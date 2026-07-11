@@ -19151,10 +19151,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get dive3d_previewHint => 'Toque para explorar em 3D';
 
   @override
-  String get dive3d_unavailable =>
-      'O 3D interativo não está disponível neste dispositivo';
-
-  @override
   String get dive3d_resetView => 'Redefinir visualização';
 
   @override

@@ -11985,8 +11985,6 @@
   "@dive3d_previewTitle": {},
   "dive3d_previewHint": "Tap to explore in 3D",
   "@dive3d_previewHint": {},
-  "dive3d_unavailable": "Interactive 3D is unavailable on this device",
-  "@dive3d_unavailable": {},
   "dive3d_resetView": "Reset view",
   "@dive3d_resetView": {},
   "dive3d_play": "Play",

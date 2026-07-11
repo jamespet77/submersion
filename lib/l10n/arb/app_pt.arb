@@ -5435,8 +5435,6 @@
   "@dive3d_previewTitle": {},
   "dive3d_previewHint": "Toque para explorar em 3D",
   "@dive3d_previewHint": {},
-  "dive3d_unavailable": "O 3D interativo não está disponível neste dispositivo",
-  "@dive3d_unavailable": {},
   "dive3d_resetView": "Redefinir visualização",
   "@dive3d_resetView": {},
   "dive3d_play": "Reproduzir",

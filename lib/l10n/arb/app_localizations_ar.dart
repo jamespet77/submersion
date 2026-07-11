@@ -18790,10 +18790,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dive3d_previewHint => 'انقر للاستكشاف بشكل ثلاثي الأبعاد';
 
   @override
-  String get dive3d_unavailable =>
-      'العرض التفاعلي ثلاثي الأبعاد غير متاح على هذا الجهاز';
-
-  @override
   String get dive3d_resetView => 'إعادة تعيين العرض';
 
   @override

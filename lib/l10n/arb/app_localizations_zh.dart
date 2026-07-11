@@ -18178,9 +18178,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dive3d_previewHint => '点按以进行3D探索';
 
   @override
-  String get dive3d_unavailable => '此设备不支持交互式3D';
-
-  @override
   String get dive3d_resetView => '重置视图';
 
   @override

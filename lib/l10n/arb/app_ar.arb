@@ -5435,8 +5435,6 @@
   "@dive3d_previewTitle": {},
   "dive3d_previewHint": "انقر للاستكشاف بشكل ثلاثي الأبعاد",
   "@dive3d_previewHint": {},
-  "dive3d_unavailable": "العرض التفاعلي ثلاثي الأبعاد غير متاح على هذا الجهاز",
-  "@dive3d_unavailable": {},
   "dive3d_resetView": "إعادة تعيين العرض",
   "@dive3d_resetView": {},
   "dive3d_play": "تشغيل",

@@ -19093,10 +19093,6 @@ class AppLocalizationsHu extends AppLocalizations {
   String get dive3d_previewHint => 'Koppints a 3D felfedezéshez';
 
   @override
-  String get dive3d_unavailable =>
-      'Az interaktív 3D nem érhető el ezen az eszközön';
-
-  @override
   String get dive3d_resetView => 'Nézet visszaállítása';
 
   @override

@@ -5435,8 +5435,6 @@
   "@dive3d_previewTitle": {},
   "dive3d_previewHint": "点按以进行3D探索",
   "@dive3d_previewHint": {},
-  "dive3d_unavailable": "此设备不支持交互式3D",
-  "@dive3d_unavailable": {},
   "dive3d_resetView": "重置视图",
   "@dive3d_resetView": {},
   "dive3d_play": "播放",

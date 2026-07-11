@@ -19116,10 +19116,6 @@ class AppLocalizationsDe extends AppLocalizations {
   String get dive3d_previewHint => 'Tippen, um in 3D zu erkunden';
 
   @override
-  String get dive3d_unavailable =>
-      'Interaktives 3D ist auf diesem Gerät nicht verfügbar';
-
-  @override
   String get dive3d_resetView => 'Ansicht zurücksetzen';
 
   @override

@@ -5435,8 +5435,6 @@
   "@dive3d_previewTitle": {},
   "dive3d_previewHint": "הקש כדי לחקור בתלת־ממד",
   "@dive3d_previewHint": {},
-  "dive3d_unavailable": "תלת־ממד אינטראקטיבי אינו זמין במכשיר זה",
-  "@dive3d_unavailable": {},
   "dive3d_resetView": "איפוס תצוגה",
   "@dive3d_resetView": {},
   "dive3d_play": "הפעלה",

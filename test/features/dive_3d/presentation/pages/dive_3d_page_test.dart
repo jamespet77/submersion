@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/features/dive_3d/application/providers.dart';
 import 'package:submersion/features/dive_3d/presentation/pages/dive_3d_page.dart';
-import 'package:submersion/features/dive_3d/presentation/widgets/scene_viewport.dart';
+import 'package:submersion/features/dive_3d/presentation/scene_overlay.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/time_scrub_bar.dart';
 
 import '../../../../helpers/mock_providers.dart';
@@ -23,8 +23,6 @@ void main() {
         child: const Dive3dPage(diveId: 'd1'),
       ),
     );
-    // The three_js host schedules frames continuously, so pumpAndSettle
-    // would never settle; bounded pumps let the providers resolve.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 50));
     await tester.pump(const Duration(milliseconds: 50));

@@ -7,29 +7,53 @@ import 'package:submersion/features/dive_3d/domain/entities/mesh_data.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/marker_layout.dart';
 import 'package:submersion/features/dive_3d/domain/scene_geometry_service.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scene_projector.dart';
+import 'package:submersion/features/dive_3d/presentation/scene_overlay.dart';
 
 /// Paints a Dive3dGeometry through SceneProjector with drawVertices.
-/// Meshes paint back-to-front by role (strata, curtain, ceiling, ribbon)
-/// and triangles within each mesh are depth-sorted, which is sufficient
-/// painter's-algorithm ordering for this scene's layered translucency.
+/// Meshes paint back-to-front by role (grid, strata, curtain, ceiling,
+/// ribbon) and triangles within each mesh are depth-sorted, which is
+/// sufficient painter's-algorithm ordering for this scene's layered
+/// translucency. This is the app's one 3D rasterizer: the preview card
+/// paints it with the default camera, the interactive viewport drives the
+/// camera parameters from gestures.
 class Dive3dPreviewPainter extends CustomPainter {
   final Dive3dGeometry geometry;
+  final double yawDegrees;
+  final double pitchDegrees;
+  final double zoom;
+  final Set<SceneOverlay>? visibleOverlays;
 
-  const Dive3dPreviewPainter({required this.geometry});
+  const Dive3dPreviewPainter({
+    required this.geometry,
+    this.yawDegrees = -32,
+    this.pitchDegrees = 22,
+    this.zoom = 1.0,
+    this.visibleOverlays,
+  });
+
+  bool _visible(SceneOverlay overlay) =>
+      visibleOverlays == null || visibleOverlays!.contains(overlay);
 
   @override
   void paint(Canvas canvas, Size size) {
-    final projector = SceneProjector(size: size, bounds: geometry.bounds);
-    for (final mesh in [
+    final projector = SceneProjector(
+      size: size,
+      bounds: geometry.bounds,
+      yawDegrees: yawDegrees,
+      pitchDegrees: pitchDegrees,
+      zoom: zoom,
+    );
+    final meshes = <MeshData?>[
       geometry.grid,
-      geometry.strata,
-      geometry.curtain,
-      geometry.ceilingSurface,
+      if (_visible(SceneOverlay.strata)) geometry.strata,
+      if (_visible(SceneOverlay.curtain)) geometry.curtain,
+      if (_visible(SceneOverlay.ceiling)) geometry.ceilingSurface,
       geometry.ribbon,
-    ]) {
+    ];
+    for (final mesh in meshes) {
       if (mesh != null) _paintMesh(canvas, projector, mesh);
     }
-    _paintMarkers(canvas, projector);
+    if (_visible(SceneOverlay.markers)) _paintMarkers(canvas, projector);
   }
 
   void _paintMesh(Canvas canvas, SceneProjector projector, MeshData mesh) {
@@ -104,5 +128,9 @@ class Dive3dPreviewPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant Dive3dPreviewPainter oldDelegate) =>
-      !identical(oldDelegate.geometry, geometry);
+      !identical(oldDelegate.geometry, geometry) ||
+      oldDelegate.yawDegrees != yawDegrees ||
+      oldDelegate.pitchDegrees != pitchDegrees ||
+      oldDelegate.zoom != zoom ||
+      oldDelegate.visibleOverlays != visibleOverlays;
 }

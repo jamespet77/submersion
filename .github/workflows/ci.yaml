@@ -614,11 +614,6 @@ jobs:
       - name: Unpack generated code
         run: tar -xzf generated-code.tar.gz
 
-      # flutter_angle (three_js GL host, dive 3D view) pins CMake 3.31.4,
-      # which the runner's Android SDK does not ship by default.
-      - name: Install CMake 3.31.4 for flutter_angle
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "cmake;3.31.4"
-
       - name: Build Android APK
         run: flutter build apk --release "${{ env.DART_DEFINES }}" -v
 
@@ -729,12 +724,6 @@ jobs:
     needs: codegen
     runs-on: windows-latest
     steps:
-      # The flutter_angle git dependency (Linux embedder fix fork) contains
-      # xcframework paths that exceed Windows' 260-char MAX_PATH during
-      # `flutter pub get`'s clone.
-      - name: Enable git long paths
-        run: git config --system core.longpaths true
-
       - uses: actions/checkout@v7
         with:
           submodules: true

@@ -18993,10 +18993,6 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dive3d_previewHint => 'Tik om in 3D te verkennen';
 
   @override
-  String get dive3d_unavailable =>
-      'Interactieve 3D is niet beschikbaar op dit apparaat';
-
-  @override
   String get dive3d_resetView => 'Weergave herstellen';
 
   @override

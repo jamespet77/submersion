@@ -5435,8 +5435,6 @@
   "@dive3d_previewTitle": {},
   "dive3d_previewHint": "Koppints a 3D felfedezéshez",
   "@dive3d_previewHint": {},
-  "dive3d_unavailable": "Az interaktív 3D nem érhető el ezen az eszközön",
-  "@dive3d_unavailable": {},
   "dive3d_resetView": "Nézet visszaállítása",
   "@dive3d_resetView": {},
   "dive3d_play": "Lejátszás",

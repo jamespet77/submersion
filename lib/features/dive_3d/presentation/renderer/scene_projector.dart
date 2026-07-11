@@ -3,9 +3,10 @@ import 'dart:ui';
 
 import 'package:submersion/features/dive_3d/domain/geometry/scene_bounds.dart';
 
-/// Fixed-camera orthographic projector: yaw about Y then pitch about X,
-/// drop view z, fit to canvas. Serves the preview card, the GL-failure
-/// fallback, and deterministic tests -- no GL involved.
+/// Orthographic projector: yaw about Y then pitch about X, drop view z,
+/// fit to canvas, scale by zoom. The single camera model for every dive_3d
+/// renderer -- preview card, interactive viewport, and deterministic tests.
+/// No GL involved.
 class SceneProjector {
   final double _cy, _sy, _cp, _sp;
   late final double _scale;
@@ -16,6 +17,7 @@ class SceneProjector {
     required SceneBounds bounds,
     double yawDegrees = -32,
     double pitchDegrees = 22,
+    double zoom = 1.0,
   }) : _cy = math.cos(yawDegrees * math.pi / 180),
        _sy = math.sin(yawDegrees * math.pi / 180),
        _cp = math.cos(pitchDegrees * math.pi / 180),
@@ -40,6 +42,7 @@ class SceneProjector {
     }
     const margin = 0.92;
     _scale =
+        zoom *
         margin *
         math.min(size.width / (maxX - minX), size.height / (maxY - minY));
     _offset = Offset(
