@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../secure_storage/fallback_secure_storage.dart';
+import 'package:submersion/core/services/secure_storage/fallback_secure_storage.dart';
 
 /// Persisted Lightroom connection credentials. BYO client id: the user's
 /// own Adobe Developer Console credentials live alongside the refresh
