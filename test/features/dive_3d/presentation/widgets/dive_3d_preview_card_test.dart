@@ -4,6 +4,7 @@ import 'package:submersion/features/dive_3d/application/providers.dart';
 import 'package:submersion/features/dive_3d/domain/entities/dive_3d_scene_data.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/dive_3d_preview_card.dart';
 
+import '../../../../helpers/mock_providers.dart';
 import '../../../../helpers/test_app.dart';
 
 Dive3dSceneData fakeSceneData() => const Dive3dSceneData(
@@ -27,9 +28,11 @@ Dive3dSceneData fakeSceneData() => const Dive3dSceneData(
 
 void main() {
   testWidgets('renders nothing when the dive has no profile', (tester) async {
+    final overrides = await getBaseOverrides();
     await tester.pumpWidget(
       testApp(
         overrides: [
+          ...overrides,
           dive3dSceneDataProvider('d1').overrideWith((ref) async => null),
         ],
         child: const Dive3dPreviewCard(diveId: 'd1'),
@@ -42,9 +45,11 @@ void main() {
   testWidgets('renders the preview card when geometry is available', (
     tester,
   ) async {
+    final overrides = await getBaseOverrides();
     await tester.pumpWidget(
       testApp(
         overrides: [
+          ...overrides,
           dive3dSceneDataProvider(
             'd1',
           ).overrideWith((ref) async => fakeSceneData()),

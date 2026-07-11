@@ -5,7 +5,9 @@ import 'package:submersion/features/dive_log/presentation/providers/active_sourc
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_log/presentation/providers/gas_switch_providers.dart';
 import 'package:submersion/features/dive_log/presentation/providers/profile_analysis_provider.dart';
+import 'package:submersion/core/constants/units.dart';
 import 'package:submersion/features/media/presentation/providers/media_providers.dart';
+import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/dive_3d/domain/entities/dive_3d_scene_data.dart';
 import 'package:submersion/features/dive_3d/domain/metric_palette.dart';
 import 'package:submersion/features/dive_3d/domain/scene_geometry_service.dart';
@@ -48,8 +50,12 @@ final dive3dSceneDataProvider = FutureProvider.family<Dive3dSceneData?, String>(
 
 typedef Dive3dGeometryKey = ({String diveId, SceneMetric metric});
 
-Dive3dGeometry _buildGeometry((Dive3dSceneData, SceneMetric) input) =>
-    const SceneGeometryService().build(input.$1, input.$2);
+Dive3dGeometry _buildGeometry((Dive3dSceneData, SceneMetric, double) input) =>
+    const SceneGeometryService().build(
+      input.$1,
+      input.$2,
+      gridStepMeters: input.$3,
+    );
 
 /// Profiles below this sample count build geometry synchronously; the
 /// isolate hop only pays for itself on large tech-dive profiles.
@@ -61,8 +67,12 @@ final dive3dGeometryProvider =
     FutureProvider.family<Dive3dGeometry?, Dive3dGeometryKey>((ref, key) async {
       final data = await ref.watch(dive3dSceneDataProvider(key.diveId).future);
       if (data == null) return null;
+      // Grid lines land on round numbers in the diver's display unit:
+      // 10 m steps for metric, 25 ft (7.62 m) for imperial.
+      final depthUnit = ref.watch(settingsProvider).depthUnit;
+      final gridStep = depthUnit == DepthUnit.feet ? 7.62 : 10.0;
       if (data.times.length < _computeThreshold) {
-        return _buildGeometry((data, key.metric));
+        return _buildGeometry((data, key.metric, gridStep));
       }
-      return compute(_buildGeometry, (data, key.metric));
+      return compute(_buildGeometry, (data, key.metric, gridStep));
     });

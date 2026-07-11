@@ -107,6 +107,9 @@ class _SceneViewportState extends State<SceneViewport> {
     _curtain = ThreeAdapter.toMesh(g.curtain);
     threeJs.scene.add(_ribbon!);
     threeJs.scene.add(_curtain!);
+    if (g.grid != null) {
+      threeJs.scene.add(ThreeAdapter.toMesh(g.grid!));
+    }
     if (g.strata != null) {
       _strata = ThreeAdapter.toMesh(g.strata!);
       threeJs.scene.add(_strata!);

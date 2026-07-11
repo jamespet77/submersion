@@ -34,6 +34,7 @@ void main() {
     expect(geometry.ribbon.vertexCount, 200);
     expect(geometry.curtain.vertexCount, 200);
     expect(geometry.strata, isNotNull);
+    expect(geometry.grid, isNotNull);
     expect(geometry.ceilingSurface, isNull);
     expect(geometry.markers, isEmpty);
   });

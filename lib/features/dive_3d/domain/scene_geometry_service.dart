@@ -3,6 +3,7 @@ import 'package:submersion/features/dive_log/presentation/widgets/profile_decima
 import 'package:submersion/features/dive_3d/domain/entities/dive_3d_scene_data.dart';
 import 'package:submersion/features/dive_3d/domain/entities/mesh_data.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/ceiling_builder.dart';
+import 'package:submersion/features/dive_3d/domain/geometry/grid_builder.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/marker_layout.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/ribbon_builder.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/scene_bounds.dart';
@@ -15,6 +16,7 @@ class Dive3dGeometry {
   final MeshData curtain;
   final MeshData? strata;
   final MeshData? ceilingSurface;
+  final MeshData? grid;
   final List<SceneMarker> markers;
   final SceneBounds bounds;
 
@@ -23,6 +25,7 @@ class Dive3dGeometry {
     required this.curtain,
     required this.strata,
     required this.ceilingSurface,
+    required this.grid,
     required this.markers,
     required this.bounds,
   });
@@ -36,7 +39,11 @@ class SceneGeometryService {
 
   const SceneGeometryService();
 
-  Dive3dGeometry build(Dive3dSceneData data, SceneMetric metric) {
+  Dive3dGeometry build(
+    Dive3dSceneData data,
+    SceneMetric metric, {
+    double gridStepMeters = 10.0,
+  }) {
     final bounds = SceneBounds(
       durationSeconds: data.durationSeconds,
       maxDepthMeters: data.maxDepthMeters,
@@ -79,6 +86,7 @@ class SceneGeometryService {
         ceilings: pickN(data.ceilings),
         bounds: bounds,
       ),
+      grid: GridBuilder.build(bounds: bounds, stepMeters: gridStepMeters),
       markers: MarkerLayout.layout(data: data, bounds: bounds),
       bounds: bounds,
     );

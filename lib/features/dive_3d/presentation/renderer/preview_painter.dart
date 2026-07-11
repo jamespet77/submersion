@@ -21,6 +21,7 @@ class Dive3dPreviewPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final projector = SceneProjector(size: size, bounds: geometry.bounds);
     for (final mesh in [
+      geometry.grid,
       geometry.strata,
       geometry.curtain,
       geometry.ceilingSurface,
