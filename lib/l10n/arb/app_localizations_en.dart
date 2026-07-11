@@ -705,16 +705,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buddies_picker_add => 'Add';
 
   @override
+  String get buddies_picker_addCustomRole => 'Add custom role...';
+
+  @override
   String get buddies_picker_addNew => 'Add New Buddy';
 
   @override
   String get buddies_picker_done => 'Done';
 
   @override
+  String get buddies_picker_me => 'Me';
+
+  @override
   String get buddies_picker_noBuddiesFound => 'No buddies found';
 
   @override
   String get buddies_picker_noBuddiesYet => 'No buddies yet';
+
+  @override
+  String get buddies_picker_noRole => 'No role';
 
   @override
   String get buddies_picker_noneSelected => 'No buddies selected';
@@ -726,9 +735,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buddies_picker_selectBuddies => 'Select Buddies';
 
   @override
+  String get buddies_picker_selectMyRole => 'Select my role';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return 'Select Role for $name';
   }
+
+  @override
+  String get buddies_picker_setMyRole => 'Set my role';
 
   @override
   String get buddies_picker_tapToAdd => 'Tap \'Add\' to select dive buddies';
@@ -4622,6 +4637,97 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => 'Buddy';
+
+  @override
+  String get diveRole_builtin_diveGuide => 'Dive Guide';
+
+  @override
+  String get diveRole_builtin_diveMaster => 'Divemaster';
+
+  @override
+  String get diveRole_builtin_instructor => 'Instructor';
+
+  @override
+  String get diveRole_builtin_rearGuard => 'Rear Guard';
+
+  @override
+  String get diveRole_builtin_safetyDiver => 'Safety Diver';
+
+  @override
+  String get diveRole_builtin_solo => 'Solo';
+
+  @override
+  String get diveRole_builtin_student => 'Student';
+
+  @override
+  String get diveRole_builtin_supportDiver => 'Support Diver';
+
+  @override
+  String get diveRoles_addDialog_addButton => 'Add';
+
+  @override
+  String get diveRoles_addDialog_nameHint => 'e.g., Photographer';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => 'Dive Role Name';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => 'Please enter a name';
+
+  @override
+  String get diveRoles_addDialog_title => 'Add Custom Dive Role';
+
+  @override
+  String get diveRoles_addTooltip => 'Add dive role';
+
+  @override
+  String get diveRoles_appBar_title => 'Dive Roles';
+
+  @override
+  String get diveRoles_builtInHeader => 'Built-in Dive Roles';
+
+  @override
+  String get diveRoles_customHeader => 'Custom Dive Roles';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return 'Are you sure you want to delete \"$name\"?';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => 'Delete Dive Role?';
+
+  @override
+  String get diveRoles_deleteTooltip => 'Delete dive role';
+
+  @override
+  String get diveRoles_renameDialog_title => 'Rename Dive Role';
+
+  @override
+  String get diveRoles_renameTooltip => 'Rename dive role';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return 'Added dive role: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return 'Cannot delete \"$name\" - it is used by existing dives';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return 'Deleted dive role: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return 'Error adding dive role: $error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => 'Max depth';
 
   @override
@@ -4772,6 +4878,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => 'Search dives...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return 'Showing the first $limit matches. Refine your search to narrow results.';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -11896,6 +12007,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reusable to-do lists for trip planning';
 
   @override
+  String get settings_manage_diveRoles => 'Dive Roles';
+
+  @override
+  String get settings_manage_diveRoles_subtitle => 'Manage custom dive roles';
+
+  @override
   String get settings_manage_diveTypes => 'Dive Types';
 
   @override
@@ -17837,6 +17954,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get universalImport_label_consolidated => 'Consolidated';
+
+  @override
+  String get universalImport_label_photosAttached => 'Photos attached';
+
+  @override
+  String get universalImport_label_photosUnmatched =>
+      'Photos not matched to a dive';
 
   @override
   String get common_label_shareWithAllProfiles =>

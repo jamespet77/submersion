@@ -245,6 +245,7 @@ class SyncData {
   final List<Map<String, dynamic>> diveTags;
   final List<Map<String, dynamic>> diveDiveTypes;
   final List<Map<String, dynamic>> diveTypes;
+  final List<Map<String, dynamic>> diveRoles;
   final List<Map<String, dynamic>> tankPresets;
   final List<Map<String, dynamic>> diveComputers;
   final List<Map<String, dynamic>> tankPressureProfiles;
@@ -296,6 +297,7 @@ class SyncData {
     this.diveTags = const [],
     this.diveDiveTypes = const [],
     this.diveTypes = const [],
+    this.diveRoles = const [],
     this.tankPresets = const [],
     this.diveComputers = const [],
     this.tankPressureProfiles = const [],
@@ -348,6 +350,7 @@ class SyncData {
     'diveTags': diveTags,
     'diveDiveTypes': diveDiveTypes,
     'diveTypes': diveTypes,
+    'diveRoles': diveRoles,
     'tankPresets': tankPresets,
     'diveComputers': diveComputers,
     'tankPressureProfiles': tankPressureProfiles,
@@ -401,6 +404,7 @@ class SyncData {
       diveTags: _parseList(json['diveTags']),
       diveDiveTypes: _parseList(json['diveDiveTypes']),
       diveTypes: _parseList(json['diveTypes']),
+      diveRoles: _parseList(json['diveRoles']),
       tankPresets: _parseList(json['tankPresets']),
       diveComputers: _parseList(json['diveComputers']),
       tankPressureProfiles: _parseList(json['tankPressureProfiles']),
@@ -622,6 +626,12 @@ class SyncDataSerializer {
       table: null,
       blob: false,
       full: () => _exportDiveTypes(null),
+    ),
+    (
+      key: 'diveRoles',
+      table: null,
+      blob: false,
+      full: () => _exportDiveRoles(null),
     ),
     (key: 'tankPresets', table: _db.tankPresets, blob: false, full: null),
     (key: 'diveComputers', table: _db.diveComputers, blob: false, full: null),
@@ -1011,6 +1021,10 @@ class SyncDataSerializer {
         'diveTypes',
         () => _exportDiveTypes(hlcSince),
       ),
+      diveRoles: await _safeExport(
+        'diveRoles',
+        () => _exportDiveRoles(hlcSince),
+      ),
       tankPresets: await _safeExport(
         'tankPresets',
         () => _exportTankPresets(hlcSince),
@@ -1366,6 +1380,11 @@ class SyncDataSerializer {
           _db.diveTypes,
         )..where((t) => t.id.equals(recordId))).getSingleOrNull();
         return row?.toJson();
+      case 'diveRoles':
+        final row = await (_db.select(
+          _db.diveRoles,
+        )..where((t) => t.id.equals(recordId))).getSingleOrNull();
+        return row?.toJson();
       case 'tankPresets':
         final row = await (_db.select(
           _db.tankPresets,
@@ -1569,6 +1588,11 @@ class SyncDataSerializer {
       case 'diveTypes':
         final rows = await (_db.select(
           _db.diveTypes,
+        )..where((t) => t.id.isIn(idList))).get();
+        return {for (final r in rows) r.id: r.toJson()};
+      case 'diveRoles':
+        final rows = await (_db.select(
+          _db.diveRoles,
         )..where((t) => t.id.isIn(idList))).get();
         return {for (final r in rows) r.id: r.toJson()};
       case 'tankPresets':
@@ -1866,6 +1890,13 @@ class SyncDataSerializer {
         await _db
             .into(_db.diveTypes)
             .insertOnConflictUpdate(DiveType.fromJson(data).toCompanion(false));
+        return;
+      case 'diveRoles':
+        await _db
+            .into(_db.diveRoles)
+            .insertOnConflictUpdate(
+              DiveRoleRow.fromJson(data).toCompanion(false),
+            );
         return;
       case 'tankPresets':
         await _db
@@ -2323,6 +2354,16 @@ class SyncDataSerializer {
           ),
         );
         return;
+      case 'diveRoles':
+        await _db.batch(
+          (b) => b.insertAllOnConflictUpdate(
+            _db.diveRoles,
+            records
+                .map((r) => DiveRoleRow.fromJson(r).toCompanion(false))
+                .toList(),
+          ),
+        );
+        return;
       case 'tankPresets':
         await _db.batch(
           (b) => b.insertAllOnConflictUpdate(
@@ -2575,6 +2616,8 @@ class SyncDataSerializer {
         return plain(_db.equipmentSets, _db.equipmentSets.id);
       case 'diveTypes':
         return plain(_db.diveTypes, _db.diveTypes.id);
+      case 'diveRoles':
+        return plain(_db.diveRoles, _db.diveRoles.id);
       case 'tankPresets':
         return plain(_db.tankPresets, _db.tankPresets.id);
       case 'diveComputers':
@@ -2668,6 +2711,11 @@ class SyncDataSerializer {
           _db.diveTypes,
         )..where((t) => t.isBuiltIn.equals(false))).go();
         return;
+      case 'diveRoles':
+        await (_db.delete(
+          _db.diveRoles,
+        )..where((t) => t.isBuiltIn.equals(false))).go();
+        return;
       case 'species':
         await (_db.delete(
           _db.species,
@@ -2729,6 +2777,8 @@ class SyncDataSerializer {
         return _db.equipmentSets;
       case 'diveTypes':
         return _db.diveTypes;
+      case 'diveRoles':
+        return _db.diveRoles;
       case 'tankPresets':
         return _db.tankPresets;
       case 'diveComputers':
@@ -2962,6 +3012,11 @@ class SyncDataSerializer {
       case 'diveTypes':
         await (_db.delete(
           _db.diveTypes,
+        )..where((t) => t.id.equals(recordId))).go();
+        return;
+      case 'diveRoles':
+        await (_db.delete(
+          _db.diveRoles,
         )..where((t) => t.id.equals(recordId))).go();
         return;
       case 'tankPresets':
@@ -3467,6 +3522,18 @@ class SyncDataSerializer {
     // launch and cannot be edited, so syncing them only risks cross-device
     // ID collisions and payload bloat. Export custom types only.
     final query = _db.select(_db.diveTypes)
+      ..where((t) => t.isBuiltIn.equals(false));
+    if (hlcSince != null) {
+      query.where((t) => t.hlc.isBiggerThanValue(hlcSince));
+    }
+    final rows = await query.get();
+    return rows.map((r) => r.toJson()).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> _exportDiveRoles(String? hlcSince) async {
+    // Built-in dive roles are re-seeded identically on every device, so
+    // syncing them only risks collisions and payload bloat. Custom only.
+    final query = _db.select(_db.diveRoles)
       ..where((t) => t.isBuiltIn.equals(false));
     if (hlcSince != null) {
       query.where((t) => t.hlc.isBiggerThanValue(hlcSince));

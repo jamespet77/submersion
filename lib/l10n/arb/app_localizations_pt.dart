@@ -718,16 +718,26 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buddies_picker_add => 'Adicionar';
 
   @override
+  String get buddies_picker_addCustomRole =>
+      'Adicionar função personalizada...';
+
+  @override
   String get buddies_picker_addNew => 'Adicionar Novo Companheiro';
 
   @override
   String get buddies_picker_done => 'Concluir';
 
   @override
+  String get buddies_picker_me => 'Eu';
+
+  @override
   String get buddies_picker_noBuddiesFound => 'Nenhum companheiro encontrado';
 
   @override
   String get buddies_picker_noBuddiesYet => 'Nenhum companheiro ainda';
+
+  @override
+  String get buddies_picker_noRole => 'Sem função';
 
   @override
   String get buddies_picker_noneSelected => 'Nenhum companheiro selecionado';
@@ -739,9 +749,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buddies_picker_selectBuddies => 'Selecionar Companheiros';
 
   @override
+  String get buddies_picker_selectMyRole => 'Selecionar minha função';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return 'Selecionar Função para $name';
   }
+
+  @override
+  String get buddies_picker_setMyRole => 'Definir minha função';
 
   @override
   String get buddies_picker_tapToAdd =>
@@ -4710,6 +4726,98 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => 'Dupla';
+
+  @override
+  String get diveRole_builtin_diveGuide => 'Guia de Mergulho';
+
+  @override
+  String get diveRole_builtin_diveMaster => 'Divemaster';
+
+  @override
+  String get diveRole_builtin_instructor => 'Instrutor';
+
+  @override
+  String get diveRole_builtin_rearGuard => 'Retaguarda';
+
+  @override
+  String get diveRole_builtin_safetyDiver => 'Mergulhador de Segurança';
+
+  @override
+  String get diveRole_builtin_solo => 'Solo';
+
+  @override
+  String get diveRole_builtin_student => 'Aluno';
+
+  @override
+  String get diveRole_builtin_supportDiver => 'Mergulhador de Apoio';
+
+  @override
+  String get diveRoles_addDialog_addButton => 'Adicionar';
+
+  @override
+  String get diveRoles_addDialog_nameHint => 'ex: Fotógrafo';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => 'Nome da Função de Mergulho';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => 'Digite um nome';
+
+  @override
+  String get diveRoles_addDialog_title =>
+      'Adicionar Função de Mergulho Personalizada';
+
+  @override
+  String get diveRoles_addTooltip => 'Adicionar função de mergulho';
+
+  @override
+  String get diveRoles_appBar_title => 'Funções de Mergulho';
+
+  @override
+  String get diveRoles_builtInHeader => 'Funções de Mergulho Integradas';
+
+  @override
+  String get diveRoles_customHeader => 'Funções de Mergulho Personalizadas';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return 'Tem certeza de que deseja excluir \"$name\"?';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => 'Excluir Função de Mergulho?';
+
+  @override
+  String get diveRoles_deleteTooltip => 'Excluir função de mergulho';
+
+  @override
+  String get diveRoles_renameDialog_title => 'Renomear Função de Mergulho';
+
+  @override
+  String get diveRoles_renameTooltip => 'Renomear função de mergulho';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return 'Função de mergulho adicionada: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return 'Não é possível excluir \"$name\" - está sendo usada por mergulhos existentes';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return 'Função de mergulho excluída: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return 'Erro ao adicionar função de mergulho: $error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => 'Prof. máx.';
 
   @override
@@ -4861,6 +4969,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => 'Buscar mergulhos...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return 'Mostrando as primeiras $limit correspondências. Refine a busca para restringir os resultados.';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -12102,6 +12215,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Listas de tarefas reutilizáveis para planejamento de viagens';
 
   @override
+  String get settings_manage_diveRoles => 'Funções de Mergulho';
+
+  @override
+  String get settings_manage_diveRoles_subtitle =>
+      'Gerenciar funções de mergulho personalizadas';
+
+  @override
   String get settings_manage_diveTypes => 'Tipos de Mergulho';
 
   @override
@@ -18150,6 +18270,13 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get universalImport_label_consolidated => 'Consolidados';
+
+  @override
+  String get universalImport_label_photosAttached => 'Fotos anexadas';
+
+  @override
+  String get universalImport_label_photosUnmatched =>
+      'Fotos sem mergulho correspondente';
 
   @override
   String get common_label_shareWithAllProfiles =>

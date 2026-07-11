@@ -716,16 +716,25 @@ class AppLocalizationsHu extends AppLocalizations {
   String get buddies_picker_add => 'Hozzáadás';
 
   @override
+  String get buddies_picker_addCustomRole => 'Egyedi szerep hozzáadása...';
+
+  @override
   String get buddies_picker_addNew => 'Új búvártárs hozzáadása';
 
   @override
   String get buddies_picker_done => 'Kész';
 
   @override
+  String get buddies_picker_me => 'Én';
+
+  @override
   String get buddies_picker_noBuddiesFound => 'Nem találhatók búvártársak';
 
   @override
   String get buddies_picker_noBuddiesYet => 'Még nincsenek búvártársak';
+
+  @override
+  String get buddies_picker_noRole => 'Nincs szerep';
 
   @override
   String get buddies_picker_noneSelected => 'Nincs kiválasztott búvártárs';
@@ -737,9 +746,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get buddies_picker_selectBuddies => 'Búvártársak kiválasztása';
 
   @override
+  String get buddies_picker_selectMyRole => 'Saját szerep kiválasztása';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return 'Szerep kiválasztása: $name';
   }
+
+  @override
+  String get buddies_picker_setMyRole => 'Saját szerep beállítása';
 
   @override
   String get buddies_picker_tapToAdd =>
@@ -4691,6 +4706,97 @@ class AppLocalizationsHu extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => 'Búvártárs';
+
+  @override
+  String get diveRole_builtin_diveGuide => 'Merülésvezető';
+
+  @override
+  String get diveRole_builtin_diveMaster => 'Divemaster';
+
+  @override
+  String get diveRole_builtin_instructor => 'Oktató';
+
+  @override
+  String get diveRole_builtin_rearGuard => 'Sereghajtó';
+
+  @override
+  String get diveRole_builtin_safetyDiver => 'Biztosító búvár';
+
+  @override
+  String get diveRole_builtin_solo => 'Szóló';
+
+  @override
+  String get diveRole_builtin_student => 'Tanuló';
+
+  @override
+  String get diveRole_builtin_supportDiver => 'Támogató búvár';
+
+  @override
+  String get diveRoles_addDialog_addButton => 'Hozzáadás';
+
+  @override
+  String get diveRoles_addDialog_nameHint => 'pl. Fotós';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => 'Merülési szerep neve';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => 'Adj meg egy nevet';
+
+  @override
+  String get diveRoles_addDialog_title => 'Egyedi merülési szerep hozzáadása';
+
+  @override
+  String get diveRoles_addTooltip => 'Merülési szerep hozzáadása';
+
+  @override
+  String get diveRoles_appBar_title => 'Merülési szerepek';
+
+  @override
+  String get diveRoles_builtInHeader => 'Beépített merülési szerepek';
+
+  @override
+  String get diveRoles_customHeader => 'Egyedi merülési szerepek';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return 'Biztosan törölni szeretnéd: \"$name\"?';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => 'Merülési szerep törlése?';
+
+  @override
+  String get diveRoles_deleteTooltip => 'Merülési szerep törlése';
+
+  @override
+  String get diveRoles_renameDialog_title => 'Merülési szerep átnevezése';
+
+  @override
+  String get diveRoles_renameTooltip => 'Merülési szerep átnevezése';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return 'Merülési szerep hozzáadva: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return 'Nem lehet törölni \"$name\" - meglévő merülések használják';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return 'Merülési szerep törölve: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return 'Hiba a merülési szerep hozzáadásakor: $error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => 'Max. mélység';
 
   @override
@@ -4843,6 +4949,11 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => 'Merulesek keresese...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return 'Az első $limit találat látható. Pontosítsa a keresést az eredmények szűkítéséhez.';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -12067,6 +12178,13 @@ class AppLocalizationsHu extends AppLocalizations {
       'Újrafelhasználható tennivalólisták az utak tervezéséhez';
 
   @override
+  String get settings_manage_diveRoles => 'Merülési szerepek';
+
+  @override
+  String get settings_manage_diveRoles_subtitle =>
+      'Egyedi merülési szerepek kezelése';
+
+  @override
   String get settings_manage_diveTypes => 'Merüles tipusok';
 
   @override
@@ -18093,6 +18211,13 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get universalImport_label_consolidated => 'Összevont';
+
+  @override
+  String get universalImport_label_photosAttached => 'Csatolt fényképek';
+
+  @override
+  String get universalImport_label_photosUnmatched =>
+      'Merüléshez nem társított fényképek';
 
   @override
   String get common_label_shareWithAllProfiles =>

@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:drift/drift.dart';
+
+import 'package:submersion/core/database/performance_indexes.dart';
 
 part 'database.g.dart';
 
@@ -401,6 +404,9 @@ class Dives extends Table {
       text().withDefault(const Constant('recreational'))();
   TextColumn get buddy => text().nullable()();
   TextColumn get diveMaster => text().nullable()();
+
+  /// The active diver's own role on this dive (dive_roles id, #547).
+  TextColumn get diverRole => text().nullable()();
   // MacDive import fields — common dive metadata
   TextColumn get boatName => text().nullable()();
   TextColumn get boatCaptain => text().nullable()();
@@ -1505,6 +1511,52 @@ const String kSeedBuiltInDiveTypesSql = '''
   CROSS JOIN (SELECT CAST(strftime('%s','now') AS INTEGER) * 1000 AS now_ms) n
 ''';
 
+/// Per-dive role vocabulary: built-in + custom (v103, issues #551/#547).
+/// Built-in ids are the legacy BuddyRole enum names so existing
+/// dive_buddies.role strings resolve without data migration; custom ids
+/// are UUIDs so renames never break references.
+@DataClassName('DiveRoleRow')
+class DiveRoles extends Table {
+  TextColumn get id => text()();
+  TextColumn get diverId =>
+      text().nullable().references(Divers, #id)(); // null for built-in roles
+  TextColumn get name => text()();
+  BoolColumn get isBuiltIn => boolean().withDefault(const Constant(false))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Seeds the nine built-in dive roles. Mirrors [kSeedBuiltInDiveTypesSql]:
+/// INSERT OR IGNORE keyed on stable slug ids keeps it idempotent, and the
+/// seed is re-asserted in beforeOpen so replace-adopt flows that clear the
+/// table cannot leave built-ins missing. The timestamp is computed once via
+/// the trailing CROSS JOIN.
+const String kSeedBuiltInDiveRolesSql = '''
+  INSERT OR IGNORE INTO dive_roles
+    (id, name, is_built_in, sort_order, created_at, updated_at)
+  SELECT t.id, t.name, 1, t.sort_order, n.now_ms, n.now_ms
+  FROM (
+    SELECT 'buddy' AS id, 'Buddy' AS name, 0 AS sort_order
+    UNION ALL SELECT 'diveGuide', 'Dive Guide', 1
+    UNION ALL SELECT 'instructor', 'Instructor', 2
+    UNION ALL SELECT 'student', 'Student', 3
+    UNION ALL SELECT 'diveMaster', 'Divemaster', 4
+    UNION ALL SELECT 'solo', 'Solo', 5
+    UNION ALL SELECT 'rearGuard', 'Rear Guard', 6
+    UNION ALL SELECT 'supportDiver', 'Support Diver', 7
+    UNION ALL SELECT 'safetyDiver', 'Safety Diver', 8
+  ) t
+  CROSS JOIN (SELECT CAST(strftime('%s','now') AS INTEGER) * 1000 AS now_ms) n
+''';
+
 /// Custom tank presets (user-defined tank configurations)
 class TankPresets extends Table {
   TextColumn get id => text()();
@@ -1997,6 +2049,7 @@ class FieldPresets extends Table {
     DiveTags,
     DiveDiveTypes,
     DiveTypes,
+    DiveRoles,
     TankPresets,
     DiveComputers,
     DiveDataSources,
@@ -2213,6 +2266,7 @@ class AppDatabase extends _$AppDatabase {
     'equipment',
     'equipment_sets',
     'dive_types',
+    'dive_roles',
     'tank_presets',
     'dive_computers',
     'tags',
@@ -2359,6 +2413,10 @@ class AppDatabase extends _$AppDatabase {
         // Seed built-in dive types (the same set the v93 migration backfills
         // for databases created before this seed existed).
         await customStatement(kSeedBuiltInDiveTypesSql);
+
+        // Seed built-in dive roles (the v103 migration backfills these for
+        // upgraded databases).
+        await customStatement(kSeedBuiltInDiveRolesSql);
       },
       onUpgrade: (Migrator m, int from, int to) async {
         int completedSteps = 0;
@@ -5036,12 +5094,41 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 102) await reportProgress();
         if (from < 103) {
-          // Media store Phase 1 (spec 2026-07-10): content identity +
-          // upload stamps on media, plus the secret-free store descriptor.
-          // Guarded ALTERs and IF NOT EXISTS keep this idempotent; the
-          // beforeOpen backstop re-asserts the same objects against
-          // parallel-branch schema-version collisions.
+          // Two features independently claimed v103 on parallel branches
+          // (media store spec 2026-07-10; dive roles #551/#547). Both
+          // blocks are idempotent and touch disjoint tables, so the merge
+          // keeps both and beforeOpen re-asserts each against the
+          // schema-version collision this very overlap illustrates.
+
+          // Media store Phase 1: content identity + upload stamps on media,
+          // plus the secret-free store descriptor. Guarded ALTERs and
+          // IF NOT EXISTS keep this idempotent.
           await _assertMediaStoreSchema();
+
+          // Dive roles vocabulary (#551) + the diver's own role (#547).
+          // createTable is IF NOT EXISTS and the seed is INSERT OR IGNORE,
+          // so this block is idempotent. The existence guards (divers for
+          // the seed's FK parent, dives for the ALTER) only matter for
+          // minimal test-fixture databases.
+          await m.createTable(diveRoles);
+          final diversTable = await customSelect(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name='divers'",
+          ).get();
+          if (diversTable.isNotEmpty) {
+            await customStatement(kSeedBuiltInDiveRolesSql);
+          }
+          final diveCols = await customSelect(
+            "PRAGMA table_info('dives')",
+          ).get();
+          final hasDiverRole = diveCols.any(
+            (c) => c.read<String>('name') == 'diver_role',
+          );
+          if (diveCols.isNotEmpty && !hasDiverRole) {
+            await customStatement(
+              'ALTER TABLE dives ADD COLUMN diver_role TEXT',
+            );
+          }
         }
         if (from < 103) await reportProgress();
       },
@@ -5090,19 +5177,55 @@ class AppDatabase extends _$AppDatabase {
         }
         await createMigrator().createTable(buddyRoles);
 
-        // v100 backstop: re-assert the dive plan tables and their indexes
-        // (same collision disease; all DDL idempotent).
+        // v100 backstop: re-assert the dive plan tables (same collision
+        // disease; createTable is idempotent). Their indexes
+        // (idx_dive_plan_tanks_plan_id / idx_dive_plan_segments_plan_id) are
+        // in the canonical performance-index set and created by
+        // ensurePerformanceIndexes below, so they are not re-declared here.
         await createMigrator().createTable(divePlans);
         await createMigrator().createTable(divePlanTanks);
         await createMigrator().createTable(divePlanSegments);
-        await customStatement('''
-          CREATE INDEX IF NOT EXISTS idx_dive_plan_tanks_plan_id
-          ON dive_plan_tanks(plan_id)
-        ''');
-        await customStatement('''
-          CREATE INDEX IF NOT EXISTS idx_dive_plan_segments_plan_id
-          ON dive_plan_segments(plan_id)
-        ''');
+
+        // v103 backstop: dive_roles table + built-in seed + dives.diver_role
+        // column (same collision disease; all DDL idempotent). The seed is
+        // guarded on the divers FK parent existing, which only matters for
+        // minimal test-fixture databases.
+        await createMigrator().createTable(diveRoles);
+        final diversParent = await customSelect(
+          "SELECT name FROM sqlite_master "
+          "WHERE type='table' AND name='divers'",
+        ).get();
+        if (diversParent.isNotEmpty) {
+          await customStatement(kSeedBuiltInDiveRolesSql);
+        }
+        final divesCols = await customSelect(
+          "PRAGMA table_info('dives')",
+        ).get();
+        final hasDiverRoleCol = divesCols.any(
+          (c) => c.read<String>('name') == 'diver_role',
+        );
+        if (divesCols.isNotEmpty && !hasDiverRoleCol) {
+          await customStatement('ALTER TABLE dives ADD COLUMN diver_role TEXT');
+        }
+
+        // Performance indexes historically existed only in onUpgrade blocks,
+        // so a database created fresh at a recent schema version -- or
+        // arriving via restore or sync-adopt -- never got them, and per-dive
+        // child lookups degraded to full scans of million-row tables.
+        // Re-assert the canonical set on every open (IF NOT EXISTS: free
+        // after the first heal). ANALYZE runs inside only when something was
+        // actually created.
+        final createdIndexes = await ensurePerformanceIndexes(this);
+        assert(() {
+          if (createdIndexes.isNotEmpty) {
+            developer.log(
+              'Healed ${createdIndexes.length} performance indexes: '
+              '${createdIndexes.join(', ')}',
+              name: 'AppDatabase',
+            );
+          }
+          return true;
+        }());
       },
     );
   }
