@@ -13,6 +13,7 @@ import 'package:submersion/core/deco/altitude_calculator.dart';
 import 'package:submersion/core/services/location_service.dart';
 import 'package:submersion/core/utils/unit_formatter.dart';
 import 'package:submersion/features/buddies/domain/entities/buddy.dart';
+import 'package:submersion/features/dive_roles/domain/entities/dive_role.dart';
 import 'package:submersion/features/buddies/presentation/providers/buddy_providers.dart';
 import 'package:submersion/features/buddies/presentation/widgets/buddy_picker.dart';
 import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
@@ -164,6 +165,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
   List<EquipmentItem> _selectedEquipment = [];
   List<BuddyWithRole> _selectedBuddies = [];
   Set<String> _originalBuddyIds = {};
+  String? _diverRoleId;
 
   // Conditions fields
   CurrentDirection? _currentDirection;
@@ -188,6 +190,10 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
 
   // Weight fields - multiple weight entries per dive
   List<DiveWeight> _weights = [];
+
+  // Post-dive weighting feedback (v104): trains the weight predictor.
+  WeightingFeedback? _weightingFeedback;
+  final _weightingFeedbackAmountController = TextEditingController();
 
   // Tank data - list of tanks with multi-tank support
   List<DiveTank> _tanks = [];
@@ -508,6 +514,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
 
         setState(() {
           _existingDive = dive;
+          _diverRoleId = dive.diverRoleId;
           _diveNumberController.text = dive.diveNumber?.toString() ?? '';
           // Use entryTime if available, otherwise fall back to dateTime
           final entryDateTime = dive.entryTime ?? dive.dateTime;
@@ -624,6 +631,15 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
             );
           }
 
+          // Load weighting feedback
+          _weightingFeedback = dive.weightingFeedback;
+          _weightingFeedbackAmountController.text =
+              dive.weightingFeedbackKg != null
+              ? units
+                    .convertWeight(dive.weightingFeedbackKg!)
+                    .toStringAsFixed(1)
+              : '';
+
           // Load tags
           _selectedTags = List.from(dive.tags);
 
@@ -724,6 +740,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     _windSpeedController.dispose();
     _humidityController.dispose();
     _weatherDescriptionController.dispose();
+    _weightingFeedbackAmountController.dispose();
     super.dispose();
   }
 
@@ -3211,7 +3228,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
           createdAt: DateTime.now(),
           updatedAt: DateTime.now(),
         ),
-    role: BuddyRole.buddy,
+    role: DiveRole.builtInBuddy(),
   );
 
   void _saveEquipmentAsSet() {
@@ -3906,6 +3923,50 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
             icon: const Icon(Icons.add),
             label: Text(context.l10n.diveLog_edit_addWeightEntry),
           ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.diveLog_edit_weightFeedback_label,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 4),
+          SegmentedButton<WeightingFeedback>(
+            emptySelectionAllowed: true,
+            segments: [
+              ButtonSegment(
+                value: WeightingFeedback.correct,
+                label: Text(context.l10n.diveLog_edit_weightFeedback_correct),
+              ),
+              ButtonSegment(
+                value: WeightingFeedback.overweighted,
+                label: Text(context.l10n.diveLog_edit_weightFeedback_over),
+              ),
+              ButtonSegment(
+                value: WeightingFeedback.underweighted,
+                label: Text(context.l10n.diveLog_edit_weightFeedback_under),
+              ),
+            ],
+            selected: {?_weightingFeedback},
+            onSelectionChanged: (selection) => setState(() {
+              _weightingFeedback = selection.isEmpty ? null : selection.first;
+              _markDirty();
+            }),
+          ),
+          if (_weightingFeedback == WeightingFeedback.overweighted ||
+              _weightingFeedback == WeightingFeedback.underweighted) ...[
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _weightingFeedbackAmountController,
+              decoration: InputDecoration(
+                labelText: context.l10n.diveLog_edit_weightFeedback_amount(
+                  units.weightSymbol,
+                ),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: (_) => _markDirty(),
+            ),
+          ],
         ],
       ),
     );
@@ -3988,12 +4049,17 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
       expanded: _isExpanded('buddies', defaultValue: false),
       onToggle: () => _toggleSection('buddies', defaultValue: false),
       summary: _buddiesSummary(),
-      isEmpty: _selectedBuddies.isEmpty,
+      isEmpty: _selectedBuddies.isEmpty && _diverRoleId == null,
       buddyPicker: Padding(
         padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
         child: BuddyPicker(
           diveId: widget.diveId,
           selectedBuddies: _selectedBuddies,
+          diverRoleId: _diverRoleId,
+          onDiverRoleChanged: (roleId) {
+            _markDirty();
+            setState(() => _diverRoleId = roleId);
+          },
           onChanged: (buddies) {
             _markDirty();
             setState(() => _selectedBuddies = buddies);
@@ -4445,6 +4511,16 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
         weatherFetchedAt: _weatherFetchedAt,
         // Weight entries (multiple)
         weights: _weights,
+        // Weighting feedback (magnitude only meaningful for over/under)
+        weightingFeedback: _weightingFeedback,
+        weightingFeedbackKg:
+            (_weightingFeedback == WeightingFeedback.overweighted ||
+                    _weightingFeedback == WeightingFeedback.underweighted) &&
+                _weightingFeedbackAmountController.text.isNotEmpty
+            ? units.weightToKg(
+                double.tryParse(_weightingFeedbackAmountController.text) ?? 0,
+              )
+            : null,
         // Tags
         tags: _selectedTags,
         // Custom fields (filter out entries with empty keys)
@@ -4460,6 +4536,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
         // Preserve legacy buddy/divemaster text fields
         buddy: _existingDive?.buddy,
         diveMaster: _existingDive?.diveMaster,
+        diverRoleId: _diverRoleId,
         // CCR/SCR rebreather settings
         diveMode: _diveMode,
         setpointLow: _diveMode == DiveMode.ccr ? _setpointLow : null,

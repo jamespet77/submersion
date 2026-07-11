@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 
 import 'package:drift/drift.dart';
+
+import 'package:submersion/core/database/performance_indexes.dart';
 
 part 'database.g.dart';
 
@@ -300,6 +303,11 @@ class DivePlans extends Table {
   TextColumn get turnPressureRule => text().nullable()();
   RealColumn get turnPressureFraction => real().nullable()();
 
+  /// Accepted weight prediction snapshot (v104). Placement is a JSON object
+  /// keyed by WeightType.name -> kg.
+  RealColumn get plannedWeightKg => real().nullable()();
+  TextColumn get plannedWeightPlacement => text().nullable()();
+
   /// Denormalized list-display summary (no engine run per list row).
   RealColumn get summaryMaxDepth => real().nullable()();
   IntColumn get summaryRuntimeSeconds => integer().nullable()();
@@ -401,6 +409,9 @@ class Dives extends Table {
       text().withDefault(const Constant('recreational'))();
   TextColumn get buddy => text().nullable()();
   TextColumn get diveMaster => text().nullable()();
+
+  /// The active diver's own role on this dive (dive_roles id, #547).
+  TextColumn get diverRole => text().nullable()();
   // MacDive import fields — common dive metadata
   TextColumn get boatName => text().nullable()();
   TextColumn get boatCaptain => text().nullable()();
@@ -442,6 +453,10 @@ class Dives extends Table {
   // Weight system fields
   RealColumn get weightAmount => real().nullable()(); // kg
   TextColumn get weightType => text().nullable()();
+  // Weighting feedback (v104): 'correct' | 'overweighted' | 'underweighted'.
+  TextColumn get weightingFeedback => text().nullable()();
+  // Magnitude in kg; direction implied by weightingFeedback.
+  RealColumn get weightingFeedbackKg => real().nullable()();
   // Favorite flag (v1.1)
   BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
   // Dive mode for CCR/SCR (v1.5)
@@ -677,6 +692,10 @@ class Equipment extends Table {
   TextColumn get model => text().nullable()();
   TextColumn get serialNumber => text().nullable()();
   TextColumn get size => text().nullable()(); // S, M, L, XL, or specific size
+  // Buoyancy metadata (v104): net in-water buoyancy in kg (positive floats),
+  // and dry weight in kg (feeds displacement scaling).
+  RealColumn get buoyancyKg => real().nullable()();
+  RealColumn get weightKg => real().nullable()();
   TextColumn get status => text().withDefault(
     const Constant('active'),
   )(); // active, needsService, retired, etc.
@@ -728,6 +747,35 @@ class DiveWeights extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+/// Dated body-mass measurements per diver (weight prediction, v104).
+@DataClassName('DiverWeightEntryRow')
+class DiverWeightEntries extends Table {
+  TextColumn get id => text()();
+  TextColumn get diverId => text().references(Divers, #id)();
+  IntColumn get measuredAt => integer()(); // Unix ms
+  RealColumn get weightKg => real()();
+  RealColumn get heightCm => real().nullable()();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution.
+  TextColumn get hlc => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Junction: equipment attached to a saved dive plan (v104).
+class DivePlanEquipment extends Table {
+  TextColumn get planId =>
+      text().references(DivePlans, #id, onDelete: KeyAction.cascade)();
+  TextColumn get equipmentId =>
+      text().references(Equipment, #id, onDelete: KeyAction.cascade)();
+
+  @override
+  Set<Column> get primaryKey => {planId, equipmentId};
 }
 
 /// Equipment sets (named collections of equipment items)
@@ -839,6 +887,13 @@ class Media extends Table {
   TextColumn get connectorAccountId => text().nullable()();
   TextColumn get remoteAssetId => text().nullable()();
   TextColumn get originDeviceId => text().nullable()();
+  // Media store (v103) - content identity + upload confirmation stamps.
+  // Nullable adds; a row with remote_uploaded_at set has its original bytes
+  // confirmed present in the library's media store at the content-hash key.
+  TextColumn get contentHash => text().nullable()();
+  IntColumn get contentSizeBytes => integer().nullable()();
+  IntColumn get remoteUploadedAt => integer().nullable()();
+  IntColumn get remoteThumbUploadedAt => integer().nullable()();
   // coverage:ignore-end
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();
@@ -997,6 +1052,21 @@ class MediaFetchDiagnostics extends Table {
 
   @override
   Set<Column> get primaryKey => {mediaItemId};
+}
+
+/// The library's media store descriptor (secret-free). Synced so other
+/// devices learn a store exists and can prompt to connect. Exactly one
+/// active row is expected; credentials never live here (keychain only).
+class MediaStores extends Table {
+  TextColumn get id => text()(); // storeId UUID, matches smv1/store.json
+  TextColumn get providerType => text()(); // 's3' (Phase 4 adds others)
+  TextColumn get displayHint => text()(); // e.g. 'dive-media @ minio.host'
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+  TextColumn get hlc => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
 }
 // coverage:ignore-end
 
@@ -1483,6 +1553,52 @@ const String kSeedBuiltInDiveTypesSql = '''
   CROSS JOIN (SELECT CAST(strftime('%s','now') AS INTEGER) * 1000 AS now_ms) n
 ''';
 
+/// Per-dive role vocabulary: built-in + custom (v103, issues #551/#547).
+/// Built-in ids are the legacy BuddyRole enum names so existing
+/// dive_buddies.role strings resolve without data migration; custom ids
+/// are UUIDs so renames never break references.
+@DataClassName('DiveRoleRow')
+class DiveRoles extends Table {
+  TextColumn get id => text()();
+  TextColumn get diverId =>
+      text().nullable().references(Divers, #id)(); // null for built-in roles
+  TextColumn get name => text()();
+  BoolColumn get isBuiltIn => boolean().withDefault(const Constant(false))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Seeds the nine built-in dive roles. Mirrors [kSeedBuiltInDiveTypesSql]:
+/// INSERT OR IGNORE keyed on stable slug ids keeps it idempotent, and the
+/// seed is re-asserted in beforeOpen so replace-adopt flows that clear the
+/// table cannot leave built-ins missing. The timestamp is computed once via
+/// the trailing CROSS JOIN.
+const String kSeedBuiltInDiveRolesSql = '''
+  INSERT OR IGNORE INTO dive_roles
+    (id, name, is_built_in, sort_order, created_at, updated_at)
+  SELECT t.id, t.name, 1, t.sort_order, n.now_ms, n.now_ms
+  FROM (
+    SELECT 'buddy' AS id, 'Buddy' AS name, 0 AS sort_order
+    UNION ALL SELECT 'diveGuide', 'Dive Guide', 1
+    UNION ALL SELECT 'instructor', 'Instructor', 2
+    UNION ALL SELECT 'student', 'Student', 3
+    UNION ALL SELECT 'diveMaster', 'Divemaster', 4
+    UNION ALL SELECT 'solo', 'Solo', 5
+    UNION ALL SELECT 'rearGuard', 'Rear Guard', 6
+    UNION ALL SELECT 'supportDiver', 'Support Diver', 7
+    UNION ALL SELECT 'safetyDiver', 'Safety Diver', 8
+  ) t
+  CROSS JOIN (SELECT CAST(strftime('%s','now') AS INTEGER) * 1000 AS now_ms) n
+''';
+
 /// Custom tank presets (user-defined tank configurations)
 class TankPresets extends Table {
   TextColumn get id => text()();
@@ -1956,6 +2072,8 @@ class FieldPresets extends Table {
     Equipment,
     DiveEquipment,
     DiveWeights,
+    DiverWeightEntries,
+    DivePlanEquipment,
     EquipmentSets,
     EquipmentSetItems,
     Species,
@@ -1975,6 +2093,7 @@ class FieldPresets extends Table {
     DiveTags,
     DiveDiveTypes,
     DiveTypes,
+    DiveRoles,
     TankPresets,
     DiveComputers,
     DiveDataSources,
@@ -2021,6 +2140,7 @@ class FieldPresets extends Table {
     ConnectorAccounts,
     NetworkCredentialHosts,
     MediaFetchDiagnostics,
+    MediaStores,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -2030,7 +2150,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 102;
+  static const int currentSchemaVersion = 104;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -2136,7 +2256,41 @@ class AppDatabase extends _$AppDatabase {
     100,
     101,
     102,
+    103,
+    104,
   ];
+
+  /// Idempotent DDL for the v103 media store objects. Called from the v103
+  /// onUpgrade block and from the beforeOpen backstop so a parallel-branch
+  /// schema-version collision cannot strand a database without them.
+  Future<void> _assertMediaStoreSchema() async {
+    // An empty PRAGMA result means the media table itself is absent (only
+    // possible in minimal test fixtures); skip the ALTERs rather than fail.
+    final cols = await customSelect("PRAGMA table_info('media')").get();
+    if (cols.isNotEmpty) {
+      final names = cols.map((c) => c.read<String>('name')).toSet();
+      Future<void> add(String name, String type) async {
+        if (!names.contains(name)) {
+          await customStatement('ALTER TABLE media ADD COLUMN $name $type');
+        }
+      }
+
+      await add('content_hash', 'TEXT');
+      await add('content_size_bytes', 'INTEGER');
+      await add('remote_uploaded_at', 'INTEGER');
+      await add('remote_thumb_uploaded_at', 'INTEGER');
+    }
+    await customStatement('''
+      CREATE TABLE IF NOT EXISTS media_stores (
+        id TEXT NOT NULL PRIMARY KEY,
+        provider_type TEXT NOT NULL,
+        display_hint TEXT NOT NULL,
+        created_at INTEGER NOT NULL,
+        updated_at INTEGER NOT NULL,
+        hlc TEXT
+      )
+    ''');
+  }
 
   /// Tables that carry a per-row Hybrid Logical Clock for cross-device conflict
   /// resolution (plus sync_metadata for the device clock). Shared between the
@@ -2157,12 +2311,14 @@ class AppDatabase extends _$AppDatabase {
     'equipment',
     'equipment_sets',
     'dive_types',
+    'dive_roles',
     'tank_presets',
     'dive_computers',
     'tags',
     'courses',
     'dives',
     'dive_sites',
+    'diver_weight_entries',
     'certifications',
     'service_records',
     'settings',
@@ -2303,6 +2459,10 @@ class AppDatabase extends _$AppDatabase {
         // Seed built-in dive types (the same set the v93 migration backfills
         // for databases created before this seed existed).
         await customStatement(kSeedBuiltInDiveTypesSql);
+
+        // Seed built-in dive roles (the v103 migration backfills these for
+        // upgraded databases).
+        await customStatement(kSeedBuiltInDiveRolesSql);
       },
       onUpgrade: (Migrator m, int from, int to) async {
         int completedSteps = 0;
@@ -4979,10 +5139,91 @@ class AppDatabase extends _$AppDatabase {
           await _relinkStrandedTankPressures();
         }
         if (from < 102) await reportProgress();
+        if (from < 103) {
+          // Two features independently claimed v103 on parallel branches
+          // (media store spec 2026-07-10; dive roles #551/#547). Both
+          // blocks are idempotent and touch disjoint tables, so the merge
+          // keeps both and beforeOpen re-asserts each against the
+          // schema-version collision this very overlap illustrates.
+
+          // Media store Phase 1: content identity + upload stamps on media,
+          // plus the secret-free store descriptor. Guarded ALTERs and
+          // IF NOT EXISTS keep this idempotent.
+          await _assertMediaStoreSchema();
+
+          // Dive roles vocabulary (#551) + the diver's own role (#547).
+          // createTable is IF NOT EXISTS and the seed is INSERT OR IGNORE,
+          // so this block is idempotent. The existence guards (divers for
+          // the seed's FK parent, dives for the ALTER) only matter for
+          // minimal test-fixture databases.
+          await m.createTable(diveRoles);
+          final diversTable = await customSelect(
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name='divers'",
+          ).get();
+          if (diversTable.isNotEmpty) {
+            await customStatement(kSeedBuiltInDiveRolesSql);
+          }
+          final diveCols = await customSelect(
+            "PRAGMA table_info('dives')",
+          ).get();
+          final hasDiverRole = diveCols.any(
+            (c) => c.read<String>('name') == 'diver_role',
+          );
+          if (diveCols.isNotEmpty && !hasDiverRole) {
+            await customStatement(
+              'ALTER TABLE dives ADD COLUMN diver_role TEXT',
+            );
+          }
+        }
+        if (from < 103) await reportProgress();
+        if (from < 104) {
+          await m.createTable(diverWeightEntries);
+          await m.createTable(divePlanEquipment);
+          Future<void> addColumnIfMissing(
+            String table,
+            String column,
+            String type,
+          ) async {
+            final cols = await customSelect(
+              "PRAGMA table_info('$table')",
+            ).get();
+            final has = cols.any((c) => c.read<String>('name') == column);
+            if (cols.isNotEmpty && !has) {
+              await customStatement(
+                'ALTER TABLE $table ADD COLUMN $column $type',
+              );
+            }
+          }
+
+          await addColumnIfMissing('dives', 'weighting_feedback', 'TEXT');
+          await addColumnIfMissing('dives', 'weighting_feedback_kg', 'REAL');
+          await addColumnIfMissing('equipment', 'buoyancy_kg', 'REAL');
+          await addColumnIfMissing('equipment', 'weight_kg', 'REAL');
+          await addColumnIfMissing('dive_plans', 'planned_weight_kg', 'REAL');
+          await addColumnIfMissing(
+            'dive_plans',
+            'planned_weight_placement',
+            'TEXT',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_diver_weight_entries_diver_id '
+            'ON diver_weight_entries(diver_id)',
+          );
+          await customStatement(
+            'CREATE INDEX IF NOT EXISTS idx_dive_plan_equipment_plan_id '
+            'ON dive_plan_equipment(plan_id)',
+          );
+        }
+        if (from < 104) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
         await customStatement('PRAGMA foreign_keys = ON');
+
+        // v103 backstop: re-assert media store schema (the helper is
+        // self-guarding when the media table is absent).
+        await _assertMediaStoreSchema();
 
         // Built-in dive types are reference data: identical on every device and
         // undeletable through DiveTypeRepository. Nothing else restores them --
@@ -5021,19 +5262,85 @@ class AppDatabase extends _$AppDatabase {
         }
         await createMigrator().createTable(buddyRoles);
 
-        // v100 backstop: re-assert the dive plan tables and their indexes
-        // (same collision disease; all DDL idempotent).
+        // v100 backstop: re-assert the dive plan tables (same collision
+        // disease; createTable is idempotent). Their indexes
+        // (idx_dive_plan_tanks_plan_id / idx_dive_plan_segments_plan_id) are
+        // in the canonical performance-index set and created by
+        // ensurePerformanceIndexes below, so they are not re-declared here.
         await createMigrator().createTable(divePlans);
         await createMigrator().createTable(divePlanTanks);
         await createMigrator().createTable(divePlanSegments);
-        await customStatement('''
-          CREATE INDEX IF NOT EXISTS idx_dive_plan_tanks_plan_id
-          ON dive_plan_tanks(plan_id)
-        ''');
-        await customStatement('''
-          CREATE INDEX IF NOT EXISTS idx_dive_plan_segments_plan_id
-          ON dive_plan_segments(plan_id)
-        ''');
+
+        // v103 backstop: dive_roles table + built-in seed + dives.diver_role
+        // column (same collision disease; all DDL idempotent). The seed is
+        // guarded on the divers FK parent existing, which only matters for
+        // minimal test-fixture databases.
+        await createMigrator().createTable(diveRoles);
+        final diversParent = await customSelect(
+          "SELECT name FROM sqlite_master "
+          "WHERE type='table' AND name='divers'",
+        ).get();
+        if (diversParent.isNotEmpty) {
+          await customStatement(kSeedBuiltInDiveRolesSql);
+        }
+        final divesCols = await customSelect(
+          "PRAGMA table_info('dives')",
+        ).get();
+        final hasDiverRoleCol = divesCols.any(
+          (c) => c.read<String>('name') == 'diver_role',
+        );
+        if (divesCols.isNotEmpty && !hasDiverRoleCol) {
+          await customStatement('ALTER TABLE dives ADD COLUMN diver_role TEXT');
+        }
+
+        // v104 backstop: weight prediction tables + columns (same collision
+        // disease; all DDL idempotent). Indexes for the new tables are in the
+        // canonical performance-index set below.
+        await createMigrator().createTable(diverWeightEntries);
+        await createMigrator().createTable(divePlanEquipment);
+        Future<void> addColumnIfMissing(
+          String table,
+          String column,
+          String type,
+        ) async {
+          final cols = await customSelect("PRAGMA table_info('$table')").get();
+          final has = cols.any((c) => c.read<String>('name') == column);
+          if (cols.isNotEmpty && !has) {
+            await customStatement(
+              'ALTER TABLE $table ADD COLUMN $column $type',
+            );
+          }
+        }
+
+        await addColumnIfMissing('dives', 'weighting_feedback', 'TEXT');
+        await addColumnIfMissing('dives', 'weighting_feedback_kg', 'REAL');
+        await addColumnIfMissing('equipment', 'buoyancy_kg', 'REAL');
+        await addColumnIfMissing('equipment', 'weight_kg', 'REAL');
+        await addColumnIfMissing('dive_plans', 'planned_weight_kg', 'REAL');
+        await addColumnIfMissing(
+          'dive_plans',
+          'planned_weight_placement',
+          'TEXT',
+        );
+
+        // Performance indexes historically existed only in onUpgrade blocks,
+        // so a database created fresh at a recent schema version -- or
+        // arriving via restore or sync-adopt -- never got them, and per-dive
+        // child lookups degraded to full scans of million-row tables.
+        // Re-assert the canonical set on every open (IF NOT EXISTS: free
+        // after the first heal). ANALYZE runs inside only when something was
+        // actually created.
+        final createdIndexes = await ensurePerformanceIndexes(this);
+        assert(() {
+          if (createdIndexes.isNotEmpty) {
+            developer.log(
+              'Healed ${createdIndexes.length} performance indexes: '
+              '${createdIndexes.join(', ')}',
+              name: 'AppDatabase',
+            );
+          }
+          return true;
+        }());
       },
     );
   }

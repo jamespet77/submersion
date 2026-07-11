@@ -77,6 +77,8 @@ import 'package:submersion/features/statistics/presentation/pages/statistics_equ
 import 'package:submersion/features/statistics/presentation/pages/statistics_profile_page.dart';
 import 'package:submersion/features/backup/presentation/pages/backup_settings_page.dart';
 import 'package:submersion/features/settings/presentation/pages/cloud_sync_page.dart';
+import 'package:submersion/features/media_store/presentation/pages/media_storage_page.dart';
+import 'package:submersion/features/media_store/presentation/pages/transfers_page.dart';
 import 'package:submersion/features/settings/presentation/pages/s3_config_page.dart';
 import 'package:submersion/features/settings/presentation/pages/fix_dive_times_page.dart';
 import 'package:submersion/features/settings/presentation/pages/settings_page.dart';
@@ -94,6 +96,7 @@ import 'package:submersion/features/settings/presentation/pages/emergency_contac
 import 'package:submersion/features/settings/presentation/pages/medical_info_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/insurance_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/notes_edit_page.dart';
+import 'package:submersion/features/settings/presentation/pages/body_weight_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/prior_experience_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/debug_log_viewer_page.dart';
 import 'package:submersion/features/media/presentation/pages/media_sources_page.dart';
@@ -101,6 +104,7 @@ import 'package:submersion/features/media/presentation/pages/network_sources_pag
 import 'package:submersion/features/settings/presentation/pages/section_appearance_page.dart';
 import 'package:submersion/features/transfer/presentation/pages/transfer_page.dart';
 import 'package:submersion/features/dive_types/presentation/pages/dive_types_page.dart';
+import 'package:submersion/features/dive_roles/presentation/pages/dive_roles_page.dart';
 import 'package:submersion/features/tank_presets/presentation/pages/tank_presets_page.dart';
 import 'package:submersion/features/tank_presets/presentation/pages/tank_preset_edit_page.dart';
 import 'package:submersion/features/marine_life/presentation/pages/species_manage_page.dart';
@@ -111,7 +115,7 @@ import 'package:submersion/features/planning/presentation/pages/planning_page.da
 import 'package:submersion/features/planning/presentation/widgets/planning_shell.dart';
 import 'package:submersion/features/planning/presentation/widgets/planning_welcome.dart';
 import 'package:submersion/features/gps_log/presentation/pages/gps_logger_page.dart';
-import 'package:submersion/features/tools/presentation/pages/weight_calculator_page.dart';
+import 'package:submersion/features/weight_planner/presentation/pages/weight_planner_page.dart';
 import 'package:submersion/features/deco_calculator/presentation/pages/deco_calculator_page.dart';
 import 'package:submersion/features/gas_calculators/presentation/pages/gas_calculators_page.dart';
 import 'package:submersion/features/dive_computer/presentation/pages/device_list_page.dart';
@@ -247,7 +251,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'weight-calculator',
                     name: 'weightCalculator',
-                    builder: (context, state) => const WeightCalculatorPage(),
+                    builder: (context, state) => const WeightPlannerPage(),
                   ),
                   GoRoute(
                     path: 'surface-interval',
@@ -911,6 +915,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 ],
               ),
               GoRoute(
+                path: 'media-storage',
+                name: 'mediaStorage',
+                builder: (context, state) => const MediaStoragePage(),
+                routes: [
+                  GoRoute(
+                    path: 'transfers',
+                    name: 'mediaStorageTransfers',
+                    builder: (context, state) => const TransfersPage(),
+                  ),
+                ],
+              ),
+              GoRoute(
                 path: 'fix-dive-times',
                 name: 'fixDiveTimes',
                 builder: (context, state) => const FixDiveTimesPage(),
@@ -975,6 +991,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     builder: (context, state) =>
                         const PriorExperienceEditPage(),
                   ),
+                  GoRoute(
+                    path: 'body-weight',
+                    name: 'editBodyWeight',
+                    builder: (context, state) => const BodyWeightEditPage(),
+                  ),
                 ],
               ),
             ],
@@ -985,6 +1006,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/dive-types',
             name: 'diveTypes',
             builder: (context, state) => const DiveTypesPage(),
+          ),
+
+          // Dive Roles Management
+          GoRoute(
+            path: '/dive-roles',
+            name: 'diveRoles',
+            builder: (context, state) => const DiveRolesPage(),
           ),
 
           // Tank Presets Management

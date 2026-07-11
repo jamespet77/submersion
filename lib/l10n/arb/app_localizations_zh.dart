@@ -100,6 +100,116 @@ class AppLocalizationsZh extends AppLocalizations {
       '此版本不可用 — 请使用 S3 或 App Store 版本';
 
   @override
+  String get settings_cloudSync_encryption_title => '端到端加密';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff => '上传前加密所有同步数据和云备份';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider => '请先选择云服务商';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff => '加密已关闭';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn => '加密已开启';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      '同步数据和云备份在上传前会被加密';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked => '已加密 — 需要口令';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      '输入口令以在此设备上同步';
+
+  @override
+  String get settings_cloudSync_encryption_enable => '开启加密';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase => '输入口令';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => '口令';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm => '确认口令';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch => '两次输入的口令不一致';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort => '请至少使用 8 个字符';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase => '口令或恢复码不正确';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      '所有其他设备都必须更新到最新版应用，并将重新下载资料库。';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      '如果口令和恢复码都丢失，云端数据将无法恢复。设备上的数据永远不会有风险。';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      '删除现有的未加密云备份';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle => '恢复码';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      '请抄写此恢复码并妥善保管。如果忘记口令，这是唯一的恢复途径。';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm => '我已保存恢复码';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase => '更改口令';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase => '当前口令';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase => '新口令';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery => '生成新的恢复码';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      '旧的恢复码将立即失效。';
+
+  @override
+  String get settings_cloudSync_encryption_disable => '关闭加密';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      '资料库将以未加密方式重新上传，其他设备将重新下载。现有的加密备份仍可用口令恢复。';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle => '输入您的加密口令';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint => '口令或恢复码';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => '解锁';
+
+  @override
+  String get settings_cloudSync_encryption_continue => '继续';
+
+  @override
+  String get settings_cloudSync_encryption_done => '完成';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => '取消';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return '同步已暂停 — 资料库已从 \"$deviceName\" 上的备份替换。';
   }
@@ -682,16 +792,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get buddies_picker_add => '添加';
 
   @override
+  String get buddies_picker_addCustomRole => '添加自定义角色...';
+
+  @override
   String get buddies_picker_addNew => '添加新潜伴';
 
   @override
   String get buddies_picker_done => '完成';
 
   @override
+  String get buddies_picker_me => '我';
+
+  @override
   String get buddies_picker_noBuddiesFound => '未找到潜伴';
 
   @override
   String get buddies_picker_noBuddiesYet => '暂无潜伴';
+
+  @override
+  String get buddies_picker_noRole => '无角色';
 
   @override
   String get buddies_picker_noneSelected => '未选择潜伴';
@@ -703,9 +822,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get buddies_picker_selectBuddies => '选择潜伴';
 
   @override
+  String get buddies_picker_selectMyRole => '选择我的角色';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return '为 $name 选择角色';
   }
+
+  @override
+  String get buddies_picker_setMyRole => '设置我的角色';
 
   @override
   String get buddies_picker_tapToAdd => '点击「添加」选择潜伴';
@@ -4479,6 +4604,97 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => '潜伴';
+
+  @override
+  String get diveRole_builtin_diveGuide => '潜导';
+
+  @override
+  String get diveRole_builtin_diveMaster => '潜水长';
+
+  @override
+  String get diveRole_builtin_instructor => '教练';
+
+  @override
+  String get diveRole_builtin_rearGuard => '后导';
+
+  @override
+  String get diveRole_builtin_safetyDiver => '安全员';
+
+  @override
+  String get diveRole_builtin_solo => '独潜';
+
+  @override
+  String get diveRole_builtin_student => '学员';
+
+  @override
+  String get diveRole_builtin_supportDiver => '支援潜水员';
+
+  @override
+  String get diveRoles_addDialog_addButton => '添加';
+
+  @override
+  String get diveRoles_addDialog_nameHint => '例如：摄影师';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => '潜水角色名称';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => '请输入名称';
+
+  @override
+  String get diveRoles_addDialog_title => '添加自定义潜水角色';
+
+  @override
+  String get diveRoles_addTooltip => '添加潜水角色';
+
+  @override
+  String get diveRoles_appBar_title => '潜水角色';
+
+  @override
+  String get diveRoles_builtInHeader => '内置潜水角色';
+
+  @override
+  String get diveRoles_customHeader => '自定义潜水角色';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return '确定要删除 \"$name\"?';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => '删除潜水角色?';
+
+  @override
+  String get diveRoles_deleteTooltip => '删除潜水角色';
+
+  @override
+  String get diveRoles_renameDialog_title => '重命名潜水角色';
+
+  @override
+  String get diveRoles_renameTooltip => '重命名潜水角色';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return '已添加潜水角色：$name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return '无法删除 \"$name\" - 已被现有潜水记录使用';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return '已删除潜水角色：$name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return '添加潜水角色出错：$error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => '最大深度';
 
   @override
@@ -4896,6 +5112,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => '搜索潜水...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return '仅显示前 $limit 条匹配结果。请细化搜索以缩小范围。';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -11767,6 +11988,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_manage_checklistTemplates_subtitle => '用于旅行规划的可重复使用待办清单';
 
   @override
+  String get settings_manage_diveRoles => '潜水角色';
+
+  @override
+  String get settings_manage_diveRoles_subtitle => '管理自定义潜水角色';
+
+  @override
   String get settings_manage_diveTypes => '潜水类型';
 
   @override
@@ -17479,6 +17706,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get universalImport_label_consolidated => '已合并';
 
   @override
+  String get universalImport_label_photosAttached => '已附加照片';
+
+  @override
+  String get universalImport_label_photosUnmatched => '未匹配到潜水的照片';
+
+  @override
   String get common_label_shareWithAllProfiles => '与所有潜水员资料共享';
 
   @override
@@ -17692,4 +17925,249 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get diveLog_bulkEdit_membership_empty => '所选潜水尚无项目';
+
+  @override
+  String get settings_mediaStorage_entry_title => '媒体存储';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle => '将照片和视频原件存储在您自己的云存储中';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured => '此设备未连接媒体存储';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return '已连接到 $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => '连接成功';
+
+  @override
+  String get settings_mediaStorage_saved => '媒体存储已连接';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => '断开连接';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title => '断开媒体存储？';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      '此设备将停止上传和获取媒体。您的存储桶中的内容不会被删除。';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync => '从同步复制设置';
+
+  @override
+  String get settings_mediaStorage_transfers_title => '传输';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => '查看传输';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => '暂无传输';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => '重试';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted => '清除已完成';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => '等待中';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => '上传中';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => '已完成';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => '失败';
+
+  @override
+  String get settings_mediaStorage_backfill_action => '上传现有媒体库';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '已排队 $count 个上传';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload => '自动上传照片';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular => '使用蜂窝数据上传照片';
+
+  @override
+  String get settings_mediaStorage_provider_label => '服务商';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      '使用云同步中的 Dropbox 连接。媒体存储在您的 Dropbox 应用文件夹中。';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      '使用 Google 登录。媒体存储在此应用的私有云端硬盘空间中。';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      '媒体存储在此应用的 iCloud 容器中，并通过您的 Apple ID 同步。';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return '连接 $provider';
+  }
+
+  @override
+  String get bodyWeight_addEntry => '添加测量';
+
+  @override
+  String get bodyWeight_dateLabel => '日期';
+
+  @override
+  String get bodyWeight_deleteTooltip => '删除条目';
+
+  @override
+  String get bodyWeight_heightLabel => '身高（厘米）';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return '体重（$unit）';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return '大约多少（$unit）';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => '感觉合适';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => '配重感觉如何？';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => '配重过多';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => '配重不足';
+
+  @override
+  String get diverProfile_bodyWeight_empty => '未记录';
+
+  @override
+  String get diverProfile_bodyWeight_title => '体重';
+
+  @override
+  String get equipment_edit_advanced_title => '高级';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure => '正值：漂浮程度';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => '负值表示下沉';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank => '留空——气瓶使用自身规格';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return '浮力（$unit）';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return '干重（$unit）';
+  }
+
+  @override
+  String get planner_gearWeights_accept => '用作计划配重';
+
+  @override
+  String get planner_gearWeights_addGear => '添加装备';
+
+  @override
+  String get planner_gearWeights_empty => '添加装备以预测配重';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return '计划：$weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return '预测：$weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => '装备与配重';
+
+  @override
+  String get planner_gearWeights_useSet => '使用套装';
+
+  @override
+  String get tools_weight_addGear => '添加装备';
+
+  @override
+  String get tools_weight_addTank => '添加气瓶';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return '基于 $count 次已记录潜水';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => '计算方式';
+
+  @override
+  String get tools_weight_confidence_high => '置信度高';
+
+  @override
+  String get tools_weight_confidence_low => '置信度低——估计值';
+
+  @override
+  String get tools_weight_confidence_medium => '置信度中等';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '较上一套装备 $delta';
+  }
+
+  @override
+  String get tools_weight_noGear => '添加计划使用的装备以获得个性化预测。';
+
+  @override
+  String get tools_weight_personalTerm => '个人基准';
+
+  @override
+  String get tools_weight_placementTitle => '建议分布';
+
+  @override
+  String get tools_weight_predictedWeight => '预测配重';
+
+  @override
+  String get tools_weight_saveToProfile => '将体重保存到个人资料';
+
+  @override
+  String get tools_weight_source_measured => '根据您的潜水测得';
+
+  @override
+  String get tools_weight_source_physics => '物理';
+
+  @override
+  String get tools_weight_source_typeDefault => '默认估计';
+
+  @override
+  String get tools_weight_source_userSpec => '来自您的装备规格';
+
+  @override
+  String get tools_weight_tanks => '气瓶';
+
+  @override
+  String get tools_weight_useSet => '使用套装';
+
+  @override
+  String get tools_weight_waterTerm => '水域类型';
 }

@@ -8,6 +8,7 @@ import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/presentation/providers/dive_repository_provider.dart';
 import 'package:submersion/features/dive_planner/presentation/providers/dive_planner_providers.dart';
 import 'package:submersion/features/dive_planner/presentation/widgets/plan_settings_panel.dart';
+import 'package:submersion/features/dive_planner/presentation/widgets/plan_gear_weights_section.dart';
 import 'package:submersion/features/dive_planner/presentation/widgets/plan_tank_list.dart';
 import 'package:submersion/features/dive_planner/presentation/widgets/segment_list.dart';
 import 'package:submersion/features/dive_planner/presentation/widgets/simple_plan_dialog.dart';
@@ -280,7 +281,11 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(12, 0, 12, 72),
-                    children: const [SegmentList(), PlanTankList()],
+                    children: const [
+                      SegmentList(),
+                      PlanTankList(),
+                      PlanGearWeightsSection(),
+                    ],
                   ),
                 ),
               ],
@@ -343,6 +348,8 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
               const ContingencySettingsSection(),
               const SizedBox(height: 12),
               const PlanTankList(),
+              const SizedBox(height: 12),
+              const PlanGearWeightsSection(),
               const SizedBox(height: 12),
               const SegmentList(),
             ],

@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
 import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/core/domain/models/incoming_dive_data.dart';
 import 'package:submersion/core/providers/provider.dart';
@@ -15,6 +18,7 @@ import 'package:submersion/features/dive_import/domain/services/dive_matcher.dar
 import 'package:submersion/features/dive_log/presentation/providers/dive_providers.dart';
 import 'package:submersion/features/dive_sites/presentation/providers/site_providers.dart';
 import 'package:submersion/features/dive_types/presentation/providers/dive_type_providers.dart';
+import 'package:submersion/features/dive_roles/presentation/providers/dive_role_providers.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_set_providers.dart';
@@ -33,6 +37,7 @@ import 'package:submersion/features/import_wizard/domain/models/import_bundle.da
     as wizard
     show ImportEntityType;
 import 'package:submersion/features/import_wizard/domain/models/unified_import_result.dart';
+import 'package:submersion/features/media/presentation/providers/photo_picker_providers.dart';
 import 'package:submersion/shared/widgets/wizard/wizard_step_def.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/tags/presentation/providers/tag_providers.dart';
@@ -447,6 +452,7 @@ class UniversalAdapter implements ImportSourceAdapter {
       certificationRepository: _ref.read(certificationRepositoryProvider),
       tagRepository: _ref.read(tagRepositoryProvider),
       diveTypeRepository: _ref.read(diveTypeRepositoryProvider),
+      diveRoleRepository: _ref.read(diveRoleRepositoryProvider),
       siteRepository: _ref.read(siteRepositoryProvider),
       diveRepository: _ref.read(diveRepositoryProvider),
       tankPressureRepository: _ref.read(tankPressureRepositoryProvider),
@@ -503,6 +509,26 @@ class UniversalAdapter implements ImportSourceAdapter {
       consolidated = summary.consolidated;
       removedDiveIds = summary.removedDiveIds;
     }
+
+    // Attach ZIP-bundled photos to the dives that survived import (skipping
+    // any that were folded away by consolidation).
+    final attachedPhotos = await attachImportedPhotos(
+      photoPathsByBaseName: notifierState.photoPathsByBaseName,
+      diveIdByIndex: result.diveIdByIndex,
+      removedDiveIds: removedDiveIds,
+      dives: payload.entitiesOf(ui.ImportEntityType.dives),
+      files: notifierState.files,
+      singleFileName: notifierState.fileName,
+      attach: (file, diveId, takenAt) async {
+        await _ref
+            .read(mediaImportServiceProvider)
+            .importLocalFileForDive(
+              sourceFile: file,
+              diveId: diveId,
+              takenAt: takenAt,
+            );
+      },
+    );
 
     // `importer.import` counted folded/removed dives as imported; subtract only
     // the dives that were ACTUALLY removed (folded, or compensating-deleted).
@@ -569,6 +595,8 @@ class UniversalAdapter implements ImportSourceAdapter {
       skippedCount: skipped + cleanedUpFailures,
       importedDiveIds: netImportedDiveIds,
       fileOutcomes: fileOutcomes,
+      attachedPhotoCount: attachedPhotos,
+      unmatchedPhotoCount: notifierState.unmatchedPhotoCount,
     );
   }
 
@@ -764,6 +792,76 @@ class UniversalAdapter implements ImportSourceAdapter {
     final name = (data['name'] as String?) ?? 'Unnamed';
     final agency = data['agency'] as String?;
     return EntityItem(title: name, subtitle: agency ?? '');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Helpers — photo attachment
+  // ---------------------------------------------------------------------------
+
+  /// Attaches ZIP-bundled photos to newly created dives.
+  ///
+  /// Photos are keyed by their source file's basename; a file's photos are
+  /// attached only when that file produced exactly one imported dive (the
+  /// DiveCloud shape) so a multi-dive file never duplicates photos across
+  /// its dives. Attach failures are swallowed: the dive import already
+  /// succeeded and a failed photo copy must not fail the wizard.
+  ///
+  /// Returns the number of photos attached.
+  static Future<int> attachImportedPhotos({
+    required Map<String, List<String>> photoPathsByBaseName,
+    required Map<int, String> diveIdByIndex,
+    required Set<String> removedDiveIds,
+    required List<Map<String, dynamic>> dives,
+    required List<PickedImportFile> files,
+    required String? singleFileName,
+    required Future<void> Function(File file, String diveId, DateTime? takenAt)
+    attach,
+  }) async {
+    if (photoPathsByBaseName.isEmpty || diveIdByIndex.isEmpty) return 0;
+
+    String? baseNameForIndex(int index) {
+      if (index < 0 || index >= dives.length) return null;
+      final sourceId = dives[index]['_sourceFileId'] as String?;
+      if (sourceId == null) {
+        // Single-file flow: payloads carry no source stamp.
+        return singleFileName == null
+            ? null
+            : p.basenameWithoutExtension(singleFileName);
+      }
+      final fileIndex = int.tryParse(sourceId.substring(1));
+      if (fileIndex == null || fileIndex < 0 || fileIndex >= files.length) {
+        return null;
+      }
+      return p.basenameWithoutExtension(files[fileIndex].name);
+    }
+
+    // Group surviving imported dives by their source file's base name.
+    final divesByBase = <String, List<MapEntry<int, String>>>{};
+    for (final entry in diveIdByIndex.entries) {
+      if (removedDiveIds.contains(entry.value)) continue;
+      final base = baseNameForIndex(entry.key);
+      if (base == null) continue;
+      (divesByBase[base] ??= []).add(entry);
+    }
+
+    var attachedCount = 0;
+    for (final entry in divesByBase.entries) {
+      final photos = photoPathsByBaseName[entry.key];
+      // Photos only attach when the file produced exactly one dive.
+      if (photos == null || entry.value.length != 1) continue;
+      final diveIndex = entry.value.single.key;
+      final diveId = entry.value.single.value;
+      final takenAt = dives[diveIndex]['dateTime'] as DateTime?;
+      for (final photoPath in photos) {
+        try {
+          await attach(File(photoPath), diveId, takenAt);
+          attachedCount++;
+        } catch (_) {
+          // Best-effort: see doc comment.
+        }
+      }
+    }
+    return attachedCount;
   }
 
   // ---------------------------------------------------------------------------

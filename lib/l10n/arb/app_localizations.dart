@@ -284,6 +284,210 @@ abstract class AppLocalizations {
   /// **'Not available in this build — use S3 or the App Store version'**
   String get settings_cloudSync_provider_icloud_unsupportedSubtitle;
 
+  /// No description provided for @settings_cloudSync_encryption_title.
+  ///
+  /// In en, this message translates to:
+  /// **'End-to-end encryption'**
+  String get settings_cloudSync_encryption_title;
+
+  /// No description provided for @settings_cloudSync_encryption_subtitleOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypt all sync data and cloud backups before upload'**
+  String get settings_cloudSync_encryption_subtitleOff;
+
+  /// No description provided for @settings_cloudSync_encryption_subtitleNeedsProvider.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a cloud provider first'**
+  String get settings_cloudSync_encryption_subtitleNeedsProvider;
+
+  /// No description provided for @settings_cloudSync_encryption_statusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption is off'**
+  String get settings_cloudSync_encryption_statusOff;
+
+  /// No description provided for @settings_cloudSync_encryption_statusOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption is on'**
+  String get settings_cloudSync_encryption_statusOn;
+
+  /// No description provided for @settings_cloudSync_encryption_statusOnSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync data and cloud backups are encrypted before upload'**
+  String get settings_cloudSync_encryption_statusOnSubtitle;
+
+  /// No description provided for @settings_cloudSync_encryption_statusLocked.
+  ///
+  /// In en, this message translates to:
+  /// **'Encrypted — passphrase needed'**
+  String get settings_cloudSync_encryption_statusLocked;
+
+  /// No description provided for @settings_cloudSync_encryption_statusLockedSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the passphrase to sync on this device'**
+  String get settings_cloudSync_encryption_statusLockedSubtitle;
+
+  /// No description provided for @settings_cloudSync_encryption_enable.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable encryption'**
+  String get settings_cloudSync_encryption_enable;
+
+  /// No description provided for @settings_cloudSync_encryption_enterPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter passphrase'**
+  String get settings_cloudSync_encryption_enterPassphrase;
+
+  /// No description provided for @settings_cloudSync_encryption_passphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase'**
+  String get settings_cloudSync_encryption_passphrase;
+
+  /// No description provided for @settings_cloudSync_encryption_passphraseConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm passphrase'**
+  String get settings_cloudSync_encryption_passphraseConfirm;
+
+  /// No description provided for @settings_cloudSync_encryption_passphraseMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrases do not match'**
+  String get settings_cloudSync_encryption_passphraseMismatch;
+
+  /// No description provided for @settings_cloudSync_encryption_passphraseTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Use at least 8 characters'**
+  String get settings_cloudSync_encryption_passphraseTooShort;
+
+  /// No description provided for @settings_cloudSync_encryption_wrongPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect passphrase or recovery code'**
+  String get settings_cloudSync_encryption_wrongPassphrase;
+
+  /// No description provided for @settings_cloudSync_encryption_warnUpdateDevices.
+  ///
+  /// In en, this message translates to:
+  /// **'All other devices must be updated to the latest app version and will re-download the library.'**
+  String get settings_cloudSync_encryption_warnUpdateDevices;
+
+  /// No description provided for @settings_cloudSync_encryption_warnLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'If you lose both the passphrase and the recovery code, data in the cloud cannot be recovered. Data on your devices is never at risk.'**
+  String get settings_cloudSync_encryption_warnLoss;
+
+  /// No description provided for @settings_cloudSync_encryption_deletePlaintextBackups.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete existing unencrypted cloud backups'**
+  String get settings_cloudSync_encryption_deletePlaintextBackups;
+
+  /// No description provided for @settings_cloudSync_encryption_recoveryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovery code'**
+  String get settings_cloudSync_encryption_recoveryTitle;
+
+  /// No description provided for @settings_cloudSync_encryption_recoveryExplain.
+  ///
+  /// In en, this message translates to:
+  /// **'Write this code down and keep it somewhere safe. It is the only way back in if you forget your passphrase.'**
+  String get settings_cloudSync_encryption_recoveryExplain;
+
+  /// No description provided for @settings_cloudSync_encryption_recoverySavedConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'I have saved my recovery code'**
+  String get settings_cloudSync_encryption_recoverySavedConfirm;
+
+  /// No description provided for @settings_cloudSync_encryption_changePassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Change passphrase'**
+  String get settings_cloudSync_encryption_changePassphrase;
+
+  /// No description provided for @settings_cloudSync_encryption_currentPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'Current passphrase'**
+  String get settings_cloudSync_encryption_currentPassphrase;
+
+  /// No description provided for @settings_cloudSync_encryption_newPassphrase.
+  ///
+  /// In en, this message translates to:
+  /// **'New passphrase'**
+  String get settings_cloudSync_encryption_newPassphrase;
+
+  /// No description provided for @settings_cloudSync_encryption_regenerateRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate new recovery code'**
+  String get settings_cloudSync_encryption_regenerateRecovery;
+
+  /// No description provided for @settings_cloudSync_encryption_regenerateRecoveryWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'The old recovery code stops working immediately.'**
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn;
+
+  /// No description provided for @settings_cloudSync_encryption_disable.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off encryption'**
+  String get settings_cloudSync_encryption_disable;
+
+  /// No description provided for @settings_cloudSync_encryption_disableWarn.
+  ///
+  /// In en, this message translates to:
+  /// **'The library will be re-uploaded unencrypted, and other devices will re-download it. Existing encrypted backups stay restorable with the passphrase.'**
+  String get settings_cloudSync_encryption_disableWarn;
+
+  /// No description provided for @settings_cloudSync_encryption_unlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your encryption passphrase'**
+  String get settings_cloudSync_encryption_unlockTitle;
+
+  /// No description provided for @settings_cloudSync_encryption_unlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Passphrase or recovery code'**
+  String get settings_cloudSync_encryption_unlockHint;
+
+  /// No description provided for @settings_cloudSync_encryption_unlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock'**
+  String get settings_cloudSync_encryption_unlock;
+
+  /// No description provided for @settings_cloudSync_encryption_continue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get settings_cloudSync_encryption_continue;
+
+  /// No description provided for @settings_cloudSync_encryption_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get settings_cloudSync_encryption_done;
+
+  /// No description provided for @settings_cloudSync_encryption_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get settings_cloudSync_encryption_cancel;
+
   /// No description provided for @settings_cloudSync_replace_globalBanner.
   ///
   /// In en, this message translates to:
@@ -1334,6 +1538,12 @@ abstract class AppLocalizations {
   /// **'Add'**
   String get buddies_picker_add;
 
+  /// No description provided for @buddies_picker_addCustomRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Add custom role...'**
+  String get buddies_picker_addCustomRole;
+
   /// No description provided for @buddies_picker_addNew.
   ///
   /// In en, this message translates to:
@@ -1346,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'Done'**
   String get buddies_picker_done;
 
+  /// No description provided for @buddies_picker_me.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get buddies_picker_me;
+
   /// No description provided for @buddies_picker_noBuddiesFound.
   ///
   /// In en, this message translates to:
@@ -1357,6 +1573,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No buddies yet'**
   String get buddies_picker_noBuddiesYet;
+
+  /// No description provided for @buddies_picker_noRole.
+  ///
+  /// In en, this message translates to:
+  /// **'No role'**
+  String get buddies_picker_noRole;
 
   /// No description provided for @buddies_picker_noneSelected.
   ///
@@ -1376,11 +1598,23 @@ abstract class AppLocalizations {
   /// **'Select Buddies'**
   String get buddies_picker_selectBuddies;
 
+  /// No description provided for @buddies_picker_selectMyRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Select my role'**
+  String get buddies_picker_selectMyRole;
+
   /// No description provided for @buddies_picker_selectRole.
   ///
   /// In en, this message translates to:
   /// **'Select Role for {name}'**
   String buddies_picker_selectRole(Object name);
+
+  /// No description provided for @buddies_picker_setMyRole.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my role'**
+  String get buddies_picker_setMyRole;
 
   /// No description provided for @buddies_picker_tapToAdd.
   ///
@@ -7934,6 +8168,168 @@ abstract class AppLocalizations {
   /// **'Error loading species: {error}'**
   String diveLog_speciesPicker_errorLoading(String error);
 
+  /// No description provided for @diveRole_builtin_buddy.
+  ///
+  /// In en, this message translates to:
+  /// **'Buddy'**
+  String get diveRole_builtin_buddy;
+
+  /// No description provided for @diveRole_builtin_diveGuide.
+  ///
+  /// In en, this message translates to:
+  /// **'Dive Guide'**
+  String get diveRole_builtin_diveGuide;
+
+  /// No description provided for @diveRole_builtin_diveMaster.
+  ///
+  /// In en, this message translates to:
+  /// **'Divemaster'**
+  String get diveRole_builtin_diveMaster;
+
+  /// No description provided for @diveRole_builtin_instructor.
+  ///
+  /// In en, this message translates to:
+  /// **'Instructor'**
+  String get diveRole_builtin_instructor;
+
+  /// No description provided for @diveRole_builtin_rearGuard.
+  ///
+  /// In en, this message translates to:
+  /// **'Rear Guard'**
+  String get diveRole_builtin_rearGuard;
+
+  /// No description provided for @diveRole_builtin_safetyDiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety Diver'**
+  String get diveRole_builtin_safetyDiver;
+
+  /// No description provided for @diveRole_builtin_solo.
+  ///
+  /// In en, this message translates to:
+  /// **'Solo'**
+  String get diveRole_builtin_solo;
+
+  /// No description provided for @diveRole_builtin_student.
+  ///
+  /// In en, this message translates to:
+  /// **'Student'**
+  String get diveRole_builtin_student;
+
+  /// No description provided for @diveRole_builtin_supportDiver.
+  ///
+  /// In en, this message translates to:
+  /// **'Support Diver'**
+  String get diveRole_builtin_supportDiver;
+
+  /// No description provided for @diveRoles_addDialog_addButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get diveRoles_addDialog_addButton;
+
+  /// No description provided for @diveRoles_addDialog_nameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g., Photographer'**
+  String get diveRoles_addDialog_nameHint;
+
+  /// No description provided for @diveRoles_addDialog_nameLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dive Role Name'**
+  String get diveRoles_addDialog_nameLabel;
+
+  /// No description provided for @diveRoles_addDialog_nameValidation.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name'**
+  String get diveRoles_addDialog_nameValidation;
+
+  /// No description provided for @diveRoles_addDialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Custom Dive Role'**
+  String get diveRoles_addDialog_title;
+
+  /// No description provided for @diveRoles_addTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Add dive role'**
+  String get diveRoles_addTooltip;
+
+  /// No description provided for @diveRoles_appBar_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Dive Roles'**
+  String get diveRoles_appBar_title;
+
+  /// No description provided for @diveRoles_builtInHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Built-in Dive Roles'**
+  String get diveRoles_builtInHeader;
+
+  /// No description provided for @diveRoles_customHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Dive Roles'**
+  String get diveRoles_customHeader;
+
+  /// No description provided for @diveRoles_deleteDialog_content.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"?'**
+  String diveRoles_deleteDialog_content(Object name);
+
+  /// No description provided for @diveRoles_deleteDialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Dive Role?'**
+  String get diveRoles_deleteDialog_title;
+
+  /// No description provided for @diveRoles_deleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete dive role'**
+  String get diveRoles_deleteTooltip;
+
+  /// No description provided for @diveRoles_renameDialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename Dive Role'**
+  String get diveRoles_renameDialog_title;
+
+  /// No description provided for @diveRoles_renameTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename dive role'**
+  String get diveRoles_renameTooltip;
+
+  /// No description provided for @diveRoles_snackbar_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Added dive role: {name}'**
+  String diveRoles_snackbar_added(Object name);
+
+  /// No description provided for @diveRoles_snackbar_cannotDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot delete \"{name}\" - it is used by existing dives'**
+  String diveRoles_snackbar_cannotDelete(Object name);
+
+  /// No description provided for @diveRoles_snackbar_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted dive role: {name}'**
+  String diveRoles_snackbar_deleted(Object name);
+
+  /// No description provided for @diveRoles_snackbar_errorAdding.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding dive role: {error}'**
+  String diveRoles_snackbar_errorAdding(Object error);
+
   /// Hero stat label: maximum site depth
   ///
   /// In en, this message translates to:
@@ -8707,6 +9103,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search dives...'**
   String get diveLog_listPage_searchFieldLabel;
+
+  /// No description provided for @diveLog_listPage_searchLimitNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the first {limit} matches. Refine your search to narrow results.'**
+  String diveLog_listPage_searchLimitNotice(int limit);
 
   /// No description provided for @diveLog_listPage_searchNoResults.
   ///
@@ -20953,6 +21355,18 @@ abstract class AppLocalizations {
   /// **'Reusable to-do lists for trip planning'**
   String get settings_manage_checklistTemplates_subtitle;
 
+  /// No description provided for @settings_manage_diveRoles.
+  ///
+  /// In en, this message translates to:
+  /// **'Dive Roles'**
+  String get settings_manage_diveRoles;
+
+  /// No description provided for @settings_manage_diveRoles_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage custom dive roles'**
+  String get settings_manage_diveRoles_subtitle;
+
   /// No description provided for @settings_manage_diveTypes.
   ///
   /// In en, this message translates to:
@@ -30860,6 +31274,18 @@ abstract class AppLocalizations {
   /// **'Consolidated'**
   String get universalImport_label_consolidated;
 
+  /// Label for the count of photos attached to imported dives
+  ///
+  /// In en, this message translates to:
+  /// **'Photos attached'**
+  String get universalImport_label_photosAttached;
+
+  /// Label for the count of archive photos that matched no dive file
+  ///
+  /// In en, this message translates to:
+  /// **'Photos not matched to a dive'**
+  String get universalImport_label_photosUnmatched;
+
   /// Switch on trip/site edit pages that makes the record visible to all local dive profiles.
   ///
   /// In en, this message translates to:
@@ -31171,6 +31597,444 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No items on the selected dives yet'**
   String get diveLog_bulkEdit_membership_empty;
+
+  /// No description provided for @settings_mediaStorage_entry_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Media Storage'**
+  String get settings_mediaStorage_entry_title;
+
+  /// No description provided for @settings_mediaStorage_entry_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Store photo and video originals in your own cloud storage'**
+  String get settings_mediaStorage_entry_subtitle;
+
+  /// No description provided for @settings_mediaStorage_status_notConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No media store connected on this device'**
+  String get settings_mediaStorage_status_notConfigured;
+
+  /// No description provided for @settings_mediaStorage_status_connected.
+  ///
+  /// In en, this message translates to:
+  /// **'Connected to {hint}'**
+  String settings_mediaStorage_status_connected(String hint);
+
+  /// No description provided for @settings_mediaStorage_test_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection successful'**
+  String get settings_mediaStorage_test_success;
+
+  /// No description provided for @settings_mediaStorage_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Media store connected'**
+  String get settings_mediaStorage_saved;
+
+  /// No description provided for @settings_mediaStorage_action_disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get settings_mediaStorage_action_disconnect;
+
+  /// No description provided for @settings_mediaStorage_disconnect_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect media store?'**
+  String get settings_mediaStorage_disconnect_confirm_title;
+
+  /// No description provided for @settings_mediaStorage_disconnect_confirm_body.
+  ///
+  /// In en, this message translates to:
+  /// **'This device stops uploading and fetching media. Nothing in your bucket is deleted.'**
+  String get settings_mediaStorage_disconnect_confirm_body;
+
+  /// No description provided for @settings_mediaStorage_action_copyFromSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy settings from Sync'**
+  String get settings_mediaStorage_action_copyFromSync;
+
+  /// No description provided for @settings_mediaStorage_transfers_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Transfers'**
+  String get settings_mediaStorage_transfers_title;
+
+  /// No description provided for @settings_mediaStorage_transfers_entry.
+  ///
+  /// In en, this message translates to:
+  /// **'View transfers'**
+  String get settings_mediaStorage_transfers_entry;
+
+  /// No description provided for @settings_mediaStorage_transfers_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No transfers'**
+  String get settings_mediaStorage_transfers_empty;
+
+  /// No description provided for @settings_mediaStorage_transfers_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get settings_mediaStorage_transfers_retry;
+
+  /// No description provided for @settings_mediaStorage_transfers_clearCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear completed'**
+  String get settings_mediaStorage_transfers_clearCompleted;
+
+  /// No description provided for @settings_mediaStorage_transfers_state_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting'**
+  String get settings_mediaStorage_transfers_state_pending;
+
+  /// No description provided for @settings_mediaStorage_transfers_state_transferring.
+  ///
+  /// In en, this message translates to:
+  /// **'Uploading'**
+  String get settings_mediaStorage_transfers_state_transferring;
+
+  /// No description provided for @settings_mediaStorage_transfers_state_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get settings_mediaStorage_transfers_state_done;
+
+  /// No description provided for @settings_mediaStorage_transfers_state_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed'**
+  String get settings_mediaStorage_transfers_state_failed;
+
+  /// No description provided for @settings_mediaStorage_backfill_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload existing library'**
+  String get settings_mediaStorage_backfill_action;
+
+  /// No description provided for @settings_mediaStorage_backfill_enqueued.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} uploads queued'**
+  String settings_mediaStorage_backfill_enqueued(int count);
+
+  /// No description provided for @settings_mediaStorage_policy_autoUpload.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload photos automatically'**
+  String get settings_mediaStorage_policy_autoUpload;
+
+  /// No description provided for @settings_mediaStorage_policy_photosOnCellular.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload photos on cellular'**
+  String get settings_mediaStorage_policy_photosOnCellular;
+
+  /// No description provided for @settings_mediaStorage_provider_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Provider'**
+  String get settings_mediaStorage_provider_label;
+
+  /// No description provided for @settings_mediaStorage_connect_dropbox_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses your Dropbox connection from Cloud Sync. Media is stored in your Dropbox app folder.'**
+  String get settings_mediaStorage_connect_dropbox_hint;
+
+  /// No description provided for @settings_mediaStorage_connect_gdrive_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Signs in with Google. Media is stored in this app\'s private Drive space.'**
+  String get settings_mediaStorage_connect_gdrive_hint;
+
+  /// No description provided for @settings_mediaStorage_connect_icloud_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Media is stored in this app\'s iCloud container and syncs through your Apple ID.'**
+  String get settings_mediaStorage_connect_icloud_hint;
+
+  /// No description provided for @settings_mediaStorage_connect_action.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect {provider}'**
+  String settings_mediaStorage_connect_action(String provider);
+
+  /// No description provided for @bodyWeight_addEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Add measurement'**
+  String get bodyWeight_addEntry;
+
+  /// No description provided for @bodyWeight_dateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Date'**
+  String get bodyWeight_dateLabel;
+
+  /// No description provided for @bodyWeight_deleteTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete entry'**
+  String get bodyWeight_deleteTooltip;
+
+  /// No description provided for @bodyWeight_heightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (cm)'**
+  String get bodyWeight_heightLabel;
+
+  /// No description provided for @bodyWeight_weightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight ({unit})'**
+  String bodyWeight_weightLabel(String unit);
+
+  /// No description provided for @diveLog_edit_weightFeedback_amount.
+  ///
+  /// In en, this message translates to:
+  /// **'By about how much ({unit})'**
+  String diveLog_edit_weightFeedback_amount(String unit);
+
+  /// No description provided for @diveLog_edit_weightFeedback_correct.
+  ///
+  /// In en, this message translates to:
+  /// **'Felt right'**
+  String get diveLog_edit_weightFeedback_correct;
+
+  /// No description provided for @diveLog_edit_weightFeedback_label.
+  ///
+  /// In en, this message translates to:
+  /// **'How was your weighting?'**
+  String get diveLog_edit_weightFeedback_label;
+
+  /// No description provided for @diveLog_edit_weightFeedback_over.
+  ///
+  /// In en, this message translates to:
+  /// **'Overweighted'**
+  String get diveLog_edit_weightFeedback_over;
+
+  /// No description provided for @diveLog_edit_weightFeedback_under.
+  ///
+  /// In en, this message translates to:
+  /// **'Underweighted'**
+  String get diveLog_edit_weightFeedback_under;
+
+  /// No description provided for @diverProfile_bodyWeight_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Not recorded'**
+  String get diverProfile_bodyWeight_empty;
+
+  /// No description provided for @diverProfile_bodyWeight_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Body Weight'**
+  String get diverProfile_bodyWeight_title;
+
+  /// No description provided for @equipment_edit_advanced_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get equipment_edit_advanced_title;
+
+  /// No description provided for @equipment_edit_buoyancyHint_exposure.
+  ///
+  /// In en, this message translates to:
+  /// **'Positive: how much it floats'**
+  String get equipment_edit_buoyancyHint_exposure;
+
+  /// No description provided for @equipment_edit_buoyancyHint_generic.
+  ///
+  /// In en, this message translates to:
+  /// **'Negative if it sinks'**
+  String get equipment_edit_buoyancyHint_generic;
+
+  /// No description provided for @equipment_edit_buoyancyHint_tank.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave empty - tanks use their own specifications'**
+  String get equipment_edit_buoyancyHint_tank;
+
+  /// No description provided for @equipment_edit_buoyancyLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Buoyancy ({unit})'**
+  String equipment_edit_buoyancyLabel(String unit);
+
+  /// No description provided for @equipment_edit_dryWeightLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Dry weight ({unit})'**
+  String equipment_edit_dryWeightLabel(String unit);
+
+  /// No description provided for @planner_gearWeights_accept.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as planned weight'**
+  String get planner_gearWeights_accept;
+
+  /// No description provided for @planner_gearWeights_addGear.
+  ///
+  /// In en, this message translates to:
+  /// **'Add gear'**
+  String get planner_gearWeights_addGear;
+
+  /// No description provided for @planner_gearWeights_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Add gear to predict your weighting'**
+  String get planner_gearWeights_empty;
+
+  /// No description provided for @planner_gearWeights_planned.
+  ///
+  /// In en, this message translates to:
+  /// **'Planned: {weight}'**
+  String planner_gearWeights_planned(String weight);
+
+  /// No description provided for @planner_gearWeights_predicted.
+  ///
+  /// In en, this message translates to:
+  /// **'Predicted: {weight}'**
+  String planner_gearWeights_predicted(String weight);
+
+  /// No description provided for @planner_gearWeights_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Gear & Weights'**
+  String get planner_gearWeights_title;
+
+  /// No description provided for @planner_gearWeights_useSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use set'**
+  String get planner_gearWeights_useSet;
+
+  /// No description provided for @tools_weight_addGear.
+  ///
+  /// In en, this message translates to:
+  /// **'Add gear'**
+  String get tools_weight_addGear;
+
+  /// No description provided for @tools_weight_addTank.
+  ///
+  /// In en, this message translates to:
+  /// **'Add tank'**
+  String get tools_weight_addTank;
+
+  /// No description provided for @tools_weight_basedOnDives.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {count} logged dives'**
+  String tools_weight_basedOnDives(int count);
+
+  /// No description provided for @tools_weight_breakdownTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How this was calculated'**
+  String get tools_weight_breakdownTitle;
+
+  /// No description provided for @tools_weight_confidence_high.
+  ///
+  /// In en, this message translates to:
+  /// **'High confidence'**
+  String get tools_weight_confidence_high;
+
+  /// No description provided for @tools_weight_confidence_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Low confidence - estimate'**
+  String get tools_weight_confidence_low;
+
+  /// No description provided for @tools_weight_confidence_medium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium confidence'**
+  String get tools_weight_confidence_medium;
+
+  /// No description provided for @tools_weight_deltaVsPrevious.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} vs previous rig'**
+  String tools_weight_deltaVsPrevious(String delta);
+
+  /// No description provided for @tools_weight_noGear.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the gear you plan to dive to personalize the prediction.'**
+  String get tools_weight_noGear;
+
+  /// No description provided for @tools_weight_personalTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal baseline'**
+  String get tools_weight_personalTerm;
+
+  /// No description provided for @tools_weight_placementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested placement'**
+  String get tools_weight_placementTitle;
+
+  /// No description provided for @tools_weight_predictedWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Predicted weight'**
+  String get tools_weight_predictedWeight;
+
+  /// No description provided for @tools_weight_saveToProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Save weight to profile'**
+  String get tools_weight_saveToProfile;
+
+  /// No description provided for @tools_weight_source_measured.
+  ///
+  /// In en, this message translates to:
+  /// **'measured from your dives'**
+  String get tools_weight_source_measured;
+
+  /// No description provided for @tools_weight_source_physics.
+  ///
+  /// In en, this message translates to:
+  /// **'physics'**
+  String get tools_weight_source_physics;
+
+  /// No description provided for @tools_weight_source_typeDefault.
+  ///
+  /// In en, this message translates to:
+  /// **'default estimate'**
+  String get tools_weight_source_typeDefault;
+
+  /// No description provided for @tools_weight_source_userSpec.
+  ///
+  /// In en, this message translates to:
+  /// **'from your gear specs'**
+  String get tools_weight_source_userSpec;
+
+  /// No description provided for @tools_weight_tanks.
+  ///
+  /// In en, this message translates to:
+  /// **'Tanks'**
+  String get tools_weight_tanks;
+
+  /// No description provided for @tools_weight_useSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Use set'**
+  String get tools_weight_useSet;
+
+  /// No description provided for @tools_weight_waterTerm.
+  ///
+  /// In en, this message translates to:
+  /// **'Water type'**
+  String get tools_weight_waterTerm;
 }
 
 class _AppLocalizationsDelegate

@@ -105,6 +105,134 @@ class AppLocalizationsPt extends AppLocalizations {
       'Indisponível nesta versão — use o S3 ou a versão da App Store';
 
   @override
+  String get settings_cloudSync_encryption_title =>
+      'Criptografia de ponta a ponta';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff =>
+      'Criptografar todos os dados de sincronização e backups na nuvem antes do envio';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider =>
+      'Selecione primeiro um provedor de nuvem';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'A criptografia está desativada';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn =>
+      'A criptografia está ativada';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      'Dados de sincronização e backups na nuvem são criptografados antes do envio';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked =>
+      'Criptografado — senha necessária';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      'Digite a frase-senha para sincronizar neste dispositivo';
+
+  @override
+  String get settings_cloudSync_encryption_enable => 'Ativar criptografia';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase =>
+      'Digitar frase-senha';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => 'Frase-senha';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm =>
+      'Confirmar frase-senha';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch =>
+      'As frases-senha não coincidem';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort =>
+      'Use pelo menos 8 caracteres';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase =>
+      'Frase-senha ou código de recuperação incorretos';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      'Todos os outros dispositivos precisam ser atualizados para a versão mais recente do app e baixarão a biblioteca novamente.';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      'Se você perder a frase-senha e o código de recuperação, os dados na nuvem não poderão ser recuperados. Os dados nos seus dispositivos nunca correm risco.';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      'Excluir backups na nuvem não criptografados existentes';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle =>
+      'Código de recuperação';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      'Anote este código e guarde-o em local seguro. É a única forma de voltar a acessar se você esquecer a frase-senha.';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm =>
+      'Salvei meu código de recuperação';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase =>
+      'Alterar frase-senha';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase =>
+      'Frase-senha atual';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase => 'Nova frase-senha';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery =>
+      'Gerar novo código de recuperação';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      'O código de recuperação antigo deixa de funcionar imediatamente.';
+
+  @override
+  String get settings_cloudSync_encryption_disable => 'Desativar criptografia';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      'A biblioteca será reenviada sem criptografia e os outros dispositivos a baixarão novamente. Os backups criptografados existentes continuam restauráveis com a frase-senha.';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle =>
+      'Digite sua frase-senha de criptografia';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint =>
+      'Frase-senha ou código de recuperação';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => 'Desbloquear';
+
+  @override
+  String get settings_cloudSync_encryption_continue => 'Continuar';
+
+  @override
+  String get settings_cloudSync_encryption_done => 'Concluído';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => 'Cancelar';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return 'Sincronização em pausa — a biblioteca foi substituída a partir de uma cópia de segurança em \"$deviceName\".';
   }
@@ -718,16 +846,26 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buddies_picker_add => 'Adicionar';
 
   @override
+  String get buddies_picker_addCustomRole =>
+      'Adicionar função personalizada...';
+
+  @override
   String get buddies_picker_addNew => 'Adicionar Novo Companheiro';
 
   @override
   String get buddies_picker_done => 'Concluir';
 
   @override
+  String get buddies_picker_me => 'Eu';
+
+  @override
   String get buddies_picker_noBuddiesFound => 'Nenhum companheiro encontrado';
 
   @override
   String get buddies_picker_noBuddiesYet => 'Nenhum companheiro ainda';
+
+  @override
+  String get buddies_picker_noRole => 'Sem função';
 
   @override
   String get buddies_picker_noneSelected => 'Nenhum companheiro selecionado';
@@ -739,9 +877,15 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buddies_picker_selectBuddies => 'Selecionar Companheiros';
 
   @override
+  String get buddies_picker_selectMyRole => 'Selecionar minha função';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return 'Selecionar Função para $name';
   }
+
+  @override
+  String get buddies_picker_setMyRole => 'Definir minha função';
 
   @override
   String get buddies_picker_tapToAdd =>
@@ -4710,6 +4854,98 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => 'Dupla';
+
+  @override
+  String get diveRole_builtin_diveGuide => 'Guia de Mergulho';
+
+  @override
+  String get diveRole_builtin_diveMaster => 'Divemaster';
+
+  @override
+  String get diveRole_builtin_instructor => 'Instrutor';
+
+  @override
+  String get diveRole_builtin_rearGuard => 'Retaguarda';
+
+  @override
+  String get diveRole_builtin_safetyDiver => 'Mergulhador de Segurança';
+
+  @override
+  String get diveRole_builtin_solo => 'Solo';
+
+  @override
+  String get diveRole_builtin_student => 'Aluno';
+
+  @override
+  String get diveRole_builtin_supportDiver => 'Mergulhador de Apoio';
+
+  @override
+  String get diveRoles_addDialog_addButton => 'Adicionar';
+
+  @override
+  String get diveRoles_addDialog_nameHint => 'ex: Fotógrafo';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => 'Nome da Função de Mergulho';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => 'Digite um nome';
+
+  @override
+  String get diveRoles_addDialog_title =>
+      'Adicionar Função de Mergulho Personalizada';
+
+  @override
+  String get diveRoles_addTooltip => 'Adicionar função de mergulho';
+
+  @override
+  String get diveRoles_appBar_title => 'Funções de Mergulho';
+
+  @override
+  String get diveRoles_builtInHeader => 'Funções de Mergulho Integradas';
+
+  @override
+  String get diveRoles_customHeader => 'Funções de Mergulho Personalizadas';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return 'Tem certeza de que deseja excluir \"$name\"?';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => 'Excluir Função de Mergulho?';
+
+  @override
+  String get diveRoles_deleteTooltip => 'Excluir função de mergulho';
+
+  @override
+  String get diveRoles_renameDialog_title => 'Renomear Função de Mergulho';
+
+  @override
+  String get diveRoles_renameTooltip => 'Renomear função de mergulho';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return 'Função de mergulho adicionada: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return 'Não é possível excluir \"$name\" - está sendo usada por mergulhos existentes';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return 'Função de mergulho excluída: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return 'Erro ao adicionar função de mergulho: $error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => 'Prof. máx.';
 
   @override
@@ -5153,6 +5389,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => 'Buscar mergulhos...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return 'Mostrando as primeiras $limit correspondências. Refine a busca para restringir os resultados.';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -12360,6 +12601,13 @@ class AppLocalizationsPt extends AppLocalizations {
       'Listas de tarefas reutilizáveis para planejamento de viagens';
 
   @override
+  String get settings_manage_diveRoles => 'Funções de Mergulho';
+
+  @override
+  String get settings_manage_diveRoles_subtitle =>
+      'Gerenciar funções de mergulho personalizadas';
+
+  @override
   String get settings_manage_diveTypes => 'Tipos de Mergulho';
 
   @override
@@ -18410,6 +18658,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get universalImport_label_consolidated => 'Consolidados';
 
   @override
+  String get universalImport_label_photosAttached => 'Fotos anexadas';
+
+  @override
+  String get universalImport_label_photosUnmatched =>
+      'Fotos sem mergulho correspondente';
+
+  @override
   String get common_label_shareWithAllProfiles =>
       'Partilhar com todos os perfis de mergulho';
 
@@ -18631,4 +18886,261 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get diveLog_bulkEdit_membership_empty =>
       'Ainda não há itens nos mergulhos selecionados';
+
+  @override
+  String get settings_mediaStorage_entry_title => 'Armazenamento de mídia';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle =>
+      'Guarde os originais de fotos e vídeos no seu próprio armazenamento em nuvem';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured =>
+      'Nenhum armazenamento de mídia conectado neste dispositivo';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return 'Conectado a $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => 'Conexão bem-sucedida';
+
+  @override
+  String get settings_mediaStorage_saved => 'Armazenamento de mídia conectado';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => 'Desconectar';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title =>
+      'Desconectar o armazenamento de mídia?';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      'Este dispositivo deixa de enviar e buscar mídia. Nada é excluído do seu bucket.';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync =>
+      'Copiar configurações do Sync';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'Transferências';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'Ver transferências';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'Sem transferências';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'Tentar novamente';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted =>
+      'Limpar concluídas';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'Aguardando';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'Enviando';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'Concluído';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'Falhou';
+
+  @override
+  String get settings_mediaStorage_backfill_action =>
+      'Enviar biblioteca existente';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count envios na fila';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload =>
+      'Enviar fotos automaticamente';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'Enviar fotos pela rede móvel';
+
+  @override
+  String get settings_mediaStorage_provider_label => 'Provedor';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      'Usa sua conexão do Dropbox da sincronização na nuvem. As mídias ficam na pasta do app no Dropbox.';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      'Entra com o Google. As mídias ficam no espaço privado do Drive deste app.';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      'As mídias ficam no contêiner do iCloud deste app e sincronizam pelo seu ID Apple.';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return 'Conectar $provider';
+  }
+
+  @override
+  String get bodyWeight_addEntry => 'Adicionar medição';
+
+  @override
+  String get bodyWeight_dateLabel => 'Data';
+
+  @override
+  String get bodyWeight_deleteTooltip => 'Excluir entrada';
+
+  @override
+  String get bodyWeight_heightLabel => 'Altura (cm)';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return 'Peso ($unit)';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return 'Por quanto, aproximadamente ($unit)';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => 'Adequado';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => 'Como estava sua lastragem?';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => 'Lastro excessivo';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => 'Lastro insuficiente';
+
+  @override
+  String get diverProfile_bodyWeight_empty => 'Não registrado';
+
+  @override
+  String get diverProfile_bodyWeight_title => 'Peso corporal';
+
+  @override
+  String get equipment_edit_advanced_title => 'Avançado';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure => 'Positivo: quanto flutua';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => 'Negativo se afunda';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank =>
+      'Deixe vazio - cilindros usam suas próprias especificações';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return 'Flutuabilidade ($unit)';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return 'Peso seco ($unit)';
+  }
+
+  @override
+  String get planner_gearWeights_accept => 'Usar como lastro planejado';
+
+  @override
+  String get planner_gearWeights_addGear => 'Adicionar equipamento';
+
+  @override
+  String get planner_gearWeights_empty =>
+      'Adicione equipamento para prever seu lastro';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return 'Planejado: $weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return 'Previsto: $weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => 'Equipamento e lastro';
+
+  @override
+  String get planner_gearWeights_useSet => 'Usar conjunto';
+
+  @override
+  String get tools_weight_addGear => 'Adicionar equipamento';
+
+  @override
+  String get tools_weight_addTank => 'Adicionar cilindro';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return 'Com base em $count mergulhos registrados';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => 'Como isso foi calculado';
+
+  @override
+  String get tools_weight_confidence_high => 'Alta confiança';
+
+  @override
+  String get tools_weight_confidence_low => 'Baixa confiança - estimativa';
+
+  @override
+  String get tools_weight_confidence_medium => 'Confiança média';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '$delta em relação ao conjunto anterior';
+  }
+
+  @override
+  String get tools_weight_noGear =>
+      'Adicione o equipamento com que vai mergulhar para personalizar a previsão.';
+
+  @override
+  String get tools_weight_personalTerm => 'Base pessoal';
+
+  @override
+  String get tools_weight_placementTitle => 'Distribuição sugerida';
+
+  @override
+  String get tools_weight_predictedWeight => 'Lastro previsto';
+
+  @override
+  String get tools_weight_saveToProfile => 'Salvar peso no perfil';
+
+  @override
+  String get tools_weight_source_measured => 'medido dos seus mergulhos';
+
+  @override
+  String get tools_weight_source_physics => 'física';
+
+  @override
+  String get tools_weight_source_typeDefault => 'estimativa padrão';
+
+  @override
+  String get tools_weight_source_userSpec =>
+      'das especificações do seu equipamento';
+
+  @override
+  String get tools_weight_tanks => 'Cilindros';
+
+  @override
+  String get tools_weight_useSet => 'Usar conjunto';
+
+  @override
+  String get tools_weight_waterTerm => 'Tipo de água';
 }

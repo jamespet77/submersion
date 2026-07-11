@@ -103,6 +103,129 @@ class AppLocalizationsHe extends AppLocalizations {
       'לא זמין בגרסה זו — השתמש ב-S3 או בגרסת App Store';
 
   @override
+  String get settings_cloudSync_encryption_title => 'הצפנה מקצה לקצה';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff =>
+      'הצפנת כל נתוני הסנכרון והגיבויים בענן לפני ההעלאה';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider =>
+      'בחרו קודם ספק ענן';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff => 'ההצפנה כבויה';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn => 'ההצפנה פועלת';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      'נתוני סנכרון וגיבויים בענן מוצפנים לפני ההעלאה';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked =>
+      'מוצפן — נדרש משפט סיסמה';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      'הזינו את משפט הסיסמה כדי לסנכרן במכשיר זה';
+
+  @override
+  String get settings_cloudSync_encryption_enable => 'הפעלת הצפנה';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase => 'הזנת משפט סיסמה';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => 'משפט סיסמה';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm =>
+      'אישור משפט הסיסמה';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch =>
+      'משפטי הסיסמה אינם תואמים';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort =>
+      'השתמשו ב-8 תווים לפחות';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase =>
+      'משפט סיסמה או קוד שחזור שגויים';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      'יש לעדכן את כל שאר המכשירים לגרסת האפליקציה האחרונה והם יורידו מחדש את הספרייה.';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      'אם תאבדו גם את משפט הסיסמה וגם את קוד השחזור, לא ניתן יהיה לשחזר את הנתונים בענן. הנתונים במכשירים שלכם לעולם אינם בסיכון.';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      'מחיקת גיבויי ענן לא מוצפנים קיימים';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle => 'קוד שחזור';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      'רשמו את הקוד הזה ושמרו אותו במקום בטוח. זו הדרך היחידה לחזור אם תשכחו את משפט הסיסמה.';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm =>
+      'שמרתי את קוד השחזור שלי';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase =>
+      'שינוי משפט סיסמה';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase =>
+      'משפט הסיסמה הנוכחי';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase => 'משפט סיסמה חדש';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery =>
+      'יצירת קוד שחזור חדש';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      'קוד השחזור הישן מפסיק לפעול מיד.';
+
+  @override
+  String get settings_cloudSync_encryption_disable => 'כיבוי ההצפנה';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      'הספרייה תועלה מחדש ללא הצפנה ושאר המכשירים יורידו אותה שוב. גיבויים מוצפנים קיימים יישארו ניתנים לשחזור עם משפט הסיסמה.';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle =>
+      'הזינו את משפט הסיסמה של ההצפנה';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint =>
+      'משפט סיסמה או קוד שחזור';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => 'ביטול נעילה';
+
+  @override
+  String get settings_cloudSync_encryption_continue => 'המשך';
+
+  @override
+  String get settings_cloudSync_encryption_done => 'סיום';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => 'ביטול';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return 'הסנכרון מושהה — הספרייה הוחלפה מגיבוי במכשיר \"$deviceName\".';
   }
@@ -701,16 +824,25 @@ class AppLocalizationsHe extends AppLocalizations {
   String get buddies_picker_add => 'הוסף';
 
   @override
+  String get buddies_picker_addCustomRole => 'הוסף תפקיד מותאם...';
+
+  @override
   String get buddies_picker_addNew => 'הוסף חבר צוללים חדש';
 
   @override
   String get buddies_picker_done => 'סיום';
 
   @override
+  String get buddies_picker_me => 'אני';
+
+  @override
   String get buddies_picker_noBuddiesFound => 'לא נמצאו חברי צוללים';
 
   @override
   String get buddies_picker_noBuddiesYet => 'עדיין אין חברי צוללים';
+
+  @override
+  String get buddies_picker_noRole => 'ללא תפקיד';
 
   @override
   String get buddies_picker_noneSelected => 'לא נבחרו חברי צוללים';
@@ -722,9 +854,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get buddies_picker_selectBuddies => 'בחר חברי צוללים';
 
   @override
+  String get buddies_picker_selectMyRole => 'בחר את התפקיד שלי';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return 'בחר תפקיד עבור $name';
   }
+
+  @override
+  String get buddies_picker_setMyRole => 'הגדר את התפקיד שלי';
 
   @override
   String get buddies_picker_tapToAdd => 'לחץ על \'הוסף\' כדי לבחור חברי צוללים';
@@ -4578,6 +4716,97 @@ class AppLocalizationsHe extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => 'חבר צוללים';
+
+  @override
+  String get diveRole_builtin_diveGuide => 'מוביל צלילה';
+
+  @override
+  String get diveRole_builtin_diveMaster => 'דייבמאסטר';
+
+  @override
+  String get diveRole_builtin_instructor => 'מדריך';
+
+  @override
+  String get diveRole_builtin_rearGuard => 'מאסף';
+
+  @override
+  String get diveRole_builtin_safetyDiver => 'צולל בטיחות';
+
+  @override
+  String get diveRole_builtin_solo => 'סולו';
+
+  @override
+  String get diveRole_builtin_student => 'חניך';
+
+  @override
+  String get diveRole_builtin_supportDiver => 'צולל תמיכה';
+
+  @override
+  String get diveRoles_addDialog_addButton => 'הוסף';
+
+  @override
+  String get diveRoles_addDialog_nameHint => 'לדוגמה: צלם';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => 'שם תפקיד צלילה';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => 'נא להזין שם';
+
+  @override
+  String get diveRoles_addDialog_title => 'הוסף תפקיד צלילה מותאם';
+
+  @override
+  String get diveRoles_addTooltip => 'הוסף תפקיד צלילה';
+
+  @override
+  String get diveRoles_appBar_title => 'תפקידי צלילה';
+
+  @override
+  String get diveRoles_builtInHeader => 'תפקידי צלילה מובנים';
+
+  @override
+  String get diveRoles_customHeader => 'תפקידי צלילה מותאמים';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return 'האם אתה בטוח שברצונך למחוק את \"$name\"?';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => 'למחוק תפקיד צלילה?';
+
+  @override
+  String get diveRoles_deleteTooltip => 'מחק תפקיד צלילה';
+
+  @override
+  String get diveRoles_renameDialog_title => 'שנה שם תפקיד צלילה';
+
+  @override
+  String get diveRoles_renameTooltip => 'שנה שם תפקיד צלילה';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return 'תפקיד צלילה נוסף: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return 'לא ניתן למחוק את \"$name\" - הוא משמש צלילות קיימות';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return 'תפקיד צלילה נמחק: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return 'שגיאה בהוספת תפקיד צלילה: $error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => 'עומק מקס\'';
 
   @override
@@ -5011,6 +5240,11 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => 'חיפוש צלילות...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return 'מוצגות $limit ההתאמות הראשונות. חדדו את החיפוש כדי לצמצם את התוצאות.';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -12032,6 +12266,13 @@ class AppLocalizationsHe extends AppLocalizations {
       'רשימות משימות לשימוש חוזר לתכנון טיולים';
 
   @override
+  String get settings_manage_diveRoles => 'תפקידי צלילה';
+
+  @override
+  String get settings_manage_diveRoles_subtitle =>
+      'ניהול תפקידי צלילה מותאמים אישית';
+
+  @override
   String get settings_manage_diveTypes => 'סוגי צלילה';
 
   @override
@@ -17931,6 +18172,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get universalImport_label_consolidated => 'אוחדו';
 
   @override
+  String get universalImport_label_photosAttached => 'תמונות שצורפו';
+
+  @override
+  String get universalImport_label_photosUnmatched => 'תמונות ללא צלילה תואמת';
+
+  @override
   String get common_label_shareWithAllProfiles => 'שיתוף עם כל פרופילי הצלילה';
 
   @override
@@ -18150,4 +18397,256 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get diveLog_bulkEdit_membership_empty =>
       'אין עדיין פריטים בצלילות שנבחרו';
+
+  @override
+  String get settings_mediaStorage_entry_title => 'אחסון מדיה';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle =>
+      'שמור מקורות של תמונות ווידאו באחסון הענן שלך';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured =>
+      'לא מחובר אחסון מדיה במכשיר זה';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return 'מחובר אל $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => 'החיבור הצליח';
+
+  @override
+  String get settings_mediaStorage_saved => 'אחסון המדיה חובר';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => 'התנתק';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title =>
+      'לנתק את אחסון המדיה?';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      'מכשיר זה יפסיק להעלות ולהוריד מדיה. שום דבר לא יימחק מהדלי שלך.';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync =>
+      'העתק הגדרות מהסנכרון';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'העברות';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'הצג העברות';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'אין העברות';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'נסה שוב';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted => 'נקה שהושלמו';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'ממתין';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'מעלה';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'הושלם';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'נכשל';
+
+  @override
+  String get settings_mediaStorage_backfill_action => 'העלה ספריה קיימת';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count העלאות בתור';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload => 'העלה תמונות אוטומטית';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'העלה תמונות ברשת סלולרית';
+
+  @override
+  String get settings_mediaStorage_provider_label => 'ספק';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      'משתמש בחיבור Dropbox מסנכרון הענן. המדיה נשמרת בתיקיית האפליקציה ב-Dropbox.';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      'מתחבר עם Google. המדיה נשמרת בשטח ה-Drive הפרטי של האפליקציה.';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      'המדיה נשמרת במיכל ה-iCloud של האפליקציה ומסתנכרנת דרך ה-Apple ID שלך.';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return 'חבר את $provider';
+  }
+
+  @override
+  String get bodyWeight_addEntry => 'הוסף מדידה';
+
+  @override
+  String get bodyWeight_dateLabel => 'תאריך';
+
+  @override
+  String get bodyWeight_deleteTooltip => 'מחק רשומה';
+
+  @override
+  String get bodyWeight_heightLabel => 'גובה (ס״מ)';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return 'משקל ($unit)';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return 'בכמה בערך ($unit)';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => 'הרגיש נכון';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => 'איך היה המשקול שלך?';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => 'משקל יתר';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => 'תת-משקל';
+
+  @override
+  String get diverProfile_bodyWeight_empty => 'לא נרשם';
+
+  @override
+  String get diverProfile_bodyWeight_title => 'משקל גוף';
+
+  @override
+  String get equipment_edit_advanced_title => 'מתקדם';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure => 'חיובי: כמה הוא צף';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => 'שלילי אם הוא שוקע';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank =>
+      'השאר ריק - מכלים משתמשים במפרט משלהם';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return 'ציפה ($unit)';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return 'משקל יבש ($unit)';
+  }
+
+  @override
+  String get planner_gearWeights_accept => 'השתמש כמשקל מתוכנן';
+
+  @override
+  String get planner_gearWeights_addGear => 'הוסף ציוד';
+
+  @override
+  String get planner_gearWeights_empty => 'הוסף ציוד כדי לחזות את המשקול שלך';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return 'מתוכנן: $weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return 'חזוי: $weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => 'ציוד ומשקולות';
+
+  @override
+  String get planner_gearWeights_useSet => 'השתמש בערכה';
+
+  @override
+  String get tools_weight_addGear => 'הוסף ציוד';
+
+  @override
+  String get tools_weight_addTank => 'הוסף מכל';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return 'מבוסס על $count צלילות מתועדות';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => 'כיצד זה חושב';
+
+  @override
+  String get tools_weight_confidence_high => 'ודאות גבוהה';
+
+  @override
+  String get tools_weight_confidence_low => 'ודאות נמוכה - הערכה';
+
+  @override
+  String get tools_weight_confidence_medium => 'ודאות בינונית';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '$delta לעומת התצורה הקודמת';
+  }
+
+  @override
+  String get tools_weight_noGear =>
+      'הוסף את הציוד שאיתו תצלול כדי להתאים אישית את החיזוי.';
+
+  @override
+  String get tools_weight_personalTerm => 'בסיס אישי';
+
+  @override
+  String get tools_weight_placementTitle => 'מיקום מוצע';
+
+  @override
+  String get tools_weight_predictedWeight => 'משקל חזוי';
+
+  @override
+  String get tools_weight_saveToProfile => 'שמור משקל בפרופיל';
+
+  @override
+  String get tools_weight_source_measured => 'נמדד מהצלילות שלך';
+
+  @override
+  String get tools_weight_source_physics => 'פיזיקה';
+
+  @override
+  String get tools_weight_source_typeDefault => 'הערכת ברירת מחדל';
+
+  @override
+  String get tools_weight_source_userSpec => 'מהמפרט של הציוד שלך';
+
+  @override
+  String get tools_weight_tanks => 'מכלים';
+
+  @override
+  String get tools_weight_useSet => 'השתמש בערכה';
+
+  @override
+  String get tools_weight_waterTerm => 'סוג מים';
 }

@@ -41,6 +41,40 @@
   "settings_cloudSync_error_icloudUnknown": "Couldn't reach iCloud. Please try again.",
   "settings_cloudSync_error_icloudUnsupported": "iCloud sync isn't available in this build of Submersion. Use S3 sync, or the App Store version.",
   "settings_cloudSync_provider_icloud_unsupportedSubtitle": "Not available in this build — use S3 or the App Store version",
+  "settings_cloudSync_encryption_title": "End-to-end encryption",
+  "settings_cloudSync_encryption_subtitleOff": "Encrypt all sync data and cloud backups before upload",
+  "settings_cloudSync_encryption_subtitleNeedsProvider": "Select a cloud provider first",
+  "settings_cloudSync_encryption_statusOff": "Encryption is off",
+  "settings_cloudSync_encryption_statusOn": "Encryption is on",
+  "settings_cloudSync_encryption_statusOnSubtitle": "Sync data and cloud backups are encrypted before upload",
+  "settings_cloudSync_encryption_statusLocked": "Encrypted — passphrase needed",
+  "settings_cloudSync_encryption_statusLockedSubtitle": "Enter the passphrase to sync on this device",
+  "settings_cloudSync_encryption_enable": "Enable encryption",
+  "settings_cloudSync_encryption_enterPassphrase": "Enter passphrase",
+  "settings_cloudSync_encryption_passphrase": "Passphrase",
+  "settings_cloudSync_encryption_passphraseConfirm": "Confirm passphrase",
+  "settings_cloudSync_encryption_passphraseMismatch": "Passphrases do not match",
+  "settings_cloudSync_encryption_passphraseTooShort": "Use at least 8 characters",
+  "settings_cloudSync_encryption_wrongPassphrase": "Incorrect passphrase or recovery code",
+  "settings_cloudSync_encryption_warnUpdateDevices": "All other devices must be updated to the latest app version and will re-download the library.",
+  "settings_cloudSync_encryption_warnLoss": "If you lose both the passphrase and the recovery code, data in the cloud cannot be recovered. Data on your devices is never at risk.",
+  "settings_cloudSync_encryption_deletePlaintextBackups": "Delete existing unencrypted cloud backups",
+  "settings_cloudSync_encryption_recoveryTitle": "Recovery code",
+  "settings_cloudSync_encryption_recoveryExplain": "Write this code down and keep it somewhere safe. It is the only way back in if you forget your passphrase.",
+  "settings_cloudSync_encryption_recoverySavedConfirm": "I have saved my recovery code",
+  "settings_cloudSync_encryption_changePassphrase": "Change passphrase",
+  "settings_cloudSync_encryption_currentPassphrase": "Current passphrase",
+  "settings_cloudSync_encryption_newPassphrase": "New passphrase",
+  "settings_cloudSync_encryption_regenerateRecovery": "Generate new recovery code",
+  "settings_cloudSync_encryption_regenerateRecoveryWarn": "The old recovery code stops working immediately.",
+  "settings_cloudSync_encryption_disable": "Turn off encryption",
+  "settings_cloudSync_encryption_disableWarn": "The library will be re-uploaded unencrypted, and other devices will re-download it. Existing encrypted backups stay restorable with the passphrase.",
+  "settings_cloudSync_encryption_unlockTitle": "Enter your encryption passphrase",
+  "settings_cloudSync_encryption_unlockHint": "Passphrase or recovery code",
+  "settings_cloudSync_encryption_unlock": "Unlock",
+  "settings_cloudSync_encryption_continue": "Continue",
+  "settings_cloudSync_encryption_done": "Done",
+  "settings_cloudSync_encryption_cancel": "Cancel",
   "@@locale": "en",
   "settings_cloudSync_replace_globalBanner": "Sync is paused — the library was replaced from a backup on \"{deviceName}\".",
   "@settings_cloudSync_replace_globalBanner": {
@@ -439,14 +473,19 @@
   "buddies_message_preparingExport": "Preparing export...",
   "buddies_message_updated": "Buddy updated successfully",
   "buddies_picker_add": "Add",
+  "buddies_picker_addCustomRole": "Add custom role...",
   "buddies_picker_addNew": "Add New Buddy",
   "buddies_picker_done": "Done",
+  "buddies_picker_me": "Me",
   "buddies_picker_noBuddiesFound": "No buddies found",
   "buddies_picker_noBuddiesYet": "No buddies yet",
+  "buddies_picker_noRole": "No role",
   "buddies_picker_noneSelected": "No buddies selected",
   "buddies_picker_searchHint": "Search buddies...",
   "buddies_picker_selectBuddies": "Select Buddies",
+  "buddies_picker_selectMyRole": "Select my role",
   "buddies_picker_selectRole": "Select Role for {name}",
+  "buddies_picker_setMyRole": "Set my role",
   "buddies_picker_tapToAdd": "Tap 'Add' to select dive buddies",
   "buddies_search_hint": "Search by name, email, or phone",
   "buddies_search_noResults": "No buddies found for \"{query}\"",
@@ -2409,6 +2448,68 @@
       }
     }
   },
+  "diveRole_builtin_buddy": "Buddy",
+  "diveRole_builtin_diveGuide": "Dive Guide",
+  "diveRole_builtin_diveMaster": "Divemaster",
+  "diveRole_builtin_instructor": "Instructor",
+  "diveRole_builtin_rearGuard": "Rear Guard",
+  "diveRole_builtin_safetyDiver": "Safety Diver",
+  "diveRole_builtin_solo": "Solo",
+  "diveRole_builtin_student": "Student",
+  "diveRole_builtin_supportDiver": "Support Diver",
+  "diveRoles_addDialog_addButton": "Add",
+  "diveRoles_addDialog_nameHint": "e.g., Photographer",
+  "diveRoles_addDialog_nameLabel": "Dive Role Name",
+  "diveRoles_addDialog_nameValidation": "Please enter a name",
+  "diveRoles_addDialog_title": "Add Custom Dive Role",
+  "diveRoles_addTooltip": "Add dive role",
+  "diveRoles_appBar_title": "Dive Roles",
+  "diveRoles_builtInHeader": "Built-in Dive Roles",
+  "diveRoles_customHeader": "Custom Dive Roles",
+  "diveRoles_deleteDialog_content": "Are you sure you want to delete \"{name}\"?",
+  "@diveRoles_deleteDialog_content": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "diveRoles_deleteDialog_title": "Delete Dive Role?",
+  "diveRoles_deleteTooltip": "Delete dive role",
+  "diveRoles_renameDialog_title": "Rename Dive Role",
+  "diveRoles_renameTooltip": "Rename dive role",
+  "diveRoles_snackbar_added": "Added dive role: {name}",
+  "@diveRoles_snackbar_added": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "diveRoles_snackbar_cannotDelete": "Cannot delete \"{name}\" - it is used by existing dives",
+  "@diveRoles_snackbar_cannotDelete": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "diveRoles_snackbar_deleted": "Deleted dive role: {name}",
+  "@diveRoles_snackbar_deleted": {
+    "placeholders": {
+      "name": {
+        "type": "Object"
+      }
+    }
+  },
+  "diveRoles_snackbar_errorAdding": "Error adding dive role: {error}",
+  "@diveRoles_snackbar_errorAdding": {
+    "placeholders": {
+      "error": {
+        "type": "Object"
+      }
+    }
+  },
   "diveSites_edit_depth_heroMax": "Max depth",
   "@diveSites_edit_depth_heroMax": {
     "description": "Hero stat label: maximum site depth"
@@ -2692,6 +2793,7 @@
     }
   },
   "diveLog_listPage_searchFieldLabel": "Search dives...",
+  "diveLog_listPage_searchLimitNotice": "Showing the first {limit} matches. Refine your search to narrow results.",
   "diveLog_listPage_searchNoResults": "No dives found for \"{query}\"",
   "diveLog_listPage_searchSuggestion": "Search by site, buddy, or notes",
   "diveLog_listPage_title": "Dive Log",
@@ -3315,6 +3417,13 @@
     "placeholders": {
       "error": {
         "type": "Object"
+      }
+    }
+  },
+  "@diveLog_listPage_searchLimitNotice": {
+    "placeholders": {
+      "limit": {
+        "type": "int"
       }
     }
   },
@@ -6707,6 +6816,8 @@
   "settings_language_systemDefault": "System Default",
   "settings_manage_checklistTemplates": "Checklist Templates",
   "settings_manage_checklistTemplates_subtitle": "Reusable to-do lists for trip planning",
+  "settings_manage_diveRoles": "Dive Roles",
+  "settings_manage_diveRoles_subtitle": "Manage custom dive roles",
   "settings_manage_diveTypes": "Dive Types",
   "settings_manage_diveTypes_subtitle": "Manage custom dive types",
   "settings_manage_header_manageData": "Manage Data",
@@ -11431,6 +11542,14 @@
   "@universalImport_label_consolidated": {
     "description": "Label for the count of consolidated dives in summary"
   },
+  "universalImport_label_photosAttached": "Photos attached",
+  "@universalImport_label_photosAttached": {
+    "description": "Label for the count of photos attached to imported dives"
+  },
+  "universalImport_label_photosUnmatched": "Photos not matched to a dive",
+  "@universalImport_label_photosUnmatched": {
+    "description": "Label for the count of archive photos that matched no dive file"
+  },
   "common_label_shareWithAllProfiles": "Share with all dive profiles",
   "@common_label_shareWithAllProfiles": {
     "description": "Switch on trip/site edit pages that makes the record visible to all local dive profiles."
@@ -11711,5 +11830,107 @@
   "diveLog_bulkEdit_membership_removing": "removing from all",
   "@diveLog_bulkEdit_membership_removing": {},
   "diveLog_bulkEdit_membership_empty": "No items on the selected dives yet",
-  "@diveLog_bulkEdit_membership_empty": {}
+  "@diveLog_bulkEdit_membership_empty": {},
+  "settings_mediaStorage_entry_title": "Media Storage",
+  "settings_mediaStorage_entry_subtitle": "Store photo and video originals in your own cloud storage",
+  "settings_mediaStorage_status_notConfigured": "No media store connected on this device",
+  "settings_mediaStorage_status_connected": "Connected to {hint}",
+  "@settings_mediaStorage_status_connected": {
+    "placeholders": {
+      "hint": {
+        "type": "String"
+      }
+    }
+  },
+  "settings_mediaStorage_test_success": "Connection successful",
+  "settings_mediaStorage_saved": "Media store connected",
+  "settings_mediaStorage_action_disconnect": "Disconnect",
+  "settings_mediaStorage_disconnect_confirm_title": "Disconnect media store?",
+  "settings_mediaStorage_disconnect_confirm_body": "This device stops uploading and fetching media. Nothing in your bucket is deleted.",
+  "settings_mediaStorage_action_copyFromSync": "Copy settings from Sync",
+  "settings_mediaStorage_transfers_title": "Transfers",
+  "settings_mediaStorage_transfers_entry": "View transfers",
+  "settings_mediaStorage_transfers_empty": "No transfers",
+  "settings_mediaStorage_transfers_retry": "Retry",
+  "settings_mediaStorage_transfers_clearCompleted": "Clear completed",
+  "settings_mediaStorage_transfers_state_pending": "Waiting",
+  "settings_mediaStorage_transfers_state_transferring": "Uploading",
+  "settings_mediaStorage_transfers_state_done": "Done",
+  "settings_mediaStorage_transfers_state_failed": "Failed",
+  "settings_mediaStorage_backfill_action": "Upload existing library",
+  "settings_mediaStorage_backfill_enqueued": "{count} uploads queued",
+  "@settings_mediaStorage_backfill_enqueued": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settings_mediaStorage_policy_autoUpload": "Upload photos automatically",
+  "settings_mediaStorage_policy_photosOnCellular": "Upload photos on cellular",
+  "settings_mediaStorage_provider_label": "Provider",
+  "settings_mediaStorage_connect_dropbox_hint": "Uses your Dropbox connection from Cloud Sync. Media is stored in your Dropbox app folder.",
+  "settings_mediaStorage_connect_gdrive_hint": "Signs in with Google. Media is stored in this app's private Drive space.",
+  "settings_mediaStorage_connect_icloud_hint": "Media is stored in this app's iCloud container and syncs through your Apple ID.",
+  "settings_mediaStorage_connect_action": "Connect {provider}",
+  "@settings_mediaStorage_connect_action": {
+    "placeholders": {
+      "provider": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyWeight_addEntry": "Add measurement",
+  "bodyWeight_dateLabel": "Date",
+  "bodyWeight_deleteTooltip": "Delete entry",
+  "bodyWeight_heightLabel": "Height (cm)",
+  "bodyWeight_weightLabel": "Weight ({unit})",
+  "@bodyWeight_weightLabel": {"placeholders": {"unit": {"type": "String"}}},
+  "diveLog_edit_weightFeedback_amount": "By about how much ({unit})",
+  "@diveLog_edit_weightFeedback_amount": {"placeholders": {"unit": {"type": "String"}}},
+  "diveLog_edit_weightFeedback_correct": "Felt right",
+  "diveLog_edit_weightFeedback_label": "How was your weighting?",
+  "diveLog_edit_weightFeedback_over": "Overweighted",
+  "diveLog_edit_weightFeedback_under": "Underweighted",
+  "diverProfile_bodyWeight_empty": "Not recorded",
+  "diverProfile_bodyWeight_title": "Body Weight",
+  "equipment_edit_advanced_title": "Advanced",
+  "equipment_edit_buoyancyHint_exposure": "Positive: how much it floats",
+  "equipment_edit_buoyancyHint_generic": "Negative if it sinks",
+  "equipment_edit_buoyancyHint_tank": "Leave empty - tanks use their own specifications",
+  "equipment_edit_buoyancyLabel": "Buoyancy ({unit})",
+  "@equipment_edit_buoyancyLabel": {"placeholders": {"unit": {"type": "String"}}},
+  "equipment_edit_dryWeightLabel": "Dry weight ({unit})",
+  "@equipment_edit_dryWeightLabel": {"placeholders": {"unit": {"type": "String"}}},
+  "planner_gearWeights_accept": "Use as planned weight",
+  "planner_gearWeights_addGear": "Add gear",
+  "planner_gearWeights_empty": "Add gear to predict your weighting",
+  "planner_gearWeights_planned": "Planned: {weight}",
+  "@planner_gearWeights_planned": {"placeholders": {"weight": {"type": "String"}}},
+  "planner_gearWeights_predicted": "Predicted: {weight}",
+  "@planner_gearWeights_predicted": {"placeholders": {"weight": {"type": "String"}}},
+  "planner_gearWeights_title": "Gear & Weights",
+  "planner_gearWeights_useSet": "Use set",
+  "tools_weight_addGear": "Add gear",
+  "tools_weight_addTank": "Add tank",
+  "tools_weight_basedOnDives": "Based on {count} logged dives",
+  "@tools_weight_basedOnDives": {"placeholders": {"count": {"type": "int"}}},
+  "tools_weight_breakdownTitle": "How this was calculated",
+  "tools_weight_confidence_high": "High confidence",
+  "tools_weight_confidence_low": "Low confidence - estimate",
+  "tools_weight_confidence_medium": "Medium confidence",
+  "tools_weight_deltaVsPrevious": "{delta} vs previous rig",
+  "@tools_weight_deltaVsPrevious": {"placeholders": {"delta": {"type": "String"}}},
+  "tools_weight_noGear": "Add the gear you plan to dive to personalize the prediction.",
+  "tools_weight_personalTerm": "Personal baseline",
+  "tools_weight_placementTitle": "Suggested placement",
+  "tools_weight_predictedWeight": "Predicted weight",
+  "tools_weight_saveToProfile": "Save weight to profile",
+  "tools_weight_source_measured": "measured from your dives",
+  "tools_weight_source_physics": "physics",
+  "tools_weight_source_typeDefault": "default estimate",
+  "tools_weight_source_userSpec": "from your gear specs",
+  "tools_weight_tanks": "Tanks",
+  "tools_weight_useSet": "Use set",
+  "tools_weight_waterTerm": "Water type"
 }

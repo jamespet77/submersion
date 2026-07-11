@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
+import 'package:submersion/core/constants/dive_search.dart';
 import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/performance/perf_timer.dart';
@@ -13,6 +14,8 @@ import 'package:submersion/features/dive_log/domain/entities/dive.dart'
     as domain;
 import 'package:submersion/features/dive_log/domain/entities/dive_data_source.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_summary.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive_times.dart'
+    as domain;
 import 'package:submersion/features/dive_log/domain/entities/dive_weight.dart'
     as domain;
 import 'package:submersion/features/dive_log/domain/entities/gas_switch.dart';
@@ -235,6 +238,8 @@ class DiveRepository {
                   serviceIntervalDays: e.serviceIntervalDays,
                   notes: e.notes,
                   isActive: e.isActive,
+                  buoyancyKg: e.buoyancyKg,
+                  weightKg: e.weightKg,
                 ),
               );
         }
@@ -859,6 +864,7 @@ class DiveRepository {
               diveType: Value(dive.diveTypeId),
               buddy: Value(dive.buddy),
               diveMaster: Value(dive.diveMaster),
+              diverRole: Value(dive.diverRoleId),
               notes: Value(dive.notes),
               name: Value(dive.name),
               siteId: Value(dive.site?.id),
@@ -905,6 +911,8 @@ class DiveRepository {
               // Weight system fields
               weightAmount: Value(dive.weightAmount),
               weightType: Value(dive.weightType?.name),
+              weightingFeedback: Value(dive.weightingFeedback?.name),
+              weightingFeedbackKg: Value(dive.weightingFeedbackKg),
               // Favorite flag
               isFavorite: Value(dive.isFavorite),
               // CCR/SCR rebreather fields (v1.5)
@@ -1102,6 +1110,7 @@ class DiveRepository {
           diveType: Value(dive.diveTypeId),
           buddy: Value(dive.buddy),
           diveMaster: Value(dive.diveMaster),
+          diverRole: Value(dive.diverRoleId),
           notes: Value(dive.notes),
           name: Value(dive.name),
           siteId: Value(dive.site?.id),
@@ -1142,6 +1151,8 @@ class DiveRepository {
           // Weight system fields
           weightAmount: Value(dive.weightAmount),
           weightType: Value(dive.weightType?.name),
+          weightingFeedback: Value(dive.weightingFeedback?.name),
+          weightingFeedbackKg: Value(dive.weightingFeedbackKg),
           // Favorite flag
           isFavorite: Value(dive.isFavorite),
           // CCR/SCR rebreather fields (v1.5)
@@ -1540,41 +1551,7 @@ class DiveRepository {
         final tagsByDive = await _tagRepository.getTagsForDives(diveIds);
         final diveTypesByDive = await _diveTypesForDives(diveIds);
 
-        return rows.map((row) {
-          final id = row.read<String>('id');
-          final entryTime = row.readNullable<int>('entry_time');
-          final bottomTime = row.readNullable<int>('bottom_time');
-          final runtime = row.readNullable<int>('runtime');
-
-          return DiveSummary(
-            id: id,
-            diveNumber: row.readNullable<int>('dive_number'),
-            name: row.readNullable<String>('dive_name'),
-            dateTime: DateTime.fromMillisecondsSinceEpoch(
-              row.read<int>('dive_date_time'),
-              isUtc: true,
-            ),
-            entryTime: entryTime != null
-                ? DateTime.fromMillisecondsSinceEpoch(entryTime, isUtc: true)
-                : null,
-            maxDepth: row.readNullable<double>('max_depth'),
-            bottomTime: bottomTime != null
-                ? Duration(seconds: bottomTime)
-                : null,
-            runtime: runtime != null ? Duration(seconds: runtime) : null,
-            waterTemp: row.readNullable<double>('water_temp'),
-            rating: row.readNullable<int>('rating'),
-            isFavorite: row.read<int>('is_favorite') == 1,
-            diveTypeIds: diveTypesByDive[id] ?? [row.read<String>('dive_type')],
-            tags: tagsByDive[id] ?? [],
-            siteName: row.readNullable<String>('site_name'),
-            siteCountry: row.readNullable<String>('site_country'),
-            siteRegion: row.readNullable<String>('site_region'),
-            siteLatitude: row.readNullable<double>('site_latitude'),
-            siteLongitude: row.readNullable<double>('site_longitude'),
-            sortTimestamp: row.read<int>('sort_timestamp'),
-          );
-        }).toList();
+        return _mapSummaryRows(rows, tagsByDive, diveTypesByDive);
       });
     } catch (e, stackTrace) {
       _log.error(
@@ -1928,89 +1905,168 @@ class DiveRepository {
     return getNextDiveNumber(diverId: diverId);
   }
 
-  /// Search dives by name, notes, or buddy name
-  Future<List<domain.Dive>> searchDives(String query, {String? diverId}) async {
+  /// Search dives by name, notes, buddy, dive master, site name/country/
+  /// region, dive center name, linked buddy names, tag names, or custom
+  /// fields, returning lightweight [DiveSummary] rows.
+  ///
+  /// Exactly four SQL statements regardless of match count (match ids,
+  /// summary rows, batched tags, batched dive types), bounded to the [limit]
+  /// most recent matches ([kDiveSearchResultLimit] by default). Callers that
+  /// need to detect truncation pass `limit + 1` and treat a full-length
+  /// result as "more matches exist". Replaces the unbounded full-Dive-
+  /// hydrating search whose roughly-ten-queries-per-match N+1 dominated
+  /// search cost on large databases (docs/superpowers/specs/2026-07-10-
+  /// large-db-performance-findings.md).
+  Future<List<DiveSummary>> searchDiveSummaries(
+    String query, {
+    String? diverId,
+    int limit = kDiveSearchResultLimit,
+  }) async {
     try {
-      // Search across dive fields and all related tables in a single query.
-      // Matches: name, notes, buddy (legacy field), dive master, site name/
-      // country/region, dive center name, linked buddy names, tag names,
-      // custom fields.
-      final likeTerm = '%$query%';
-      final diverClause = diverId != null ? 'AND d.diver_id = ?' : '';
-      final diverArgs = diverId != null
-          ? [Variable<String>(diverId)]
-          : <Variable<String>>[];
+      return await PerfTimer.measure('searchDiveSummaries', () async {
+        // Empty/whitespace queries match everything ('%%'); the provider
+        // already treats them as "no search", so return nothing here too.
+        // Guarding limit <= 0 also avoids SQLite's negative-LIMIT (unbounded)
+        // case, which would defeat the bound this method exists to enforce.
+        final trimmed = query.trim();
+        if (trimmed.isEmpty || limit <= 0) return <DiveSummary>[];
+        // Match on the trimmed term so incidental leading/trailing whitespace
+        // (e.g. "manta ") does not silently exclude otherwise-matching dives.
+        final likeTerm = '%$trimmed%';
+        final diverClause = diverId != null ? 'AND d.diver_id = ?' : '';
+        final diverArgs = diverId != null
+            ? [Variable<String>(diverId)]
+            : <Variable<String>>[];
 
-      final matchingIds = await _db
-          .customSelect(
-            '''
-            SELECT DISTINCT d.id
-            FROM dives d
-            LEFT JOIN dive_sites ds ON d.site_id = ds.id
-            LEFT JOIN dive_centers dc ON d.dive_center_id = dc.id
-            LEFT JOIN dive_buddies db ON db.dive_id = d.id
-            LEFT JOIN buddies b ON db.buddy_id = b.id
-            LEFT JOIN dive_tags dt ON dt.dive_id = d.id
-            LEFT JOIN tags t ON dt.tag_id = t.id
-            LEFT JOIN dive_custom_fields cf ON cf.dive_id = d.id
-            WHERE (
-              d.notes LIKE ?
-              OR d.name LIKE ?
-              OR d.buddy LIKE ?
-              OR d.dive_master LIKE ?
-              OR ds.name LIKE ?
-              OR ds.country LIKE ?
-              OR ds.region LIKE ?
-              OR dc.name LIKE ?
-              OR b.name LIKE ?
-              OR t.name LIKE ?
-              OR cf.field_key LIKE ?
-              OR cf.field_value LIKE ?
+        final matchingIds = await _db
+            .customSelect(
+              '''
+              SELECT DISTINCT d.id,
+                COALESCE(d.entry_time, d.dive_date_time) AS sort_ts,
+                d.dive_number AS dive_number
+              FROM dives d
+              LEFT JOIN dive_sites ds ON d.site_id = ds.id
+              LEFT JOIN dive_centers dc ON d.dive_center_id = dc.id
+              LEFT JOIN dive_buddies db ON db.dive_id = d.id
+              LEFT JOIN buddies b ON db.buddy_id = b.id
+              LEFT JOIN dive_tags dt ON dt.dive_id = d.id
+              LEFT JOIN tags t ON dt.tag_id = t.id
+              LEFT JOIN dive_custom_fields cf ON cf.dive_id = d.id
+              WHERE (
+                d.notes LIKE ?
+                OR d.name LIKE ?
+                OR d.buddy LIKE ?
+                OR d.dive_master LIKE ?
+                OR ds.name LIKE ?
+                OR ds.country LIKE ?
+                OR ds.region LIKE ?
+                OR dc.name LIKE ?
+                OR b.name LIKE ?
+                OR t.name LIKE ?
+                OR cf.field_key LIKE ?
+                OR cf.field_value LIKE ?
+              )
+              $diverClause
+              ORDER BY sort_ts DESC,
+                COALESCE(d.dive_number, 0) DESC, d.id DESC
+              LIMIT ?
+              ''',
+              variables: [
+                for (var i = 0; i < 12; i++) Variable<String>(likeTerm),
+                ...diverArgs,
+                Variable<int>(limit),
+              ],
             )
-            $diverClause
-            ''',
-            variables: [
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              Variable(likeTerm),
-              ...diverArgs,
-            ],
-          )
-          .get();
+            .get();
 
-      if (matchingIds.isEmpty) return [];
+        if (matchingIds.isEmpty) return <DiveSummary>[];
 
-      final ids = matchingIds.map((r) => r.data['id'] as String).toList();
-
-      final rows =
-          await (_db.select(_db.dives)
-                ..where((t) => t.id.isIn(ids))
-                ..orderBy([
-                  (t) => OrderingTerm.desc(
-                    coalesce([t.entryTime, t.diveDateTime]),
-                  ),
-                  (t) => OrderingTerm.desc(t.diveNumber),
-                ]))
-              .get();
-
-      return Future.wait(rows.map(_mapRowToDive));
+        final ids = matchingIds.map((r) => r.read<String>('id')).toList();
+        return _summariesForIds(ids);
+      });
     } catch (e, stackTrace) {
       _log.error(
-        'Failed to search dives: $query',
+        'Failed to search dive summaries: $query',
         error: e,
         stackTrace: stackTrace,
       );
       rethrow;
     }
+  }
+
+  /// Loads [DiveSummary] rows for [ids] (slim SELECT plus batched tags and
+  /// dive types), ordered most recent first.
+  Future<List<DiveSummary>> _summariesForIds(List<String> ids) async {
+    final placeholders = List.filled(ids.length, '?').join(', ');
+    final rows = await _db
+        .customSelect(
+          'SELECT '
+          'd.id, d.dive_number, d.name AS dive_name, '
+          'd.dive_date_time, d.entry_time, '
+          'd.max_depth, d.bottom_time, d.runtime, d.water_temp, d.rating, '
+          'd.is_favorite, d.dive_type, '
+          'COALESCE(d.entry_time, d.dive_date_time) AS sort_timestamp, '
+          's.name AS site_name, s.country AS site_country, '
+          's.region AS site_region, s.latitude AS site_latitude, '
+          's.longitude AS site_longitude '
+          'FROM dives d '
+          'LEFT JOIN dive_sites s ON d.site_id = s.id '
+          'WHERE d.id IN ($placeholders) '
+          'ORDER BY sort_timestamp DESC, '
+          'COALESCE(d.dive_number, 0) DESC, d.id DESC',
+          variables: [for (final id in ids) Variable<String>(id)],
+          readsFrom: {_db.dives, _db.diveSites},
+        )
+        .get();
+
+    if (rows.isEmpty) return [];
+
+    final diveIds = rows.map((r) => r.read<String>('id')).toList();
+    final tagsByDive = await _tagRepository.getTagsForDives(diveIds);
+    final diveTypesByDive = await _diveTypesForDives(diveIds);
+    return _mapSummaryRows(rows, tagsByDive, diveTypesByDive);
+  }
+
+  /// Shared row mapper for the summary SELECT column list (used by
+  /// [getDiveSummaries] and [_summariesForIds]).
+  List<DiveSummary> _mapSummaryRows(
+    List<QueryRow> rows,
+    Map<String, List<domain.Tag>> tagsByDive,
+    Map<String, List<String>> diveTypesByDive,
+  ) {
+    return rows.map((row) {
+      final id = row.read<String>('id');
+      final entryTime = row.readNullable<int>('entry_time');
+      final bottomTime = row.readNullable<int>('bottom_time');
+      final runtime = row.readNullable<int>('runtime');
+
+      return DiveSummary(
+        id: id,
+        diveNumber: row.readNullable<int>('dive_number'),
+        name: row.readNullable<String>('dive_name'),
+        dateTime: DateTime.fromMillisecondsSinceEpoch(
+          row.read<int>('dive_date_time'),
+          isUtc: true,
+        ),
+        entryTime: entryTime != null
+            ? DateTime.fromMillisecondsSinceEpoch(entryTime, isUtc: true)
+            : null,
+        maxDepth: row.readNullable<double>('max_depth'),
+        bottomTime: bottomTime != null ? Duration(seconds: bottomTime) : null,
+        runtime: runtime != null ? Duration(seconds: runtime) : null,
+        waterTemp: row.readNullable<double>('water_temp'),
+        rating: row.readNullable<int>('rating'),
+        isFavorite: row.read<int>('is_favorite') == 1,
+        diveTypeIds: diveTypesByDive[id] ?? [row.read<String>('dive_type')],
+        tags: tagsByDive[id] ?? [],
+        siteName: row.readNullable<String>('site_name'),
+        siteCountry: row.readNullable<String>('site_country'),
+        siteRegion: row.readNullable<String>('site_region'),
+        siteLatitude: row.readNullable<double>('site_latitude'),
+        siteLongitude: row.readNullable<double>('site_longitude'),
+        sortTimestamp: row.read<int>('sort_timestamp'),
+      );
+    }).toList();
   }
 
   // ============================================================================
@@ -2311,6 +2367,141 @@ class DiveRepository {
     );
   }
 
+  /// Number of dives strictly after [since] (dashboard month / year-to-date
+  /// counters): one COUNT statement instead of hydrating every dive.
+  Future<int> countDivesSince(DateTime since, {String? diverId}) async {
+    final diverFilter = diverId != null ? 'AND diver_id = ?' : '';
+    final row = await _db
+        .customSelect(
+          'SELECT COUNT(*) AS c FROM dives '
+          'WHERE dive_date_time > ? $diverFilter',
+          variables: [
+            Variable<int>(since.millisecondsSinceEpoch),
+            if (diverId != null) Variable<String>(diverId),
+          ],
+          readsFrom: {_db.dives},
+        )
+        .getSingle();
+    return row.read<int>('c');
+  }
+
+  /// SQL expression mirroring [domain.Dive.effectiveRuntime]'s resolution
+  /// order in seconds: runtime, exit - entry (when positive), profile span,
+  /// bottom time.
+  static const _effectiveRuntimeSql =
+      'COALESCE(d.runtime, '
+      'CASE WHEN d.exit_time IS NOT NULL AND d.entry_time IS NOT NULL '
+      'AND d.exit_time > d.entry_time '
+      // CAST truncates toward zero to match Dart's Duration.inSeconds.
+      'THEN CAST((d.exit_time - d.entry_time) / 1000 AS INTEGER) END, '
+      // NULLIF drops a zero-span profile (single point or same-timestamp
+      // samples) to NULL so COALESCE falls through to bottom_time, matching
+      // calculateRuntimeFromProfile()'s `totalSeconds > 0 ? ... : null`.
+      'NULLIF((SELECT MAX(p.timestamp) - MIN(p.timestamp) FROM dive_profiles p '
+      'WHERE p.dive_id = d.id), 0), '
+      'd.bottom_time)';
+
+  /// Deterministic tie-break for the personal-record winners, matching the
+  /// most-recent-first order [getAllDives] used before WS4: the old in-memory
+  /// loops scanned that order with a strict `>` (`<` for coldest), so ties
+  /// implicitly resolved to the most recent dive. Appending this keeps a tied
+  /// depth/runtime/temperature on the same visible winner.
+  static const _recencyTieBreak =
+      'COALESCE(d.entry_time, d.dive_date_time) DESC, d.dive_number DESC';
+
+  /// Winner ids for the dashboard personal records (deepest / longest /
+  /// coldest / warmest) plus the most visited site: six small indexed
+  /// statements. Callers hydrate the handful of winner dives individually
+  /// instead of loading the whole table (WS4, large-DB performance).
+  Future<
+    ({
+      String? deepestId,
+      String? longestId,
+      String? coldestId,
+      String? warmestId,
+      String? mostVisitedSiteId,
+      String? mostVisitedSiteName,
+      int? mostVisitedSiteCount,
+    })
+  >
+  getPersonalRecordIds({String? diverId}) async {
+    final vars = diverId != null
+        ? [Variable<String>(diverId)]
+        : <Variable<Object>>[];
+    final diverFilter = diverId != null ? 'AND d.diver_id = ?' : '';
+
+    Future<String?> winner(String where, String orderBy) async {
+      final row = await _db
+          .customSelect(
+            'SELECT d.id FROM dives d WHERE $where $diverFilter '
+            'ORDER BY $orderBy LIMIT 1',
+            variables: vars,
+            readsFrom: {_db.dives, _db.diveProfiles},
+          )
+          .getSingleOrNull();
+      return row?.read<String>('id');
+    }
+
+    // The > 0 guards mirror the old in-memory loops' strict-greater seeding
+    // (a lone dive with zero depth/runtime produced no record).
+    final deepestId = await winner(
+      'd.max_depth IS NOT NULL AND d.max_depth > 0',
+      'd.max_depth DESC, $_recencyTieBreak',
+    );
+    // Longest evaluates the effective-runtime expression (a correlated
+    // dive_profiles subquery) once in a derived table and filters/orders on
+    // the alias, rather than paying for the subquery twice (WHERE + ORDER BY)
+    // -- this is the dashboard hot path the PR is optimizing.
+    final longestRow = await _db
+        .customSelect(
+          'SELECT id FROM ('
+          'SELECT d.id AS id, $_effectiveRuntimeSql AS er, '
+          'COALESCE(d.entry_time, d.dive_date_time) AS recency, '
+          'd.dive_number AS dn FROM dives d WHERE 1 = 1 $diverFilter'
+          ') WHERE er > 0 ORDER BY er DESC, recency DESC, dn DESC LIMIT 1',
+          variables: vars,
+          readsFrom: {_db.dives, _db.diveProfiles},
+        )
+        .getSingleOrNull();
+    final longestId = longestRow?.read<String>('id');
+    final coldestId = await winner(
+      'd.water_temp IS NOT NULL',
+      'd.water_temp ASC, $_recencyTieBreak',
+    );
+    final warmestId = await winner(
+      'd.water_temp IS NOT NULL',
+      'd.water_temp DESC, $_recencyTieBreak',
+    );
+
+    // On a count tie, keep the site whose most recent dive is latest -- the
+    // old loop scanned most-recent-first and kept the first site to reach the
+    // max count, i.e. the one owning the newest dive among the tied sites. The
+    // trailing site_id is a final deterministic key so an exact recency tie
+    // cannot flap across SQLite query plans.
+    final siteRow = await _db
+        .customSelect(
+          'SELECT d.site_id AS site_id, s.name AS site_name, COUNT(*) AS c '
+          'FROM dives d JOIN dive_sites s ON d.site_id = s.id '
+          'WHERE d.site_id IS NOT NULL $diverFilter '
+          'GROUP BY d.site_id ORDER BY c DESC, '
+          'MAX(COALESCE(d.entry_time, d.dive_date_time)) DESC, d.site_id '
+          'LIMIT 1',
+          variables: vars,
+          readsFrom: {_db.dives, _db.diveSites},
+        )
+        .getSingleOrNull();
+
+    return (
+      deepestId: deepestId,
+      longestId: longestId,
+      coldestId: coldestId,
+      warmestId: warmestId,
+      mostVisitedSiteId: siteRow?.readNullable<String>('site_id'),
+      mostVisitedSiteName: siteRow?.readNullable<String>('site_name'),
+      mostVisitedSiteCount: siteRow?.readNullable<int>('c'),
+    );
+  }
+
   // ============================================================================
   // Mapping Helpers
   // ============================================================================
@@ -2429,6 +2620,7 @@ class DiveRepository {
       diveTypeIds: diveTypeIds ?? [row.diveType],
       buddy: row.buddy,
       diveMaster: row.diveMaster,
+      diverRoleId: row.diverRole,
       notes: row.notes,
       name: row.name,
       site: domainSite,
@@ -2486,6 +2678,13 @@ class DiveRepository {
               orElse: () => WeightType.belt,
             )
           : null,
+      weightingFeedback: row.weightingFeedback != null
+          ? WeightingFeedback.values.firstWhere(
+              (f) => f.name == row.weightingFeedback,
+              orElse: () => WeightingFeedback.correct,
+            )
+          : null,
+      weightingFeedbackKg: row.weightingFeedbackKg,
       // Weather conditions
       windSpeed: row.windSpeed,
       windDirection: row.windDirection != null
@@ -2646,6 +2845,8 @@ class DiveRepository {
         serviceIntervalDays: e.serviceIntervalDays,
         notes: e.notes,
         isActive: e.isActive,
+        buoyancyKg: e.buoyancyKg,
+        weightKg: e.weightKg,
       );
     }).toList();
 
@@ -2781,6 +2982,7 @@ class DiveRepository {
       diveTypeIds: diveTypeIds,
       buddy: row.buddy,
       diveMaster: row.diveMaster,
+      diverRoleId: row.diverRole,
       notes: row.notes,
       name: row.name,
       site: site,
@@ -2840,6 +3042,13 @@ class DiveRepository {
               orElse: () => WeightType.belt,
             )
           : null,
+      weightingFeedback: row.weightingFeedback != null
+          ? WeightingFeedback.values.firstWhere(
+              (f) => f.name == row.weightingFeedback,
+              orElse: () => WeightingFeedback.correct,
+            )
+          : null,
+      weightingFeedbackKg: row.weightingFeedbackKg,
       // Weather conditions
       windSpeed: row.windSpeed,
       windDirection: row.windDirection != null
@@ -2909,32 +3118,7 @@ class DiveRepository {
           computerId: t.computerId,
         );
       }).toList(),
-      profile: profileRows
-          .map(
-            (p) => domain.DiveProfilePoint(
-              timestamp: p.timestamp,
-              depth: p.depth,
-              temperature: p.temperature,
-              heartRate: p.heartRate,
-              heartRateSource: p.heartRateSource,
-              setpoint: p.setpoint,
-              ppO2: p.ppO2,
-              o2Sensor1: p.o2Sensor1,
-              o2Sensor2: p.o2Sensor2,
-              o2Sensor3: p.o2Sensor3,
-              o2Sensor4: p.o2Sensor4,
-              o2Sensor5: p.o2Sensor5,
-              o2Sensor6: p.o2Sensor6,
-              cns: p.cns,
-              ndl: p.ndl,
-              ceiling: p.ceiling,
-              ascentRate: p.ascentRate,
-              rbt: p.rbt,
-              decoType: p.decoType,
-              tts: p.tts,
-            ),
-          )
-          .toList(),
+      profile: profileRows.map(_profilePointFromRow).toList(),
       equipment: equipmentItems,
       weights: weights,
       isFavorite: row.isFavorite,
@@ -3643,21 +3827,26 @@ class DiveRepository {
 
   /// Calculate surface interval between this dive and the previous dive
   /// Returns null if there is no previous dive
+  ///
+  /// Runs on the times-only projection ([getDiveTimes] /
+  /// [getPreviousDiveTimes]) rather than full hydration: the formula needs
+  /// only timestamps and effective runtime, and this method sits on the
+  /// residual-decompression lookback hot path (WS2, large-DB performance).
   Future<Duration?> getSurfaceInterval(String diveId) async {
     try {
-      final currentDive = await getDiveById(diveId);
-      if (currentDive == null) return null;
+      final current = await getDiveTimes(diveId);
+      if (current == null) return null;
 
-      final previousDive = await getPreviousDive(diveId);
-      if (previousDive == null) return null;
+      final previous = await getPreviousDiveTimes(diveId);
+      if (previous == null) return null;
 
       // Calculate interval: from previous dive exit to current dive entry
       final previousExitTime =
-          previousDive.exitTime ??
-          (previousDive.entryTime ?? previousDive.dateTime).add(
-            previousDive.effectiveRuntime ?? Duration.zero,
+          previous.exitTime ??
+          (previous.entryTime ?? previous.dateTime).add(
+            previous.effectiveRuntime ?? Duration.zero,
           );
-      final currentEntryTime = currentDive.entryTime ?? currentDive.dateTime;
+      final currentEntryTime = current.entryTime ?? current.dateTime;
 
       final interval = currentEntryTime.difference(previousExitTime);
       return interval.isNegative ? Duration.zero : interval;
@@ -3668,6 +3857,165 @@ class DiveRepository {
         stackTrace: stackTrace,
       );
       return null;
+    }
+  }
+
+  /// Shared SELECT for the times-only dive projection. The scalar subquery
+  /// carries the profile-derived runtime fallback so
+  /// [DiveTimes.effectiveRuntime] can mirror [domain.Dive.effectiveRuntime]
+  /// without loading profile rows.
+  static const _diveTimesSelect =
+      'SELECT d.id, d.dive_date_time, d.entry_time, d.exit_time, '
+      'd.runtime, d.bottom_time, '
+      '(SELECT MAX(p.timestamp) - MIN(p.timestamp) FROM dive_profiles p '
+      'WHERE p.dive_id = d.id) AS profile_span '
+      'FROM dives d';
+
+  domain.DiveTimes _mapDiveTimesRow(QueryRow row) {
+    final entry = row.readNullable<int>('entry_time');
+    final exit = row.readNullable<int>('exit_time');
+    final runtime = row.readNullable<int>('runtime');
+    final bottom = row.readNullable<int>('bottom_time');
+    final span = row.readNullable<int>('profile_span');
+    return domain.DiveTimes(
+      id: row.read<String>('id'),
+      dateTime: DateTime.fromMillisecondsSinceEpoch(
+        row.read<int>('dive_date_time'),
+        isUtc: true,
+      ),
+      entryTime: entry != null
+          ? DateTime.fromMillisecondsSinceEpoch(entry, isUtc: true)
+          : null,
+      exitTime: exit != null
+          ? DateTime.fromMillisecondsSinceEpoch(exit, isUtc: true)
+          : null,
+      runtime: runtime != null ? Duration(seconds: runtime) : null,
+      bottomTime: bottom != null ? Duration(seconds: bottom) : null,
+      // Matches Dive.calculateRuntimeFromProfile: null unless positive.
+      profileSpan: span != null && span > 0 ? Duration(seconds: span) : null,
+    );
+  }
+
+  /// Times-only projection of one dive: a single SQL statement.
+  Future<domain.DiveTimes?> getDiveTimes(String diveId) async {
+    final rows = await _db
+        .customSelect(
+          '$_diveTimesSelect WHERE d.id = ?',
+          variables: [Variable<String>(diveId)],
+          readsFrom: {_db.dives, _db.diveProfiles},
+        )
+        .get();
+    if (rows.isEmpty) return null;
+    return _mapDiveTimesRow(rows.first);
+  }
+
+  /// Times-only equivalent of [getPreviousDive] (identical predicate and
+  /// ordering), for lookback chains that need only id and timestamps.
+  Future<domain.DiveTimes?> getPreviousDiveTimes(String diveId) async {
+    final current = await getDiveTimes(diveId);
+    if (current == null) return null;
+
+    final cutoff =
+        (current.entryTime ?? current.dateTime).millisecondsSinceEpoch;
+    final rows = await _db
+        .customSelect(
+          '$_diveTimesSelect '
+          'WHERE d.id != ? AND (d.entry_time < ? OR '
+          '(d.entry_time IS NULL AND d.dive_date_time < ?)) '
+          'ORDER BY d.entry_time DESC, d.dive_date_time DESC LIMIT 1',
+          variables: [
+            Variable<String>(diveId),
+            Variable<int>(cutoff),
+            Variable<int>(cutoff),
+          ],
+          readsFrom: {_db.dives, _db.diveProfiles},
+        )
+        .get();
+    if (rows.isEmpty) return null;
+    return _mapDiveTimesRow(rows.first);
+  }
+
+  /// Times-only equivalent of [getDivesInRange] (identical WHERE and
+  /// ordering), for same-day and weekly exposure aggregation.
+  Future<List<domain.DiveTimes>> getDiveTimesInRange(
+    DateTime start,
+    DateTime end, {
+    String? diverId,
+  }) async {
+    final clauses = <String>['d.dive_date_time >= ?', 'd.dive_date_time <= ?'];
+    final args = <Variable<Object>>[
+      Variable<int>(start.millisecondsSinceEpoch),
+      Variable<int>(end.millisecondsSinceEpoch),
+    ];
+    if (diverId != null) {
+      clauses.add('d.diver_id = ?');
+      args.add(Variable<String>(diverId));
+    }
+    final rows = await _db
+        .customSelect(
+          '$_diveTimesSelect WHERE ${clauses.join(' AND ')} '
+          'ORDER BY COALESCE(d.entry_time, d.dive_date_time) DESC, '
+          'd.dive_number DESC',
+          variables: args,
+          readsFrom: {_db.dives, _db.diveProfiles},
+        )
+        .get();
+    return rows.map(_mapDiveTimesRow).toList();
+  }
+
+  /// All profile samples for [diveId] across every source, ordered by
+  /// timestamp (one SQL statement). Matches the shape of `Dive.profile`.
+  ///
+  /// Deliberately unfiltered, mirroring the `profileRows` query in
+  /// [getDiveById]: [getDiveForAnalysis] must feed the analysis pipeline the
+  /// exact same samples the pre-WS2 `diveProvider` -> `getDiveById` path did,
+  /// which the parity test locks in. This is intentionally NOT the
+  /// `isPrimary`-filtered view used by [getDiveProfile] /
+  /// [getProfilesByDataSource]: for an edited dive it still returns the demoted
+  /// originals alongside the edited rows, exactly as [getDiveById] does. Any
+  /// change to that merge semantics (e.g. dropping demoted originals) must be
+  /// made in both places together, and measured, rather than diverging here.
+  Future<List<domain.DiveProfilePoint>> getMergedProfile(String diveId) async {
+    final rows =
+        await (_db.select(_db.diveProfiles)
+              ..where((t) => t.diveId.equals(diveId))
+              ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
+            .get();
+    return rows.map(_profilePointFromRow).toList();
+  }
+
+  /// Lean hydration for decompression/exposure analysis: the dive row's
+  /// scalars plus tanks and the merged profile (three SQL statements).
+  /// Joined display entities (site, center, trip, equipment, weights, tags,
+  /// dive types, custom fields) are left at their defaults -- the analysis
+  /// pipeline reads only row scalars, tanks, and profile (see the WS2
+  /// findings doc). Never use the result for display.
+  Future<domain.Dive?> getDiveForAnalysis(String diveId) async {
+    try {
+      final row = await (_db.select(
+        _db.dives,
+      )..where((t) => t.id.equals(diveId))).getSingleOrNull();
+      if (row == null) return null;
+
+      final tankRows =
+          await (_db.select(_db.diveTanks)
+                ..where((t) => t.diveId.equals(diveId))
+                ..orderBy([(t) => OrderingTerm.asc(t.tankOrder)]))
+              .get();
+      final profile = await getMergedProfile(diveId);
+
+      return _mapRowToDiveWithPreloadedData(
+        row,
+        tanks: tankRows,
+        equipment: const [],
+      ).copyWith(profile: profile);
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to get dive for analysis: $diveId',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
     }
   }
 

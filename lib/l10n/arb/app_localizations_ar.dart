@@ -105,6 +105,131 @@ class AppLocalizationsAr extends AppLocalizations {
       'غير متوفر في هذا الإصدار — استخدم S3 أو نسخة App Store';
 
   @override
+  String get settings_cloudSync_encryption_title => 'التشفير من طرف إلى طرف';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleOff =>
+      'تشفير جميع بيانات المزامنة والنسخ الاحتياطية السحابية قبل الرفع';
+
+  @override
+  String get settings_cloudSync_encryption_subtitleNeedsProvider =>
+      'اختر مزود التخزين السحابي أولاً';
+
+  @override
+  String get settings_cloudSync_encryption_statusOff => 'التشفير معطّل';
+
+  @override
+  String get settings_cloudSync_encryption_statusOn => 'التشفير مفعّل';
+
+  @override
+  String get settings_cloudSync_encryption_statusOnSubtitle =>
+      'يتم تشفير بيانات المزامنة والنسخ الاحتياطية السحابية قبل الرفع';
+
+  @override
+  String get settings_cloudSync_encryption_statusLocked =>
+      'مشفّر — مطلوب عبارة المرور';
+
+  @override
+  String get settings_cloudSync_encryption_statusLockedSubtitle =>
+      'أدخل عبارة المرور للمزامنة على هذا الجهاز';
+
+  @override
+  String get settings_cloudSync_encryption_enable => 'تفعيل التشفير';
+
+  @override
+  String get settings_cloudSync_encryption_enterPassphrase =>
+      'إدخال عبارة المرور';
+
+  @override
+  String get settings_cloudSync_encryption_passphrase => 'عبارة المرور';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseConfirm =>
+      'تأكيد عبارة المرور';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseMismatch =>
+      'عبارتا المرور غير متطابقتين';
+
+  @override
+  String get settings_cloudSync_encryption_passphraseTooShort =>
+      'استخدم 8 أحرف على الأقل';
+
+  @override
+  String get settings_cloudSync_encryption_wrongPassphrase =>
+      'عبارة مرور أو رمز استرداد غير صحيح';
+
+  @override
+  String get settings_cloudSync_encryption_warnUpdateDevices =>
+      'يجب تحديث جميع الأجهزة الأخرى إلى أحدث إصدار من التطبيق وستعيد تنزيل المكتبة.';
+
+  @override
+  String get settings_cloudSync_encryption_warnLoss =>
+      'إذا فقدت عبارة المرور ورمز الاسترداد معًا، فلا يمكن استرداد البيانات في السحابة. بيانات أجهزتك ليست في خطر أبدًا.';
+
+  @override
+  String get settings_cloudSync_encryption_deletePlaintextBackups =>
+      'حذف النسخ الاحتياطية السحابية غير المشفرة الموجودة';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryTitle => 'رمز الاسترداد';
+
+  @override
+  String get settings_cloudSync_encryption_recoveryExplain =>
+      'دوّن هذا الرمز واحفظه في مكان آمن. إنه الطريقة الوحيدة للعودة إذا نسيت عبارة المرور.';
+
+  @override
+  String get settings_cloudSync_encryption_recoverySavedConfirm =>
+      'لقد حفظت رمز الاسترداد الخاص بي';
+
+  @override
+  String get settings_cloudSync_encryption_changePassphrase =>
+      'تغيير عبارة المرور';
+
+  @override
+  String get settings_cloudSync_encryption_currentPassphrase =>
+      'عبارة المرور الحالية';
+
+  @override
+  String get settings_cloudSync_encryption_newPassphrase =>
+      'عبارة المرور الجديدة';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecovery =>
+      'إنشاء رمز استرداد جديد';
+
+  @override
+  String get settings_cloudSync_encryption_regenerateRecoveryWarn =>
+      'يتوقف رمز الاسترداد القديم عن العمل فورًا.';
+
+  @override
+  String get settings_cloudSync_encryption_disable => 'إيقاف التشفير';
+
+  @override
+  String get settings_cloudSync_encryption_disableWarn =>
+      'سيُعاد رفع المكتبة دون تشفير وستعيد الأجهزة الأخرى تنزيلها. تظل النسخ الاحتياطية المشفرة الموجودة قابلة للاستعادة بعبارة المرور.';
+
+  @override
+  String get settings_cloudSync_encryption_unlockTitle =>
+      'أدخل عبارة مرور التشفير';
+
+  @override
+  String get settings_cloudSync_encryption_unlockHint =>
+      'عبارة المرور أو رمز الاسترداد';
+
+  @override
+  String get settings_cloudSync_encryption_unlock => 'فتح';
+
+  @override
+  String get settings_cloudSync_encryption_continue => 'متابعة';
+
+  @override
+  String get settings_cloudSync_encryption_done => 'تم';
+
+  @override
+  String get settings_cloudSync_encryption_cancel => 'إلغاء';
+
+  @override
   String settings_cloudSync_replace_globalBanner(String deviceName) {
     return 'المزامنة متوقفة مؤقتًا — تم استبدال المكتبة من نسخة احتياطية على \"$deviceName\".';
   }
@@ -709,16 +834,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get buddies_picker_add => 'إضافة';
 
   @override
+  String get buddies_picker_addCustomRole => 'إضافة دور مخصص...';
+
+  @override
   String get buddies_picker_addNew => 'إضافة رفيق جديد';
 
   @override
   String get buddies_picker_done => 'تم';
 
   @override
+  String get buddies_picker_me => 'أنا';
+
+  @override
   String get buddies_picker_noBuddiesFound => 'لم يتم العثور على رفاق';
 
   @override
   String get buddies_picker_noBuddiesYet => 'لا يوجد رفاق بعد';
+
+  @override
+  String get buddies_picker_noRole => 'بدون دور';
 
   @override
   String get buddies_picker_noneSelected => 'لم يتم تحديد رفاق';
@@ -730,9 +864,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get buddies_picker_selectBuddies => 'اختيار الرفاق';
 
   @override
+  String get buddies_picker_selectMyRole => 'اختيار دوري';
+
+  @override
   String buddies_picker_selectRole(Object name) {
     return 'اختر دور $name';
   }
+
+  @override
+  String get buddies_picker_setMyRole => 'تحديد دوري';
 
   @override
   String get buddies_picker_tapToAdd => 'اضغط على \'إضافة\' لاختيار رفاق الغوص';
@@ -4600,6 +4740,97 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get diveRole_builtin_buddy => 'رفيق';
+
+  @override
+  String get diveRole_builtin_diveGuide => 'مرشد غوص';
+
+  @override
+  String get diveRole_builtin_diveMaster => 'دايف ماستر';
+
+  @override
+  String get diveRole_builtin_instructor => 'مدرب';
+
+  @override
+  String get diveRole_builtin_rearGuard => 'حارس المؤخرة';
+
+  @override
+  String get diveRole_builtin_safetyDiver => 'غواص السلامة';
+
+  @override
+  String get diveRole_builtin_solo => 'منفرد';
+
+  @override
+  String get diveRole_builtin_student => 'طالب';
+
+  @override
+  String get diveRole_builtin_supportDiver => 'غواص دعم';
+
+  @override
+  String get diveRoles_addDialog_addButton => 'إضافة';
+
+  @override
+  String get diveRoles_addDialog_nameHint => 'مثال: مصور';
+
+  @override
+  String get diveRoles_addDialog_nameLabel => 'اسم دور الغوص';
+
+  @override
+  String get diveRoles_addDialog_nameValidation => 'الرجاء إدخال اسم';
+
+  @override
+  String get diveRoles_addDialog_title => 'إضافة دور غوص مخصص';
+
+  @override
+  String get diveRoles_addTooltip => 'إضافة دور غوص';
+
+  @override
+  String get diveRoles_appBar_title => 'أدوار الغوص';
+
+  @override
+  String get diveRoles_builtInHeader => 'أدوار الغوص المدمجة';
+
+  @override
+  String get diveRoles_customHeader => 'أدوار الغوص المخصصة';
+
+  @override
+  String diveRoles_deleteDialog_content(Object name) {
+    return 'هل أنت متأكد من حذف \"$name\"؟';
+  }
+
+  @override
+  String get diveRoles_deleteDialog_title => 'حذف دور الغوص؟';
+
+  @override
+  String get diveRoles_deleteTooltip => 'حذف دور الغوص';
+
+  @override
+  String get diveRoles_renameDialog_title => 'إعادة تسمية دور الغوص';
+
+  @override
+  String get diveRoles_renameTooltip => 'إعادة تسمية دور الغوص';
+
+  @override
+  String diveRoles_snackbar_added(Object name) {
+    return 'تمت إضافة دور الغوص: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_cannotDelete(Object name) {
+    return 'لا يمكن حذف \"$name\" - مستخدم في غطسات موجودة';
+  }
+
+  @override
+  String diveRoles_snackbar_deleted(Object name) {
+    return 'تم حذف دور الغوص: $name';
+  }
+
+  @override
+  String diveRoles_snackbar_errorAdding(Object error) {
+    return 'خطأ في إضافة دور الغوص: $error';
+  }
+
+  @override
   String get diveSites_edit_depth_heroMax => 'أقصى عمق';
 
   @override
@@ -5035,6 +5266,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diveLog_listPage_searchFieldLabel => 'البحث في الغوصات...';
+
+  @override
+  String diveLog_listPage_searchLimitNotice(int limit) {
+    return 'عرض أول $limit نتيجة مطابقة. حسّن البحث لتضييق النتائج.';
+  }
 
   @override
   String diveLog_listPage_searchNoResults(Object query) {
@@ -12121,6 +12357,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'قوائم مهام قابلة لإعادة الاستخدام للتخطيط للرحلات';
 
   @override
+  String get settings_manage_diveRoles => 'أدوار الغوص';
+
+  @override
+  String get settings_manage_diveRoles_subtitle => 'إدارة أدوار الغوص المخصصة';
+
+  @override
   String get settings_manage_diveTypes => 'أنواع الغوص';
 
   @override
@@ -18063,6 +18305,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get universalImport_label_consolidated => 'مدمجة';
 
   @override
+  String get universalImport_label_photosAttached => 'الصور المرفقة';
+
+  @override
+  String get universalImport_label_photosUnmatched => 'صور لم تطابق أي غوصة';
+
+  @override
   String get common_label_shareWithAllProfiles =>
       'المشاركة مع جميع ملفات الغوص';
 
@@ -18282,4 +18530,256 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get diveLog_bulkEdit_membership_empty =>
       'لا توجد عناصر في الغطسات المحددة بعد';
+
+  @override
+  String get settings_mediaStorage_entry_title => 'تخزين الوسائط';
+
+  @override
+  String get settings_mediaStorage_entry_subtitle =>
+      'خزّن النسخ الأصلية للصور والفيديو في التخزين السحابي الخاص بك';
+
+  @override
+  String get settings_mediaStorage_status_notConfigured =>
+      'لا يوجد مخزن وسائط متصل على هذا الجهاز';
+
+  @override
+  String settings_mediaStorage_status_connected(String hint) {
+    return 'متصل بـ $hint';
+  }
+
+  @override
+  String get settings_mediaStorage_test_success => 'نجح الاتصال';
+
+  @override
+  String get settings_mediaStorage_saved => 'تم توصيل مخزن الوسائط';
+
+  @override
+  String get settings_mediaStorage_action_disconnect => 'قطع الاتصال';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_title =>
+      'قطع اتصال مخزن الوسائط؟';
+
+  @override
+  String get settings_mediaStorage_disconnect_confirm_body =>
+      'يتوقف هذا الجهاز عن رفع الوسائط وجلبها. لن يُحذف أي شيء من الحاوية الخاصة بك.';
+
+  @override
+  String get settings_mediaStorage_action_copyFromSync =>
+      'نسخ الإعدادات من المزامنة';
+
+  @override
+  String get settings_mediaStorage_transfers_title => 'عمليات النقل';
+
+  @override
+  String get settings_mediaStorage_transfers_entry => 'عرض عمليات النقل';
+
+  @override
+  String get settings_mediaStorage_transfers_empty => 'لا توجد عمليات نقل';
+
+  @override
+  String get settings_mediaStorage_transfers_retry => 'إعادة المحاولة';
+
+  @override
+  String get settings_mediaStorage_transfers_clearCompleted => 'مسح المكتملة';
+
+  @override
+  String get settings_mediaStorage_transfers_state_pending => 'في الانتظار';
+
+  @override
+  String get settings_mediaStorage_transfers_state_transferring => 'جارٍ الرفع';
+
+  @override
+  String get settings_mediaStorage_transfers_state_done => 'تم';
+
+  @override
+  String get settings_mediaStorage_transfers_state_failed => 'فشل';
+
+  @override
+  String get settings_mediaStorage_backfill_action => 'رفع المكتبة الحالية';
+
+  @override
+  String settings_mediaStorage_backfill_enqueued(int count) {
+    return '$count عمليات رفع في قائمة الانتظار';
+  }
+
+  @override
+  String get settings_mediaStorage_policy_autoUpload => 'رفع الصور تلقائيا';
+
+  @override
+  String get settings_mediaStorage_policy_photosOnCellular =>
+      'رفع الصور عبر شبكة الجوال';
+
+  @override
+  String get settings_mediaStorage_provider_label => 'المزود';
+
+  @override
+  String get settings_mediaStorage_connect_dropbox_hint =>
+      'يستخدم اتصال Dropbox من مزامنة السحابة. تُخزن الوسائط في مجلد التطبيق في Dropbox.';
+
+  @override
+  String get settings_mediaStorage_connect_gdrive_hint =>
+      'يسجل الدخول عبر Google. تُخزن الوسائط في مساحة Drive الخاصة بهذا التطبيق.';
+
+  @override
+  String get settings_mediaStorage_connect_icloud_hint =>
+      'تُخزن الوسائط في حاوية iCloud لهذا التطبيق وتتزامن عبر Apple ID الخاص بك.';
+
+  @override
+  String settings_mediaStorage_connect_action(String provider) {
+    return 'توصيل $provider';
+  }
+
+  @override
+  String get bodyWeight_addEntry => 'إضافة قياس';
+
+  @override
+  String get bodyWeight_dateLabel => 'التاريخ';
+
+  @override
+  String get bodyWeight_deleteTooltip => 'حذف الإدخال';
+
+  @override
+  String get bodyWeight_heightLabel => 'الطول (سم)';
+
+  @override
+  String bodyWeight_weightLabel(String unit) {
+    return 'الوزن ($unit)';
+  }
+
+  @override
+  String diveLog_edit_weightFeedback_amount(String unit) {
+    return 'بمقدار كم تقريبا ($unit)';
+  }
+
+  @override
+  String get diveLog_edit_weightFeedback_correct => 'مناسب';
+
+  @override
+  String get diveLog_edit_weightFeedback_label => 'كيف كانت أوزانك؟';
+
+  @override
+  String get diveLog_edit_weightFeedback_over => 'وزن زائد';
+
+  @override
+  String get diveLog_edit_weightFeedback_under => 'وزن ناقص';
+
+  @override
+  String get diverProfile_bodyWeight_empty => 'غير مسجل';
+
+  @override
+  String get diverProfile_bodyWeight_title => 'وزن الجسم';
+
+  @override
+  String get equipment_edit_advanced_title => 'متقدم';
+
+  @override
+  String get equipment_edit_buoyancyHint_exposure => 'موجب: مقدار الطفو';
+
+  @override
+  String get equipment_edit_buoyancyHint_generic => 'سالب إذا كان يغرق';
+
+  @override
+  String get equipment_edit_buoyancyHint_tank =>
+      'اتركه فارغا - تستخدم الأسطوانات مواصفاتها الخاصة';
+
+  @override
+  String equipment_edit_buoyancyLabel(String unit) {
+    return 'الطفو ($unit)';
+  }
+
+  @override
+  String equipment_edit_dryWeightLabel(String unit) {
+    return 'الوزن الجاف ($unit)';
+  }
+
+  @override
+  String get planner_gearWeights_accept => 'استخدام كوزن مخطط';
+
+  @override
+  String get planner_gearWeights_addGear => 'إضافة معدات';
+
+  @override
+  String get planner_gearWeights_empty => 'أضف معدات للتنبؤ بأوزانك';
+
+  @override
+  String planner_gearWeights_planned(String weight) {
+    return 'المخطط: $weight';
+  }
+
+  @override
+  String planner_gearWeights_predicted(String weight) {
+    return 'المتوقع: $weight';
+  }
+
+  @override
+  String get planner_gearWeights_title => 'المعدات والأوزان';
+
+  @override
+  String get planner_gearWeights_useSet => 'استخدام مجموعة';
+
+  @override
+  String get tools_weight_addGear => 'إضافة معدات';
+
+  @override
+  String get tools_weight_addTank => 'إضافة أسطوانة';
+
+  @override
+  String tools_weight_basedOnDives(int count) {
+    return 'استنادا إلى $count غوصات مسجلة';
+  }
+
+  @override
+  String get tools_weight_breakdownTitle => 'كيف تم الحساب';
+
+  @override
+  String get tools_weight_confidence_high => 'ثقة عالية';
+
+  @override
+  String get tools_weight_confidence_low => 'ثقة منخفضة - تقدير';
+
+  @override
+  String get tools_weight_confidence_medium => 'ثقة متوسطة';
+
+  @override
+  String tools_weight_deltaVsPrevious(String delta) {
+    return '$delta مقارنة بالتجهيز السابق';
+  }
+
+  @override
+  String get tools_weight_noGear =>
+      'أضف المعدات التي تخطط للغوص بها لتخصيص التنبؤ.';
+
+  @override
+  String get tools_weight_personalTerm => 'الأساس الشخصي';
+
+  @override
+  String get tools_weight_placementTitle => 'التوزيع المقترح';
+
+  @override
+  String get tools_weight_predictedWeight => 'الوزن المتوقع';
+
+  @override
+  String get tools_weight_saveToProfile => 'حفظ الوزن في الملف الشخصي';
+
+  @override
+  String get tools_weight_source_measured => 'مقاس من غوصاتك';
+
+  @override
+  String get tools_weight_source_physics => 'فيزياء';
+
+  @override
+  String get tools_weight_source_typeDefault => 'تقدير افتراضي';
+
+  @override
+  String get tools_weight_source_userSpec => 'من مواصفات معداتك';
+
+  @override
+  String get tools_weight_tanks => 'الأسطوانات';
+
+  @override
+  String get tools_weight_useSet => 'استخدام مجموعة';
+
+  @override
+  String get tools_weight_waterTerm => 'نوع الماء';
 }
