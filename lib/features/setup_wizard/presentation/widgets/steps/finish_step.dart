@@ -7,6 +7,17 @@ import 'package:submersion/features/setup_wizard/domain/setup_wizard_models.dart
 import 'package:submersion/features/setup_wizard/presentation/providers/setup_wizard_providers.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
+/// Feature-discovery destinations offered on the finish screen, in display
+/// order. Public so a router test can assert each one resolves to a real
+/// route (a bad link 404s to the "Page Not Found" screen).
+const kSetupFinishFeatureRoutes = <String>[
+  '/dive-computers/discover', // dive computer download
+  '/transfer', // file import
+  '/statistics', // statistics
+  '/sites', // dive sites map
+  '/equipment', // gear / service tracking
+];
+
 /// Final step: feature discovery plus the apply-and-go action.
 class FinishStep extends ConsumerStatefulWidget {
   final SetupWizardMode mode;
@@ -56,12 +67,28 @@ class _FinishStepState extends ConsumerState<FinishStep> {
       (
         Icons.watch,
         l10n.setup_finish_feature_diveComputer,
-        '/dive-computers/discover',
+        kSetupFinishFeatureRoutes[0],
       ),
-      (Icons.file_upload, l10n.setup_finish_feature_import, '/transfer'),
-      (Icons.query_stats, l10n.setup_finish_feature_statistics, '/stats'),
-      (Icons.map, l10n.setup_finish_feature_sites, '/sites'),
-      (Icons.build, l10n.setup_finish_feature_gear, '/gear'),
+      (
+        Icons.file_upload,
+        l10n.setup_finish_feature_import,
+        kSetupFinishFeatureRoutes[1],
+      ),
+      (
+        Icons.query_stats,
+        l10n.setup_finish_feature_statistics,
+        kSetupFinishFeatureRoutes[2],
+      ),
+      (
+        Icons.map,
+        l10n.setup_finish_feature_sites,
+        kSetupFinishFeatureRoutes[3],
+      ),
+      (
+        Icons.build,
+        l10n.setup_finish_feature_gear,
+        kSetupFinishFeatureRoutes[4],
+      ),
     ];
 
     return SingleChildScrollView(
