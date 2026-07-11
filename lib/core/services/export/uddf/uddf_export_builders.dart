@@ -846,6 +846,7 @@ class UddfExportBuilders {
     Diver? owner,
     List<Tag>? tags,
     List<DiveTypeEntity>? customDiveTypes,
+    List<DiveRole>? customDiveRoles,
     List<DiveComputer>? diveComputers,
     List<EquipmentSet>? equipmentSets,
     List<Trip>? trips,
@@ -861,6 +862,7 @@ class UddfExportBuilders {
         owner != null ||
         (tags?.isNotEmpty ?? false) ||
         (customDiveTypes?.isNotEmpty ?? false) ||
+        (customDiveRoles?.isNotEmpty ?? false) ||
         (diveComputers?.isNotEmpty ?? false) ||
         (equipmentSets?.isNotEmpty ?? false) ||
         (trips?.isNotEmpty ?? false) ||
@@ -1202,6 +1204,34 @@ class UddfExportBuilders {
                         builder.element(
                           'isbuiltin',
                           nest: diveType.isBuiltIn.toString(),
+                        );
+                      },
+                    );
+                  }
+                },
+              );
+            }
+
+            // Custom Dive Roles (no UDDF equivalent; #551). Ids are
+            // preserved so dive_buddies.role / dives.diver_role references
+            // resolve after restore.
+            if (customDiveRoles != null && customDiveRoles.isNotEmpty) {
+              builder.element(
+                'diveroles',
+                nest: () {
+                  for (final diveRole in customDiveRoles) {
+                    builder.element(
+                      'diverole',
+                      attributes: {'id': diveRole.id},
+                      nest: () {
+                        builder.element('name', nest: diveRole.name);
+                        builder.element(
+                          'sortorder',
+                          nest: diveRole.sortOrder.toString(),
+                        );
+                        builder.element(
+                          'isbuiltin',
+                          nest: diveRole.isBuiltIn.toString(),
                         );
                       },
                     );

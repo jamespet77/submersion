@@ -127,6 +127,55 @@ class DiveRoleRepository {
     }
   }
 
+  /// Restore a custom dive role preserving its original id (backup/restore
+  /// path, #551). The id must survive so dive_buddies.role and
+  /// dives.diver_role references resolve after restore. InsertOrIgnore keeps
+  /// re-imports idempotent; returns true when a row was actually inserted.
+  Future<bool> importDiveRole({
+    required String id,
+    required String name,
+    required String diverId,
+    int sortOrder = 100,
+  }) async {
+    try {
+      // Drift's insert return value does not distinguish an ignored
+      // conflict, so check existence explicitly.
+      final existing = await getDiveRoleById(id);
+      if (existing != null) return false;
+
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await _db
+          .into(_db.diveRoles)
+          .insert(
+            DiveRolesCompanion(
+              id: Value(id),
+              diverId: Value(diverId),
+              name: Value(name.trim()),
+              isBuiltIn: const Value(false),
+              sortOrder: Value(sortOrder),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+            ),
+            mode: InsertMode.insertOrIgnore,
+          );
+      await _syncRepository.markRecordPending(
+        entityType: 'diveRoles',
+        recordId: id,
+        localUpdatedAt: now,
+      );
+      SyncEventBus.notifyLocalChange();
+      _log.info('Imported dive role $id ($name)');
+      return true;
+    } catch (e, stackTrace) {
+      _log.error(
+        'Failed to import dive role: $id',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
   /// Rename a custom dive role (built-ins cannot be renamed).
   Future<void> renameDiveRole(String id, String newName) async {
     try {

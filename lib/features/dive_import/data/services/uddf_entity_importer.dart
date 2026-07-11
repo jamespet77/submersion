@@ -24,6 +24,7 @@ import 'package:submersion/features/dive_log/domain/entities/profile_event.dart'
 import 'package:submersion/features/dive_sites/data/repositories/site_repository_impl.dart';
 import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
 import 'package:submersion/features/dive_types/data/repositories/dive_type_repository.dart';
+import 'package:submersion/features/dive_roles/data/repositories/dive_role_repository.dart';
 import 'package:submersion/features/dive_types/domain/entities/dive_type_entity.dart';
 import 'package:submersion/features/equipment/data/repositories/equipment_repository_impl.dart';
 import 'package:submersion/features/equipment/data/repositories/equipment_set_repository_impl.dart';
@@ -49,6 +50,10 @@ class ImportRepositories {
   final CertificationRepository certificationRepository;
   final TagRepository tagRepository;
   final DiveTypeRepository diveTypeRepository;
+
+  /// Optional so existing constructors and mock bundles keep working;
+  /// when null, custom dive role restore is skipped.
+  final DiveRoleRepository? diveRoleRepository;
   final SiteRepository siteRepository;
   final DiveRepository diveRepository;
   final TankPressureRepository tankPressureRepository;
@@ -63,6 +68,7 @@ class ImportRepositories {
     required this.certificationRepository,
     required this.tagRepository,
     required this.diveTypeRepository,
+    this.diveRoleRepository,
     required this.siteRepository,
     required this.diveRepository,
     required this.tankPressureRepository,
@@ -319,6 +325,14 @@ class UddfEntityImporter {
       now,
       onProgress,
     );
+
+    // Custom dive roles restore unconditionally (no selection UI): they are
+    // tiny reference rows whose ids are referenced by imported dive_buddies
+    // and dives rows, and the id-preserving insert is idempotent.
+    final diveRoleRepository = repositories.diveRoleRepository;
+    if (diveRoleRepository != null) {
+      await _importDiveRoles(data.customDiveRoles, diveRoleRepository, diverId);
+    }
 
     final sitesCount = await _importSites(
       data.sites,
@@ -733,6 +747,33 @@ class UddfEntityImporter {
       onProgress?.call(ImportPhase.diveTypes, count, selected.length);
     }
 
+    return count;
+  }
+
+  Future<int> _importDiveRoles(
+    List<Map<String, dynamic>> items,
+    DiveRoleRepository repository,
+    String diverId,
+  ) async {
+    var count = 0;
+    for (final roleData in items) {
+      final name = roleData['name'] as String?;
+      final id = roleData['id'] as String?;
+      final isBuiltIn = roleData['isBuiltIn'] as bool? ?? false;
+      if (isBuiltIn || id == null || name == null || name.isEmpty) continue;
+
+      try {
+        final imported = await repository.importDiveRole(
+          id: id,
+          name: name,
+          diverId: diverId,
+          sortOrder: roleData['sortOrder'] as int? ?? 100,
+        );
+        if (imported) count++;
+      } catch (_) {
+        // Ignore duplicates -- the role may already exist with the same id.
+      }
+    }
     return count;
   }
 

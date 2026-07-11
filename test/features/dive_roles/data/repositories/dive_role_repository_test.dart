@@ -95,6 +95,35 @@ void main() {
       expect(await repository.getDiveRoleById(created.id), isNull);
     });
 
+    test(
+      'importDiveRole preserves the original id and is idempotent',
+      () async {
+        final diverId = await _insertDiver();
+        final inserted = await repository.importDiveRole(
+          id: 'restored-uuid-1',
+          name: 'Hekkensluiter',
+          diverId: diverId,
+          sortOrder: 12,
+        );
+        expect(inserted, isTrue);
+
+        final fetched = await repository.getDiveRoleById('restored-uuid-1');
+        expect(fetched, isNotNull);
+        expect(fetched!.name, 'Hekkensluiter');
+        expect(fetched.isBuiltIn, isFalse);
+
+        // Re-import is a no-op, not an error, and reports false.
+        final again = await repository.importDiveRole(
+          id: 'restored-uuid-1',
+          name: 'Different Name',
+          diverId: diverId,
+        );
+        expect(again, isFalse);
+        final unchanged = await repository.getDiveRoleById('restored-uuid-1');
+        expect(unchanged!.name, 'Hekkensluiter');
+      },
+    );
+
     test('isDiveRoleInUse reflects dive_buddies.role and dives.diver_role '
         'references', () async {
       final diverId = await _insertDiver();
