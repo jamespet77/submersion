@@ -18739,4 +18739,16 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'אין צלילות עם פרופילים';
+
+  @override
+  String get dive3d_spatial_title => 'נוף ים תלת־ממדי';
+
+  @override
+  String get dive3d_spatial_estimatedPath => 'נתיב משוער (ניווט משוער)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => 'קרקעית ים מסונתזת';
+
+  @override
+  String get dive3d_spatial_noPath => 'אין מספיק נתונים לשחזור הנתיב';
 }

@@ -32215,6 +32215,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No dives with profiles to show'**
   String get dive3d_career_empty;
+
+  /// No description provided for @dive3d_spatial_title.
+  ///
+  /// In en, this message translates to:
+  /// **'3D Seascape'**
+  String get dive3d_spatial_title;
+
+  /// No description provided for @dive3d_spatial_estimatedPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated path (dead reckoning)'**
+  String get dive3d_spatial_estimatedPath;
+
+  /// No description provided for @dive3d_spatial_synthesizedSeafloor.
+  ///
+  /// In en, this message translates to:
+  /// **'Synthesized seafloor'**
+  String get dive3d_spatial_synthesizedSeafloor;
+
+  /// No description provided for @dive3d_spatial_noPath.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough data to reconstruct the dive path'**
+  String get dive3d_spatial_noPath;
 }
 
 class _AppLocalizationsDelegate

@@ -18872,4 +18872,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'لا توجد غطسات بمخططات';
+
+  @override
+  String get dive3d_spatial_title => 'مشهد بحري ثلاثي الأبعاد';
+
+  @override
+  String get dive3d_spatial_estimatedPath => 'مسار مقدّر (الحساب الاستدلالي)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => 'قاع بحر مُركّب';
+
+  @override
+  String get dive3d_spatial_noPath => 'بيانات غير كافية لإعادة بناء المسار';
 }

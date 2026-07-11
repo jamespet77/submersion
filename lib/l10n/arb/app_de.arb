@@ -5490,5 +5490,13 @@
   "dive3d_career_colorDepth": "Tiefe",
   "@dive3d_career_colorDepth": {},
   "dive3d_career_empty": "Keine Tauchgänge mit Profilen",
-  "@dive3d_career_empty": {}
+  "@dive3d_career_empty": {},
+  "dive3d_spatial_title": "3D-Unterwasserwelt",
+  "@dive3d_spatial_title": {},
+  "dive3d_spatial_estimatedPath": "Geschätzter Pfad (Koppelnavigation)",
+  "@dive3d_spatial_estimatedPath": {},
+  "dive3d_spatial_synthesizedSeafloor": "Synthetisierter Meeresboden",
+  "@dive3d_spatial_synthesizedSeafloor": {},
+  "dive3d_spatial_noPath": "Nicht genug Daten zur Pfadrekonstruktion",
+  "@dive3d_spatial_noPath": {}
 }

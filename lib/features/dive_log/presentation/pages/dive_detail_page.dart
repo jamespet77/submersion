@@ -28,6 +28,7 @@ import 'package:submersion/features/dive_log/data/services/profile_analysis_serv
 import 'package:submersion/features/dive_log/data/services/profile_markers_service.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_data_source.dart';
 import 'package:submersion/features/dive_3d/presentation/pages/dive_3d_page.dart';
+import 'package:submersion/features/dive_3d/presentation/pages/spatial_site_page.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/dive_3d_preview_card.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_computer.dart';
@@ -1298,6 +1299,16 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute<void>(
                           builder: (_) => Dive3dPage(diveId: dive.id),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.terrain),
+                      tooltip: context.l10n.dive3d_spatial_title,
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => SpatialSitePage(diveId: dive.id),
                         ),
                       ),
                     ),

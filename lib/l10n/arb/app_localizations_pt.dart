@@ -19233,4 +19233,18 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'Nenhum mergulho com perfis';
+
+  @override
+  String get dive3d_spatial_title => 'Paisagem marinha 3D';
+
+  @override
+  String get dive3d_spatial_estimatedPath =>
+      'Trajeto estimado (navegação estimada)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => 'Fundo do mar sintetizado';
+
+  @override
+  String get dive3d_spatial_noPath =>
+      'Dados insuficientes para reconstruir o trajeto';
 }

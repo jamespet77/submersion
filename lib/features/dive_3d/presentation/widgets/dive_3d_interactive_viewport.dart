@@ -151,7 +151,7 @@ class _ScrubCursorPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final path = scene.scrubPath;
     if (path == null) return;
-    final scenePoint = path.positionAt(scrubPosition.value);
+    final scenePoint = path.sceneAt(scrubPosition.value);
     if (scenePoint == null) return;
     final projector = SceneProjector(
       size: size,
@@ -160,7 +160,7 @@ class _ScrubCursorPainter extends CustomPainter {
       pitchDegrees: pitchDegrees,
       zoom: zoom,
     );
-    final center = projector.project(scenePoint.dx, scenePoint.dy, 0);
+    final center = projector.project(scenePoint.x, scenePoint.y, scenePoint.z);
     canvas.drawCircle(
       center,
       7,

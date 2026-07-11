@@ -18260,4 +18260,16 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => '没有可显示的剖面潜水';
+
+  @override
+  String get dive3d_spatial_title => '3D海景';
+
+  @override
+  String get dive3d_spatial_estimatedPath => '估算路径（航位推算）';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => '合成海底';
+
+  @override
+  String get dive3d_spatial_noPath => '数据不足，无法重建潜水路径';
 }

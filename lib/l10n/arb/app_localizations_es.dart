@@ -19237,4 +19237,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'No hay inmersiones con perfiles';
+
+  @override
+  String get dive3d_spatial_title => 'Paisaje marino 3D';
+
+  @override
+  String get dive3d_spatial_estimatedPath =>
+      'Ruta estimada (navegación a estima)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => 'Fondo marino sintetizado';
+
+  @override
+  String get dive3d_spatial_noPath =>
+      'Datos insuficientes para reconstruir la ruta';
 }

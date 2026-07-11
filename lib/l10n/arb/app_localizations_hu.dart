@@ -19175,4 +19175,17 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'Nincs profillal rendelkező merülés';
+
+  @override
+  String get dive3d_spatial_title => '3D tengeri táj';
+
+  @override
+  String get dive3d_spatial_estimatedPath => 'Becsült útvonal (holtszámítás)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => 'Szintetizált tengerfenék';
+
+  @override
+  String get dive3d_spatial_noPath =>
+      'Nincs elég adat az útvonal rekonstruálásához';
 }

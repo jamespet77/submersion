@@ -19198,4 +19198,19 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'Keine Tauchgänge mit Profilen';
+
+  @override
+  String get dive3d_spatial_title => '3D-Unterwasserwelt';
+
+  @override
+  String get dive3d_spatial_estimatedPath =>
+      'Geschätzter Pfad (Koppelnavigation)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor =>
+      'Synthetisierter Meeresboden';
+
+  @override
+  String get dive3d_spatial_noPath =>
+      'Nicht genug Daten zur Pfadrekonstruktion';
 }

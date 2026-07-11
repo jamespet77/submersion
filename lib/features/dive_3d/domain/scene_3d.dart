@@ -24,17 +24,27 @@ class ScrubPath {
   final List<double> xs;
   final List<double> ys;
 
+  /// Optional Z track for genuinely 3D scenes (the spatial swim path).
+  /// When null the cursor rides at z = 0 (depth-time scenes).
+  final List<double>? zs;
+
   const ScrubPath({
     required this.normalizedTimes,
     required this.xs,
     required this.ys,
+    this.zs,
   });
 
-  Offset? positionAt(double t) {
+  /// The scene-space cursor point at normalized time [t], or null if empty.
+  ({double x, double y, double z})? sceneAt(double t) {
     final n = normalizedTimes.length;
     if (n == 0) return null;
-    if (t <= normalizedTimes.first) return Offset(xs.first, ys.first);
-    if (t >= normalizedTimes.last) return Offset(xs.last, ys.last);
+    if (t <= normalizedTimes.first) {
+      return (x: xs.first, y: ys.first, z: zs?.first ?? 0);
+    }
+    if (t >= normalizedTimes.last) {
+      return (x: xs.last, y: ys.last, z: zs?.last ?? 0);
+    }
     var lo = 0, hi = n - 1;
     while (hi - lo > 1) {
       final mid = (lo + hi) ~/ 2;
@@ -46,10 +56,14 @@ class ScrubPath {
     }
     final span = normalizedTimes[hi] - normalizedTimes[lo];
     final f = span <= 0 ? 0.0 : (t - normalizedTimes[lo]) / span;
-    return Offset(
-      xs[lo] + (xs[hi] - xs[lo]) * f,
-      ys[lo] + (ys[hi] - ys[lo]) * f,
-    );
+    double lerp(List<double> v) => v[lo] + (v[hi] - v[lo]) * f;
+    return (x: lerp(xs), y: lerp(ys), z: zs == null ? 0.0 : lerp(zs!));
+  }
+
+  /// 2D convenience (x, y) for depth-time scenes.
+  Offset? positionAt(double t) {
+    final p = sceneAt(t);
+    return p == null ? null : Offset(p.x, p.y);
   }
 }
 

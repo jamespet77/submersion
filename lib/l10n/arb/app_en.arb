@@ -12040,5 +12040,13 @@
   "dive3d_career_colorDepth": "Depth",
   "@dive3d_career_colorDepth": {},
   "dive3d_career_empty": "No dives with profiles to show",
-  "@dive3d_career_empty": {}
+  "@dive3d_career_empty": {},
+  "dive3d_spatial_title": "3D Seascape",
+  "@dive3d_spatial_title": {},
+  "dive3d_spatial_estimatedPath": "Estimated path (dead reckoning)",
+  "@dive3d_spatial_estimatedPath": {},
+  "dive3d_spatial_synthesizedSeafloor": "Synthesized seafloor",
+  "@dive3d_spatial_synthesizedSeafloor": {},
+  "dive3d_spatial_noPath": "Not enough data to reconstruct the dive path",
+  "@dive3d_spatial_noPath": {}
 }

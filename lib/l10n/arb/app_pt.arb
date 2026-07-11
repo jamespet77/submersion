@@ -5490,5 +5490,13 @@
   "dive3d_career_colorDepth": "Profundidade",
   "@dive3d_career_colorDepth": {},
   "dive3d_career_empty": "Nenhum mergulho com perfis",
-  "@dive3d_career_empty": {}
+  "@dive3d_career_empty": {},
+  "dive3d_spatial_title": "Paisagem marinha 3D",
+  "@dive3d_spatial_title": {},
+  "dive3d_spatial_estimatedPath": "Trajeto estimado (navegação estimada)",
+  "@dive3d_spatial_estimatedPath": {},
+  "dive3d_spatial_synthesizedSeafloor": "Fundo do mar sintetizado",
+  "@dive3d_spatial_synthesizedSeafloor": {},
+  "dive3d_spatial_noPath": "Dados insuficientes para reconstruir o trajeto",
+  "@dive3d_spatial_noPath": {}
 }

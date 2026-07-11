@@ -18906,4 +18906,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dive3d_career_empty => 'No dives with profiles to show';
+
+  @override
+  String get dive3d_spatial_title => '3D Seascape';
+
+  @override
+  String get dive3d_spatial_estimatedPath => 'Estimated path (dead reckoning)';
+
+  @override
+  String get dive3d_spatial_synthesizedSeafloor => 'Synthesized seafloor';
+
+  @override
+  String get dive3d_spatial_noPath =>
+      'Not enough data to reconstruct the dive path';
 }
