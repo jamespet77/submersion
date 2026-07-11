@@ -95,6 +95,7 @@ import 'package:submersion/features/settings/presentation/pages/emergency_contac
 import 'package:submersion/features/settings/presentation/pages/medical_info_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/insurance_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/notes_edit_page.dart';
+import 'package:submersion/features/settings/presentation/pages/body_weight_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/prior_experience_edit_page.dart';
 import 'package:submersion/features/settings/presentation/pages/debug_log_viewer_page.dart';
 import 'package:submersion/features/media/presentation/pages/media_sources_page.dart';
@@ -113,7 +114,7 @@ import 'package:submersion/features/planning/presentation/pages/planning_page.da
 import 'package:submersion/features/planning/presentation/widgets/planning_shell.dart';
 import 'package:submersion/features/planning/presentation/widgets/planning_welcome.dart';
 import 'package:submersion/features/gps_log/presentation/pages/gps_logger_page.dart';
-import 'package:submersion/features/tools/presentation/pages/weight_calculator_page.dart';
+import 'package:submersion/features/weight_planner/presentation/pages/weight_planner_page.dart';
 import 'package:submersion/features/deco_calculator/presentation/pages/deco_calculator_page.dart';
 import 'package:submersion/features/gas_calculators/presentation/pages/gas_calculators_page.dart';
 import 'package:submersion/features/dive_computer/presentation/pages/device_list_page.dart';
@@ -248,7 +249,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'weight-calculator',
                     name: 'weightCalculator',
-                    builder: (context, state) => const WeightCalculatorPage(),
+                    builder: (context, state) => const WeightPlannerPage(),
                   ),
                   GoRoute(
                     path: 'surface-interval',
@@ -981,6 +982,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     name: 'editPriorExperience',
                     builder: (context, state) =>
                         const PriorExperienceEditPage(),
+                  ),
+                  GoRoute(
+                    path: 'body-weight',
+                    name: 'editBodyWeight',
+                    builder: (context, state) => const BodyWeightEditPage(),
                   ),
                 ],
               ),

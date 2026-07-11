@@ -957,6 +957,17 @@ class SyncService {
             records: data.equipmentSetItems,
             hasUpdatedAt: false,
           ),
+          // After both parents (divePlans and equipment).
+          (
+            type: 'divePlanEquipment',
+            records: data.divePlanEquipment,
+            hasUpdatedAt: false,
+          ),
+          (
+            type: 'diverWeightEntries',
+            records: data.diverWeightEntries,
+            hasUpdatedAt: true,
+          ),
           (type: 'diveTypes', records: data.diveTypes, hasUpdatedAt: true),
           (type: 'diveRoles', records: data.diveRoles, hasUpdatedAt: true),
           (type: 'tankPresets', records: data.tankPresets, hasUpdatedAt: true),
@@ -1547,6 +1558,8 @@ class SyncService {
     'equipment': true,
     'equipmentSets': true,
     'equipmentSetItems': false,
+    'divePlanEquipment': false,
+    'diverWeightEntries': true,
     'diveTypes': true,
     'diveRoles': true,
     'tankPresets': true,
@@ -1678,6 +1691,10 @@ class SyncService {
     'courses': [(field: 'instructorId', parent: 'buddies', nullable: true)],
     'equipmentSetItems': [
       (field: 'setId', parent: 'equipmentSets', nullable: false),
+      (field: 'equipmentId', parent: 'equipment', nullable: false),
+    ],
+    'divePlanEquipment': [
+      (field: 'planId', parent: 'divePlans', nullable: false),
       (field: 'equipmentId', parent: 'equipment', nullable: false),
     ],
     'serviceRecords': [
