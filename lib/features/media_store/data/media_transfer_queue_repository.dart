@@ -65,7 +65,54 @@ class MediaTransferQueueRepository {
 
   Future<void> markTransferring(int id) => _setState(id, 'transferring');
 
-  Future<void> markDone(int id) => _setState(id, 'done');
+  /// Completion also clears resume/progress state and any error message
+  /// from earlier attempts: a finished transfer must not leak a stale
+  /// resume point into a future re-enqueue of the same media, and a done
+  /// row must not display a failure it recovered from.
+  Future<void> markDone(int id) async {
+    await (_db.update(
+      _db.mediaTransferQueue,
+    )..where((t) => t.id.equals(id))).write(
+      MediaTransferQueueCompanion(
+        state: const Value('done'),
+        resumeStateJson: const Value(null),
+        progressBytes: const Value(null),
+        totalBytes: const Value(null),
+        errorMessage: const Value(null),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  /// Persists (or clears, with null) the adapter's opaque resume point.
+  /// markFailed, retry, and defer all PRESERVE it - resuming after a
+  /// failure is the entire point.
+  Future<void> updateResumeState(int id, String? resumeStateJson) async {
+    await (_db.update(
+      _db.mediaTransferQueue,
+    )..where((t) => t.id.equals(id))).write(
+      MediaTransferQueueCompanion(
+        resumeStateJson: Value(resumeStateJson),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
+  Future<void> updateProgress(
+    int id, {
+    required int transferredBytes,
+    int? totalBytes,
+  }) async {
+    await (_db.update(
+      _db.mediaTransferQueue,
+    )..where((t) => t.id.equals(id))).write(
+      MediaTransferQueueCompanion(
+        progressBytes: Value(transferredBytes),
+        totalBytes: Value(totalBytes),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
 
   Future<void> markFailed(int id, String error) async {
     final row = await (_db.select(

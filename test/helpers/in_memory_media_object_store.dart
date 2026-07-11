@@ -10,6 +10,13 @@ class InMemoryMediaObjectStore implements MediaObjectStore {
   /// When set, the next operation throws it once and clears the field.
   Exception? failNextWith;
 
+  /// When set, putFile fires onResumeStateChanged with this JSON once per
+  /// call (pipeline wiring tests).
+  String? emitResumeState;
+
+  /// The resumeStateJson the last putFile call received.
+  String? lastResumeStateJsonIn;
+
   void _maybeFail() {
     final e = failNextWith;
     if (e != null) {
@@ -35,14 +42,26 @@ class InMemoryMediaObjectStore implements MediaObjectStore {
     String key,
     File source, {
     required String contentType,
+    TransferProgressCallback? onProgress,
+    String? resumeStateJson,
+    void Function(String resumeStateJson)? onResumeStateChanged,
   }) async {
     _maybeFail();
-    objects[key] = await source.readAsBytes();
+    lastResumeStateJsonIn = resumeStateJson;
+    final bytes = await source.readAsBytes();
+    objects[key] = bytes;
     modified[key] = DateTime.now();
+    final emit = emitResumeState;
+    if (emit != null) onResumeStateChanged?.call(emit);
+    onProgress?.call(bytes.length, bytes.length);
   }
 
   @override
-  Future<void> getFile(String key, File destination) async {
+  Future<void> getFile(
+    String key,
+    File destination, {
+    TransferProgressCallback? onProgress,
+  }) async {
     _maybeFail();
     final bytes = objects[key];
     if (bytes == null) {
@@ -52,6 +71,7 @@ class InMemoryMediaObjectStore implements MediaObjectStore {
       );
     }
     await destination.writeAsBytes(bytes, flush: true);
+    onProgress?.call(bytes.length, bytes.length);
   }
 
   @override
