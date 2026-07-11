@@ -191,6 +191,10 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
   // Weight fields - multiple weight entries per dive
   List<DiveWeight> _weights = [];
 
+  // Post-dive weighting feedback (v104): trains the weight predictor.
+  WeightingFeedback? _weightingFeedback;
+  final _weightingFeedbackAmountController = TextEditingController();
+
   // Tank data - list of tanks with multi-tank support
   List<DiveTank> _tanks = [];
   final _uuid = const Uuid();
@@ -627,6 +631,15 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
             );
           }
 
+          // Load weighting feedback
+          _weightingFeedback = dive.weightingFeedback;
+          _weightingFeedbackAmountController.text =
+              dive.weightingFeedbackKg != null
+              ? units
+                    .convertWeight(dive.weightingFeedbackKg!)
+                    .toStringAsFixed(1)
+              : '';
+
           // Load tags
           _selectedTags = List.from(dive.tags);
 
@@ -727,6 +740,7 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
     _windSpeedController.dispose();
     _humidityController.dispose();
     _weatherDescriptionController.dispose();
+    _weightingFeedbackAmountController.dispose();
     super.dispose();
   }
 
@@ -3909,6 +3923,50 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
             icon: const Icon(Icons.add),
             label: Text(context.l10n.diveLog_edit_addWeightEntry),
           ),
+          const SizedBox(height: 12),
+          Text(
+            context.l10n.diveLog_edit_weightFeedback_label,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
+          const SizedBox(height: 4),
+          SegmentedButton<WeightingFeedback>(
+            emptySelectionAllowed: true,
+            segments: [
+              ButtonSegment(
+                value: WeightingFeedback.correct,
+                label: Text(context.l10n.diveLog_edit_weightFeedback_correct),
+              ),
+              ButtonSegment(
+                value: WeightingFeedback.overweighted,
+                label: Text(context.l10n.diveLog_edit_weightFeedback_over),
+              ),
+              ButtonSegment(
+                value: WeightingFeedback.underweighted,
+                label: Text(context.l10n.diveLog_edit_weightFeedback_under),
+              ),
+            ],
+            selected: {if (_weightingFeedback != null) _weightingFeedback!},
+            onSelectionChanged: (selection) => setState(() {
+              _weightingFeedback = selection.isEmpty ? null : selection.first;
+              _markDirty();
+            }),
+          ),
+          if (_weightingFeedback == WeightingFeedback.overweighted ||
+              _weightingFeedback == WeightingFeedback.underweighted) ...[
+            const SizedBox(height: 8),
+            TextFormField(
+              controller: _weightingFeedbackAmountController,
+              decoration: InputDecoration(
+                labelText: context.l10n.diveLog_edit_weightFeedback_amount(
+                  units.weightSymbol,
+                ),
+              ),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              onChanged: (_) => _markDirty(),
+            ),
+          ],
         ],
       ),
     );
@@ -4453,6 +4511,16 @@ class _DiveEditPageState extends ConsumerState<DiveEditPage> {
         weatherFetchedAt: _weatherFetchedAt,
         // Weight entries (multiple)
         weights: _weights,
+        // Weighting feedback (magnitude only meaningful for over/under)
+        weightingFeedback: _weightingFeedback,
+        weightingFeedbackKg:
+            (_weightingFeedback == WeightingFeedback.overweighted ||
+                    _weightingFeedback == WeightingFeedback.underweighted) &&
+                _weightingFeedbackAmountController.text.isNotEmpty
+            ? units.weightToKg(
+                double.tryParse(_weightingFeedbackAmountController.text) ?? 0,
+              )
+            : null,
         // Tags
         tags: _selectedTags,
         // Custom fields (filter out entries with empty keys)
