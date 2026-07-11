@@ -8,6 +8,8 @@ import 'package:submersion/core/services/sync/post_restore_sync_store.dart';
 import 'package:submersion/features/backup/data/repositories/backup_preferences.dart';
 import 'package:submersion/features/backup/data/services/backup_service.dart';
 import 'package:submersion/features/backup/domain/entities/backup_record.dart';
+import 'package:submersion/core/services/sync/crypto/sync_encryption_service.dart'
+    show WrongPassphraseException;
 import 'package:submersion/features/backup/domain/exceptions/backup_encrypted_exception.dart';
 import 'package:submersion/features/backup/domain/entities/backup_settings.dart';
 import 'package:submersion/features/backup/domain/entities/restore_mode.dart';
@@ -238,6 +240,12 @@ class BackupOperationNotifier extends StateNotifier<BackupOperationState> {
       // The page prompts for the passphrase and retries with the secret.
       state = const BackupOperationState(status: BackupOperationStatus.idle);
       rethrow;
+    } on WrongPassphraseException {
+      // A wrong secret during the retry must reach the passphrase dialog so it
+      // can keep itself open and show the inline error; the generic catch below
+      // would swallow it into an error state and close the dialog on success.
+      state = const BackupOperationState(status: BackupOperationStatus.idle);
+      rethrow;
     } catch (e) {
       state = BackupOperationState(
         status: BackupOperationStatus.error,
@@ -362,6 +370,12 @@ class BackupOperationNotifier extends StateNotifier<BackupOperationState> {
       _ref.invalidate(backupHistoryProvider);
     } on BackupEncryptedException {
       // The page prompts for the passphrase and retries with the secret.
+      state = const BackupOperationState(status: BackupOperationStatus.idle);
+      rethrow;
+    } on WrongPassphraseException {
+      // A wrong secret during the retry must reach the passphrase dialog so it
+      // can keep itself open and show the inline error; the generic catch below
+      // would swallow it into an error state and close the dialog on success.
       state = const BackupOperationState(status: BackupOperationStatus.idle);
       rethrow;
     } catch (e) {

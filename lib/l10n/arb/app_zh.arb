@@ -30,6 +30,7 @@
   "settings_cloudSync_encryption_title": "端到端加密",
   "settings_cloudSync_encryption_subtitleOff": "上传前加密所有同步数据和云备份",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "请先选择云服务商",
+  "settings_cloudSync_encryption_statusOff": "加密已关闭",
   "settings_cloudSync_encryption_statusOn": "加密已开启",
   "settings_cloudSync_encryption_statusOnSubtitle": "同步数据和云备份在上传前会被加密",
   "settings_cloudSync_encryption_statusLocked": "已加密 — 需要口令",

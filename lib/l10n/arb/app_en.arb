@@ -44,6 +44,7 @@
   "settings_cloudSync_encryption_title": "End-to-end encryption",
   "settings_cloudSync_encryption_subtitleOff": "Encrypt all sync data and cloud backups before upload",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Select a cloud provider first",
+  "settings_cloudSync_encryption_statusOff": "Encryption is off",
   "settings_cloudSync_encryption_statusOn": "Encryption is on",
   "settings_cloudSync_encryption_statusOnSubtitle": "Sync data and cloud backups are encrypted before upload",
   "settings_cloudSync_encryption_statusLocked": "Encrypted — passphrase needed",

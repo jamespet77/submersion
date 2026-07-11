@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "Cifrado de extremo a extremo",
   "settings_cloudSync_encryption_subtitleOff": "Cifrar todos los datos de sincronización y las copias en la nube antes de subirlos",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Selecciona primero un proveedor de nube",
+  "settings_cloudSync_encryption_statusOff": "El cifrado está desactivado",
   "settings_cloudSync_encryption_statusOn": "El cifrado está activado",
   "settings_cloudSync_encryption_statusOnSubtitle": "Los datos de sincronización y las copias en la nube se cifran antes de subirse",
   "settings_cloudSync_encryption_statusLocked": "Cifrado — se necesita la frase de acceso",

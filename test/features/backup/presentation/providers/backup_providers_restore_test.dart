@@ -9,6 +9,8 @@ import 'package:submersion/features/backup/data/repositories/backup_preferences.
 import 'package:submersion/features/backup/data/services/backup_service.dart';
 import 'package:submersion/features/backup/domain/entities/backup_record.dart';
 import 'package:submersion/features/backup/domain/entities/restore_mode.dart';
+import 'package:submersion/core/services/sync/crypto/sync_encryption_service.dart'
+    show WrongPassphraseException;
 import 'package:submersion/features/backup/domain/exceptions/backup_encrypted_exception.dart';
 import 'package:submersion/features/backup/presentation/providers/backup_providers.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
@@ -42,8 +44,21 @@ class _RecordingBackupService extends BackupService {
   /// supplied -- modelling the "encrypted artifact needs a passphrase" path.
   bool requireSecret = false;
 
+  /// The only secret that unlocks; any other non-null secret throws
+  /// [WrongPassphraseException], modelling a wrong passphrase on retry.
+  String? correctSecret;
+
   _RecordingBackupService(BackupPreferences prefs)
     : super(dbAdapter: _NoopAdapter(), preferences: prefs);
+
+  void _gate(String? secret) {
+    if (requireSecret && secret == null) {
+      throw const BackupEncryptedException();
+    }
+    if (correctSecret != null && secret != null && secret != correctSecret) {
+      throw const WrongPassphraseException();
+    }
+  }
 
   @override
   Future<BackupValidationResult> validateBackupFile(String filePath) async =>
@@ -58,9 +73,7 @@ class _RecordingBackupService extends BackupService {
     calls.add('restoreFromBackup');
     lastMode = mode;
     lastSecret = encryptionSecret;
-    if (requireSecret && encryptionSecret == null) {
-      throw const BackupEncryptedException();
-    }
+    _gate(encryptionSecret);
   }
 
   @override
@@ -72,9 +85,7 @@ class _RecordingBackupService extends BackupService {
     calls.add('restoreFromFile');
     lastMode = mode;
     lastSecret = encryptionSecret;
-    if (requireSecret && encryptionSecret == null) {
-      throw const BackupEncryptedException();
-    }
+    _gate(encryptionSecret);
   }
 }
 
@@ -201,6 +212,70 @@ void main() {
     expect(
       container.read(backupOperationProvider).status,
       BackupOperationStatus.restoreComplete,
+    );
+  });
+
+  test('restoreFromFilePath rethrows WrongPassphraseException and resets to '
+      'idle so the passphrase dialog can show the inline error', () async {
+    service
+      ..requireSecret = true
+      ..correctSecret = 'right';
+    final container = makeContainer();
+    final tmp = File(
+      '${Directory.systemTemp.path}/notifier_wrongpw_'
+      '${DateTime.now().microsecondsSinceEpoch}.db',
+    );
+    await tmp.writeAsString('db');
+    addTearDown(() async {
+      if (await tmp.exists()) await tmp.delete();
+    });
+
+    // A wrong secret must propagate (not become an error state), so the
+    // dialog stays open with its inline error instead of closing on success.
+    await expectLater(
+      container
+          .read(backupOperationProvider.notifier)
+          .restoreFromFilePath(tmp.path, encryptionSecret: 'wrong'),
+      throwsA(isA<WrongPassphraseException>()),
+    );
+    expect(
+      container.read(backupOperationProvider).status,
+      BackupOperationStatus.idle,
+    );
+
+    // The correct secret then completes the restore.
+    await container
+        .read(backupOperationProvider.notifier)
+        .restoreFromFilePath(tmp.path, encryptionSecret: 'right');
+    expect(
+      container.read(backupOperationProvider).status,
+      BackupOperationStatus.restoreComplete,
+    );
+  });
+
+  test('restoreFromBackup rethrows WrongPassphraseException and resets to '
+      'idle', () async {
+    service
+      ..requireSecret = true
+      ..correctSecret = 'right';
+    final container = makeContainer();
+    final record = BackupRecord(
+      id: 'enc2',
+      filename: 'b.sbe',
+      timestamp: DateTime(2026),
+      sizeBytes: 1,
+      location: BackupLocation.local,
+    );
+
+    await expectLater(
+      container
+          .read(backupOperationProvider.notifier)
+          .restoreFromBackup(record, encryptionSecret: 'wrong'),
+      throwsA(isA<WrongPassphraseException>()),
+    );
+    expect(
+      container.read(backupOperationProvider).status,
+      BackupOperationStatus.idle,
     );
   });
 

@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "End-to-end-versleuteling",
   "settings_cloudSync_encryption_subtitleOff": "Versleutel alle synchronisatiegegevens en cloudback-ups vóór het uploaden",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Selecteer eerst een cloudprovider",
+  "settings_cloudSync_encryption_statusOff": "Versleuteling staat uit",
   "settings_cloudSync_encryption_statusOn": "Versleuteling staat aan",
   "settings_cloudSync_encryption_statusOnSubtitle": "Synchronisatiegegevens en cloudback-ups worden vóór het uploaden versleuteld",
   "settings_cloudSync_encryption_statusLocked": "Versleuteld — wachtwoordzin vereist",

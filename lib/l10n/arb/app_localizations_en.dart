@@ -115,6 +115,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Select a cloud provider first';
 
   @override
+  String get settings_cloudSync_encryption_statusOff => 'Encryption is off';
+
+  @override
   String get settings_cloudSync_encryption_statusOn => 'Encryption is on';
 
   @override

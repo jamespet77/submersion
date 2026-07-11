@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:submersion/features/settings/presentation/providers/sync_providers.dart';
 import 'package:submersion/features/settings/presentation/widgets/encryption_settings_section.dart';
+import 'package:submersion/l10n/l10n_extension.dart';
 
 /// Recovery actions for a wedged Cloud Sync state (issue #509). Reached from
 /// the Cloud Sync page's Advanced section and by tapping the sync-error banner.
@@ -68,27 +69,27 @@ class TroubleshootSyncPage extends ConsumerWidget {
   /// Encryption status: Off / On / Locked. Locked (flag on, no unlocked
   /// session) is tappable and runs the shared unlock flow -- the most
   /// common "sync stopped working" cause on a freshly restored device.
+  /// Uses the same localized strings as the Cloud Sync page.
   Widget _buildEncryptionStatusRow(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
     final enabled = ref.watch(syncPreferencesProvider).syncEncryptionEnabled;
     final session = ref.watch(encryptionKeyNotifierProvider);
     final locked = enabled && session == null;
-    final status = !enabled
-        ? 'Off'
-        : locked
-        ? 'Locked - passphrase needed'
-        : 'On';
+    final String subtitle;
+    if (!enabled) {
+      subtitle = l10n.settings_cloudSync_encryption_statusOff;
+    } else if (locked) {
+      subtitle = l10n.settings_cloudSync_encryption_statusLockedSubtitle;
+    } else {
+      subtitle = l10n.settings_cloudSync_encryption_statusOn;
+    }
     return ListTile(
       leading: Icon(
         locked ? Icons.lock_clock : Icons.lock_outline,
         color: locked ? Theme.of(context).colorScheme.error : null,
       ),
-      title: const Text('End-to-end encryption'),
-      subtitle: Text(
-        locked
-            ? 'Sync is paused until the passphrase is entered on this device. '
-                  'Tap to unlock.'
-            : status,
-      ),
+      title: Text(l10n.settings_cloudSync_encryption_title),
+      subtitle: Text(subtitle),
       onTap: locked ? () => runEncryptionUnlockFlow(context, ref) : null,
     );
   }

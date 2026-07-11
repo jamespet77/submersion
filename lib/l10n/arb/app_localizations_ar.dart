@@ -116,6 +116,9 @@ class AppLocalizationsAr extends AppLocalizations {
       'اختر مزود التخزين السحابي أولاً';
 
   @override
+  String get settings_cloudSync_encryption_statusOff => 'التشفير معطّل';
+
+  @override
   String get settings_cloudSync_encryption_statusOn => 'التشفير مفعّل';
 
   @override

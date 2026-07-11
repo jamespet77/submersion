@@ -114,6 +114,9 @@ class AppLocalizationsHe extends AppLocalizations {
       'בחרו קודם ספק ענן';
 
   @override
+  String get settings_cloudSync_encryption_statusOff => 'ההצפנה כבויה';
+
+  @override
   String get settings_cloudSync_encryption_statusOn => 'ההצפנה פועלת';
 
   @override

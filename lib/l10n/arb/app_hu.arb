@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "Végpontok közötti titkosítás",
   "settings_cloudSync_encryption_subtitleOff": "Minden szinkronizálási adat és felhőmentés titkosítása feltöltés előtt",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Előbb válasszon felhőszolgáltatót",
+  "settings_cloudSync_encryption_statusOff": "A titkosítás ki van kapcsolva",
   "settings_cloudSync_encryption_statusOn": "A titkosítás be van kapcsolva",
   "settings_cloudSync_encryption_statusOnSubtitle": "A szinkronizálási adatok és a felhőmentések feltöltés előtt titkosítva lesznek",
   "settings_cloudSync_encryption_statusLocked": "Titkosítva — jelmondat szükséges",

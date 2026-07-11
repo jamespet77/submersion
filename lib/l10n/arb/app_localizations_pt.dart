@@ -117,6 +117,10 @@ class AppLocalizationsPt extends AppLocalizations {
       'Selecione primeiro um provedor de nuvem';
 
   @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'A criptografia está desativada';
+
+  @override
   String get settings_cloudSync_encryption_statusOn =>
       'A criptografia está ativada';
 

@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "Crittografia end-to-end",
   "settings_cloudSync_encryption_subtitleOff": "Cripta tutti i dati di sincronizzazione e i backup cloud prima del caricamento",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Seleziona prima un provider cloud",
+  "settings_cloudSync_encryption_statusOff": "La crittografia è disattivata",
   "settings_cloudSync_encryption_statusOn": "La crittografia è attiva",
   "settings_cloudSync_encryption_statusOnSubtitle": "I dati di sincronizzazione e i backup cloud vengono criptati prima del caricamento",
   "settings_cloudSync_encryption_statusLocked": "Criptato — serve la passphrase",

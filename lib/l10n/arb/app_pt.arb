@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "Criptografia de ponta a ponta",
   "settings_cloudSync_encryption_subtitleOff": "Criptografar todos os dados de sincronização e backups na nuvem antes do envio",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Selecione primeiro um provedor de nuvem",
+  "settings_cloudSync_encryption_statusOff": "A criptografia está desativada",
   "settings_cloudSync_encryption_statusOn": "A criptografia está ativada",
   "settings_cloudSync_encryption_statusOnSubtitle": "Dados de sincronização e backups na nuvem são criptografados antes do envio",
   "settings_cloudSync_encryption_statusLocked": "Criptografado — senha necessária",

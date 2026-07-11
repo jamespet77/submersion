@@ -116,6 +116,10 @@ class AppLocalizationsDe extends AppLocalizations {
       'Zuerst einen Cloud-Anbieter auswählen';
 
   @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'Verschlüsselung ist aus';
+
+  @override
   String get settings_cloudSync_encryption_statusOn =>
       'Verschlüsselung ist aktiv';
 

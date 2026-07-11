@@ -302,6 +302,12 @@ abstract class AppLocalizations {
   /// **'Select a cloud provider first'**
   String get settings_cloudSync_encryption_subtitleNeedsProvider;
 
+  /// No description provided for @settings_cloudSync_encryption_statusOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Encryption is off'**
+  String get settings_cloudSync_encryption_statusOff;
+
   /// No description provided for @settings_cloudSync_encryption_statusOn.
   ///
   /// In en, this message translates to:

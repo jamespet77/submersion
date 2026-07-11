@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "التشفير من طرف إلى طرف",
   "settings_cloudSync_encryption_subtitleOff": "تشفير جميع بيانات المزامنة والنسخ الاحتياطية السحابية قبل الرفع",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "اختر مزود التخزين السحابي أولاً",
+  "settings_cloudSync_encryption_statusOff": "التشفير معطّل",
   "settings_cloudSync_encryption_statusOn": "التشفير مفعّل",
   "settings_cloudSync_encryption_statusOnSubtitle": "يتم تشفير بيانات المزامنة والنسخ الاحتياطية السحابية قبل الرفع",
   "settings_cloudSync_encryption_statusLocked": "مشفّر — مطلوب عبارة المرور",

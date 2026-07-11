@@ -117,6 +117,10 @@ class AppLocalizationsHu extends AppLocalizations {
       'Előbb válasszon felhőszolgáltatót';
 
   @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'A titkosítás ki van kapcsolva';
+
+  @override
   String get settings_cloudSync_encryption_statusOn =>
       'A titkosítás be van kapcsolva';
 

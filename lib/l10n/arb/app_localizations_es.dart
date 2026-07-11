@@ -116,6 +116,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Selecciona primero un proveedor de nube';
 
   @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'El cifrado está desactivado';
+
+  @override
   String get settings_cloudSync_encryption_statusOn =>
       'El cifrado está activado';
 

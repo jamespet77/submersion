@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "הצפנה מקצה לקצה",
   "settings_cloudSync_encryption_subtitleOff": "הצפנת כל נתוני הסנכרון והגיבויים בענן לפני ההעלאה",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "בחרו קודם ספק ענן",
+  "settings_cloudSync_encryption_statusOff": "ההצפנה כבויה",
   "settings_cloudSync_encryption_statusOn": "ההצפנה פועלת",
   "settings_cloudSync_encryption_statusOnSubtitle": "נתוני סנכרון וגיבויים בענן מוצפנים לפני ההעלאה",
   "settings_cloudSync_encryption_statusLocked": "מוצפן — נדרש משפט סיסמה",

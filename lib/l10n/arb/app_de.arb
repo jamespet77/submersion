@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "Ende-zu-Ende-Verschlüsselung",
   "settings_cloudSync_encryption_subtitleOff": "Alle Sync-Daten und Cloud-Backups vor dem Hochladen verschlüsseln",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Zuerst einen Cloud-Anbieter auswählen",
+  "settings_cloudSync_encryption_statusOff": "Verschlüsselung ist aus",
   "settings_cloudSync_encryption_statusOn": "Verschlüsselung ist aktiv",
   "settings_cloudSync_encryption_statusOnSubtitle": "Sync-Daten und Cloud-Backups werden vor dem Hochladen verschlüsselt",
   "settings_cloudSync_encryption_statusLocked": "Verschlüsselt — Passphrase erforderlich",

@@ -31,6 +31,7 @@
   "settings_cloudSync_encryption_title": "Chiffrement de bout en bout",
   "settings_cloudSync_encryption_subtitleOff": "Chiffrer toutes les données de synchronisation et les sauvegardes cloud avant l'envoi",
   "settings_cloudSync_encryption_subtitleNeedsProvider": "Sélectionnez d'abord un fournisseur cloud",
+  "settings_cloudSync_encryption_statusOff": "Le chiffrement est désactivé",
   "settings_cloudSync_encryption_statusOn": "Le chiffrement est activé",
   "settings_cloudSync_encryption_statusOnSubtitle": "Les données de synchronisation et les sauvegardes cloud sont chiffrées avant l'envoi",
   "settings_cloudSync_encryption_statusLocked": "Chiffré — phrase secrète requise",

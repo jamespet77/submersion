@@ -109,6 +109,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_cloudSync_encryption_subtitleNeedsProvider => '请先选择云服务商';
 
   @override
+  String get settings_cloudSync_encryption_statusOff => '加密已关闭';
+
+  @override
   String get settings_cloudSync_encryption_statusOn => '加密已开启';
 
   @override

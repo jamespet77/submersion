@@ -115,6 +115,10 @@ class AppLocalizationsNl extends AppLocalizations {
       'Selecteer eerst een cloudprovider';
 
   @override
+  String get settings_cloudSync_encryption_statusOff =>
+      'Versleuteling staat uit';
+
+  @override
   String get settings_cloudSync_encryption_statusOn =>
       'Versleuteling staat aan';
 
