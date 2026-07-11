@@ -6,6 +6,7 @@ import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_planner/presentation/providers/dive_planner_providers.dart';
 import 'package:submersion/features/divers/domain/entities/diver_weight_entry.dart';
+import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_weight_entry_providers.dart';
 import 'package:submersion/features/equipment/domain/entities/equipment_item.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
@@ -90,6 +91,49 @@ void main() {
     expect(feature.hasUserSpec, isTrue);
     expect(feature.dryMassKg, 2.5);
   });
+
+  test('unknownGearFeature keeps deleted-gear dives in the fit', () async {
+    final ghostObservations = [
+      for (final o in observations())
+        WeightObservation(
+          diveId: o.diveId,
+          diveDateTime: o.diveDateTime,
+          waterType: o.waterType,
+          carriedKg: o.carriedKg,
+          equipmentIds: const ['ghost-id'],
+          tanks: o.tanks,
+          feedback: o.feedback,
+        ),
+    ];
+    final c2 = ProviderContainer(
+      overrides: [
+        weightObservationsProvider.overrideWith(
+          (ref) async => ghostObservations,
+        ),
+        allEquipmentProvider.overrideWith((ref) async => const [suitItem]),
+        latestDiverWeightProvider.overrideWith((ref) async => entry),
+      ],
+    );
+    addTearDown(c2.dispose);
+    final model = await c2.read(weightCalibrationProvider.future);
+    expect(model.coefficientsById.keys, contains('ghost-id'));
+    expect(model.supportingDives, 12);
+  });
+
+  test(
+    'weightObservationsProvider returns empty without an active diver',
+    () async {
+      final base = await getBaseOverrides();
+      final c = ProviderContainer(
+        overrides: [
+          ...base.cast<Override>(),
+          validatedCurrentDiverIdProvider.overrideWith((ref) async => null),
+        ],
+      );
+      addTearDown(c.dispose);
+      expect(await c.read(weightObservationsProvider.future), isEmpty);
+    },
+  );
 
   test('weightCalibrationProvider fits a usable model', () async {
     final c = await container();

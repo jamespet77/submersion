@@ -118,6 +118,41 @@ void main() {
     },
   );
 
+  test(
+    'duplicate weight types accumulate and null tank material survives',
+    () async {
+      await diveRepository.createDive(
+        Dive(
+          id: '',
+          diverId: diverId,
+          dateTime: DateTime(2026, 1, 1),
+          weights: const [
+            DiveWeight(
+              id: 'a',
+              diveId: '',
+              weightType: WeightType.belt,
+              amountKg: 3.0,
+            ),
+            DiveWeight(
+              id: 'b',
+              diveId: '',
+              weightType: WeightType.belt,
+              amountKg: 2.0,
+            ),
+          ],
+          tanks: const [DiveTank(id: 't1', volume: 12.0)],
+        ),
+      );
+      final observation = (await repository.observationsForDiver(
+        diverId,
+      )).single;
+      expect(observation.placement, {'belt': 5.0});
+      expect(observation.carriedKg, 5.0);
+      expect(observation.waterType, isNull);
+      expect(observation.tanks.single.material, isNull);
+    },
+  );
+
   test('dives of other divers are excluded', () async {
     final db = DatabaseService.instance.database;
     await db.customStatement(

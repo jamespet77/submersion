@@ -60,6 +60,38 @@ void main() {
     expect(entries.single.weightKg, 82.5);
   });
 
+  testWidgets('dialog cancel adds nothing; height renders in the subtitle', (
+    tester,
+  ) async {
+    final repository = DiverWeightEntryRepository();
+    final now = DateTime(2026, 6, 1);
+    await repository.createEntry(
+      DiverWeightEntry(
+        id: '',
+        diverId: diverId,
+        measuredAt: now,
+        weightKg: 80.0,
+        heightCm: 180.0,
+        createdAt: now,
+        updatedAt: now,
+      ),
+    );
+    await pumpPage(tester);
+    expect(find.textContaining('180 cm'), findsOneWidget);
+
+    await tester.tap(find.text('Add measurement'));
+    await tester.pumpAndSettle();
+    // Exercise the date picker row, then back out of both dialogs.
+    await tester.tap(find.byIcon(Icons.calendar_today));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    expect(await repository.getEntriesForDiver(diverId), hasLength(1));
+  });
+
   testWidgets('deletes a measurement from the list', (tester) async {
     final repository = DiverWeightEntryRepository();
     final now = DateTime(2026, 6, 1);

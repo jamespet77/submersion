@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/buoyancy/weight_observation.dart';
@@ -8,7 +9,9 @@ import 'package:submersion/features/dive_planner/presentation/widgets/plan_gear_
 import 'package:submersion/features/divers/domain/entities/diver_weight_entry.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_weight_entry_providers.dart';
 import 'package:submersion/features/equipment/domain/entities/equipment_item.dart';
+import 'package:submersion/features/equipment/domain/entities/equipment_set.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
+import 'package:submersion/features/equipment/presentation/providers/equipment_set_providers.dart';
 import 'package:submersion/features/weight_planner/presentation/providers/weight_planner_providers.dart';
 
 import '../../../helpers/mock_providers.dart';
@@ -93,6 +96,56 @@ void main() {
     expect(state.plannedWeightKg, isNotNull);
     expect(state.plannedWeightKg, greaterThan(4.0));
     expect(find.textContaining('Planned:'), findsOneWidget);
+  });
+
+  testWidgets('gear picker and set picker add items; chip delete removes '
+      'them', (tester) async {
+    final base = await getBaseOverrides();
+    final set = EquipmentSet(
+      id: 'set-1',
+      name: 'Tropical rig',
+      description: '',
+      equipmentIds: const ['suit'],
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
+    await tester.pumpWidget(
+      testApp(
+        overrides: [
+          ...base,
+          weightObservationsProvider.overrideWith((ref) async => const []),
+          allEquipmentProvider.overrideWith((ref) async => const [suitItem]),
+          latestDiverWeightProvider.overrideWith((ref) async => null),
+          equipmentSetsProvider.overrideWith((ref) async => [set]),
+          equipmentSetWithItemsProvider(
+            'set-1',
+          ).overrideWith((ref) async => set.copyWith(items: const [suitItem])),
+        ],
+        child: const PlanGearWeightsSection(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Add via the gear picker.
+    await tester.tap(find.byTooltip('Add gear'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('5mm Suit').last);
+    await tester.pumpAndSettle();
+    expect(find.byType(InputChip), findsOneWidget);
+
+    // Remove via the chip's delete icon (its only Icon descendant).
+    await tester.tap(
+      find.descendant(of: find.byType(InputChip), matching: find.byType(Icon)),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byType(InputChip), findsNothing);
+
+    // Add via the set picker.
+    await tester.tap(find.byTooltip('Use set'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tropical rig'));
+    await tester.pumpAndSettle();
+    expect(find.byType(InputChip), findsOneWidget);
   });
 
   testWidgets('shows the empty invitation without gear', (tester) async {

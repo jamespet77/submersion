@@ -155,6 +155,66 @@ void main() {
       );
     });
 
+    test(
+      'deleteRecord removes a weight entry (tombstone apply path)',
+      () async {
+        final serializer = SyncDataSerializer();
+        await serializer.upsertRecord(
+          'diverWeightEntries',
+          weightEntryRow('w1', hlc: hlcAt(1000, 'dev-a')),
+        );
+        await serializer.deleteRecord('diverWeightEntries', 'w1');
+        expect(
+          await serializer.recordIdsFor('diverWeightEntries'),
+          isNot(contains('w1')),
+        );
+      },
+    );
+
+    test('incremental export: weight entries filter by their own hlc, plan '
+        'equipment keys off the parent plan hlc', () async {
+      final serializer = SyncDataSerializer();
+      final db = DatabaseService.instance.database;
+      await serializer.upsertRecord(
+        'diverWeightEntries',
+        weightEntryRow('w-old', hlc: hlcAt(1000, 'dev-a')),
+      );
+      await serializer.upsertRecord(
+        'diverWeightEntries',
+        weightEntryRow('w-new', hlc: hlcAt(9000, 'dev-a')),
+      );
+      await serializer.upsertRecord('divePlanEquipment', planEquipmentRow());
+
+      // Parent plan untouched since the watermark: junction stays out.
+      await db.customStatement(
+        "UPDATE dive_plans SET hlc = '${hlcAt(1000, 'dev-a')}' "
+        "WHERE id = 'p1'",
+      );
+      var changeset = await serializer.exportChangeset(
+        deviceId: 'dev-a',
+        hlcWatermark: hlcAt(5000, 'dev-a'),
+        deletions: const [],
+      );
+      final entryIds = changeset.data.diverWeightEntries
+          .map((r) => r['id'])
+          .toSet();
+      expect(entryIds, contains('w-new'));
+      expect(entryIds, isNot(contains('w-old')));
+      expect(changeset.data.divePlanEquipment, isEmpty);
+
+      // Parent plan modified after the watermark: junction rides along.
+      await db.customStatement(
+        "UPDATE dive_plans SET hlc = '${hlcAt(9000, 'dev-a')}' "
+        "WHERE id = 'p1'",
+      );
+      changeset = await serializer.exportChangeset(
+        deviceId: 'dev-a',
+        hlcWatermark: hlcAt(5000, 'dev-a'),
+        deletions: const [],
+      );
+      expect(changeset.data.divePlanEquipment, hasLength(1));
+    });
+
     test('deleteAllRecords clears both tables', () async {
       final serializer = SyncDataSerializer();
       await serializer.upsertRecord(

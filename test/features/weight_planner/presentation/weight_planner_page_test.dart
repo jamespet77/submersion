@@ -3,10 +3,15 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/buoyancy/weight_observation.dart';
 import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/core/constants/tank_presets.dart';
+import 'package:submersion/core/services/database_service.dart';
+import 'package:submersion/features/divers/data/repositories/diver_weight_entry_repository.dart';
 import 'package:submersion/features/divers/domain/entities/diver_weight_entry.dart';
+import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_weight_entry_providers.dart';
 import 'package:submersion/features/equipment/domain/entities/equipment_item.dart';
+import 'package:submersion/features/equipment/domain/entities/equipment_set.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
+import 'package:submersion/features/equipment/presentation/providers/equipment_set_providers.dart';
 import 'package:submersion/features/tank_presets/domain/entities/tank_preset_entity.dart';
 import 'package:submersion/features/tank_presets/presentation/providers/tank_preset_providers.dart';
 import 'package:submersion/features/weight_planner/presentation/pages/weight_planner_page.dart';
@@ -14,6 +19,7 @@ import 'package:submersion/features/weight_planner/presentation/providers/weight
 
 import '../../../helpers/mock_providers.dart';
 import '../../../helpers/test_app.dart';
+import '../../../helpers/test_database.dart';
 
 void main() {
   const suitItem = EquipmentItem(
@@ -56,7 +62,11 @@ void main() {
       ),
   ];
 
-  Future<void> pumpPage(WidgetTester tester) async {
+  Future<void> pumpPage(
+    WidgetTester tester, {
+    List<dynamic> extraOverrides = const [],
+    DiverWeightEntry? latestWeight,
+  }) async {
     final base = await getBaseOverrides();
     await tester.pumpWidget(
       testApp(
@@ -66,10 +76,16 @@ void main() {
           allEquipmentProvider.overrideWith(
             (ref) async => const [suitItem, bcdItem],
           ),
-          latestDiverWeightProvider.overrideWith((ref) async => entry),
-          tankPresetsProvider.overrideWith(
-            (ref) async => [TankPresetEntity.fromBuiltIn(TankPresets.al80)],
+          latestDiverWeightProvider.overrideWith(
+            (ref) async => latestWeight ?? entry,
           ),
+          tankPresetsProvider.overrideWith(
+            (ref) async => [
+              TankPresetEntity.fromBuiltIn(TankPresets.al80),
+              TankPresetEntity.fromBuiltIn(TankPresets.steel12),
+            ],
+          ),
+          ...extraOverrides,
         ],
         child: const WeightPlannerPage(),
       ),
@@ -113,5 +129,99 @@ void main() {
 
     // Let the 4-second delta chip timer elapse.
     await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('water switch and tank add/remove/change update the '
+      'prediction', (tester) async {
+    await pumpPage(tester);
+    final salt = predictedText(tester);
+
+    await tester.tap(find.text('Fresh Water'));
+    await tester.pumpAndSettle();
+    expect(predictedText(tester), isNot(salt));
+    await tester.pump(const Duration(seconds: 5));
+
+    // Add a second tank, swap it to steel, then remove it.
+    await tester.tap(find.text('Add tank'));
+    await tester.pumpAndSettle();
+    expect(
+      find.byType(DropdownButtonFormField<TankPresetEntity>),
+      findsNWidgets(2),
+    );
+
+    await tester.tap(
+      find.byType(DropdownButtonFormField<TankPresetEntity>).last,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Steel 12L').last);
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds: 5));
+
+    await tester.tap(find.byIcon(Icons.delete_outline).last);
+    await tester.pumpAndSettle();
+    expect(
+      find.byType(DropdownButtonFormField<TankPresetEntity>),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('use set adds all set items as chips', (tester) async {
+    final set = EquipmentSet(
+      id: 'set-1',
+      name: 'Tropical rig',
+      description: '',
+      equipmentIds: const ['suit', 'bcd'],
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 1, 1),
+    );
+    await pumpPage(
+      tester,
+      extraOverrides: [
+        equipmentSetsProvider.overrideWith((ref) async => [set]),
+        equipmentSetWithItemsProvider('set-1').overrideWith(
+          (ref) async => set.copyWith(items: const [suitItem, bcdItem]),
+        ),
+      ],
+    );
+
+    await tester.tap(find.text('Use set'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Tropical rig'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(InputChip), findsNWidgets(2));
+    await tester.pump(const Duration(seconds: 5));
+  });
+
+  testWidgets('save-to-profile writes a new weight entry', (tester) async {
+    await setUpTestDatabase();
+    addTearDown(tearDownTestDatabase);
+    final db = DatabaseService.instance.database;
+    await db.customStatement(
+      "INSERT INTO divers (id, name, created_at, updated_at) "
+      "VALUES ('diver-1', 'Eric', 1000, 1000)",
+    );
+
+    await pumpPage(
+      tester,
+      latestWeight: null,
+      extraOverrides: [
+        validatedCurrentDiverIdProvider.overrideWith((ref) async => 'diver-1'),
+      ],
+    );
+
+    await tester.enterText(
+      find.widgetWithText(TextField, 'Body Weight (optional)'),
+      '85',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Save weight to profile'));
+    await tester.pumpAndSettle();
+
+    final entries = await DiverWeightEntryRepository().getEntriesForDiver(
+      'diver-1',
+    );
+    expect(entries.single.weightKg, 85.0);
   });
 }

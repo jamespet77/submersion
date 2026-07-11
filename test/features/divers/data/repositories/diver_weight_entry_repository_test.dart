@@ -114,6 +114,22 @@ void main() {
     expect(entries.single.heightCm, 181.0);
   });
 
+  test('createEntry preserves an explicit id', () async {
+    final created = await repository.createEntry(
+      entry(DateTime(2026, 1, 1), 82.0).copyWith(id: 'fixed-id'),
+    );
+    expect(created.id, 'fixed-id');
+  });
+
+  test('createEntry surfaces FK violations for unknown divers', () async {
+    expect(
+      () => repository.createEntry(
+        entry(DateTime(2026, 1, 1), 82.0).copyWith(diverId: 'nobody'),
+      ),
+      throwsA(anything),
+    );
+  });
+
   test('deleteEntry removes the row and writes a deletion tombstone', () async {
     final created = await repository.createEntry(
       entry(DateTime(2026, 1, 1), 82.0),
