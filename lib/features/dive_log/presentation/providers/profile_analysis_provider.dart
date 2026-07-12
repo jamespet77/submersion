@@ -913,12 +913,25 @@ Future<ProfileAnalysis?> computeAnalysisForProfile(
     // Compute cumulative OTU from earlier same-day dives
     final startOtu = await _computeResidualOtu(ref, diveId);
 
-    final gasSegments = dive.diveMode == DiveMode.oc
-        ? buildProfileGasSegments(
-            dive,
-            await repository.getGasSwitchesForDive(diveId),
-          )
-        : null;
+    // Resolve rebreather loop ppO2 once and reuse it for the analysis
+    // (CNS/OTU and CCR inert-gas loading) and the display overlay so they
+    // always agree.
+    final rebreatherPpO2 = dive.diveMode == DiveMode.oc
+        ? null
+        : resolveRebreatherPpO2(profile);
+    final gasSegments = switch (dive.diveMode) {
+      DiveMode.oc => buildProfileGasSegments(
+        dive,
+        await repository.getGasSwitchesForDive(diveId),
+      ),
+      DiveMode.ccr => buildCcrProfileGasSegments(
+        timestamps: timestamps,
+        loopPpO2Curve: rebreatherPpO2?.curve,
+        diluentMix: resolveCcrDiluentMix(dive),
+        fallbackSetpoint: dive.setpointHigh ?? dive.setpointLow,
+      ),
+      DiveMode.scr => null,
+    };
     final ascentMaxPpO2 = ref.watch(ppO2MaxDecoProvider);
     final ascentGases = dive.diveMode == DiveMode.oc
         ? buildAvailableGases(
@@ -927,11 +940,6 @@ Future<ProfileAnalysis?> computeAnalysisForProfile(
             gasSet: ref.watch(ascentGasSetProvider),
           )
         : null;
-    // Resolve rebreather loop ppO2 once and reuse it for both the analysis
-    // (CNS/OTU) and the display overlay so the two always agree.
-    final rebreatherPpO2 = dive.diveMode == DiveMode.oc
-        ? null
-        : resolveRebreatherPpO2(profile);
     // Run Buhlmann analysis on a background isolate to keep UI responsive
     _log.debug(
       'Analyzing profile for dive $diveId with ${depths.length} points, '
@@ -1419,6 +1427,15 @@ final diveProfileAnalysisProvider = Provider.family<ProfileAnalysis?, Dive>((
         ? null
         : resolveRebreatherPpO2(dive.profile);
 
+    final gasSegments = dive.diveMode == DiveMode.ccr
+        ? buildCcrProfileGasSegments(
+            timestamps: timestamps,
+            loopPpO2Curve: rebreatherPpO2?.curve,
+            diluentMix: resolveCcrDiluentMix(dive),
+            fallbackSetpoint: dive.setpointHigh ?? dive.setpointLow,
+          )
+        : null;
+
     final ascentGases = dive.diveMode == DiveMode.oc
         ? buildAvailableGases(
             dive,
@@ -1450,6 +1467,7 @@ final diveProfileAnalysisProvider = Provider.family<ProfileAnalysis?, Dive>((
       scrInjectionRate: dive.scrInjectionRate,
       scrSupplyO2Percent: dive.diluentGas?.o2,
       scrVo2: dive.assumedVo2 ?? 1.3,
+      gasSegments: gasSegments,
       ascentGasPlan: ascentGasPlan,
       rebreatherPpO2Curve: rebreatherPpO2?.curve,
     );

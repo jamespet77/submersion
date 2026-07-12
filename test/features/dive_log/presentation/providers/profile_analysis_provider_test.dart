@@ -94,12 +94,16 @@ Dive makeDive({
   DateTime? dateTime,
   List<DiveTank> tanks = const [],
   GasMix? diluentGas,
+  DiveMode diveMode = DiveMode.oc,
+  List<DiveProfilePoint> profile = const [],
 }) {
   return Dive(
     id: id,
     dateTime: dateTime ?? DateTime.utc(2026, 7, 12),
     tanks: tanks,
     diluentGas: diluentGas,
+    diveMode: diveMode,
+    profile: profile,
   );
 }
 
@@ -1192,5 +1196,57 @@ void main() {
       final result = container.read(diveProfileAnalysisProvider(dive));
       expect(result, isNull);
     });
+
+    test(
+      'CCR dive analysis loads on the loop, not the first tank (issue #455)',
+      () async {
+        // 44 m square profile at setpoint 1.3, air diluent, EAN40 first tank.
+        final profile = [
+          for (final (t, d) in [
+            (0, 0.0),
+            (180, 44.0),
+            (1200, 44.0),
+            (2400, 44.0),
+            (2700, 0.0),
+          ])
+            DiveProfilePoint(timestamp: t, depth: d, setpoint: 1.3),
+        ];
+        final ccrDive = makeDive(
+          diveMode: DiveMode.ccr,
+          profile: profile,
+          tanks: const [
+            DiveTank(id: 'bg', gasMix: GasMix(o2: 40), role: TankRole.backGas),
+            DiveTank(id: 'dil', gasMix: GasMix(), role: TankRole.diluent),
+          ],
+        );
+        // Identical dive analyzed as if the segments were absent (legacy
+        // model): first tank EAN40 open circuit.
+        final legacyDive = makeDive(
+          diveMode: DiveMode.oc,
+          profile: profile,
+          tanks: const [
+            DiveTank(id: 'bg', gasMix: GasMix(o2: 40), role: TankRole.backGas),
+            DiveTank(id: 'dil', gasMix: GasMix(), role: TankRole.diluent),
+          ],
+        );
+
+        final container = ProviderContainer(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(_prefs),
+            diverRepositoryProvider.overrideWithValue(_FakeDiverRepository()),
+            settingsProvider.overrideWith((ref) => _SettingsNotifier(ref)),
+          ],
+        );
+        addTearDown(container.dispose);
+
+        final ccr = container.read(diveProfileAnalysisProvider(ccrDive));
+        final legacy = container.read(diveProfileAnalysisProvider(legacyDive));
+
+        expect(ccr, isNotNull);
+        // Loop at 1.3 over air diluent at 44 m loads more N2 than OC EAN40:
+        // the CCR TTS at the last bottom sample exceeds the legacy value.
+        expect(ccr!.ttsCurve![3], greaterThan(legacy!.ttsCurve![3]));
+      },
+    );
   });
 }
