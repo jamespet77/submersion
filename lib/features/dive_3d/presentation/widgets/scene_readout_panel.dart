@@ -25,12 +25,15 @@ class SceneReadoutPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final units = UnitFormatter(ref.watch(settingsProvider));
     final lookup = ProfileLookup(data.times);
+    // Cache the nullable-depth view once: the builder below runs at frame rate
+    // during playback, so allocating a CastList per tick is avoidable.
+    final nullableDepths = data.depths.cast<double?>();
     return ValueListenableBuilder<double>(
       valueListenable: position,
       builder: (context, value, _) {
         final t = value * data.durationSeconds;
         double? at(List<double?> series) => lookup.interpolate(series, t);
-        final depth = at(data.depths.cast<double?>());
+        final depth = at(nullableDepths);
         final temp = at(data.temperatures);
         final ascent = at(data.ascentRates);
         final ppO2 = at(data.ppO2s);
