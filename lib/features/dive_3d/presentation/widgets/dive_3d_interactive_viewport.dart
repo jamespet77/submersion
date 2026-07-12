@@ -49,7 +49,9 @@ class _Dive3dInteractiveViewportState extends State<Dive3dInteractiveViewport> {
 
   void _onPanUpdate(DragUpdateDetails details) {
     setState(() {
-      _yaw -= details.delta.dx * 0.4;
+      // Drag follows the object: dragging right spins it clockwise (yaw up),
+      // dragging down tilts it toward the viewer.
+      _yaw += details.delta.dx * 0.4;
       _pitch = (_pitch + details.delta.dy * 0.4).clamp(-80.0, 80.0);
     });
   }

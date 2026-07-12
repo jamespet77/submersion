@@ -101,7 +101,7 @@ void main() {
     );
     await tester.pump();
     final orbited = scenePainterOf(tester);
-    expect(orbited.yawDegrees, lessThan(-32)); // dragged right -> yaw down
+    expect(orbited.yawDegrees, greaterThan(-32)); // dragged right -> yaw up
     expect(orbited.pitchDegrees, lessThan(22));
 
     await tester.tap(find.byType(Dive3dInteractiveViewport));
