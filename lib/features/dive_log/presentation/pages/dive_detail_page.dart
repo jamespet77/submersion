@@ -29,7 +29,6 @@ import 'package:submersion/features/dive_log/data/services/profile_markers_servi
 import 'package:submersion/features/dive_log/domain/entities/dive_data_source.dart';
 import 'package:submersion/features/dive_3d/presentation/pages/dive_3d_page.dart';
 import 'package:submersion/features/dive_3d/presentation/pages/spatial_site_page.dart';
-import 'package:submersion/features/dive_3d/presentation/widgets/dive_3d_preview_card.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive_computer.dart';
 import 'package:submersion/features/dive_log/presentation/providers/dive_computer_providers.dart';
@@ -492,11 +491,8 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
             ),
             const SizedBox(height: 24),
             // Fixed: Dive Profile Chart
-            if (dive.profile.isNotEmpty) ...[
+            if (dive.profile.isNotEmpty)
               _buildProfileSection(context, ref, dive),
-              const SizedBox(height: 16),
-              Dive3dPreviewCard(diveId: dive.id),
-            ],
             // Configurable sections in user-defined order
             for (final section in settings.diveDetailSections)
               if (section.visible) ...builders[section.id]?.call() ?? [],
