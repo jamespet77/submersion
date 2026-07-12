@@ -18,7 +18,6 @@ import 'package:submersion/l10n/l10n_extension.dart';
 /// scrub notifier and playback controller.
 class CompareProfile3dView extends ConsumerStatefulWidget {
   final AsyncValue<List<ComparisonProfile>> profiles;
-  final String title;
   final CompareLayout initialLayout;
 
   /// Optional control placed before the layout toggle (e.g. the Dive3dPage
@@ -28,7 +27,6 @@ class CompareProfile3dView extends ConsumerStatefulWidget {
   const CompareProfile3dView({
     super.key,
     required this.profiles,
-    required this.title,
     this.initialLayout = CompareLayout.sideBySide,
     this.leading,
   });

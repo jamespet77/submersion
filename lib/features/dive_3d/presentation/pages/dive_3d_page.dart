@@ -125,7 +125,6 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
   Widget _buildComputersBody() {
     return CompareProfile3dView(
       profiles: ref.watch(computerComparisonProfilesProvider(widget.diveId)),
-      title: context.l10n.dive3d_compare_computers_title,
       initialLayout: CompareLayout.overlay,
       leading: _sceneSwitcher(),
     );

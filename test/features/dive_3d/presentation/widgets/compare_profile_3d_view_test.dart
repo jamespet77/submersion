@@ -32,7 +32,6 @@ void main() {
             prof('a', const Color(0xFF00D4FF)),
             prof('b', const Color(0xFFFF9500)),
           ]),
-          title: 'Compare',
           initialLayout: CompareLayout.overlay,
         ),
       ),
@@ -65,7 +64,6 @@ void main() {
         overrides: overrides,
         child: CompareProfile3dView(
           profiles: AsyncValue.data([prof('a', const Color(0xFF00D4FF))]),
-          title: 'Compare',
         ),
       ),
     );

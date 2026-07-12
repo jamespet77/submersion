@@ -22,7 +22,6 @@ class CompareDives3dPage extends ConsumerWidget {
       appBar: AppBar(title: Text(context.l10n.dive3d_compare_dives_title)),
       body: CompareProfile3dView(
         profiles: profiles,
-        title: context.l10n.dive3d_compare_dives_title,
         initialLayout: CompareLayout.sideBySide,
       ),
     );
