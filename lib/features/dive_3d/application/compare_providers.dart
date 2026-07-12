@@ -18,8 +18,8 @@ const _neutralLabels = SourceNameLabels(
 
 /// The dive-computer sources of a single dive, as comparison profiles. The
 /// primary source is placed first so it is the reference (index 0). Sources
-/// without usable depth samples are skipped; the list is capped for
-/// legibility.
+/// without usable depth samples are skipped. The full comparable set is
+/// returned; the view caps how many it renders and notes the remainder.
 final computerComparisonProfilesProvider =
     FutureProvider.family<List<ComparisonProfile>, String>((ref, diveId) async {
       final sources = await ref.watch(diveDataSourcesProvider(diveId).future);
@@ -52,9 +52,7 @@ final computerComparisonProfilesProvider =
           ),
         );
       }
-      return out.length > kMaxComparisonProfiles
-          ? out.sublist(0, kMaxComparisonProfiles)
-          : out;
+      return out;
     });
 
 /// Equatable key for a fixed, ordered set of dive ids, so the multi-dive
@@ -82,12 +80,12 @@ class DiveIdSet {
 
 /// Several dives' primary profiles, as comparison profiles in selection order.
 /// The first dive is the reference (index 0); dives without a usable profile
-/// (manual logs) are skipped; the list is capped for legibility.
+/// (manual logs) are skipped. The full comparable set is returned; the view
+/// caps how many it renders and notes the remainder.
 final diveComparisonProfilesProvider =
     FutureProvider.family<List<ComparisonProfile>, DiveIdSet>((ref, key) async {
       final out = <ComparisonProfile>[];
       for (final diveId in key.ids) {
-        if (out.length >= kMaxComparisonProfiles) break;
         final profilesBySource = await ref.watch(
           sourceProfilesProvider(diveId).future,
         );
