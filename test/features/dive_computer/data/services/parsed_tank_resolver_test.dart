@@ -12,6 +12,7 @@ void main() {
       List<pigeon.ProfileSample> samples = const [],
       List<pigeon.TankInfo> tanks = const [],
       List<pigeon.GasMix> gasMixes = const [],
+      String? diveMode,
     }) {
       return pigeon.ParsedDive(
         fingerprint: 'test',
@@ -27,6 +28,7 @@ void main() {
         samples: samples,
         tanks: tanks,
         gasMixes: gasMixes,
+        diveMode: diveMode,
         events: const [],
       );
     }
@@ -39,6 +41,20 @@ void main() {
           tankIndex: tankIndex,
           gasMixIndex: gasMixIndex,
         );
+
+    test('gauge-mode parsed dive yields no synthesized tanks or switches', () {
+      // Gauge dives log depth+time only. Even when the computer reports a gas
+      // mix (which would otherwise synthesize a pressureless air cylinder),
+      // a gauge dive must import with no tanks and no gas switches.
+      final parsed = makeParsedDive(
+        diveMode: 'gauge',
+        gasMixes: [pigeon.GasMix(index: 0, o2Percent: 21.0, hePercent: 0.0)],
+        samples: [sample(0, 0, 0), sample(60, 0, 0)],
+        tanks: const [],
+      );
+      expect(resolveParsedTanks(parsed), isEmpty);
+      expect(resolveGasSwitches(parsed), isEmpty);
+    });
 
     test('multi-gas dive with one transmitter keeps both gases and labels the '
         'transmitter tank with the gas actually breathed on it', () {
@@ -352,6 +368,7 @@ void main() {
       List<pigeon.ProfileSample> samples = const [],
       List<pigeon.TankInfo> tanks = const [],
       List<pigeon.GasMix> gasMixes = const [],
+      String? diveMode,
     }) {
       return pigeon.ParsedDive(
         fingerprint: 'test',
@@ -367,6 +384,7 @@ void main() {
         samples: samples,
         tanks: tanks,
         gasMixes: gasMixes,
+        diveMode: diveMode,
         events: const [],
       );
     }

@@ -82,6 +82,12 @@ class _ResolvedCylinders {
 }
 
 _ResolvedCylinders _resolveCylinders(pigeon.ParsedDive parsed) {
+  // Gauge (bottom-timer) dives log depth and time only. Never synthesize a
+  // cylinder (or an air fallback) for them, so the imported dive stays tankless
+  // and carries no gas switches.
+  if (parsed.diveMode == 'gauge') {
+    return const _ResolvedCylinders([], {});
+  }
   final gasMixes = parsed.gasMixes;
   final gasIndexToTankIndex = <int, int>{};
 
