@@ -18751,6 +18751,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bodyWeight_heightLabel => 'الطول (سم)';
 
   @override
+  String get bodyWeight_heightFeetLabel => 'الطول (قدم)';
+
+  @override
+  String get bodyWeight_heightInchesLabel => 'بوصة';
+
+  @override
   String bodyWeight_weightLabel(String unit) {
     return 'الوزن ($unit)';
   }

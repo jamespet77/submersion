@@ -11954,6 +11954,8 @@
   "bodyWeight_dateLabel": "Date",
   "bodyWeight_deleteTooltip": "Delete entry",
   "bodyWeight_heightLabel": "Height (cm)",
+  "bodyWeight_heightFeetLabel": "Height (ft)",
+  "bodyWeight_heightInchesLabel": "Inches",
   "bodyWeight_weightLabel": "Weight ({unit})",
   "@bodyWeight_weightLabel": {"placeholders": {"unit": {"type": "String"}}},
   "diveLog_edit_weightFeedback_amount": "By about how much ({unit})",

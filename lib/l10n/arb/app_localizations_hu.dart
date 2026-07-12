@@ -19054,6 +19054,12 @@ class AppLocalizationsHu extends AppLocalizations {
   String get bodyWeight_heightLabel => 'Magasság (cm)';
 
   @override
+  String get bodyWeight_heightFeetLabel => 'Magasság (ft)';
+
+  @override
+  String get bodyWeight_heightInchesLabel => 'Hüvelyk';
+
+  @override
   String bodyWeight_weightLabel(String unit) {
     return 'Testsúly ($unit)';
   }

@@ -5419,6 +5419,8 @@
   "bodyWeight_dateLabel": "Date",
   "bodyWeight_deleteTooltip": "Supprimer l'entrée",
   "bodyWeight_heightLabel": "Taille (cm)",
+  "bodyWeight_heightFeetLabel": "Taille (ft)",
+  "bodyWeight_heightInchesLabel": "Pouces",
   "bodyWeight_weightLabel": "Poids ({unit})",
   "diveLog_edit_weightFeedback_amount": "D'environ combien ({unit})",
   "diveLog_edit_weightFeedback_correct": "Correct",

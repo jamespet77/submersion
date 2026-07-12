@@ -18136,6 +18136,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bodyWeight_heightLabel => '身高（厘米）';
 
   @override
+  String get bodyWeight_heightFeetLabel => '身高（英尺）';
+
+  @override
+  String get bodyWeight_heightInchesLabel => '英寸';
+
+  @override
   String bodyWeight_weightLabel(String unit) {
     return '体重（$unit）';
   }

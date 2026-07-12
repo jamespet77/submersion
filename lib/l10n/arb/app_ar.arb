@@ -5419,6 +5419,8 @@
   "bodyWeight_dateLabel": "التاريخ",
   "bodyWeight_deleteTooltip": "حذف الإدخال",
   "bodyWeight_heightLabel": "الطول (سم)",
+  "bodyWeight_heightFeetLabel": "الطول (قدم)",
+  "bodyWeight_heightInchesLabel": "بوصة",
   "bodyWeight_weightLabel": "الوزن ({unit})",
   "diveLog_edit_weightFeedback_amount": "بمقدار كم تقريبا ({unit})",
   "diveLog_edit_weightFeedback_correct": "مناسب",

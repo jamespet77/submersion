@@ -5419,6 +5419,8 @@
   "bodyWeight_dateLabel": "תאריך",
   "bodyWeight_deleteTooltip": "מחק רשומה",
   "bodyWeight_heightLabel": "גובה (ס״מ)",
+  "bodyWeight_heightFeetLabel": "גובה (רגל)",
+  "bodyWeight_heightInchesLabel": "אינץ'",
   "bodyWeight_weightLabel": "משקל ({unit})",
   "diveLog_edit_weightFeedback_amount": "בכמה בערך ({unit})",
   "diveLog_edit_weightFeedback_correct": "הרגיש נכון",

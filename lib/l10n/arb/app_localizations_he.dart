@@ -18616,6 +18616,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get bodyWeight_heightLabel => 'גובה (ס״מ)';
 
   @override
+  String get bodyWeight_heightFeetLabel => 'גובה (רגל)';
+
+  @override
+  String get bodyWeight_heightInchesLabel => 'אינץ\'';
+
+  @override
   String bodyWeight_weightLabel(String unit) {
     return 'משקל ($unit)';
   }

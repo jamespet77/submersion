@@ -5419,6 +5419,8 @@
   "bodyWeight_dateLabel": "日期",
   "bodyWeight_deleteTooltip": "删除条目",
   "bodyWeight_heightLabel": "身高（厘米）",
+  "bodyWeight_heightFeetLabel": "身高（英尺）",
+  "bodyWeight_heightInchesLabel": "英寸",
   "bodyWeight_weightLabel": "体重（{unit}）",
   "diveLog_edit_weightFeedback_amount": "大约多少（{unit}）",
   "diveLog_edit_weightFeedback_correct": "感觉合适",

@@ -31968,6 +31968,18 @@ abstract class AppLocalizations {
   /// **'Height (cm)'**
   String get bodyWeight_heightLabel;
 
+  /// No description provided for @bodyWeight_heightFeetLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Height (ft)'**
+  String get bodyWeight_heightFeetLabel;
+
+  /// No description provided for @bodyWeight_heightInchesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Inches'**
+  String get bodyWeight_heightInchesLabel;
+
   /// No description provided for @bodyWeight_weightLabel.
   ///
   /// In en, this message translates to:

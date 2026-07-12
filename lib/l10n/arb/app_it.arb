@@ -5419,6 +5419,8 @@
   "bodyWeight_dateLabel": "Data",
   "bodyWeight_deleteTooltip": "Elimina voce",
   "bodyWeight_heightLabel": "Altezza (cm)",
+  "bodyWeight_heightFeetLabel": "Altezza (ft)",
+  "bodyWeight_heightInchesLabel": "Pollici",
   "bodyWeight_weightLabel": "Peso ({unit})",
   "diveLog_edit_weightFeedback_amount": "Di quanto circa ({unit})",
   "diveLog_edit_weightFeedback_correct": "Corretto",

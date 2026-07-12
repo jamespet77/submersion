@@ -18784,6 +18784,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bodyWeight_heightLabel => 'Height (cm)';
 
   @override
+  String get bodyWeight_heightFeetLabel => 'Height (ft)';
+
+  @override
+  String get bodyWeight_heightInchesLabel => 'Inches';
+
+  @override
   String bodyWeight_weightLabel(String unit) {
     return 'Weight ($unit)';
   }

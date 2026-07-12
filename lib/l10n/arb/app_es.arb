@@ -5419,6 +5419,8 @@
   "bodyWeight_dateLabel": "Fecha",
   "bodyWeight_deleteTooltip": "Eliminar entrada",
   "bodyWeight_heightLabel": "Altura (cm)",
+  "bodyWeight_heightFeetLabel": "Altura (ft)",
+  "bodyWeight_heightInchesLabel": "Pulgadas",
   "bodyWeight_weightLabel": "Peso ({unit})",
   "diveLog_edit_weightFeedback_amount": "Por cuánto aproximadamente ({unit})",
   "diveLog_edit_weightFeedback_correct": "Correcto",
