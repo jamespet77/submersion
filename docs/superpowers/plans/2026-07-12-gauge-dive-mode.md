@@ -291,6 +291,15 @@ git commit -m "feat(dive-log): add gauge dive mode with profile-only analysis (#
 
 `analyze()` now returns profile-only for gauge, but both analysis providers post-process it with `overlayComputerDecoData` (which can re-inject computer-reported NDL/ceiling/CNS) and compute a rebreather ppO2. Gate both.
 
+> IMPLEMENTATION NOTE (as-built): the short-circuit is placed at the TOP of each
+> provider (right after the empty-profile guard / after `final diveId = dive.id;`),
+> BEFORE any GF/residual/settings lookups — a gauge dive needs none of them. Uses a
+> default `ProfileAnalysisService().analyze(..., diveMode: DiveMode.gauge)`. This is
+> cleaner and unit-testable in a bare `ProviderContainer` (no settings overrides),
+> and makes the separate rebreather-ppO2 line edits unnecessary. The test fixture
+> uses the `Dive` domain field `dateTime:` (NOT `diveDateTime:`, which is the DB
+> column name).
+
 **Files:**
 - Modify: `lib/features/dive_log/presentation/providers/profile_analysis_provider.dart` — `computeAnalysisForProfile` (~line 825 and ~line 870) and `diveProfileAnalysisProvider` (~line 1298 and ~line 1335)
 - Test: `test/features/dive_log/presentation/providers/profile_analysis_provider_gauge_test.dart` (create)

@@ -711,6 +711,23 @@ Future<ProfileAnalysis?> computeAnalysisForProfile(
 }) async {
   {
     final diveId = dive.id;
+    if (dive.isGauge) {
+      // Gauge dives log depth+time only: no gas or decompression. Skip all
+      // gas/GF/residual settings and the computer-deco overlay; return a
+      // profile-only analysis, still surfacing any dive-computer events.
+      final analysis = ProfileAnalysisService().analyze(
+        diveId: diveId,
+        depths: profile.map((p) => p.depth).toList(),
+        timestamps: profile.map((p) => p.timestamp).toList(),
+        diveMode: DiveMode.gauge,
+      );
+      final dbEvents = await ref.watch(
+        diveComputerEventsProvider(diveId).future,
+      );
+      return dbEvents.isEmpty
+          ? analysis
+          : analysis.copyWith(events: mergeEvents(analysis.events, dbEvents));
+    }
     final tanks = computerId == null
         ? dive.tanks
         : dive.tanks
@@ -1251,6 +1268,16 @@ final diveProfileAnalysisProvider = Provider.family<ProfileAnalysis?, Dive>((
   }
 
   try {
+    if (dive.isGauge) {
+      // Gauge dives log depth+time only: no gas or decompression. Skip all
+      // gas/GF/residual settings and return a profile-only analysis.
+      return ProfileAnalysisService().analyze(
+        diveId: dive.id,
+        depths: dive.profile.map((p) => p.depth).toList(),
+        timestamps: dive.profile.map((p) => p.timestamp).toList(),
+        diveMode: DiveMode.gauge,
+      );
+    }
     // Use dive-specific GF if the dive computer provided them,
     // otherwise fall back to user settings
     if (dive.gradientFactorLow != null && dive.gradientFactorHigh != null) {
