@@ -24,8 +24,10 @@
 ### Task 1: Localization strings for gauge mode
 
 **Files:**
-- Modify: `lib/l10n/arb/app_en.arb` (and the other 9 ARB files: `app_ar app_de app_es app_fr app_he app_hu app_it app_nl app_pt`)
+- Modify: `lib/l10n/arb/app_en.arb` (and the other 10 ARB files: `app_ar app_de app_es app_fr app_he app_hu app_it app_nl app_pt app_zh`)
 - Generated (do not hand-edit): `lib/l10n/arb/app_localizations*.dart`
+
+(11 locales total: `ar de en es fr he hu it nl pt zh`.)
 
 **Interfaces:**
 - Produces: `AppLocalizations.enum_diveMode_gauge` (String), `AppLocalizations.diveLog_diveMode_gaugeDescription` (String). Consumed by Task 2 (selector) and Task 4.
@@ -46,6 +48,7 @@ Strings to add (English is the template; the rest are translations):
 | it | `Gauge` | `Solo profondità e tempo; nessun tracciamento di gas o decompressione` |
 | nl | `Gauge` | `Alleen diepte en tijd; geen gas- of decompressietracking` |
 | pt | `Gauge` | `Apenas profundidade e tempo; sem rastreamento de gás ou descompressão` |
+| zh | `计深表` | `仅记录深度和时间；不追踪气体或减压` |
 
 - [ ] **Step 1: Add the two keys to `app_en.arb`**
 
