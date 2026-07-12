@@ -930,7 +930,9 @@ Future<ProfileAnalysis?> computeAnalysisForProfile(
         diluentMix: resolveCcrDiluentMix(dive),
         fallbackSetpoint: dive.setpointHigh ?? dive.setpointLow,
       ),
-      DiveMode.scr => null,
+      // Gauge dives return a profile-only analysis before this point; the arm
+      // exists only for exhaustiveness.
+      DiveMode.scr || DiveMode.gauge => null,
     };
     final ascentMaxPpO2 = ref.watch(ppO2MaxDecoProvider);
     final ascentGases = dive.diveMode == DiveMode.oc
