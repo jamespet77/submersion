@@ -11,7 +11,6 @@ import 'package:submersion/features/backup/data/repositories/backup_preferences.
 import 'package:submersion/features/backup/data/services/backup_encryption_key_store.dart';
 import 'package:submersion/features/backup/data/services/backup_encryption_service.dart';
 import 'package:submersion/features/backup/data/services/backup_service.dart';
-import 'package:submersion/features/backup/domain/exceptions/backup_encrypted_exception.dart';
 
 import '../../../../support/fake_cloud_storage_provider.dart';
 import '../../../../support/fake_keychain_storage.dart';
@@ -91,6 +90,38 @@ void main() {
       final record = await buildService().performBackup();
       expect(record.filename, endsWith('.db'));
       expect(await File(record.localPath!).readAsString(), 'fake backup data');
+    },
+  );
+
+  test(
+    'backup encryption ON: local history file is .sbe with SBE1 magic',
+    () async {
+      await enableBackupEncryption();
+      final record = await buildService().performBackup();
+      expect(record.filename, endsWith('.sbe'));
+      final bytes = await File(record.localPath!).readAsBytes();
+      expect(SyncEnvelope.hasMagic(bytes), isTrue);
+    },
+  );
+
+  test(
+    'backup encryption ON: cloud copy is the SAME .sbe (single encryption)',
+    () async {
+      await enableBackupEncryption();
+      await preferences.setCloudBackupEnabled(true);
+      await buildService().performBackup();
+
+      final folderId = await cloud.createFolder('Submersion Backups');
+      final files = await cloud.listFiles(
+        folderId: folderId,
+        namePattern: 'submersion_backup_',
+      );
+      expect(files, hasLength(1));
+      expect(files.single.name, endsWith('.sbe'));
+      expect(
+        SyncEnvelope.hasMagic(await cloud.downloadFile(files.single.id)),
+        isTrue,
+      );
     },
   );
 }

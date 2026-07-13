@@ -160,16 +160,54 @@ class BackupService {
     required bool isAutomatic,
   }) async {
     final filename = _generateFilename();
+    final encKey = await _activeBackupKey();
 
-    // Write the backup; ref is a filesystem path or a content:// document URI.
-    final ref = await target.write(_dbAdapter, filename);
+    final String ref;
+    final int sizeBytes;
+    final String storedName;
+    if (encKey == null) {
+      storedName = filename;
+      // Write the backup; ref is a filesystem path or a content:// document URI.
+      ref = await target.write(_dbAdapter, filename);
 
-    // SAF refs are content URIs (no File length). The backup is a byte copy of
-    // the live DB, so its size equals the source's. Filesystem refs keep the
-    // existing File(ref).length() behavior.
-    final sizeBytes = isSafRef(ref)
-        ? await File(await _dbAdapter.databasePath).length()
-        : await File(ref).length();
+      // SAF refs are content URIs (no File length). The backup is a byte copy
+      // of the live DB, so its size equals the source's. Filesystem refs keep
+      // the existing File(ref).length() behavior.
+      sizeBytes = isSafRef(ref)
+          ? await File(await _dbAdapter.databasePath).length()
+          : await File(ref).length();
+    } else {
+      // Backup encryption on: encrypt to a temp .sbe off to the side, then
+      // write that into the target (filesystem copy or SAF stream).
+      storedName =
+          p.basenameWithoutExtension(filename) + BackupCrypto.fileExtension;
+      final tempDir = await getTemporaryDirectory();
+      final tempPlain = p.join(tempDir.path, filename);
+      final tempSbe = p.join(tempDir.path, storedName);
+      try {
+        await _dbAdapter.backup(tempPlain);
+        await BackupCrypto.encryptFile(
+          inPath: tempPlain,
+          outPath: tempSbe,
+          mlk: encKey.mlk,
+          libraryKeyId: encKey.libraryKeyId,
+          keyslotBytes: encKey.keyslotBytes,
+        );
+        ref = await target.writeSource(tempSbe, storedName);
+        sizeBytes = await File(tempSbe).length();
+      } finally {
+        for (final t in [tempPlain, tempSbe]) {
+          final f = File(t);
+          if (await f.exists()) {
+            try {
+              await f.delete();
+            } catch (_) {
+              // best-effort temp cleanup
+            }
+          }
+        }
+      }
+    }
 
     // Get dive and site counts
     final counts = await _getDiveSiteCounts();
@@ -182,7 +220,7 @@ class BackupService {
     final settings = _preferences.getSettings();
     if (settings.cloudBackupEnabled && _cloudProvider != null) {
       try {
-        cloudFileId = await _uploadToCloud(ref, filename);
+        cloudFileId = await _uploadToCloud(ref, storedName);
         location = BackupLocation.both;
         _log.info('Backup uploaded to cloud: $cloudFileId');
       } catch (e, stack) {
@@ -197,7 +235,7 @@ class BackupService {
 
     final record = BackupRecord(
       id: _uuid.v4(),
-      filename: filename,
+      filename: storedName,
       timestamp: DateTime.now(),
       sizeBytes: sizeBytes,
       location: location,
@@ -921,14 +959,18 @@ class BackupService {
     final folderId = await _getOrCreateCloudBackupFolder();
     if (folderId == null) return null;
 
-    // End-to-end encryption: the CLOUD copy becomes a framed .sbe artifact
-    // (local artifacts stay plaintext by design -- disaster recovery must
-    // never sit behind a passphrase). File-to-file crypto keeps memory
-    // bounded regardless of database size.
     var uploadPath = localPath;
     var uploadName = filename;
     File? encryptedTemp;
-    if (_syncPreferences?.syncEncryptionEnabled ?? false) {
+
+    // When backup encryption (issue #580) already produced a framed .sbe, the
+    // local artifact IS the encrypted upload -- send it verbatim. Otherwise, if
+    // sync encryption is on, the CLOUD copy becomes a framed .sbe here (local
+    // artifacts stay plaintext by design). The cloud decorator exempts
+    // submersion_backup_*.sbe, so a pass-through .sbe is never double-encrypted.
+    final alreadyEncrypted = await BackupCrypto.isEncryptedBackup(localPath);
+    if (!alreadyEncrypted &&
+        (_syncPreferences?.syncEncryptionEnabled ?? false)) {
       final key = await _encryptionKeyStore?.loadKey();
       final mirror = await _encryptionKeyStore?.loadKeyslotMirror();
       if (key == null || mirror == null) {
