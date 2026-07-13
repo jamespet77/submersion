@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:submersion/core/providers/account_providers.dart';
 import 'package:submersion/core/services/accounts/account_kind.dart';
+import 'package:submersion/core/services/accounts/account_provider_adapter.dart';
 import 'package:submersion/core/services/accounts/adapters/lightroom_account_adapter.dart';
 import 'package:submersion/core/services/accounts/connected_account.dart'
     as domain;
@@ -34,6 +35,25 @@ final lightroomAccountProvider = FutureProvider<domain.ConnectedAccount?>(
       .watch(connectedAccountsRepositoryProvider)
       .getByKind(AccountKind.adobeLightroom),
 );
+
+/// This device's Lightroom connection state. The roster row syncs but
+/// credentials are per-device, so a device that received the synced
+/// account without a local keychain blob is [needsSignIn] (must run the
+/// connect flow to attach credentials), NOT [connected].
+enum LightroomDeviceStatus { notConnected, needsSignIn, connected }
+
+final lightroomDeviceStatusProvider = FutureProvider<LightroomDeviceStatus>((
+  ref,
+) async {
+  final account = await ref.watch(lightroomAccountProvider.future);
+  if (account == null) return LightroomDeviceStatus.notConnected;
+  final status = await ref
+      .watch(lightroomAccountAdapterProvider)
+      .status(account);
+  return status == AccountStatus.signedIn
+      ? LightroomDeviceStatus.connected
+      : LightroomDeviceStatus.needsSignIn;
+});
 
 /// The Lightroom adapter, checked. A non-Lightroom adapter registered for
 /// AccountKind.adobeLightroom (only reachable via a test override or a

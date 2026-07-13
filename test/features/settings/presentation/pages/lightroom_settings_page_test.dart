@@ -279,6 +279,12 @@ void main() {
         accountIdentifier: 'cat9',
       );
       accountId = account.id;
+      // A signed-in device also has the per-account credential blob; the
+      // page gates its connected UI on this (not just the roster row).
+      await AccountCredentialsStore(storage: keychain).write(
+        account.id,
+        jsonEncode({'clientId': 'cid', 'refreshToken': 'rt'}),
+      );
     }
 
     testWidgets('shows account, album filter, auto-poll, scan, disconnect', (
@@ -412,6 +418,78 @@ void main() {
             ConnectedAccountsRepository().getByKind(AccountKind.adobeLightroom),
       );
       expect(account, isNull);
+    });
+  });
+
+  group('needs sign-in on a second device', () {
+    // A synced roster row exists, but this device has no per-account
+    // credential blob: the page must show the connect flow (not the
+    // connected UI), and connecting must reuse the synced row.
+    testWidgets('shows the connect flow despite the synced roster row', (
+      tester,
+    ) async {
+      await tester.runAsync(() async {
+        await ConnectedAccountsRepository().create(
+          kind: AccountKind.adobeLightroom,
+          label: 'Eric G',
+          accountIdentifier: 'cat9',
+        );
+        // No per-account blob and no legacy auth: device is needsSignIn.
+      });
+      await pumpPage(tester);
+
+      expect(find.text('Adobe client ID'), findsOneWidget);
+      expect(find.text('Connected as Eric G'), findsNothing);
+    });
+
+    testWidgets('connecting reuses the synced row (no duplicate)', (
+      tester,
+    ) async {
+      final existing = await tester.runAsync(
+        () => ConnectedAccountsRepository().create(
+          kind: AccountKind.adobeLightroom,
+          label: 'Old label',
+          accountIdentifier: 'cat9',
+        ),
+      );
+      await pumpPage(tester);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Adobe client ID'),
+        'cid',
+      );
+      await tester.pump();
+      await tester.tap(find.widgetWithText(FilledButton, 'Connect Lightroom'));
+      await settle(tester);
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.byType(TextField),
+        ),
+        'https://submersion.app/lightroom/callback?code=thecode',
+      );
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.widgetWithText(FilledButton, 'Connect'),
+        ),
+      );
+      await settle(tester);
+      await settle(tester);
+
+      final all = await tester.runAsync(
+        () => ConnectedAccountsRepository().getAll(),
+      );
+      final lightroom = all!
+          .where((a) => a.kind == AccountKind.adobeLightroom)
+          .toList();
+      expect(lightroom, hasLength(1), reason: 'reused, not duplicated');
+      expect(lightroom.single.id, existing!.id);
+      expect(
+        keychain.values[AccountCredentialsStore.keyFor(existing.id)],
+        isNotNull,
+        reason: 'credentials attached to the existing row',
+      );
     });
   });
 }
