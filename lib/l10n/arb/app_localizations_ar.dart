@@ -329,6 +329,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => 'ليس الآن';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return 'تمت إعادة تشفير $done نسخة احتياطية؛ تعذّر تشفير $failed وما زالت غير محمية';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return 'تمت إعادة تشفير $count نسخة احتياطية';
   }

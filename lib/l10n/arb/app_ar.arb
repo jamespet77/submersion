@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "لا تزال نسخك الاحتياطية الحالية غير مشفّرة. هل تريد إعادة تشفيرها الآن بكلمة مرورك الجديدة؟",
   "settings_backupEncryption_reencryptNow": "إعادة التشفير الآن",
   "settings_backupEncryption_reencryptNotNow": "ليس الآن",
+  "settings_backupEncryption_reencryptPartial": "تمت إعادة تشفير {done} نسخة احتياطية؛ تعذّر تشفير {failed} وما زالت غير محمية",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "تمت إعادة تشفير {count} نسخة احتياطية",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

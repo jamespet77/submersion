@@ -332,6 +332,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => 'Agora não';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return '$done backups recriptografados; $failed não puderam ser criptografados e continuam desprotegidos';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return '$count backups recriptografados';
   }

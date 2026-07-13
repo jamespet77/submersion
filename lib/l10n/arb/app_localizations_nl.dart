@@ -333,6 +333,11 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => 'Niet nu';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return '$done back-ups opnieuw versleuteld; $failed konden niet worden versleuteld en zijn nog onbeschermd';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return '$count back-ups opnieuw versleuteld';
   }

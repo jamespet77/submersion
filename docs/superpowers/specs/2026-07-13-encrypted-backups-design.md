@@ -8,11 +8,18 @@
 ## Summary
 
 Add an optional, app-wide **backup encryption** feature: the user sets a password
-once in Settings, and from then on **every backup the app writes** — the scheduled
-local auto-backups, manual *Save to File* and *Share* exports, and cloud
+once in Settings, and from then on **every user-facing backup the app writes** — the
+scheduled local auto-backups, manual *Save to File* and *Share* exports, and cloud
 backups — is encrypted with that password. Restoring an encrypted backup requires
 the password (or a recovery code). A recovery code is always generated at setup so
 a forgotten password does not mean permanent data loss.
+
+**Out of scope:** the pre-migration safety snapshot (`PreMigrationBackupService`)
+stays a plaintext `.db`. It is written by the migration path *before* providers,
+secure storage, and the encryption key are initialized (the key may not be
+loadable at that point), it never leaves the device, and it is pruned after a
+successful upgrade. Encrypting it would risk making the DB-upgrade safety net
+itself fail-closed. This backup is deliberately excluded from the guarantee above.
 
 This reuses the encrypted-artifact format and crypto primitives already merged in
 #520 (encrypted cloud sync), but is a **separate, independent feature** with its own

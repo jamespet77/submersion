@@ -89,6 +89,17 @@
   "settings_backupEncryption_reencryptBody": "您现有的备份仍未加密。现在使用您的新密码重新加密它们吗？",
   "settings_backupEncryption_reencryptNow": "立即重新加密",
   "settings_backupEncryption_reencryptNotNow": "暂不",
+  "settings_backupEncryption_reencryptPartial": "已重新加密 {done} 个备份；{failed} 个无法加密，仍未受保护",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "已重新加密 {count} 个备份",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

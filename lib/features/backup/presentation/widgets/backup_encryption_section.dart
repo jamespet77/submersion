@@ -4,8 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:submersion/features/backup/presentation/providers/backup_providers.dart';
 import 'package:submersion/features/backup/presentation/widgets/backup_change_password_dialog.dart';
 import 'package:submersion/features/backup/presentation/widgets/backup_enable_encryption_dialog.dart';
-import 'package:submersion/features/settings/presentation/widgets/enable_encryption_dialog.dart'
-    show RecoveryCodeDisplay;
+import 'package:submersion/features/backup/presentation/widgets/backup_recovery_code_dialog.dart';
 import 'package:submersion/features/settings/presentation/widgets/encryption_passphrase_dialog.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
@@ -110,10 +109,22 @@ class BackupEncryptionSection extends ConsumerWidget {
         .read(backupServiceProvider)
         .reencryptExistingBackups();
     if (!context.mounted) return;
+    // When some backups could not be encrypted, say so explicitly (with a
+    // warning color) so the user does not assume everything is now protected.
+    final theme = Theme.of(context);
+    final hasFailures = result.failed > 0;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        backgroundColor: hasFailures ? theme.colorScheme.error : null,
         content: Text(
-          l10n.settings_backupEncryption_reencryptDone(result.reencrypted),
+          hasFailures
+              ? l10n.settings_backupEncryption_reencryptPartial(
+                  result.reencrypted,
+                  result.failed,
+                )
+              : l10n.settings_backupEncryption_reencryptDone(
+                  result.reencrypted,
+                ),
         ),
       ),
     );
@@ -145,27 +156,7 @@ class BackupEncryptionSection extends ConsumerWidget {
       },
     );
     if (newCode == null || !context.mounted) return;
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.settings_backupEncryption_recoveryTitle),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.settings_backupEncryption_recoveryExplain),
-            const SizedBox(height: 12),
-            RecoveryCodeDisplay(code: newCode!),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(l10n.settings_backupEncryption_done),
-          ),
-        ],
-      ),
-    );
+    await showBackupRecoveryCodeDialog(context, code: newCode!);
   }
 
   Future<void> _turnOff(BuildContext context, WidgetRef ref) async {

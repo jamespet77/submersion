@@ -297,6 +297,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => '暂不';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return '已重新加密 $done 个备份；$failed 个无法加密，仍未受保护';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return '已重新加密 $count 个备份';
   }

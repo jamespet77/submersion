@@ -103,6 +103,17 @@
   "settings_backupEncryption_reencryptBody": "Your existing backups are still unencrypted. Re-encrypt them now with your new password?",
   "settings_backupEncryption_reencryptNow": "Re-encrypt now",
   "settings_backupEncryption_reencryptNotNow": "Not now",
+  "settings_backupEncryption_reencryptPartial": "Re-encrypted {done} backups; {failed} could not be encrypted and are still unprotected",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "Re-encrypted {count} backups",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

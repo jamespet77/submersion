@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "Ihre bestehenden Backups sind noch unverschlüsselt. Jetzt mit Ihrem neuen Passwort neu verschlüsseln?",
   "settings_backupEncryption_reencryptNow": "Jetzt neu verschlüsseln",
   "settings_backupEncryption_reencryptNotNow": "Nicht jetzt",
+  "settings_backupEncryption_reencryptPartial": "{done} Backups neu verschlüsselt; {failed} konnten nicht verschlüsselt werden und sind weiterhin ungeschützt",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "{count} Backups neu verschlüsselt",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

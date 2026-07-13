@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "Tus copias de seguridad existentes aún no están cifradas. ¿Volver a cifrarlas ahora con tu nueva contraseña?",
   "settings_backupEncryption_reencryptNow": "Volver a cifrar ahora",
   "settings_backupEncryption_reencryptNotNow": "Ahora no",
+  "settings_backupEncryption_reencryptPartial": "Se volvieron a cifrar {done} copias de seguridad; {failed} no se pudieron cifrar y siguen sin protección",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "Se volvieron a cifrar {count} copias de seguridad",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

@@ -335,6 +335,11 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => 'Nicht jetzt';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return '$done Backups neu verschlüsselt; $failed konnten nicht verschlüsselt werden und sind weiterhin ungeschützt';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return '$count Backups neu verschlüsselt';
   }

@@ -97,7 +97,10 @@ class BackupService {
 
   /// Backup-encryption key (issue #580). When the backupEncryptionEnabled flag
   /// is on and this + a mirror are present, every backup write is a framed
-  /// `.sbe`. Nullable so existing constructions keep working (plaintext).
+  /// `.sbe`. Nullable so existing constructions keep working (plaintext). Every
+  /// real construction path that can run with backup encryption enabled must
+  /// inject one (the providers do; the mobile background isolate does too) --
+  /// `_activeBackupKey` fails closed when the flag is on but the store is null.
   final BackupEncryptionKeyStore? _backupEncryptionKeyStore;
 
   /// SAF write/read/delete seam for Android custom (`content://`) backup
@@ -409,26 +412,48 @@ class BackupService {
         );
         await File(tempSbe).copy(newPath);
         await File(tempSbe).delete();
-        if (newPath != localPath) await file.delete();
 
-        String? cloudFileId = record.cloudFileId;
+        // Upload the new .sbe BEFORE committing history. If the upload throws,
+        // the record still points at the intact plaintext .db and its old cloud
+        // object, so the next run re-encrypts it -- resumability is preserved.
+        String? newCloudFileId = record.cloudFileId;
         if (record.cloudFileId != null && _cloudProvider != null) {
-          cloudFileId = await _uploadToCloud(newPath, newName);
+          newCloudFileId = await _uploadToCloud(newPath, newName);
+        }
+
+        // Commit the record to the on-disk .sbe (which now exists) BEFORE
+        // deleting the old plaintext/cloud artifacts. A failed delete below is
+        // then a best-effort leak, never a dangling history pointer or data
+        // loss.
+        await _preferences.updateRecord(
+          record.copyWith(
+            filename: newName,
+            localPath: newPath,
+            sizeBytes: await File(newPath).length(),
+            cloudFileId: newCloudFileId,
+          ),
+        );
+
+        if (newPath != localPath) {
+          try {
+            await file.delete();
+          } catch (_) {
+            // best-effort old plaintext cleanup
+          }
+        }
+        // Delete the old cloud object only when the upload produced a DIFFERENT
+        // id. Path-based providers (S3/Dropbox/iCloud) reuse the id for the same
+        // name, so an unconditional delete would remove the object we just
+        // uploaded.
+        if (record.cloudFileId != null &&
+            _cloudProvider != null &&
+            newCloudFileId != record.cloudFileId) {
           try {
             await _cloudProvider.deleteFile(record.cloudFileId!);
           } catch (_) {
             // best-effort old-object cleanup
           }
         }
-
-        await _preferences.updateRecord(
-          record.copyWith(
-            filename: newName,
-            localPath: newPath,
-            sizeBytes: await File(newPath).length(),
-            cloudFileId: cloudFileId,
-          ),
-        );
         reencrypted++;
       } catch (e, stack) {
         _log.error(

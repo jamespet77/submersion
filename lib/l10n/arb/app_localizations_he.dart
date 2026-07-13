@@ -322,6 +322,11 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => 'לא כעת';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return '$done גיבויים הוצפנו מחדש; לא ניתן היה להצפין $failed והם עדיין אינם מוגנים';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return '$count גיבויים הוצפנו מחדש';
   }

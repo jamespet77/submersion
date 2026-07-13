@@ -333,6 +333,11 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_backupEncryption_reencryptNotNow => 'Most nem';
 
   @override
+  String settings_backupEncryption_reencryptPartial(int done, int failed) {
+    return '$done biztonsági mentés újratitkosítva; $failed nem sikerült titkosítani, ezek továbbra is védtelenek';
+  }
+
+  @override
   String settings_backupEncryption_reencryptDone(int count) {
     return '$count biztonsági mentés újratitkosítva';
   }

@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "הגיבויים הקיימים שלך עדיין אינם מוצפנים. להצפין אותם מחדש כעת באמצעות הסיסמה החדשה שלך?",
   "settings_backupEncryption_reencryptNow": "הצפן מחדש כעת",
   "settings_backupEncryption_reencryptNotNow": "לא כעת",
+  "settings_backupEncryption_reencryptPartial": "{done} גיבויים הוצפנו מחדש; לא ניתן היה להצפין {failed} והם עדיין אינם מוגנים",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "{count} גיבויים הוצפנו מחדש",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "Seus backups existentes ainda não estão criptografados. Recriptografá-los agora com sua nova senha?",
   "settings_backupEncryption_reencryptNow": "Recriptografar agora",
   "settings_backupEncryption_reencryptNotNow": "Agora não",
+  "settings_backupEncryption_reencryptPartial": "{done} backups recriptografados; {failed} não puderam ser criptografados e continuam desprotegidos",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "{count} backups recriptografados",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

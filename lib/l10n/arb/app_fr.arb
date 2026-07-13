@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "Vos sauvegardes existantes ne sont toujours pas chiffrées. Les rechiffrer maintenant avec votre nouveau mot de passe ?",
   "settings_backupEncryption_reencryptNow": "Rechiffrer maintenant",
   "settings_backupEncryption_reencryptNotNow": "Pas maintenant",
+  "settings_backupEncryption_reencryptPartial": "{done} sauvegardes rechiffrées ; {failed} n'ont pas pu être chiffrées et restent non protégées",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "{count} sauvegardes rechiffrées",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

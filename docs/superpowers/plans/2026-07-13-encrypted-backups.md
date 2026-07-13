@@ -16,7 +16,7 @@
 - **Separate backup key**: backup secure-storage keys must be distinct from the sync store's (`sync_encryption_*`). Use the `backup_encryption_*` prefix.
 - **No DB schema change**, no schema-version bump. Everything is SharedPreferences + secure storage + file I/O.
 - **Tests use the fast KDF** `const KdfParams(m: 1024, t: 3, p: 1)` — never run 64 MiB Argon2id in tests. Import from `package:submersion/core/services/sync/crypto/keyslots.dart`.
-- **Localization**: every new user-facing string goes into `lib/l10n/app_en.arb` AND all 10 non-en locale ARBs, then regenerate (`flutter gen-l10n` runs via build). Locales: ar, de, es, fr, it, ja, ko, nl, pt, zh (confirm the exact set from existing `app_*.arb` files).
+- **Localization**: every new user-facing string goes into `lib/l10n/arb/app_en.arb` AND all 10 non-en locale ARBs under `lib/l10n/arb/`, then regenerate (`flutter gen-l10n`). Locales (the full `AppLocalizations.supportedLocales` set): ar, de, es, fr, he, hu, it, nl, pt, zh.
 - **Formatting/lint**: `dart format .` clean and `flutter analyze` clean (whole project) before every commit.
 - **No emojis** in code, comments, or strings. Immutability: use `copyWith`, never mutate.
 - **Run specific test files** during TDD (not the whole suite each step) to avoid timeouts; run the full suite only in the final task.

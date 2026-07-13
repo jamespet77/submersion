@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "Uw bestaande back-ups zijn nog onversleuteld. Wilt u ze nu opnieuw versleutelen met uw nieuwe wachtwoord?",
   "settings_backupEncryption_reencryptNow": "Nu opnieuw versleutelen",
   "settings_backupEncryption_reencryptNotNow": "Niet nu",
+  "settings_backupEncryption_reencryptPartial": "{done} back-ups opnieuw versleuteld; {failed} konden niet worden versleuteld en zijn nog onbeschermd",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "{count} back-ups opnieuw versleuteld",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {

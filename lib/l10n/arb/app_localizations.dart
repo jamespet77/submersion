@@ -656,6 +656,12 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get settings_backupEncryption_reencryptNotNow;
 
+  /// No description provided for @settings_backupEncryption_reencryptPartial.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-encrypted {done} backups; {failed} could not be encrypted and are still unprotected'**
+  String settings_backupEncryption_reencryptPartial(int done, int failed);
+
   /// No description provided for @settings_backupEncryption_reencryptDone.
   ///
   /// In en, this message translates to:

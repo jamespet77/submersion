@@ -90,6 +90,17 @@
   "settings_backupEncryption_reencryptBody": "I tuoi backup esistenti non sono ancora crittografati. Vuoi crittografarli ora con la tua nuova password?",
   "settings_backupEncryption_reencryptNow": "Crittografa ora",
   "settings_backupEncryption_reencryptNotNow": "Non ora",
+  "settings_backupEncryption_reencryptPartial": "{done} backup crittografati di nuovo; {failed} non è stato possibile crittografarli e restano non protetti",
+  "@settings_backupEncryption_reencryptPartial": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "failed": {
+        "type": "int"
+      }
+    }
+  },
   "settings_backupEncryption_reencryptDone": "{count} backup crittografati di nuovo",
   "@settings_backupEncryption_reencryptDone": {
     "placeholders": {
