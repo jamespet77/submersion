@@ -536,20 +536,37 @@ class UddfEntityImporter {
         name: name,
         email: buddyData['email'] as String?,
         phone: buddyData['phone'] as String?,
-        certificationLevel: _parseEnum(
-          buddyData['certificationLevel'],
-          CertificationLevel.values,
-        ),
-        certificationAgency: _parseEnum(
-          buddyData['certificationAgency'],
-          CertificationAgency.values,
-        ),
         notes: buddyData['notes'] as String? ?? '',
         createdAt: now,
         updatedAt: now,
       );
 
       await repository.createBuddy(buddy);
+
+      // issue #553: buddy certs live in the certifications table now (setting
+      // them on the Buddy entity would be ignored). Create a buddy-owned cert
+      // row from the parsed certification, if any.
+      final certLevel = _parseEnum(
+        buddyData['certificationLevel'],
+        CertificationLevel.values,
+      );
+      final certAgency = _parseEnum(
+        buddyData['certificationAgency'],
+        CertificationAgency.values,
+      );
+      if (certLevel != null || certAgency != null) {
+        await CertificationRepository().createCertification(
+          Certification(
+            id: '',
+            buddyId: newId,
+            name: certLevel?.displayName ?? certAgency?.displayName ?? name,
+            agency: certAgency ?? CertificationAgency.other,
+            level: certLevel,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+      }
       if (uddfId != null) idMapping[uddfId] = newId;
       count++;
       onProgress?.call(ImportPhase.buddies, count, selected.length);

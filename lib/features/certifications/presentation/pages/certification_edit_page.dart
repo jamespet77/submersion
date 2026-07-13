@@ -21,12 +21,22 @@ class CertificationEditPage extends ConsumerStatefulWidget {
   final void Function(String savedId)? onSaved;
   final VoidCallback? onCancel;
 
+  /// Staging mode (issue #553): when [onStaged] is provided, Save builds the
+  /// [Certification] and hands it back via the callback WITHOUT persisting (no
+  /// diver-id lookup, no repository write). [initialCertification] prefills the
+  /// form from an in-memory staged cert instead of loading by id. Used by the
+  /// buddy edit form to stage a buddy's certs and commit them on its own Save.
+  final Certification? initialCertification;
+  final void Function(Certification result)? onStaged;
+
   const CertificationEditPage({
     super.key,
     this.certificationId,
     this.embedded = false,
     this.onSaved,
     this.onCancel,
+    this.initialCertification,
+    this.onStaged,
   });
 
   @override
@@ -58,11 +68,14 @@ class _CertificationEditPageState extends ConsumerState<CertificationEditPage> {
   String? _instructorId;
 
   bool get isEditing => widget.certificationId != null;
+  bool get _isStaging => widget.onStaged != null;
 
   @override
   void initState() {
     super.initState();
-    if (isEditing) {
+    if (widget.initialCertification != null) {
+      _prefillFrom(widget.initialCertification!);
+    } else if (isEditing) {
       _loadCertification();
     }
     _nameController.addListener(_onFieldChanged);
@@ -76,6 +89,24 @@ class _CertificationEditPageState extends ConsumerState<CertificationEditPage> {
     if (!_hasChanges) {
       setState(() => _hasChanges = true);
     }
+  }
+
+  /// Prefill the form from an in-memory (possibly unpersisted) certification,
+  /// used by staging mode instead of loading by id.
+  void _prefillFrom(Certification cert) {
+    _originalCertification = cert;
+    _nameController.text = cert.name;
+    _cardNumberController.text = cert.cardNumber ?? '';
+    _instructorNameController.text = cert.instructorName ?? '';
+    _instructorNumberController.text = cert.instructorNumber ?? '';
+    _notesController.text = cert.notes;
+    _agency = cert.agency;
+    _level = cert.level;
+    _issueDate = cert.issueDate;
+    _expiryDate = cert.expiryDate;
+    _photoFront = cert.photoFront;
+    _photoBack = cert.photoBack;
+    _instructorId = cert.instructorId;
   }
 
   Future<void> _loadCertification() async {
@@ -781,6 +812,47 @@ class _CertificationEditPageState extends ConsumerState<CertificationEditPage> {
 
   Future<void> _saveCertification() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // issue #553 staging mode: build the cert and hand it back via onStaged;
+    // do NOT persist (the buddy edit form commits it on its own Save). Handled
+    // before the saving spinner because staging is synchronous -- setting
+    // _isSaving and returning would leave an embedded editor spinning forever
+    // if its host keeps it mounted.
+    if (_isStaging) {
+      final now = DateTime.now();
+      final result = Certification(
+        id: widget.initialCertification?.id ?? '',
+        diverId: widget.initialCertification?.diverId,
+        buddyId: widget.initialCertification?.buddyId,
+        name: _nameController.text.trim(),
+        agency: _agency,
+        level: _level,
+        cardNumber: _cardNumberController.text.trim().isEmpty
+            ? null
+            : _cardNumberController.text.trim(),
+        issueDate: _issueDate,
+        expiryDate: _expiryDate,
+        instructorName: _instructorNameController.text.trim().isEmpty
+            ? null
+            : _instructorNameController.text.trim(),
+        instructorNumber: _instructorNumberController.text.trim().isEmpty
+            ? null
+            : _instructorNumberController.text.trim(),
+        instructorId: _instructorId,
+        photoFront: _photoFront,
+        photoBack: _photoBack,
+        notes: _notesController.text.trim(),
+        createdAt: widget.initialCertification?.createdAt ?? now,
+        updatedAt: now,
+      );
+      widget.onStaged!(result);
+      if (widget.embedded) {
+        widget.onSaved?.call(result.id);
+      } else {
+        context.pop();
+      }
+      return;
+    }
 
     setState(() => _isSaving = true);
 

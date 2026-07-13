@@ -116,6 +116,64 @@ class CertificationRepository {
     }).toList();
   }
 
+  /// All certifications owned by a buddy (newest issue date first). Issue #553.
+  Future<List<domain.Certification>> getCertificationsByBuddy(
+    String buddyId,
+  ) async {
+    final query = _db.select(_db.certifications)
+      ..where((t) => t.buddyId.equals(buddyId))
+      ..orderBy([
+        (t) => OrderingTerm.desc(t.issueDate),
+        (t) => OrderingTerm.asc(t.name),
+      ]);
+    final rows = await query.get();
+    return rows.map(_mapRowToCertification).toList();
+  }
+
+  /// Certifications for many buddies at once, grouped by buddyId. Single query
+  /// (no N+1) so buddy-list hydration stays O(1). Issue #553.
+  Future<Map<String, List<domain.Certification>>> getCertificationsForBuddies(
+    List<String> buddyIds,
+  ) async {
+    if (buddyIds.isEmpty) return {};
+    final query = _db.select(_db.certifications)
+      ..where((t) => t.buddyId.isIn(buddyIds));
+    final rows = await query.get();
+    final out = <String, List<domain.Certification>>{};
+    for (final row in rows) {
+      final cert = _mapRowToCertification(row);
+      (out[cert.buddyId!] ??= []).add(cert);
+    }
+    return out;
+  }
+
+  /// Replace a buddy's certification set with [desired]: insert new (empty id),
+  /// update existing, and delete+tombstone existing rows not in [desired].
+  /// Backs the buddy edit form's stage-then-commit-on-save flow (issue #553).
+  Future<void> replaceBuddyCertifications(
+    String buddyId,
+    List<domain.Certification> desired,
+  ) async {
+    final existing = await getCertificationsByBuddy(buddyId);
+    final existingIds = {for (final c in existing) c.id};
+    final keptIds = <String>{};
+    for (final cert in desired) {
+      final owned = cert.copyWith(buddyId: buddyId);
+      if (owned.id.isEmpty || !existingIds.contains(owned.id)) {
+        final created = await createCertification(owned);
+        keptIds.add(created.id);
+      } else {
+        await updateCertification(owned);
+        keptIds.add(owned.id);
+      }
+    }
+    for (final c in existing) {
+      if (!keptIds.contains(c.id)) {
+        await deleteCertification(c.id);
+      }
+    }
+  }
+
   /// Create a new certification
   Future<domain.Certification> createCertification(
     domain.Certification cert,
@@ -125,12 +183,22 @@ class CertificationRepository {
       final id = cert.id.isEmpty ? _uuid.v4() : cert.id;
       final now = DateTime.now();
 
+      // issue #553: a certification belongs to a diver or a buddy, never
+      // both. (Ownerless certs remain valid: legacy rows and the
+      // no-validated-diver fallback both create them.)
+      if (cert.diverId != null && cert.buddyId != null) {
+        throw ArgumentError(
+          'Certification cannot belong to both a diver and a buddy',
+        );
+      }
+
       await _db
           .into(_db.certifications)
           .insert(
             CertificationsCompanion(
               id: Value(id),
               diverId: Value(cert.diverId),
+              buddyId: Value(cert.buddyId),
               name: Value(cert.name),
               agency: Value(cert.agency.name),
               level: Value(cert.level?.name),
@@ -346,6 +414,7 @@ class CertificationRepository {
     return domain.Certification(
       id: row.id,
       diverId: row.diverId,
+      buddyId: row.buddyId,
       name: row.name,
       agency: _parseCertificationAgency(row.agency),
       level: _parseCertificationLevel(row.level),

@@ -14,6 +14,8 @@ import 'package:submersion/features/buddies/data/repositories/buddy_role_reposit
 import 'package:submersion/features/buddies/domain/entities/buddy_role_credential.dart';
 import 'package:submersion/features/dive_roles/data/repositories/dive_role_repository.dart';
 import 'package:submersion/features/dive_roles/domain/entities/dive_role.dart';
+import 'package:submersion/features/certifications/data/repositories/certification_repository.dart';
+import 'package:submersion/features/certifications/domain/certification_primary.dart';
 
 // Re-export merge types so callers can import from buddy_repository.dart
 export 'package:submersion/features/buddies/data/repositories/buddy_merge_repository.dart'
@@ -43,6 +45,7 @@ class BuddyRepository {
   }
 
   final SyncRepository _syncRepository = SyncRepository();
+  final CertificationRepository _certRepo = CertificationRepository();
   final _uuid = const Uuid();
   final _log = LoggerService.forClass(BuddyRepository);
 
@@ -85,7 +88,7 @@ class BuddyRepository {
       }
 
       final rows = await query.get();
-      return rows.map(_mapRowToBuddy).toList();
+      return _withPrimaryCerts(rows.map(_mapRowToBuddy).toList());
     } catch (e, stackTrace) {
       _log.error('Failed to get all buddies', error: e, stackTrace: stackTrace);
       rethrow;
@@ -98,7 +101,8 @@ class BuddyRepository {
       final query = _db.select(_db.buddies)..where((t) => t.id.equals(id));
 
       final row = await query.getSingleOrNull();
-      return row != null ? _mapRowToBuddy(row) : null;
+      if (row == null) return null;
+      return (await _withPrimaryCerts([_mapRowToBuddy(row)])).first;
     } catch (e, stackTrace) {
       _log.error(
         'Failed to get buddy by id: $id',
@@ -132,7 +136,7 @@ class BuddyRepository {
       ORDER BY name ASC
     ''', variables: variables).get();
 
-    return results.map((row) {
+    final buddies = results.map((row) {
       return domain.Buddy(
         id: row.data['id'] as String,
         diverId: row.data['diver_id'] as String?,
@@ -155,6 +159,7 @@ class BuddyRepository {
         ),
       );
     }).toList();
+    return _withPrimaryCerts(buddies);
   }
 
   /// Create a new buddy
@@ -173,8 +178,6 @@ class BuddyRepository {
               name: Value(buddy.name),
               email: Value(buddy.email),
               phone: Value(buddy.phone),
-              certificationLevel: Value(buddy.certificationLevel?.name),
-              certificationAgency: Value(buddy.certificationAgency?.name),
               photoPath: Value(buddy.photoPath),
               notes: Value(buddy.notes),
               createdAt: Value(now.millisecondsSinceEpoch),
@@ -225,7 +228,7 @@ class BuddyRepository {
       if (results.isNotEmpty) {
         final row = results.first;
         _log.info('Found existing buddy: $trimmedName');
-        return domain.Buddy(
+        final found = domain.Buddy(
           id: row.data['id'] as String,
           name: row.data['name'] as String,
           email: row.data['email'] as String?,
@@ -245,6 +248,7 @@ class BuddyRepository {
             row.data['updated_at'] as int,
           ),
         );
+        return (await _withPrimaryCerts([found])).first;
       }
 
       // Create new buddy
@@ -282,8 +286,6 @@ class BuddyRepository {
           name: Value(buddy.name),
           email: Value(buddy.email),
           phone: Value(buddy.phone),
-          certificationLevel: Value(buddy.certificationLevel?.name),
-          certificationAgency: Value(buddy.certificationAgency?.name),
           photoPath: Value(buddy.photoPath),
           notes: Value(buddy.notes),
           updatedAt: Value(now),
@@ -310,6 +312,12 @@ class BuddyRepository {
   Future<void> deleteBuddy(String id) async {
     try {
       _log.info('Deleting buddy: $id');
+      // issue #553: tombstone the buddy's certs explicitly. FK cascade deletes
+      // the rows but writes no deletion_log entry, so they would resurrect on
+      // the next sync.
+      for (final cert in await _certRepo.getCertificationsByBuddy(id)) {
+        await _certRepo.deleteCertification(cert.id);
+      }
       // Dive buddies will be automatically deleted due to CASCADE
       await (_db.delete(_db.buddies)..where((t) => t.id.equals(id))).go();
       await _syncRepository.logDeletion(entityType: 'buddies', recordId: id);
@@ -345,7 +353,7 @@ class BuddyRepository {
     final roleRows = await _db.select(_db.diveRoles).get();
     final rolesById = {for (final r in roleRows) r.id: mapDiveRoleRow(r)};
 
-    return results.map((row) {
+    final list = results.map((row) {
       final buddy = domain.Buddy(
         id: row.data['id'] as String,
         name: row.data['name'] as String,
@@ -370,6 +378,12 @@ class BuddyRepository {
       final role = rolesById[roleId] ?? DiveRole.synthetic(roleId);
       return domain.BuddyWithRole(buddy: buddy, role: role);
     }).toList();
+    final filled = await _withPrimaryCerts(list.map((w) => w.buddy).toList());
+    final byId = {for (final b in filled) b.id: b};
+    return [
+      for (final w in list)
+        domain.BuddyWithRole(buddy: byId[w.buddy.id]!, role: w.role),
+    ];
   }
 
   /// Set buddies for a dive (replaces existing)
@@ -653,7 +667,7 @@ class BuddyRepository {
         ORDER BY b.name ASC
       ''', variables: variables).get();
 
-      return results.map((row) {
+      final list = results.map((row) {
         final buddy = domain.Buddy(
           id: row.data['id'] as String,
           diverId: row.data['diver_id'] as String?,
@@ -680,6 +694,12 @@ class BuddyRepository {
           diveCount: row.data['dive_count'] as int,
         );
       }).toList();
+      final filled = await _withPrimaryCerts(list.map((w) => w.buddy).toList());
+      final byId = {for (final b in filled) b.id: b};
+      return [
+        for (final w in list)
+          BuddyWithDiveCount(buddy: byId[w.buddy.id]!, diveCount: w.diveCount),
+      ];
     } catch (e, stackTrace) {
       _log.error(
         'Failed to get buddies with dive counts',
@@ -807,6 +827,37 @@ class BuddyRepository {
   Future<void> bulkDeleteBuddies(List<String> ids) =>
       BuddyMergeRepository().bulkDeleteBuddies(ids);
 
+  /// Fill each buddy's derived primary certification (highest by ladder) from
+  /// the certifications table. Single batched query (no N+1); buddies with no
+  /// certs get null level/agency. Issue #553.
+  Future<List<domain.Buddy>> _withPrimaryCerts(
+    List<domain.Buddy> buddies,
+  ) async {
+    if (buddies.isEmpty) return buddies;
+    final certsByBuddy = await _certRepo.getCertificationsForBuddies(
+      buddies.map((b) => b.id).toList(),
+    );
+    return [
+      for (final b in buddies)
+        () {
+          final primary = primaryCertification(certsByBuddy[b.id] ?? const []);
+          return domain.Buddy(
+            id: b.id,
+            diverId: b.diverId,
+            name: b.name,
+            email: b.email,
+            phone: b.phone,
+            certificationLevel: primary?.level,
+            certificationAgency: primary?.agency,
+            photoPath: b.photoPath,
+            notes: b.notes,
+            createdAt: b.createdAt,
+            updatedAt: b.updatedAt,
+          );
+        }(),
+    ];
+  }
+
   domain.Buddy _mapRowToBuddy(Buddy row) {
     return domain.Buddy(
       id: row.id,
@@ -814,8 +865,10 @@ class BuddyRepository {
       name: row.name,
       email: row.email,
       phone: row.phone,
-      certificationLevel: _parseCertificationLevel(row.certificationLevel),
-      certificationAgency: _parseCertificationAgency(row.certificationAgency),
+      // Derived at hydration from the certifications table (issue #553);
+      // _withPrimaryCerts overwrites these on the read paths.
+      certificationLevel: null,
+      certificationAgency: null,
       photoPath: row.photoPath,
       notes: row.notes,
       createdAt: DateTime.fromMillisecondsSinceEpoch(row.createdAt),

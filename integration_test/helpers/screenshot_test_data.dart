@@ -363,8 +363,6 @@ class ScreenshotTestDataSeeder {
               diverId: Value(_diverId),
               name: buddy['name'] as String,
               email: Value(buddy['email'] as String),
-              certificationLevel: Value(buddy['certLevel'] as String),
-              certificationAgency: Value(buddy['agency'] as String),
               createdAt: now,
               updatedAt: now,
             ),
