@@ -1,16 +1,23 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/deco/buhlmann_algorithm.dart';
 import 'package:submersion/features/dive_3d/domain/entities/dive_3d_scene_data.dart';
+import 'package:submersion/features/dive_3d/domain/geometry/axis_frame.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/marker_layout.dart';
 import 'package:submersion/features/dive_3d/domain/metric_palette.dart';
 import 'package:submersion/features/dive_3d/domain/scene_3d.dart';
 import 'package:submersion/features/dive_3d/domain/scene_geometry_service.dart';
+import 'package:submersion/features/dive_3d/domain/tissue/subsurface_tissue_builder.dart';
+import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_picker.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/preview_painter.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scene_projector.dart';
+import 'package:submersion/features/dive_3d/presentation/renderer/tissue_chrome_painters.dart';
 import 'package:submersion/features/dive_3d/presentation/scene_overlay.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/dive_3d_interactive_viewport.dart';
 import 'package:submersion/features/dive_log/domain/entities/gas_switch.dart';
+import 'package:submersion/features/dive_log/presentation/widgets/tissue_color_schemes.dart';
 
 Scene3d buildScene() {
   final data = Dive3dSceneData(
@@ -159,5 +166,67 @@ void main() {
       ),
     );
     expect(paints.any((p) => p.foregroundPainter != null), isTrue);
+  });
+
+  testWidgets('hover over a surface vertex publishes a pick', (tester) async {
+    const size = Size(400, 300);
+    final result = SubsurfaceTissueBuilder.buildResult(
+      BuhlmannAlgorithm().processProfile(
+        depths: const [0, 30, 30, 30, 0],
+        timestamps: const [0, 120, 600, 1200, 1400],
+      ),
+      colorFn: thermalColor,
+    );
+    final frame = AxisFrame.build(result.scene.bounds, referenceY: 3.0);
+    final hoverPick = ValueNotifier<TissuePick?>(null);
+    const style = TissueChromeStyle(
+      axisX: Color(0xFFFFB300),
+      axisY: Color(0xFF66BB6A),
+      axisZ: Color(0xFF42A5F5),
+      grid: Color(0x33FFFFFF),
+      wireframe: Color(0x33FFFFFF),
+      marker: Color(0xFFFFFFFF),
+      markerOutline: Color(0xFF000000),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox.fromSize(
+              size: size,
+              child: Dive3dInteractiveViewport(
+                scene: result.scene,
+                scrubPosition: ValueNotifier<double>(0),
+                visibleOverlays: const {},
+                surfaceGrid: result.grid,
+                axisFrame: frame,
+                chromeStyle: style,
+                hoverPick: hoverPick,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    // Compute where vertex (col, comp) lands at the default camera, then hover.
+    final projector = SceneProjector(size: size, bounds: result.scene.bounds);
+    const col = 1, comp = 5;
+    final (x, y, z) = result.grid.positionAt(col, comp);
+    final origin = tester.getTopLeft(find.byType(Dive3dInteractiveViewport));
+    final target = origin + projector.project(x, y, z);
+
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(target);
+    await tester.pump();
+
+    expect(hoverPick.value, isNotNull);
+    expect(hoverPick.value!.col, col);
+    expect(hoverPick.value!.comp, comp);
   });
 }

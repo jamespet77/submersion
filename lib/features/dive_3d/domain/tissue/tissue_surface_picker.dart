@@ -23,13 +23,12 @@ class TissuePick {
   });
 }
 
-const double _tiePx = 4.0;
-
-/// Nearest projected surface vertex to [cursor] within [thresholdPx]. On a
-/// near-tie (within [_tiePx]) prefers the greater [viewDepths] value so the
-/// cursor picks the visible front surface, not a vertex hidden behind it.
-/// Returns null if nothing qualifies. [projected]/[viewDepths] are indexed
-/// col*compartments + comp.
+/// Nearest projected surface vertex to [cursor] within [thresholdPx]. The
+/// strictly-nearest vertex wins; only when two vertices project to the exact
+/// same point (a front face in front of a back face) does the greater
+/// [viewDepths] value break the tie, so the cursor picks the visible front
+/// surface rather than a vertex hidden behind it. Returns null if nothing
+/// qualifies. [projected]/[viewDepths] are indexed col*compartments + comp.
 TissuePick? pickNearestTissueVertex({
   required Offset cursor,
   required List<Offset> projected,
@@ -46,11 +45,11 @@ TissuePick? pickNearestTissueVertex({
     if (d > thresholdPx) continue;
     final better =
         bestIndex < 0 ||
-        d < bestDist - _tiePx ||
-        ((d - bestDist).abs() <= _tiePx && viewDepths[i] > bestDepth);
+        d < bestDist ||
+        (d == bestDist && viewDepths[i] > bestDepth);
     if (better) {
       bestIndex = i;
-      bestDist = d < bestDist ? d : bestDist;
+      bestDist = d;
       bestDepth = viewDepths[i];
     }
   }

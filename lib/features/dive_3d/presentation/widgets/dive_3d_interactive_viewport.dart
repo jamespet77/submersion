@@ -2,11 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'package:submersion/features/dive_3d/domain/geometry/axis_frame.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/marker_layout.dart';
 import 'package:submersion/features/dive_3d/domain/scene_3d.dart';
+import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_grid.dart';
+import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_picker.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/preview_painter.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scene_projector.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scrub_cursor.dart';
+import 'package:submersion/features/dive_3d/presentation/renderer/tissue_chrome_painters.dart';
 import 'package:submersion/features/dive_3d/presentation/scene_overlay.dart';
 
 /// How the scrub cursor is drawn: a dot riding the path (depth/tissue/career/
@@ -27,6 +31,13 @@ class Dive3dInteractiveViewport extends StatefulWidget {
   final void Function(SceneMarker marker)? onMarkerTap;
   final ScrubCursorStyle scrubCursor;
 
+  /// Tissue-only chrome. All null for the dive/computers scenes, in which case
+  /// the viewport behaves exactly as before (no axes/grid/tooltip picking).
+  final TissueSurfaceGrid? surfaceGrid;
+  final AxisFrame? axisFrame;
+  final TissueChromeStyle? chromeStyle;
+  final ValueNotifier<TissuePick?>? hoverPick;
+
   const Dive3dInteractiveViewport({
     super.key,
     required this.scene,
@@ -34,6 +45,10 @@ class Dive3dInteractiveViewport extends StatefulWidget {
     required this.visibleOverlays,
     this.onMarkerTap,
     this.scrubCursor = ScrubCursorStyle.dot,
+    this.surfaceGrid,
+    this.axisFrame,
+    this.chromeStyle,
+    this.hoverPick,
   });
 
   @override
@@ -79,6 +94,61 @@ class _Dive3dInteractiveViewportState extends State<Dive3dInteractiveViewport> {
     zoom: _zoom,
   );
 
+  // Cached screen projections of the surface grid, recomputed only when the
+  // camera or size changes (not on every hover event).
+  List<Offset>? _projected;
+  List<double>? _viewDepths;
+  double? _cacheYaw, _cachePitch, _cacheZoom;
+  Size? _cacheSize;
+
+  void _ensureProjection(Size size) {
+    final grid = widget.surfaceGrid;
+    if (grid == null || grid.isEmpty) {
+      _projected = null;
+      _viewDepths = null;
+      return;
+    }
+    if (_projected != null &&
+        _cacheYaw == _yaw &&
+        _cachePitch == _pitch &&
+        _cacheZoom == _zoom &&
+        _cacheSize == size) {
+      return;
+    }
+    final p = _projectorFor(size);
+    final n = grid.columns * grid.compartments;
+    final proj = List<Offset>.filled(n, Offset.zero);
+    final depths = List<double>.filled(n, 0);
+    for (var col = 0; col < grid.columns; col++) {
+      for (var comp = 0; comp < grid.compartments; comp++) {
+        final (x, y, z) = grid.positionAt(col, comp);
+        final i = col * grid.compartments + comp;
+        proj[i] = p.project(x, y, z);
+        depths[i] = p.viewDepth(x, y, z);
+      }
+    }
+    _projected = proj;
+    _viewDepths = depths;
+    _cacheYaw = _yaw;
+    _cachePitch = _pitch;
+    _cacheZoom = _zoom;
+    _cacheSize = size;
+  }
+
+  void _pickAt(Size size, Offset local) {
+    final notifier = widget.hoverPick;
+    final grid = widget.surfaceGrid;
+    if (notifier == null || grid == null || grid.isEmpty) return;
+    _ensureProjection(size);
+    notifier.value = pickNearestTissueVertex(
+      cursor: local,
+      projected: _projected!,
+      viewDepths: _viewDepths!,
+      columns: grid.columns,
+      compartments: grid.compartments,
+    );
+  }
+
   void _handleTapUp(Size size, TapUpDetails details) {
     final onTap = widget.onMarkerTap;
     if (onTap == null ||
@@ -105,35 +175,81 @@ class _Dive3dInteractiveViewportState extends State<Dive3dInteractiveViewport> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final size = constraints.biggest;
+        final hasChrome =
+            widget.surfaceGrid != null &&
+            widget.axisFrame != null &&
+            widget.chromeStyle != null &&
+            widget.hoverPick != null;
+
+        final scenePaint = CustomPaint(
+          painter: Dive3dScenePainter(
+            scene: widget.scene,
+            yawDegrees: _yaw,
+            pitchDegrees: _pitch,
+            zoom: _zoom,
+            visibleOverlays: widget.visibleOverlays,
+          ),
+          foregroundPainter: hasChrome
+              ? TissueChromePainter(
+                  scene: widget.scene,
+                  grid: widget.surfaceGrid!,
+                  frame: widget.axisFrame!,
+                  style: widget.chromeStyle!,
+                  yawDegrees: _yaw,
+                  pitchDegrees: _pitch,
+                  zoom: _zoom,
+                  scrubPosition: widget.scrubPosition,
+                  hoverPick: widget.hoverPick!,
+                )
+              : _ScrubCursorPainter(
+                  scene: widget.scene,
+                  yawDegrees: _yaw,
+                  pitchDegrees: _pitch,
+                  zoom: _zoom,
+                  scrubPosition: widget.scrubPosition,
+                  style: widget.scrubCursor,
+                ),
+          child: const SizedBox.expand(),
+        );
+
+        // Frame grid draws behind the surface (paint order gives occlusion).
+        final painted = hasChrome
+            ? CustomPaint(
+                painter: TissueFramePainter(
+                  bounds: widget.scene.bounds,
+                  frame: widget.axisFrame!,
+                  style: widget.chromeStyle!,
+                  yawDegrees: _yaw,
+                  pitchDegrees: _pitch,
+                  zoom: _zoom,
+                ),
+                child: scenePaint,
+              )
+            : scenePaint;
+
+        final gestures = GestureDetector(
+          onPanUpdate: _onPanUpdate,
+          onDoubleTap: _resetCamera,
+          onTapUp: (details) {
+            _handleTapUp(size, details);
+            _pickAt(size, details.localPosition);
+          },
+          child: painted,
+        );
+
         return Listener(
           onPointerSignal: (signal) {
             if (signal is PointerScrollEvent) {
               _zoomBy(signal.scrollDelta.dy < 0 ? 1.1 : 1 / 1.1);
             }
           },
-          child: GestureDetector(
-            onPanUpdate: _onPanUpdate,
-            onDoubleTap: _resetCamera,
-            onTapUp: (details) => _handleTapUp(size, details),
-            child: CustomPaint(
-              painter: Dive3dScenePainter(
-                scene: widget.scene,
-                yawDegrees: _yaw,
-                pitchDegrees: _pitch,
-                zoom: _zoom,
-                visibleOverlays: widget.visibleOverlays,
-              ),
-              foregroundPainter: _ScrubCursorPainter(
-                scene: widget.scene,
-                yawDegrees: _yaw,
-                pitchDegrees: _pitch,
-                zoom: _zoom,
-                scrubPosition: widget.scrubPosition,
-                style: widget.scrubCursor,
-              ),
-              child: const SizedBox.expand(),
-            ),
-          ),
+          child: hasChrome
+              ? MouseRegion(
+                  onHover: (e) => _pickAt(size, e.localPosition),
+                  onExit: (_) => widget.hoverPick!.value = null,
+                  child: gestures,
+                )
+              : gestures,
         );
       },
     );
