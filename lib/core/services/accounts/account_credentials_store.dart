@@ -24,6 +24,24 @@ class AccountCredentialsStore {
   Future<void> delete(String accountId) =>
       _storage.delete(key: keyFor(accountId));
 
+  /// Makes the per-account key an EXACT mirror of a legacy source-of-truth
+  /// key: copies the blob when present, deletes the per-account key when the
+  /// legacy key is absent. Used by account-first sync resolution so a
+  /// cleared legacy credential (sign-out / remove) can neither be read from
+  /// nor resurrected into the per-account key. The legacy key is left
+  /// untouched (it remains the source of truth).
+  Future<void> mirrorLegacy({
+    required String legacyKey,
+    required String accountId,
+  }) async {
+    final legacy = await _storage.read(key: legacyKey);
+    if (legacy != null) {
+      await write(accountId, legacy);
+    } else {
+      await delete(accountId);
+    }
+  }
+
   /// Copies a legacy single-key blob to the per-account key. Keeps the
   /// legacy entry (rollback safety).
   ///

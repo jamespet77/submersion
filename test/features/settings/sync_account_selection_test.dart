@@ -98,6 +98,47 @@ void main() {
     );
   });
 
+  test('clearing the legacy blob then re-deriving deletes the stale '
+      'per-account mirror (disconnect is not resurrected)', () async {
+    final keychain = InMemoryKeychain();
+    keychain.values[S3CredentialsStore.storageKey] = jsonEncode(
+      S3Config(
+        endpoint: 'https://minio.local:9000',
+        bucket: 'dive-media',
+        accessKeyId: 'AK',
+        secretAccessKey: 'SK',
+      ).toJson(),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        accountCredentialsStoreProvider.overrideWithValue(
+          AccountCredentialsStore(storage: keychain),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(selectedCloudProviderTypeProvider.notifier).state =
+        CloudProviderType.s3;
+    final account = await container.read(selectedSyncAccountProvider.future);
+    expect(
+      keychain.values[AccountCredentialsStore.keyFor(account!.id)],
+      isNotNull,
+      reason: 'mirrored on first derivation',
+    );
+
+    // Simulate a "Remove Configuration": the legacy source of truth is gone.
+    keychain.values.remove(S3CredentialsStore.storageKey);
+    container.invalidate(selectedSyncAccountProvider);
+    await container.read(selectedSyncAccountProvider.future);
+
+    expect(
+      keychain.values[AccountCredentialsStore.keyFor(account.id)],
+      isNull,
+      reason: 'per-account mirror deleted to match the cleared legacy key',
+    );
+  });
+
   test('a Google Drive selection does not attempt a credential mirror '
       '(session-managed, no keychain blob)', () async {
     final keychain = InMemoryKeychain();

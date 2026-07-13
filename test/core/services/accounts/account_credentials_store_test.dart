@@ -52,6 +52,29 @@ void main() {
     },
   );
 
+  test('mirrorLegacy copies the legacy blob when present', () async {
+    keychain.values['sync_s3_config'] = '{"v":1}';
+    await store.mirrorLegacy(legacyKey: 'sync_s3_config', accountId: 'acc-7');
+    expect(await store.read('acc-7'), '{"v":1}');
+  });
+
+  test('mirrorLegacy deletes the per-account key when the legacy key is '
+      'absent (a cleared credential is never resurrected)', () async {
+    await store.write('acc-8', '{"stale":true}');
+    // legacy key not present
+    await store.mirrorLegacy(legacyKey: 'sync_s3_config', accountId: 'acc-8');
+    expect(await store.read('acc-8'), isNull);
+  });
+
+  test(
+    'mirrorLegacy leaves the legacy key untouched (source of truth)',
+    () async {
+      keychain.values['sync_s3_config'] = '{"v":1}';
+      await store.mirrorLegacy(legacyKey: 'sync_s3_config', accountId: 'acc-9');
+      expect(keychain.values['sync_s3_config'], '{"v":1}');
+    },
+  );
+
   test(
     'rekeyFromLegacy overwrite refreshes an existing per-account blob',
     () async {

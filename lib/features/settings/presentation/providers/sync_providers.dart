@@ -311,10 +311,13 @@ final selectedSyncAccountProvider = FutureProvider<domain.ConnectedAccount?>((
   }
 });
 
-/// Refresh the account's per-account credential blob from the legacy key so
-/// account-first resolution never reads a stale copy. Best-effort: a
-/// keychain failure here must not null the derived account (resolution
-/// falls back to the legacy singleton, which is still valid).
+/// Keep the account's per-account credential blob an exact mirror of the
+/// legacy source-of-truth key, so account-first resolution never reads a
+/// stale copy — and a cleared legacy credential (sign-out / remove) can
+/// neither be read from nor resurrected into the per-account key. Copies
+/// when the legacy key is present, deletes the per-account key when absent.
+/// Best-effort: a keychain failure must not null the derived account
+/// (resolution falls back to the legacy singleton, which is still valid).
 Future<void> _mirrorLegacyCredentials(
   Ref ref,
   domain.ConnectedAccount account,
@@ -331,11 +334,7 @@ Future<void> _mirrorLegacyCredentials(
   try {
     await ref
         .read(accountCredentialsStoreProvider)
-        .rekeyFromLegacy(
-          legacyKey: legacyKey,
-          accountId: account.id,
-          overwrite: true,
-        );
+        .mirrorLegacy(legacyKey: legacyKey, accountId: account.id);
   } catch (_) {
     // Ignored: legacy singleton remains a valid resolution fallback.
   }
@@ -1112,6 +1111,13 @@ class SyncNotifier extends StateNotifier<SyncState> {
     final selected = _ref.read(selectedCloudProviderTypeProvider);
     if (selected != CloudProviderType.s3) {
       await _syncService.signOut();
+      // Account-first resolution means _syncService.signOut() cleared the
+      // PER-ACCOUNT Dropbox blob (and revoked); also clear the legacy
+      // source-of-truth key, otherwise the UI still reads it as connected
+      // and the next credential mirror would resurrect it.
+      if (selected == CloudProviderType.dropbox) {
+        await DropboxAuthStore().clear();
+      }
     } else {
       // Match SyncService.signOut()'s metadata clearing without the
       // provider sign-out, so the hand-entered credentials survive.
