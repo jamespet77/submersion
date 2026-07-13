@@ -5,6 +5,7 @@ import 'package:submersion/core/database/database.dart';
 import 'package:submersion/core/services/database_service.dart';
 import 'package:submersion/core/services/logger_service.dart';
 import 'package:submersion/core/services/sync/hlc.dart';
+import 'package:submersion/core/services/sync/sync_event_bus.dart';
 import 'package:submersion/core/services/sync/sync_clock.dart';
 
 /// Sync status for individual records
@@ -299,6 +300,9 @@ class SyncRepository {
       );
 
       _log.info('Set cloud provider to: ${provider?.name}');
+      // Selection changed: let account-derived UI (pending-setup routes)
+      // recompute while Settings stays mounted.
+      SyncEventBus.notifyLocalChange();
     } catch (e, stackTrace) {
       _log.error(
         'Failed to set cloud provider',
@@ -325,6 +329,7 @@ class SyncRepository {
         updatedAt: Value(now),
       ),
     );
+    SyncEventBus.notifyLocalChange();
   }
 
   /// The connected account driving sync, or null pre-account-migration or

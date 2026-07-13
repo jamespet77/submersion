@@ -288,6 +288,33 @@ void main() {
     },
   );
 
+  test('reconnecting Dropbox refreshes a stale per-account blob from the '
+      'rotated legacy key', () async {
+    // First connect stamps the per-account blob from the legacy key.
+    accountKeychain.values['sync_dropbox_auth'] = '{"refreshToken":"old"}';
+    final dropboxFake = InMemoryMediaObjectStore();
+    MediaStoreService svc() => MediaStoreService(
+      credentials: credentials,
+      attachState: attachState,
+      storesRepository: storesRepository,
+      accountsRepository: accountsRepository,
+      accountCredentials: accountCredentials,
+      dropboxStoreFactory: () async => dropboxFake,
+    );
+    await svc().connectDropbox();
+    final account = (await accountsRepository.getByKind(AccountKind.dropbox))!;
+
+    // User re-links Dropbox in Cloud Sync: legacy blob rotates.
+    accountKeychain.values['sync_dropbox_auth'] = '{"refreshToken":"new"}';
+    await svc().connectDropbox();
+
+    expect(
+      accountKeychain.values[AccountCredentialsStore.keyFor(account.id)],
+      '{"refreshToken":"new"}',
+      reason: 'runtime reads only the per-account key; it must be refreshed',
+    );
+  });
+
   test(
     'disconnect detaches but keeps the account row and its credentials',
     () async {

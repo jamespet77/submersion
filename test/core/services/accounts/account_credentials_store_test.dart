@@ -51,4 +51,28 @@ void main() {
       expect(await store.read('acc-4'), '{"new":true}');
     },
   );
+
+  test(
+    'rekeyFromLegacy overwrite refreshes an existing per-account blob',
+    () async {
+      await store.write('acc-5', '{"stale":true}');
+      keychain.values['sync_dropbox_auth'] = '{"fresh":true}';
+      await store.rekeyFromLegacy(
+        legacyKey: 'sync_dropbox_auth',
+        accountId: 'acc-5',
+        overwrite: true,
+      );
+      expect(await store.read('acc-5'), '{"fresh":true}');
+    },
+  );
+
+  test('rekeyFromLegacy overwrite is a no-op when legacy is absent', () async {
+    await store.write('acc-6', '{"keep":true}');
+    await store.rekeyFromLegacy(
+      legacyKey: 'missing',
+      accountId: 'acc-6',
+      overwrite: true,
+    );
+    expect(await store.read('acc-6'), '{"keep":true}');
+  });
 }

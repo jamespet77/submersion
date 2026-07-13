@@ -278,9 +278,13 @@ class MediaStoreService {
         await _accounts.getByKind(kind) ??
         await _accounts.create(kind: kind, label: displayHint);
     if (type == CloudProviderType.dropbox) {
+      // Refresh (overwrite) so a re-link in Cloud Sync that rotated the
+      // legacy blob is reflected here; the runtime reads only the
+      // per-account key, so a stale copy would fail with revoked creds.
       await _accountCredentials.rekeyFromLegacy(
         legacyKey: DropboxAuthStore.storageKey,
         accountId: account.id,
+        overwrite: true,
       );
     }
     await _attachState.setAttached(

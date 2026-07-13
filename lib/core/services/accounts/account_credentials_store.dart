@@ -25,13 +25,21 @@ class AccountCredentialsStore {
       _storage.delete(key: keyFor(accountId));
 
   /// Copies a legacy single-key blob to the per-account key. Keeps the
-  /// legacy entry (rollback safety) and never overwrites an existing
-  /// per-account blob (idempotent across repeated startups).
+  /// legacy entry (rollback safety).
+  ///
+  /// By default (`overwrite: false`) an existing per-account blob is left
+  /// untouched, which keeps the one-time startup migration idempotent. The
+  /// connect flow passes `overwrite: true` to REFRESH the per-account blob
+  /// from the legacy key: after the user re-authenticates the underlying
+  /// provider (e.g. re-links Dropbox in Cloud Sync, rotating
+  /// `sync_dropbox_auth`), a stale per-account copy would otherwise make
+  /// account-first runtime resolution fail with revoked credentials.
   Future<void> rekeyFromLegacy({
     required String legacyKey,
     required String accountId,
+    bool overwrite = false,
   }) async {
-    if (await read(accountId) != null) return;
+    if (!overwrite && await read(accountId) != null) return;
     final legacy = await _storage.read(key: legacyKey);
     if (legacy == null) return;
     await write(accountId, legacy);

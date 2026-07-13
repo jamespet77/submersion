@@ -14,13 +14,14 @@ import 'package:submersion/core/services/accounts/connected_account.dart'
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/domain/entities/storage_config.dart';
 import 'package:submersion/core/services/logger_service.dart';
+import 'package:submersion/core/services/cloud_storage/cloud_provider_instances.dart';
+export 'package:submersion/core/services/cloud_storage/cloud_provider_instances.dart'
+    show cloudProviderInstanceFor;
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/dropbox/dropbox_app.dart';
 import 'package:submersion/core/services/cloud_storage/dropbox/dropbox_auth_store.dart';
 import 'package:submersion/core/services/cloud_storage/dropbox_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/encrypting_cloud_storage_provider.dart';
-import 'package:submersion/core/services/cloud_storage/google_drive_storage_provider.dart';
-import 'package:submersion/core/services/cloud_storage/icloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/icloud_native_service.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
 import 'package:submersion/core/services/cloud_storage/s3_storage_provider.dart';
@@ -301,29 +302,6 @@ final selectedSyncAccountProvider = FutureProvider<domain.ConnectedAccount?>((
     return null;
   }
 });
-
-/// Cloud storage provider singletons
-final _googleDriveProvider = GoogleDriveStorageProvider();
-final _icloudProvider = ICloudStorageProvider();
-final _s3Provider = S3StorageProvider();
-final _dropboxProvider = DropboxStorageProvider();
-
-/// The singleton instance backing a [CloudProviderType]. Shared by the active
-/// provider resolution and by old-backend cleanup, which must reach a backend
-/// the user has already switched away from (so it is no longer the active
-/// provider).
-CloudStorageProvider cloudProviderInstanceFor(CloudProviderType type) {
-  switch (type) {
-    case CloudProviderType.icloud:
-      return _icloudProvider;
-    case CloudProviderType.googledrive:
-      return _googleDriveProvider;
-    case CloudProviderType.s3:
-      return _s3Provider;
-    case CloudProviderType.dropbox:
-      return _dropboxProvider;
-  }
-}
 
 /// Cloud storage provider instance (null if none selected or custom folder mode)
 ///
@@ -1275,7 +1253,7 @@ final restoreLastProviderProvider = FutureProvider<void>((ref) async {
 /// Direct access to the S3 provider singleton for the configuration UI
 /// (load/save config, test connection).
 final s3StorageProviderInstanceProvider = Provider<S3StorageProvider>(
-  (ref) => _s3Provider,
+  (ref) => s3ProviderInstance,
 );
 
 /// The stored S3 configuration, or null when S3 has not been set up.
@@ -1287,7 +1265,7 @@ final s3ConfigProvider = FutureProvider<S3Config?>((ref) async {
 /// Direct access to the Dropbox provider singleton for the connect UI
 /// (begin/complete authorization, account info).
 final dropboxStorageProviderInstanceProvider = Provider<DropboxStorageProvider>(
-  (ref) => _dropboxProvider,
+  (ref) => dropboxProviderInstance,
 );
 
 /// The stored Dropbox connection, or null when Dropbox is not connected.

@@ -35,6 +35,25 @@ final lightroomAccountProvider = FutureProvider<domain.ConnectedAccount?>(
       .getByKind(AccountKind.adobeLightroom),
 );
 
+/// The Lightroom adapter, checked. A non-Lightroom adapter registered for
+/// AccountKind.adobeLightroom (only reachable via a test override or a
+/// future refactor) fails with a diagnosable message rather than an opaque
+/// TypeError from an `as` cast.
+final lightroomAccountAdapterProvider = Provider<LightroomAccountAdapter>((
+  ref,
+) {
+  final adapter = ref
+      .watch(accountProviderRegistryProvider)
+      .adapterFor(AccountKind.adobeLightroom);
+  if (adapter is! LightroomAccountAdapter) {
+    throw StateError(
+      'Expected a LightroomAccountAdapter for AccountKind.adobeLightroom, '
+      'got ${adapter.runtimeType}',
+    );
+  }
+  return adapter;
+});
+
 /// API client on the account's own auth manager once an account exists;
 /// the legacy connect-time manager before that (the connect flow fetches
 /// identity/catalog before the account row is created).
@@ -42,11 +61,7 @@ final lightroomApiClientProvider = Provider<LightroomApiClient>((ref) {
   final account = ref.watch(lightroomAccountProvider).value;
   final auth = account == null
       ? ref.watch(lightroomAuthManagerProvider)
-      : (ref
-                    .watch(accountProviderRegistryProvider)
-                    .adapterFor(AccountKind.adobeLightroom)
-                as LightroomAccountAdapter)
-            .authManagerFor(account);
+      : ref.watch(lightroomAccountAdapterProvider).authManagerFor(account);
   return LightroomApiClient(auth: auth);
 });
 
