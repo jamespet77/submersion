@@ -5,9 +5,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:submersion/core/database/database.dart';
+import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/sync/crypto/keyslots.dart';
 import 'package:submersion/core/services/sync/crypto/sync_envelope.dart';
 import 'package:submersion/features/backup/data/repositories/backup_preferences.dart';
+import 'package:submersion/features/backup/domain/entities/backup_record.dart';
 import 'package:submersion/features/backup/data/services/backup_encryption_key_store.dart';
 import 'package:submersion/features/backup/data/services/backup_encryption_service.dart';
 import 'package:submersion/features/backup/data/services/backup_service.dart';
@@ -105,26 +107,29 @@ void main() {
     },
   );
 
-  test(
-    'backup encryption ON: cloud copy is the SAME .sbe (single encryption)',
-    () async {
-      await enableBackupEncryption();
-      await preferences.setCloudBackupEnabled(true);
-      await buildService().performBackup();
+  test('backup encryption ON: cloud copy is byte-identical to the local .sbe '
+      '(verbatim single encryption)', () async {
+    await enableBackupEncryption();
+    await preferences.setCloudBackupEnabled(true);
+    final record = await buildService().performBackup();
 
-      final folderId = await cloud.createFolder('Submersion Backups');
-      final files = await cloud.listFiles(
-        folderId: folderId,
-        namePattern: 'submersion_backup_',
-      );
-      expect(files, hasLength(1));
-      expect(files.single.name, endsWith('.sbe'));
-      expect(
-        SyncEnvelope.hasMagic(await cloud.downloadFile(files.single.id)),
-        isTrue,
-      );
-    },
-  );
+    final localBytes = await File(record.localPath!).readAsBytes();
+    expect(SyncEnvelope.hasMagic(localBytes), isTrue);
+
+    final folderId = await cloud.createFolder('Submersion Backups');
+    final files = await cloud.listFiles(
+      folderId: folderId,
+      namePattern: 'submersion_backup_',
+    );
+    expect(files, hasLength(1));
+    expect(files.single.name, endsWith('.sbe'));
+
+    // Byte-for-byte equality is the real single-encryption guarantee: a
+    // double-encrypted upload would also start with SBE1 but would NOT match
+    // the local artifact.
+    final cloudBytes = await cloud.downloadFile(files.single.id);
+    expect(cloudBytes, equals(localBytes));
+  });
 
   test('exportBackupToTemp encrypts to .sbe when enabled', () async {
     await enableBackupEncryption();
@@ -227,4 +232,148 @@ void main() {
       expect(again.skipped, 1);
     },
   );
+
+  test(
+    'reencrypt: skips records with no usable local filesystem path',
+    () async {
+      await enableBackupEncryption();
+      BackupRecord seed(String id, String? localPath) => BackupRecord(
+        id: id,
+        filename: '$id.db',
+        timestamp: DateTime.now(),
+        sizeBytes: 1,
+        location: BackupLocation.local,
+        localPath: localPath,
+      );
+      await preferences.addRecord(seed('none', null)); // no local path
+      await preferences.addRecord(
+        seed('saf', 'content://tree/doc/backup.db'),
+      ); // SAF ref
+      await preferences.addRecord(
+        seed('gone', '${Directory.systemTemp.path}/does_not_exist_x9.db'),
+      ); // missing file
+
+      final result = await buildService().reencryptExistingBackups();
+      expect(result.reencrypted, 0);
+      expect(result.skipped, 3);
+      expect(result.failed, 0);
+    },
+  );
+
+  test(
+    'reencrypt: cloud copy replaced; old object deleted when its id differs',
+    () async {
+      await preferences.setCloudBackupEnabled(true);
+      // Plaintext local + plaintext cloud .db (encryption still off here).
+      final plain = await buildService().performBackup();
+      expect(plain.filename, endsWith('.db'));
+      final oldCloudId = preferences.getHistory().single.cloudFileId;
+      expect(oldCloudId, isNotNull);
+      expect(oldCloudId, endsWith('.db'));
+
+      await enableBackupEncryption();
+      final result = await buildService().reencryptExistingBackups();
+      expect(result.reencrypted, 1);
+
+      final rec = preferences.getHistory().single;
+      // Cloud id moved to the new .sbe object; the old .db object is gone.
+      expect(rec.cloudFileId, endsWith('.sbe'));
+      expect(rec.cloudFileId, isNot(oldCloudId));
+      await expectLater(
+        cloud.downloadFile(oldCloudId!),
+        throwsA(isA<Object>()),
+      );
+      expect(
+        SyncEnvelope.hasMagic(await cloud.downloadFile(rec.cloudFileId!)),
+        isTrue,
+      );
+    },
+  );
+
+  test('reencrypt: path-based provider reuses the cloud id; the object is NOT '
+      'deleted (single-encryption collision is safe)', () async {
+    // Seed a record whose cloud object already carries the .sbe name the
+    // re-encrypt upload will produce -- the case a path-based provider
+    // (S3/Dropbox/iCloud) returns the SAME id for. A blind delete here would
+    // destroy the object we just uploaded.
+    final localDb = File(
+      '${Directory.systemTemp.path}/collide_${DateTime.now().microsecondsSinceEpoch}.db',
+    );
+    await localDb.writeAsString('plaintext db');
+    addTearDown(() async {
+      if (await localDb.exists()) await localDb.delete();
+      final sbe = File(
+        '${localDb.parent.path}/${localDb.uri.pathSegments.last.replaceAll('.db', '.sbe')}',
+      );
+      if (await sbe.exists()) await sbe.delete();
+    });
+    final base = localDb.uri.pathSegments.last.replaceAll('.db', '');
+    // The upload target folder id is 'Submersion Backups' (fake createFolder),
+    // so the colliding id is that folder + the new .sbe name.
+    final upload = await cloud.uploadFile(
+      Uint8List.fromList('old sync-encrypted bytes'.codeUnits),
+      '$base.sbe',
+      folderId: 'Submersion Backups',
+    );
+    await preferences.addRecord(
+      BackupRecord(
+        id: 'seed',
+        filename: '$base.db',
+        timestamp: DateTime.now(),
+        sizeBytes: await localDb.length(),
+        location: BackupLocation.both,
+        localPath: localDb.path,
+        cloudFileId: upload.fileId,
+      ),
+    );
+
+    await enableBackupEncryption();
+    final result = await buildService().reencryptExistingBackups();
+    expect(result.reencrypted, 1);
+
+    final rec = preferences.getHistory().single;
+    // Same id reused; the object survives and is the new backup-key .sbe.
+    expect(rec.cloudFileId, upload.fileId);
+    final bytes = await cloud.downloadFile(upload.fileId);
+    expect(SyncEnvelope.hasMagic(bytes), isTrue);
+  });
+
+  test('reencrypt: a failed cloud upload leaves the record resumable (points at '
+      'the intact plaintext .db)', () async {
+    await preferences.setCloudBackupEnabled(true);
+    final plain = await buildService().performBackup();
+    final oldLocal = plain.localPath!;
+    expect(oldLocal, endsWith('.db'));
+
+    await enableBackupEncryption();
+    // A cloud provider that always fails uploads simulates an interrupted run.
+    final failing = BackupService(
+      dbAdapter: _FakeBackupDatabaseAdapter(),
+      preferences: preferences,
+      cloudProvider: _AlwaysFailUploadCloud(),
+      backupEncryptionKeyStore: backupKeyStore,
+    );
+    final result = await failing.reencryptExistingBackups();
+    expect(result.failed, 1);
+    expect(result.reencrypted, 0);
+
+    // The record still points at the untouched plaintext .db, so the next run
+    // can re-encrypt it -- resumability is preserved.
+    final rec = preferences.getHistory().single;
+    expect(rec.localPath, oldLocal);
+    expect(rec.filename, endsWith('.db'));
+    expect(await File(oldLocal).exists(), isTrue);
+  });
+}
+
+/// A cloud provider that fails every upload (all other calls delegate to a
+/// plain fake). Used to prove the re-encrypt run stays resumable when an upload
+/// throws after the new local .sbe is already written.
+class _AlwaysFailUploadCloud extends FakeCloudStorageProvider {
+  @override
+  Future<UploadResult> uploadFile(
+    Uint8List data,
+    String filename, {
+    String? folderId,
+  }) async => throw const CloudStorageException('Fake: upload failed');
 }

@@ -5,6 +5,8 @@ import 'package:submersion/l10n/arb/app_localizations.dart';
 import 'package:submersion/features/backup/presentation/widgets/backup_enable_encryption_dialog.dart';
 
 Widget _host(Widget child) => MaterialApp(
+  // Pinned: the assertions match English strings.
+  locale: const Locale('en'),
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(body: child),
@@ -53,6 +55,68 @@ void main() {
     await tester.tap(find.text('Done'));
     await tester.pumpAndSettle();
     expect(finished, isTrue);
+  });
+
+  testWidgets('an enable failure returns to the form with an inline error', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _host(
+        Builder(
+          builder: (context) {
+            return ElevatedButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => BackupEnableEncryptionDialog(
+                  onEnable: (p) async => throw Exception('keystore down'),
+                  onFinished: () async {},
+                ),
+              ),
+              child: const Text('open'),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField).at(0), 'backuppass1');
+    await tester.enterText(find.byType(TextField).at(1), 'backuppass1');
+    await tester.tap(find.text('Continue'));
+    await tester.pumpAndSettle();
+
+    // Back on the form (both fields visible) with the error surfaced; no
+    // recovery phase, so no checkbox.
+    expect(find.textContaining('keystore down'), findsOneWidget);
+    expect(find.byType(TextField), findsNWidgets(2));
+    expect(find.byType(CheckboxListTile), findsNothing);
+  });
+
+  testWidgets('Cancel dismisses the enable dialog', (tester) async {
+    await tester.pumpWidget(
+      _host(
+        Builder(
+          builder: (context) {
+            return ElevatedButton(
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (_) => BackupEnableEncryptionDialog(
+                  onEnable: (p) async => 'x',
+                  onFinished: () async {},
+                ),
+              ),
+              child: const Text('open'),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BackupEnableEncryptionDialog), findsNothing);
   });
 
   testWidgets('form validates password length and match', (tester) async {
