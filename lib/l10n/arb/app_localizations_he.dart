@@ -18857,6 +18857,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get dive3d_resetView => 'איפוס תצוגה';
 
   @override
+  String get dive3d_zoomIn => 'התקרבות';
+
+  @override
+  String get dive3d_zoomOut => 'התרחקות';
+
+  @override
   String get dive3d_play => 'הפעלה';
 
   @override
@@ -18969,6 +18975,41 @@ class AppLocalizationsHe extends AppLocalizations {
   String get dive3d_tissue_offGassing => 'שחרור';
 
   @override
+  String dive3d_tissue_tooltipCompartment(int number) {
+    return 'תא $number';
+  }
+
+  @override
+  String dive3d_tissue_tooltipHalfTime(int minutes) {
+    return '$minutes דק׳ N2';
+  }
+
+  @override
+  String dive3d_tissue_tooltipSaturation(int percent) {
+    return 'רוויה $percent%';
+  }
+
+  @override
+  String dive3d_tissue_tooltipProgress(int percent) {
+    return '$percent% מהצלילה';
+  }
+
+  @override
+  String get dive3d_tissue_stateEquilibrium => 'שיווי משקל';
+
+  @override
+  String get dive3d_tissue_statePastMValue => 'מעל ערך M';
+
+  @override
+  String get dive3d_tissue_axisTime => 'זמן';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'רוויה %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'תא';
+
+  @override
   String get dive3d_compare_computers_title => 'השוואת מחשבי צלילה';
 
   @override
@@ -19000,4 +19041,128 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get diveLog_sources_compareIn3d => 'השוואה בתלת-ממד';
+
+  @override
+  String get settings_setup_pendingTitle => 'השלם את הגדרת המכשיר הזה';
+
+  @override
+  String settings_setup_mediaStoreAttach(String hint) {
+    return 'חיבור אחסון מדיה ($hint)';
+  }
+
+  @override
+  String settings_setup_accountSignIn(String label) {
+    return 'התחברות אל $label';
+  }
+
+  @override
+  String get settings_setup_dismiss => 'התעלם';
+
+  @override
+  String get settings_photosMedia_title => 'תמונות ומדיה';
+
+  @override
+  String get settings_photosMedia_subtitle => 'מקורות, אחסון וחשבונות';
+
+  @override
+  String get settings_photosMedia_sourcesHeader => 'מאיפה מגיעות התמונות';
+
+  @override
+  String get settings_photosMedia_storageHeader => 'איפה נשמרים העותקים';
+
+  @override
+  String get settings_photosMedia_accountsHeader => 'חשבונות';
+
+  @override
+  String get settings_photosMedia_guidedSetup => 'הגדרה מודרכת';
+
+  @override
+  String get settings_photosMedia_photoSources_title => 'ספריית תמונות ומקורות';
+
+  @override
+  String get settings_photosMedia_photoSources_subtitle =>
+      'גלריה, קבצים ואפשרויות ייבוא';
+
+  @override
+  String get settings_photosMedia_networkSources_title => 'מקורות רשת';
+
+  @override
+  String get settings_photosMedia_networkSources_subtitle =>
+      'כתובות URL והזנות מניפסט (מתקדם)';
+
+  @override
+  String get settings_connectedAccounts_title => 'חשבונות מחוברים';
+
+  @override
+  String get settings_connectedAccounts_subtitle => 'כניסות לענן ולשירותים';
+
+  @override
+  String get settings_connectedAccounts_empty => 'אין עדיין חשבונות מחוברים';
+
+  @override
+  String get settings_connectedAccounts_status_signedIn => 'מחובר';
+
+  @override
+  String get settings_connectedAccounts_status_needsSignIn => 'נדרשת כניסה';
+
+  @override
+  String get settings_connectedAccounts_status_unavailable =>
+      'לא זמין במכשיר זה';
+
+  @override
+  String get settings_connectedAccounts_disconnectDevice => 'התנתק במכשיר זה';
+
+  @override
+  String get settings_connectedAccounts_removeFromLibrary => 'הסר מהספרייה';
+
+  @override
+  String get settings_connectedAccounts_removeConfirmTitle =>
+      'להסיר את החשבון?';
+
+  @override
+  String get settings_connectedAccounts_removeConfirmBody =>
+      'החשבון מוסר מכל המכשירים המסונכרנים. אישורים השמורים במכשירים אחרים אינם נמחקים.';
+
+  @override
+  String get settings_setupGuide_title => 'הגדרת תמונות ומדיה';
+
+  @override
+  String get settings_setupGuide_intro =>
+      'חבר את מקורות התמונות ואת מקום שמירת העותקים. אפשר להריץ זאת שוב בכל עת.';
+
+  @override
+  String get settings_setupGuide_stepSources => 'מקורות תמונות';
+
+  @override
+  String get settings_setupGuide_stepSources_desc =>
+      'צרף תמונות מספריית התמונות, מקבצים או מ-Lightroom.';
+
+  @override
+  String get settings_setupGuide_stepStorage => 'אחסון מדיה';
+
+  @override
+  String get settings_setupGuide_stepStorage_desc =>
+      'שמור עותקים של התמונות בענן שלך כדי שכל מכשיר יוכל להציגן.';
+
+  @override
+  String get settings_setupGuide_stepSync => 'סנכרון ענן';
+
+  @override
+  String get settings_setupGuide_stepSync_desc =>
+      'סנכרן נתוני צלילה בין מכשירים.';
+
+  @override
+  String get settings_setupGuide_statusDone => 'מוגדר';
+
+  @override
+  String get settings_setupGuide_statusTodo => 'לא מוגדר';
+
+  @override
+  String get settings_setupGuide_open => 'פתח';
+
+  @override
+  String get settings_connectedAccounts_loadError => 'לא ניתן לטעון חשבונות';
+
+  @override
+  String get media_unavailablePlaceholder_volumeOffline => 'הכונן אינו מחובר';
 }

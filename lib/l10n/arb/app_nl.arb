@@ -5487,6 +5487,10 @@
   "@dive3d_previewHint": {},
   "dive3d_resetView": "Weergave herstellen",
   "@dive3d_resetView": {},
+  "dive3d_zoomIn": "Inzoomen",
+  "@dive3d_zoomIn": {},
+  "dive3d_zoomOut": "Uitzoomen",
+  "@dive3d_zoomOut": {},
   "dive3d_play": "Afspelen",
   "@dive3d_play": {},
   "dive3d_pause": "Pauzeren",
@@ -5561,6 +5565,48 @@
   "@dive3d_tissue_onGassing": {},
   "dive3d_tissue_offGassing": "Ontzadeling",
   "@dive3d_tissue_offGassing": {},
+  "dive3d_tissue_tooltipCompartment": "Comp. {number}",
+  "@dive3d_tissue_tooltipCompartment": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "dive3d_tissue_tooltipHalfTime": "{minutes} min N2",
+  "@dive3d_tissue_tooltipHalfTime": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "dive3d_tissue_tooltipSaturation": "Verzadiging {percent}%",
+  "@dive3d_tissue_tooltipSaturation": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dive3d_tissue_tooltipProgress": "{percent}% van de duik",
+  "@dive3d_tissue_tooltipProgress": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "dive3d_tissue_stateEquilibrium": "Evenwicht",
+  "@dive3d_tissue_stateEquilibrium": {},
+  "dive3d_tissue_statePastMValue": "Boven M-waarde",
+  "@dive3d_tissue_statePastMValue": {},
+  "dive3d_tissue_axisTime": "Tijd",
+  "@dive3d_tissue_axisTime": {},
+  "dive3d_tissue_axisSaturation": "Verzadiging %",
+  "@dive3d_tissue_axisSaturation": {},
+  "dive3d_tissue_axisCompartment": "Compartiment",
+  "@dive3d_tissue_axisCompartment": {},
   "dive3d_compare_computers_title": "Computers vergelijken",
   "@dive3d_compare_computers_title": {},
   "dive3d_compare_dives_title": "Duiken vergelijken",
@@ -5581,8 +5627,41 @@
   "@diveLog_selection_tooltip_compare3d": {},
   "diveLog_sources_compareIn3d": "Vergelijken in 3D",
   "@diveLog_sources_compareIn3d": {},
-  "dive3d_play": "Afspelen",
-  "@dive3d_play": {},
-  "dive3d_pause": "Pauzeren",
-  "@dive3d_pause": {}
+  "settings_setup_pendingTitle": "Voltooi het instellen van dit apparaat",
+  "settings_setup_mediaStoreAttach": "Mediaopslag koppelen ({hint})",
+  "settings_setup_accountSignIn": "Aanmelden bij {label}",
+  "settings_setup_dismiss": "Negeren",
+  "settings_photosMedia_title": "Foto's en media",
+  "settings_photosMedia_subtitle": "Bronnen, opslag en accounts",
+  "settings_photosMedia_sourcesHeader": "Waar foto's vandaan komen",
+  "settings_photosMedia_storageHeader": "Waar kopieën worden bewaard",
+  "settings_photosMedia_accountsHeader": "Accounts",
+  "settings_photosMedia_guidedSetup": "Begeleide installatie",
+  "settings_photosMedia_photoSources_title": "Fotobibliotheek en bronnen",
+  "settings_photosMedia_photoSources_subtitle": "Galerij, bestanden en importopties",
+  "settings_photosMedia_networkSources_title": "Netwerkbronnen",
+  "settings_photosMedia_networkSources_subtitle": "URL’s en manifest-feeds (geavanceerd)",
+  "settings_connectedAccounts_title": "Gekoppelde accounts",
+  "settings_connectedAccounts_subtitle": "Cloud- en service-aanmeldingen",
+  "settings_connectedAccounts_empty": "Nog geen accounts gekoppeld",
+  "settings_connectedAccounts_status_signedIn": "Aangemeld",
+  "settings_connectedAccounts_status_needsSignIn": "Aanmelden vereist",
+  "settings_connectedAccounts_status_unavailable": "Niet beschikbaar op dit apparaat",
+  "settings_connectedAccounts_disconnectDevice": "Afmelden op dit apparaat",
+  "settings_connectedAccounts_removeFromLibrary": "Uit bibliotheek verwijderen",
+  "settings_connectedAccounts_removeConfirmTitle": "Account verwijderen?",
+  "settings_connectedAccounts_removeConfirmBody": "Het account wordt van elk gesynchroniseerd apparaat verwijderd. Op andere apparaten opgeslagen inloggegevens worden niet gewist.",
+  "settings_setupGuide_title": "Foto's en media instellen",
+  "settings_setupGuide_intro": "Koppel waar je foto's vandaan komen en waar kopieën worden bewaard. Je kunt dit altijd opnieuw uitvoeren.",
+  "settings_setupGuide_stepSources": "Fotobronnen",
+  "settings_setupGuide_stepSources_desc": "Voeg foto's toe uit je fotobibliotheek, bestanden of Lightroom.",
+  "settings_setupGuide_stepStorage": "Mediaopslag",
+  "settings_setupGuide_stepStorage_desc": "Bewaar kopieën van je foto's in je eigen cloud zodat elk apparaat ze kan tonen.",
+  "settings_setupGuide_stepSync": "Cloudsynchronisatie",
+  "settings_setupGuide_stepSync_desc": "Synchroniseer duikgegevens tussen apparaten.",
+  "settings_setupGuide_statusDone": "Ingesteld",
+  "settings_setupGuide_statusTodo": "Niet ingesteld",
+  "settings_setupGuide_open": "Openen",
+  "settings_connectedAccounts_loadError": "Accounts konden niet worden geladen",
+  "media_unavailablePlaceholder_volumeOffline": "Volume niet gekoppeld"
 }

@@ -19351,6 +19351,12 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dive3d_resetView => 'Reimposta vista';
 
   @override
+  String get dive3d_zoomIn => 'Ingrandisci';
+
+  @override
+  String get dive3d_zoomOut => 'Riduci';
+
+  @override
   String get dive3d_play => 'Riproduci';
 
   @override
@@ -19466,6 +19472,41 @@ class AppLocalizationsIt extends AppLocalizations {
   String get dive3d_tissue_offGassing => 'Rilascio';
 
   @override
+  String dive3d_tissue_tooltipCompartment(int number) {
+    return 'Comp. $number';
+  }
+
+  @override
+  String dive3d_tissue_tooltipHalfTime(int minutes) {
+    return '$minutes min N2';
+  }
+
+  @override
+  String dive3d_tissue_tooltipSaturation(int percent) {
+    return 'Saturazione $percent%';
+  }
+
+  @override
+  String dive3d_tissue_tooltipProgress(int percent) {
+    return '$percent% dell\'immersione';
+  }
+
+  @override
+  String get dive3d_tissue_stateEquilibrium => 'Equilibrio';
+
+  @override
+  String get dive3d_tissue_statePastMValue => 'Oltre il valore M';
+
+  @override
+  String get dive3d_tissue_axisTime => 'Tempo';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'Saturazione %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'Compartimento';
+
+  @override
   String get dive3d_compare_computers_title => 'Confronta computer';
 
   @override
@@ -19497,4 +19538,136 @@ class AppLocalizationsIt extends AppLocalizations {
 
   @override
   String get diveLog_sources_compareIn3d => 'Confronta in 3D';
+
+  @override
+  String get settings_setup_pendingTitle =>
+      'Completa la configurazione di questo dispositivo';
+
+  @override
+  String settings_setup_mediaStoreAttach(String hint) {
+    return 'Collega archiviazione multimediale ($hint)';
+  }
+
+  @override
+  String settings_setup_accountSignIn(String label) {
+    return 'Accedi a $label';
+  }
+
+  @override
+  String get settings_setup_dismiss => 'Ignora';
+
+  @override
+  String get settings_photosMedia_title => 'Foto e media';
+
+  @override
+  String get settings_photosMedia_subtitle =>
+      'Sorgenti, archiviazione e account';
+
+  @override
+  String get settings_photosMedia_sourcesHeader => 'Da dove arrivano le foto';
+
+  @override
+  String get settings_photosMedia_storageHeader =>
+      'Dove sono conservate le copie';
+
+  @override
+  String get settings_photosMedia_accountsHeader => 'Account';
+
+  @override
+  String get settings_photosMedia_guidedSetup => 'Configurazione guidata';
+
+  @override
+  String get settings_photosMedia_photoSources_title =>
+      'Libreria foto e sorgenti';
+
+  @override
+  String get settings_photosMedia_photoSources_subtitle =>
+      'Galleria, file e opzioni di importazione';
+
+  @override
+  String get settings_photosMedia_networkSources_title => 'Sorgenti di rete';
+
+  @override
+  String get settings_photosMedia_networkSources_subtitle =>
+      'URL e feed manifest (avanzato)';
+
+  @override
+  String get settings_connectedAccounts_title => 'Account collegati';
+
+  @override
+  String get settings_connectedAccounts_subtitle => 'Accessi cloud e servizi';
+
+  @override
+  String get settings_connectedAccounts_empty => 'Nessun account collegato';
+
+  @override
+  String get settings_connectedAccounts_status_signedIn => 'Accesso effettuato';
+
+  @override
+  String get settings_connectedAccounts_status_needsSignIn =>
+      'Accesso richiesto';
+
+  @override
+  String get settings_connectedAccounts_status_unavailable =>
+      'Non disponibile su questo dispositivo';
+
+  @override
+  String get settings_connectedAccounts_disconnectDevice =>
+      'Esci su questo dispositivo';
+
+  @override
+  String get settings_connectedAccounts_removeFromLibrary =>
+      'Rimuovi dalla libreria';
+
+  @override
+  String get settings_connectedAccounts_removeConfirmTitle =>
+      'Rimuovere l\'account?';
+
+  @override
+  String get settings_connectedAccounts_removeConfirmBody =>
+      'L\'account viene rimosso da tutti i dispositivi sincronizzati. Le credenziali salvate su altri dispositivi non vengono eliminate.';
+
+  @override
+  String get settings_setupGuide_title => 'Configura foto e media';
+
+  @override
+  String get settings_setupGuide_intro =>
+      'Collega le sorgenti delle tue foto e dove conservare le copie. Puoi rieseguirlo in qualsiasi momento.';
+
+  @override
+  String get settings_setupGuide_stepSources => 'Sorgenti foto';
+
+  @override
+  String get settings_setupGuide_stepSources_desc =>
+      'Allega foto dalla libreria, dai file o da Lightroom.';
+
+  @override
+  String get settings_setupGuide_stepStorage => 'Archiviazione media';
+
+  @override
+  String get settings_setupGuide_stepStorage_desc =>
+      'Conserva copie delle tue foto nel tuo cloud così ogni dispositivo può mostrarle.';
+
+  @override
+  String get settings_setupGuide_stepSync => 'Sincronizzazione cloud';
+
+  @override
+  String get settings_setupGuide_stepSync_desc =>
+      'Sincronizza i dati delle immersioni tra dispositivi.';
+
+  @override
+  String get settings_setupGuide_statusDone => 'Configurato';
+
+  @override
+  String get settings_setupGuide_statusTodo => 'Non configurato';
+
+  @override
+  String get settings_setupGuide_open => 'Apri';
+
+  @override
+  String get settings_connectedAccounts_loadError =>
+      'Impossibile caricare gli account';
+
+  @override
+  String get media_unavailablePlaceholder_volumeOffline => 'Volume non montato';
 }

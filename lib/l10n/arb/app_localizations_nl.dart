@@ -19198,6 +19198,12 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dive3d_resetView => 'Weergave herstellen';
 
   @override
+  String get dive3d_zoomIn => 'Inzoomen';
+
+  @override
+  String get dive3d_zoomOut => 'Uitzoomen';
+
+  @override
   String get dive3d_play => 'Afspelen';
 
   @override
@@ -19312,6 +19318,41 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dive3d_tissue_offGassing => 'Ontzadeling';
 
   @override
+  String dive3d_tissue_tooltipCompartment(int number) {
+    return 'Comp. $number';
+  }
+
+  @override
+  String dive3d_tissue_tooltipHalfTime(int minutes) {
+    return '$minutes min N2';
+  }
+
+  @override
+  String dive3d_tissue_tooltipSaturation(int percent) {
+    return 'Verzadiging $percent%';
+  }
+
+  @override
+  String dive3d_tissue_tooltipProgress(int percent) {
+    return '$percent% van de duik';
+  }
+
+  @override
+  String get dive3d_tissue_stateEquilibrium => 'Evenwicht';
+
+  @override
+  String get dive3d_tissue_statePastMValue => 'Boven M-waarde';
+
+  @override
+  String get dive3d_tissue_axisTime => 'Tijd';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'Verzadiging %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'Compartiment';
+
+  @override
   String get dive3d_compare_computers_title => 'Computers vergelijken';
 
   @override
@@ -19343,4 +19384,137 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get diveLog_sources_compareIn3d => 'Vergelijken in 3D';
+
+  @override
+  String get settings_setup_pendingTitle =>
+      'Voltooi het instellen van dit apparaat';
+
+  @override
+  String settings_setup_mediaStoreAttach(String hint) {
+    return 'Mediaopslag koppelen ($hint)';
+  }
+
+  @override
+  String settings_setup_accountSignIn(String label) {
+    return 'Aanmelden bij $label';
+  }
+
+  @override
+  String get settings_setup_dismiss => 'Negeren';
+
+  @override
+  String get settings_photosMedia_title => 'Foto\'s en media';
+
+  @override
+  String get settings_photosMedia_subtitle => 'Bronnen, opslag en accounts';
+
+  @override
+  String get settings_photosMedia_sourcesHeader => 'Waar foto\'s vandaan komen';
+
+  @override
+  String get settings_photosMedia_storageHeader =>
+      'Waar kopieën worden bewaard';
+
+  @override
+  String get settings_photosMedia_accountsHeader => 'Accounts';
+
+  @override
+  String get settings_photosMedia_guidedSetup => 'Begeleide installatie';
+
+  @override
+  String get settings_photosMedia_photoSources_title =>
+      'Fotobibliotheek en bronnen';
+
+  @override
+  String get settings_photosMedia_photoSources_subtitle =>
+      'Galerij, bestanden en importopties';
+
+  @override
+  String get settings_photosMedia_networkSources_title => 'Netwerkbronnen';
+
+  @override
+  String get settings_photosMedia_networkSources_subtitle =>
+      'URL’s en manifest-feeds (geavanceerd)';
+
+  @override
+  String get settings_connectedAccounts_title => 'Gekoppelde accounts';
+
+  @override
+  String get settings_connectedAccounts_subtitle =>
+      'Cloud- en service-aanmeldingen';
+
+  @override
+  String get settings_connectedAccounts_empty => 'Nog geen accounts gekoppeld';
+
+  @override
+  String get settings_connectedAccounts_status_signedIn => 'Aangemeld';
+
+  @override
+  String get settings_connectedAccounts_status_needsSignIn =>
+      'Aanmelden vereist';
+
+  @override
+  String get settings_connectedAccounts_status_unavailable =>
+      'Niet beschikbaar op dit apparaat';
+
+  @override
+  String get settings_connectedAccounts_disconnectDevice =>
+      'Afmelden op dit apparaat';
+
+  @override
+  String get settings_connectedAccounts_removeFromLibrary =>
+      'Uit bibliotheek verwijderen';
+
+  @override
+  String get settings_connectedAccounts_removeConfirmTitle =>
+      'Account verwijderen?';
+
+  @override
+  String get settings_connectedAccounts_removeConfirmBody =>
+      'Het account wordt van elk gesynchroniseerd apparaat verwijderd. Op andere apparaten opgeslagen inloggegevens worden niet gewist.';
+
+  @override
+  String get settings_setupGuide_title => 'Foto\'s en media instellen';
+
+  @override
+  String get settings_setupGuide_intro =>
+      'Koppel waar je foto\'s vandaan komen en waar kopieën worden bewaard. Je kunt dit altijd opnieuw uitvoeren.';
+
+  @override
+  String get settings_setupGuide_stepSources => 'Fotobronnen';
+
+  @override
+  String get settings_setupGuide_stepSources_desc =>
+      'Voeg foto\'s toe uit je fotobibliotheek, bestanden of Lightroom.';
+
+  @override
+  String get settings_setupGuide_stepStorage => 'Mediaopslag';
+
+  @override
+  String get settings_setupGuide_stepStorage_desc =>
+      'Bewaar kopieën van je foto\'s in je eigen cloud zodat elk apparaat ze kan tonen.';
+
+  @override
+  String get settings_setupGuide_stepSync => 'Cloudsynchronisatie';
+
+  @override
+  String get settings_setupGuide_stepSync_desc =>
+      'Synchroniseer duikgegevens tussen apparaten.';
+
+  @override
+  String get settings_setupGuide_statusDone => 'Ingesteld';
+
+  @override
+  String get settings_setupGuide_statusTodo => 'Niet ingesteld';
+
+  @override
+  String get settings_setupGuide_open => 'Openen';
+
+  @override
+  String get settings_connectedAccounts_loadError =>
+      'Accounts konden niet worden geladen';
+
+  @override
+  String get media_unavailablePlaceholder_volumeOffline =>
+      'Volume niet gekoppeld';
 }

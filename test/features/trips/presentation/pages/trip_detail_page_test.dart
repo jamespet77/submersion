@@ -9,7 +9,8 @@ import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/divers/domain/entities/diver.dart';
 import 'package:submersion/features/divers/presentation/providers/diver_providers.dart';
-import 'package:submersion/features/media/domain/entities/connector_account.dart';
+import 'package:submersion/core/services/accounts/account_kind.dart';
+import 'package:submersion/core/services/accounts/connected_account.dart';
 import 'package:submersion/features/media/presentation/providers/lightroom_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/features/trips/domain/entities/trip.dart';
@@ -148,12 +149,12 @@ void main() {
         checklistItems: [],
         today: DateTime(2026, 6, 1),
       );
-      final account = ConnectorAccount(
+      final account = ConnectedAccount(
         id: 'acc-1',
-        connectorType: 'lightroom',
-        displayName: 'Adobe',
-        credentialsRef: 'ref',
-        addedAt: DateTime(2026, 1, 1),
+        kind: AccountKind.adobeLightroom,
+        label: 'Adobe',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 1, 1),
       );
 
       Future<void> pumpPage() async {
