@@ -18439,6 +18439,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get dive3d_tissue_statePastMValue => '超过 M 值';
 
   @override
+  String get dive3d_tissue_axisTime => '时间';
+
+  @override
+  String get dive3d_tissue_axisSaturation => '饱和度 %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => '隔室';
+
+  @override
   String get dive3d_compare_computers_title => '比较潜水电脑';
 
   @override

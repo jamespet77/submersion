@@ -32526,6 +32526,24 @@ abstract class AppLocalizations {
   /// **'Past M-value'**
   String get dive3d_tissue_statePastMValue;
 
+  /// No description provided for @dive3d_tissue_axisTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get dive3d_tissue_axisTime;
+
+  /// No description provided for @dive3d_tissue_axisSaturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Saturation %'**
+  String get dive3d_tissue_axisSaturation;
+
+  /// No description provided for @dive3d_tissue_axisCompartment.
+  ///
+  /// In en, this message translates to:
+  /// **'Compartment'**
+  String get dive3d_tissue_axisCompartment;
+
   /// No description provided for @dive3d_compare_computers_title.
   ///
   /// In en, this message translates to:

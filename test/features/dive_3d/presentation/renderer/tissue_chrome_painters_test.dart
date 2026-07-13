@@ -5,6 +5,7 @@ import 'package:submersion/core/deco/buhlmann_algorithm.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/axis_frame.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/subsurface_tissue_builder.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_picker.dart';
+import 'package:submersion/features/dive_3d/presentation/renderer/axis_labels.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/tissue_chrome_painters.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/tissue_color_schemes.dart';
 
@@ -24,6 +25,17 @@ void main() {
     wireframe: Colors.white24,
     marker: Colors.white,
     markerOutline: Colors.black,
+    label: Colors.white,
+  );
+
+  final axisLabels = buildTissueAxisLabels(
+    bounds: result.scene.bounds,
+    grid: result.grid,
+    referenceY: SubsurfaceTissueBuilder.referenceHeight,
+    timeTitle: 'Time',
+    saturationTitle: 'Saturation %',
+    compartmentTitle: 'Compartment',
+    runtimeSeconds: 1400,
   );
 
   void paint(CustomPainter painter) {
@@ -64,6 +76,7 @@ void main() {
       zoom: 1,
       scrubPosition: ValueNotifier<double>(0.5),
       hoverPick: pick,
+      labels: axisLabels,
     );
     expect(() => paint(painter), returnsNormally);
   });

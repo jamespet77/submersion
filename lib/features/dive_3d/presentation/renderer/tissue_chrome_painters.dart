@@ -6,13 +6,21 @@ import 'package:submersion/features/dive_3d/domain/geometry/scene_bounds.dart';
 import 'package:submersion/features/dive_3d/domain/scene_3d.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_grid.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_picker.dart';
+import 'package:submersion/features/dive_3d/presentation/renderer/axis_labels.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scene_projector.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scrub_cursor.dart';
 
 /// Theme-resolved colors for the tissue chrome (built by the viewport, which
 /// owns the BuildContext; painters never read Theme directly).
 class TissueChromeStyle {
-  final Color axisX, axisY, axisZ, grid, wireframe, marker, markerOutline;
+  final Color axisX,
+      axisY,
+      axisZ,
+      grid,
+      wireframe,
+      marker,
+      markerOutline,
+      label;
   const TissueChromeStyle({
     required this.axisX,
     required this.axisY,
@@ -21,6 +29,7 @@ class TissueChromeStyle {
     required this.wireframe,
     required this.marker,
     required this.markerOutline,
+    required this.label,
   });
 }
 
@@ -83,6 +92,7 @@ class TissueChromePainter extends CustomPainter {
   final double yawDegrees, pitchDegrees, zoom;
   final ValueListenable<double> scrubPosition;
   final ValueListenable<TissuePick?> hoverPick;
+  final AxisLabelSet? labels;
 
   /// ~12 iso-time lines is enough to read structure without clutter.
   static const int _maxWireColumns = 12;
@@ -97,6 +107,7 @@ class TissueChromePainter extends CustomPainter {
     required this.zoom,
     required this.scrubPosition,
     required this.hoverPick,
+    this.labels,
   }) : super(repaint: Listenable.merge([scrubPosition, hoverPick]));
 
   SceneProjector _projector(Size size) => SceneProjector(
@@ -117,8 +128,35 @@ class TissueChromePainter extends CustomPainter {
     final p = _projector(size);
     if (!grid.isEmpty) _paintWireframe(canvas, p);
     _paintAxes(canvas, p);
+    _paintLabels(canvas, p);
     _paintMarker(canvas, p);
     _paintCursor(canvas, p);
+  }
+
+  void _paintLabels(Canvas canvas, SceneProjector p) {
+    final set = labels;
+    if (set == null) return;
+    for (final l in set.labels) {
+      final at = p.project(l.x, l.y, l.z);
+      final isTitle = l.kind == AxisLabelKind.title;
+      final tp = TextPainter(
+        text: TextSpan(
+          text: l.text,
+          style: TextStyle(
+            color: style.label,
+            fontSize: isTitle ? 11 : 9.5,
+            fontWeight: isTitle ? FontWeight.w600 : FontWeight.w400,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      // Titles sit above-right of the axis end; tick values below-left of the
+      // tick, so neither overlaps the axis line.
+      final offset = isTitle
+          ? Offset(4, -tp.height - 2)
+          : Offset(-tp.width - 4, -tp.height / 2);
+      tp.paint(canvas, at + offset);
+    }
   }
 
   void _paintWireframe(Canvas canvas, SceneProjector p) {
@@ -212,5 +250,6 @@ class TissueChromePainter extends CustomPainter {
       old.zoom != zoom ||
       !identical(old.scene, scene) ||
       !identical(old.grid, grid) ||
-      !identical(old.frame, frame);
+      !identical(old.frame, frame) ||
+      !identical(old.labels, labels);
 }

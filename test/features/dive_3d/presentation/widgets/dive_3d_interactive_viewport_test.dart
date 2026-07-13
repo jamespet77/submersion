@@ -187,6 +187,7 @@ void main() {
       wireframe: Color(0x33FFFFFF),
       marker: Color(0xFFFFFFFF),
       markerOutline: Color(0xFF000000),
+      label: Color(0xFFFFFFFF),
     );
 
     await tester.pumpWidget(

@@ -19365,6 +19365,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get dive3d_tissue_statePastMValue => 'M-érték felett';
 
   @override
+  String get dive3d_tissue_axisTime => 'Idő';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'Telítettség %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'Kompartiment';
+
+  @override
   String get dive3d_compare_computers_title => 'Számítógépek összehasonlítása';
 
   @override

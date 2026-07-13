@@ -19094,6 +19094,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dive3d_tissue_statePastMValue => 'Past M-value';
 
   @override
+  String get dive3d_tissue_axisTime => 'Time';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'Saturation %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'Compartment';
+
+  @override
   String get dive3d_compare_computers_title => 'Compare computers';
 
   @override

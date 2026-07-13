@@ -18923,6 +18923,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get dive3d_tissue_statePastMValue => 'מעל ערך M';
 
   @override
+  String get dive3d_tissue_axisTime => 'זמן';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'רוויה %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'תא';
+
+  @override
   String get dive3d_compare_computers_title => 'השוואת מחשבי צלילה';
 
   @override

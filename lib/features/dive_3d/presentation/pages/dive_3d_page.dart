@@ -13,6 +13,7 @@ import 'package:submersion/features/dive_3d/domain/scene_3d.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/subsurface_tissue_builder.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_grid.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_picker.dart';
+import 'package:submersion/features/dive_3d/presentation/renderer/axis_labels.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/tissue_chrome_painters.dart';
 import 'package:submersion/features/dive_3d/presentation/scene_overlay.dart';
 import 'package:submersion/features/dive_3d/presentation/widgets/compare_profile_3d_view.dart';
@@ -131,6 +132,15 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
           ? 16
           : surface.grid.compartments,
     );
+    final labels = buildTissueAxisLabels(
+      bounds: surface.scene.bounds,
+      grid: surface.grid,
+      referenceY: SubsurfaceTissueBuilder.referenceHeight,
+      timeTitle: context.l10n.dive3d_tissue_axisTime,
+      saturationTitle: context.l10n.dive3d_tissue_axisSaturation,
+      compartmentTitle: context.l10n.dive3d_tissue_axisCompartment,
+      runtimeSeconds: runtime,
+    );
     return _sceneScaffold(
       scene: surface.scene,
       readout: TissueReadoutPanel(statuses: statuses, position: _position),
@@ -139,6 +149,7 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
       cornerOverlay: TissueLegend(colorFn: colorFn),
       surfaceGrid: surface.grid,
       axisFrame: frame,
+      axisLabels: labels,
       tooltip: ValueListenableBuilder<TissuePick?>(
         valueListenable: _hoverPick,
         builder: (context, pick, _) {
@@ -162,6 +173,7 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
       wireframe: scheme.onSurface.withValues(alpha: 0.16),
       marker: scheme.onSurface,
       markerOutline: scheme.surface,
+      label: scheme.onSurface,
     );
   }
 
@@ -216,6 +228,7 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
     Widget? cornerOverlay,
     TissueSurfaceGrid? surfaceGrid,
     AxisFrame? axisFrame,
+    AxisLabelSet? axisLabels,
     Widget? tooltip,
   }) {
     return Column(
@@ -231,6 +244,7 @@ class _Dive3dPageState extends ConsumerState<Dive3dPage>
                   onMarkerTap: onMarkerTap,
                   surfaceGrid: surfaceGrid,
                   axisFrame: axisFrame,
+                  axisLabels: axisLabels,
                   chromeStyle: axisFrame == null ? null : _chromeStyle(context),
                   hoverPick: axisFrame == null ? null : _hoverPick,
                 ),

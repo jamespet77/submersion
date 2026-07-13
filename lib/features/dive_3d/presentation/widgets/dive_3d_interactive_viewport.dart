@@ -7,6 +7,7 @@ import 'package:submersion/features/dive_3d/domain/geometry/marker_layout.dart';
 import 'package:submersion/features/dive_3d/domain/scene_3d.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_grid.dart';
 import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_picker.dart';
+import 'package:submersion/features/dive_3d/presentation/renderer/axis_labels.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/preview_painter.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scene_projector.dart';
 import 'package:submersion/features/dive_3d/presentation/renderer/scrub_cursor.dart';
@@ -35,6 +36,7 @@ class Dive3dInteractiveViewport extends StatefulWidget {
   /// the viewport behaves exactly as before (no axes/grid/tooltip picking).
   final TissueSurfaceGrid? surfaceGrid;
   final AxisFrame? axisFrame;
+  final AxisLabelSet? axisLabels;
   final TissueChromeStyle? chromeStyle;
   final ValueNotifier<TissuePick?>? hoverPick;
 
@@ -47,6 +49,7 @@ class Dive3dInteractiveViewport extends StatefulWidget {
     this.scrubCursor = ScrubCursorStyle.dot,
     this.surfaceGrid,
     this.axisFrame,
+    this.axisLabels,
     this.chromeStyle,
     this.hoverPick,
   });
@@ -200,6 +203,7 @@ class _Dive3dInteractiveViewportState extends State<Dive3dInteractiveViewport> {
                   zoom: _zoom,
                   scrubPosition: widget.scrubPosition,
                   hoverPick: widget.hoverPick!,
+                  labels: widget.axisLabels,
                 )
               : _ScrubCursorPainter(
                   scene: widget.scene,

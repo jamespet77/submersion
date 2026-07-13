@@ -19265,6 +19265,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get dive3d_tissue_statePastMValue => 'Boven M-waarde';
 
   @override
+  String get dive3d_tissue_axisTime => 'Tijd';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'Verzadiging %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'Compartiment';
+
+  @override
   String get dive3d_compare_computers_title => 'Computers vergelijken';
 
   @override

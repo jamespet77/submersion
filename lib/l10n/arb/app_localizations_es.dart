@@ -19426,6 +19426,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get dive3d_tissue_statePastMValue => 'Sobre el valor M';
 
   @override
+  String get dive3d_tissue_axisTime => 'Tiempo';
+
+  @override
+  String get dive3d_tissue_axisSaturation => 'Saturación %';
+
+  @override
+  String get dive3d_tissue_axisCompartment => 'Compartimento';
+
+  @override
   String get dive3d_compare_computers_title => 'Comparar ordenadores';
 
   @override
