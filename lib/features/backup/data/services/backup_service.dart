@@ -272,8 +272,11 @@ class BackupService {
     } else {
       final tempDir = await getTemporaryDirectory();
       final plainPath = p.join(tempDir.path, 'export_${_uuid.v4()}.db');
-      await _dbAdapter.backup(plainPath);
       try {
+        // Inside the try so a failed/partial backup still gets its plaintext
+        // temp cleaned up in the finally -- never leave an unencrypted DB behind
+        // when encryption is enabled.
+        await _dbAdapter.backup(plainPath);
         await BackupCrypto.encryptFile(
           inPath: plainPath,
           outPath: destinationPath,
@@ -341,8 +344,11 @@ class BackupService {
     final sbeName =
         p.basenameWithoutExtension(filename) + BackupCrypto.fileExtension;
     final sbePath = p.join(tempDir.path, sbeName);
-    await _dbAdapter.backup(plainPath);
     try {
+      // Inside the try so a failed/partial backup still gets its plaintext temp
+      // cleaned up in the finally -- never leave an unencrypted DB behind when
+      // encryption is enabled.
+      await _dbAdapter.backup(plainPath);
       await BackupCrypto.encryptFile(
         inPath: plainPath,
         outPath: sbePath,
@@ -419,6 +425,16 @@ class BackupService {
         String? newCloudFileId = record.cloudFileId;
         if (record.cloudFileId != null && _cloudProvider != null) {
           newCloudFileId = await _uploadToCloud(newPath, newName);
+          // A null result means the folder could not be created; treat it as a
+          // failed migration. Committing here would (via copyWith's null-keeps-
+          // old semantics) leave history on the OLD id while the delete branch
+          // removes that object -- a dangling pointer. Bail so the record stays
+          // fully intact and resumable.
+          if (newCloudFileId == null) {
+            throw const BackupException(
+              'Cloud re-upload returned no file id during re-encrypt',
+            );
+          }
         }
 
         // Commit the record to the on-disk .sbe (which now exists) BEFORE

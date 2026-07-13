@@ -80,6 +80,17 @@ class _BackupEnableEncryptionDialogState
 
   @override
   Widget build(BuildContext context) {
+    // Once onEnable has persisted the key/mirror (busy + recovery phases), the
+    // system Back gesture must not bypass the saved-code gate and leave the
+    // preference off with a half-completed key lifecycle. Only the initial form
+    // phase (nothing persisted yet) may pop.
+    return PopScope(
+      canPop: _phase == _Phase.form,
+      child: _buildDialog(context),
+    );
+  }
+
+  Widget _buildDialog(BuildContext context) {
     final l10n = context.l10n;
     switch (_phase) {
       case _Phase.form:

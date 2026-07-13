@@ -364,6 +364,34 @@ void main() {
     expect(rec.filename, endsWith('.db'));
     expect(await File(oldLocal).exists(), isTrue);
   });
+
+  test('reencrypt: a null cloud upload result is a failure, not a dangling '
+      'commit', () async {
+    await preferences.setCloudBackupEnabled(true);
+    final plain = await buildService().performBackup();
+    final oldLocal = plain.localPath!;
+    final oldCloudId = preferences.getHistory().single.cloudFileId;
+    expect(oldCloudId, isNotNull);
+
+    await enableBackupEncryption();
+    // Folder creation fails -> _uploadToCloud returns null (does not throw).
+    final noFolder = BackupService(
+      dbAdapter: _FakeBackupDatabaseAdapter(),
+      preferences: preferences,
+      cloudProvider: _FolderCreateFailsCloud(),
+      backupEncryptionKeyStore: backupKeyStore,
+    );
+    final result = await noFolder.reencryptExistingBackups();
+    expect(result.failed, 1);
+    expect(result.reencrypted, 0);
+
+    // History untouched: still the plaintext .db and its original cloud id (no
+    // commit that would strand the record on a deleted object).
+    final rec = preferences.getHistory().single;
+    expect(rec.localPath, oldLocal);
+    expect(rec.filename, endsWith('.db'));
+    expect(rec.cloudFileId, oldCloudId);
+  });
 }
 
 /// A cloud provider that fails every upload (all other calls delegate to a
@@ -376,4 +404,15 @@ class _AlwaysFailUploadCloud extends FakeCloudStorageProvider {
     String filename, {
     String? folderId,
   }) async => throw const CloudStorageException('Fake: upload failed');
+}
+
+/// A cloud provider whose folder creation fails, so `_uploadToCloud` returns
+/// null (rather than throwing). Proves re-encrypt treats a null upload result
+/// as a failure instead of committing a dangling history pointer.
+class _FolderCreateFailsCloud extends FakeCloudStorageProvider {
+  @override
+  Future<String> createFolder(
+    String folderName, {
+    String? parentFolderId,
+  }) async => throw const CloudStorageException('Fake: cannot create folder');
 }
