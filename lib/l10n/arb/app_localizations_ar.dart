@@ -310,6 +310,14 @@ class AppLocalizationsAr extends AppLocalizations {
       'أدخل كلمة مرور النسخ الاحتياطي أو رمز الاسترداد';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'فتح النسخة الاحتياطية المشفّرة';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'أدخل كلمة المرور أو رمز الاسترداد لهذه النسخة الاحتياطية';
+
+  @override
   String get settings_backupEncryption_continue => 'متابعة';
 
   @override

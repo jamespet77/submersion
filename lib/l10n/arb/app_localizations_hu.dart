@@ -314,6 +314,14 @@ class AppLocalizationsHu extends AppLocalizations {
       'Adja meg a biztonsági mentés jelszavát vagy a helyreállítási kódot';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Titkosított biztonsági mentés feloldása';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Add meg a biztonsági mentés jelszavát vagy helyreállítási kódját';
+
+  @override
   String get settings_backupEncryption_continue => 'Folytatás';
 
   @override

@@ -262,8 +262,8 @@ class BackupSettingsPage extends ConsumerWidget {
         if (!context.mounted) return;
         await showEncryptionPassphraseDialog(
           context,
-          title: context.l10n.settings_backupEncryption_unlockTitle,
-          hint: context.l10n.settings_backupEncryption_unlockHint,
+          title: context.l10n.settings_backupEncryption_restoreUnlockTitle,
+          hint: context.l10n.settings_backupEncryption_restoreUnlockHint,
           onSubmit: (secret) => ref
               .read(backupOperationProvider.notifier)
               .restoreFromFilePath(
@@ -397,8 +397,8 @@ class BackupSettingsPage extends ConsumerWidget {
             if (!context.mounted) return;
             await showEncryptionPassphraseDialog(
               context,
-              title: context.l10n.settings_backupEncryption_unlockTitle,
-              hint: context.l10n.settings_backupEncryption_unlockHint,
+              title: context.l10n.settings_backupEncryption_restoreUnlockTitle,
+              hint: context.l10n.settings_backupEncryption_restoreUnlockHint,
               onSubmit: (secret) => ref
                   .read(backupOperationProvider.notifier)
                   .restoreFromBackup(

@@ -315,6 +315,14 @@ class AppLocalizationsDe extends AppLocalizations {
       'Geben Sie Ihr Backup-Passwort oder Ihren Wiederherstellungscode ein';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Verschlüsseltes Backup entsperren';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Gib das Passwort oder den Wiederherstellungscode für dieses Backup ein';
+
+  @override
   String get settings_backupEncryption_continue => 'Weiter';
 
   @override

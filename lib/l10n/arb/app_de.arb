@@ -84,6 +84,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "Ich habe meinen Wiederherstellungscode gespeichert",
   "settings_backupEncryption_unlockTitle": "Backup-Passwort eingeben",
   "settings_backupEncryption_unlockHint": "Geben Sie Ihr Backup-Passwort oder Ihren Wiederherstellungscode ein",
+  "settings_backupEncryption_restoreUnlockTitle": "Verschlüsseltes Backup entsperren",
+  "settings_backupEncryption_restoreUnlockHint": "Gib das Passwort oder den Wiederherstellungscode für dieses Backup ein",
   "settings_backupEncryption_continue": "Weiter",
   "settings_backupEncryption_cancel": "Abbrechen",
   "settings_backupEncryption_done": "Fertig",

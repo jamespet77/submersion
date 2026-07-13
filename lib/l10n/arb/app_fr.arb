@@ -84,6 +84,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "J'ai enregistré mon code de récupération",
   "settings_backupEncryption_unlockTitle": "Saisissez le mot de passe de sauvegarde",
   "settings_backupEncryption_unlockHint": "Saisissez votre mot de passe de sauvegarde ou code de récupération",
+  "settings_backupEncryption_restoreUnlockTitle": "Déverrouiller la sauvegarde chiffrée",
+  "settings_backupEncryption_restoreUnlockHint": "Saisissez le mot de passe ou le code de récupération de cette sauvegarde",
   "settings_backupEncryption_continue": "Continuer",
   "settings_backupEncryption_cancel": "Annuler",
   "settings_backupEncryption_done": "Terminé",

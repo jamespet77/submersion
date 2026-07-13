@@ -316,6 +316,14 @@ class AppLocalizationsFr extends AppLocalizations {
       'Saisissez votre mot de passe de sauvegarde ou code de récupération';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Déverrouiller la sauvegarde chiffrée';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Saisissez le mot de passe ou le code de récupération de cette sauvegarde';
+
+  @override
   String get settings_backupEncryption_continue => 'Continuer';
 
   @override

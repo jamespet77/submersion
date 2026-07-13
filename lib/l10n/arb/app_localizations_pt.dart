@@ -313,6 +313,14 @@ class AppLocalizationsPt extends AppLocalizations {
       'Digite a senha do backup ou o código de recuperação';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Desbloquear backup criptografado';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Insira a senha ou o código de recuperação deste backup';
+
+  @override
   String get settings_backupEncryption_continue => 'Continuar';
 
   @override

@@ -303,6 +303,14 @@ class AppLocalizationsHe extends AppLocalizations {
       'הזן את סיסמת הגיבוי או קוד השחזור שלך';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'פתיחת גיבוי מוצפן';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'הזן את הסיסמה או קוד השחזור עבור גיבוי זה';
+
+  @override
   String get settings_backupEncryption_continue => 'המשך';
 
   @override

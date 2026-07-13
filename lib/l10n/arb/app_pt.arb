@@ -84,6 +84,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "Salvei meu código de recuperação",
   "settings_backupEncryption_unlockTitle": "Digite a senha do backup",
   "settings_backupEncryption_unlockHint": "Digite a senha do backup ou o código de recuperação",
+  "settings_backupEncryption_restoreUnlockTitle": "Desbloquear backup criptografado",
+  "settings_backupEncryption_restoreUnlockHint": "Insira a senha ou o código de recuperação deste backup",
   "settings_backupEncryption_continue": "Continuar",
   "settings_backupEncryption_cancel": "Cancelar",
   "settings_backupEncryption_done": "Concluído",

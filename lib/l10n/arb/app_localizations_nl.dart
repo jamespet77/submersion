@@ -313,6 +313,14 @@ class AppLocalizationsNl extends AppLocalizations {
       'Voer uw back-upwachtwoord of herstelcode in';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Versleutelde back-up ontgrendelen';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Voer het wachtwoord of de herstelcode voor deze back-up in';
+
+  @override
   String get settings_backupEncryption_continue => 'Doorgaan';
 
   @override

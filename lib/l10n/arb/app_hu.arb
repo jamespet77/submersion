@@ -84,6 +84,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "Elmentettem a helyreállítási kódomat",
   "settings_backupEncryption_unlockTitle": "Adja meg a biztonsági mentés jelszavát",
   "settings_backupEncryption_unlockHint": "Adja meg a biztonsági mentés jelszavát vagy a helyreállítási kódot",
+  "settings_backupEncryption_restoreUnlockTitle": "Titkosított biztonsági mentés feloldása",
+  "settings_backupEncryption_restoreUnlockHint": "Add meg a biztonsági mentés jelszavát vagy helyreállítási kódját",
   "settings_backupEncryption_continue": "Folytatás",
   "settings_backupEncryption_cancel": "Mégse",
   "settings_backupEncryption_done": "Kész",

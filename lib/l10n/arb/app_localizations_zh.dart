@@ -279,6 +279,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_backupEncryption_unlockHint => '输入您的备份密码或恢复代码';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle => '解锁加密备份';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint => '输入此备份的密码或恢复代码';
+
+  @override
   String get settings_backupEncryption_continue => '继续';
 
   @override

@@ -620,6 +620,18 @@ abstract class AppLocalizations {
   /// **'Enter your backup password or recovery code'**
   String get settings_backupEncryption_unlockHint;
 
+  /// No description provided for @settings_backupEncryption_restoreUnlockTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock encrypted backup'**
+  String get settings_backupEncryption_restoreUnlockTitle;
+
+  /// No description provided for @settings_backupEncryption_restoreUnlockHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the password or recovery code for this backup'**
+  String get settings_backupEncryption_restoreUnlockHint;
+
   /// No description provided for @settings_backupEncryption_continue.
   ///
   /// In en, this message translates to:

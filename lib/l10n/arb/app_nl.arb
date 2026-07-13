@@ -84,6 +84,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "Ik heb mijn herstelcode opgeslagen",
   "settings_backupEncryption_unlockTitle": "Voer uw back-upwachtwoord in",
   "settings_backupEncryption_unlockHint": "Voer uw back-upwachtwoord of herstelcode in",
+  "settings_backupEncryption_restoreUnlockTitle": "Versleutelde back-up ontgrendelen",
+  "settings_backupEncryption_restoreUnlockHint": "Voer het wachtwoord of de herstelcode voor deze back-up in",
   "settings_backupEncryption_continue": "Doorgaan",
   "settings_backupEncryption_cancel": "Annuleren",
   "settings_backupEncryption_done": "Klaar",

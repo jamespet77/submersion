@@ -84,6 +84,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "שמרתי את קוד השחזור שלי",
   "settings_backupEncryption_unlockTitle": "הזן סיסמת גיבוי",
   "settings_backupEncryption_unlockHint": "הזן את סיסמת הגיבוי או קוד השחזור שלך",
+  "settings_backupEncryption_restoreUnlockTitle": "פתיחת גיבוי מוצפן",
+  "settings_backupEncryption_restoreUnlockHint": "הזן את הסיסמה או קוד השחזור עבור גיבוי זה",
   "settings_backupEncryption_continue": "המשך",
   "settings_backupEncryption_cancel": "ביטול",
   "settings_backupEncryption_done": "סיום",

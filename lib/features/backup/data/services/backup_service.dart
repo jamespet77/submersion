@@ -185,8 +185,13 @@ class BackupService {
       storedName =
           p.basenameWithoutExtension(filename) + BackupCrypto.fileExtension;
       final tempDir = await getTemporaryDirectory();
-      final tempPlain = p.join(tempDir.path, filename);
-      final tempSbe = p.join(tempDir.path, storedName);
+      // Per-invocation prefix so a foreground backup/share and the scheduled
+      // background backup cannot collide on the shared temp dir within the same
+      // second (the filename has only second precision). The final stored name
+      // stays `storedName`.
+      final tempPrefix = _uuid.v4();
+      final tempPlain = p.join(tempDir.path, '$tempPrefix-$filename');
+      final tempSbe = p.join(tempDir.path, '$tempPrefix-$storedName');
       try {
         await _dbAdapter.backup(tempPlain);
         await BackupCrypto.encryptFile(
@@ -423,7 +428,17 @@ class BackupService {
         // the record still points at the intact plaintext .db and its old cloud
         // object, so the next run re-encrypts it -- resumability is preserved.
         String? newCloudFileId = record.cloudFileId;
-        if (record.cloudFileId != null && _cloudProvider != null) {
+        if (record.cloudFileId != null) {
+          // The record has a cloud copy that must be re-encrypted too. If the
+          // provider is unavailable (signed out, or a custom local folder makes
+          // it null), fail THIS record rather than commit a local .sbe while the
+          // cloud copy stays plaintext -- otherwise the success tally would
+          // falsely imply that copy is protected.
+          if (_cloudProvider == null) {
+            throw const BackupException(
+              'Cloud copy cannot be re-encrypted: no cloud provider available',
+            );
+          }
           newCloudFileId = await _uploadToCloud(newPath, newName);
           // A null result means the folder could not be created; treat it as a
           // failed migration. Committing here would (via copyWith's null-keeps-

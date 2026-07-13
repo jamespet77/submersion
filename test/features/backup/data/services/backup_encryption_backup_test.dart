@@ -392,6 +392,46 @@ void main() {
     expect(rec.filename, endsWith('.db'));
     expect(rec.cloudFileId, oldCloudId);
   });
+
+  test('reencrypt: a record with a cloud copy fails when no provider is '
+      'available (does not falsely claim the cloud copy is protected)', () async {
+    final localDb = File(
+      '${Directory.systemTemp.path}/noprov_${DateTime.now().microsecondsSinceEpoch}.db',
+    );
+    await localDb.writeAsString('plaintext db');
+    addTearDown(() async {
+      if (await localDb.exists()) await localDb.delete();
+      final sbe = File(localDb.path.replaceAll('.db', '.sbe'));
+      if (await sbe.exists()) await sbe.delete();
+    });
+    await preferences.addRecord(
+      BackupRecord(
+        id: 'np',
+        filename: 'noprov.db',
+        timestamp: DateTime.now(),
+        sizeBytes: await localDb.length(),
+        location: BackupLocation.both,
+        localPath: localDb.path,
+        cloudFileId: 'Submersion Backups/noprov.sbe',
+      ),
+    );
+
+    await enableBackupEncryption();
+    // No cloud provider injected, but the record claims a cloud copy.
+    final noProvider = BackupService(
+      dbAdapter: _FakeBackupDatabaseAdapter(),
+      preferences: preferences,
+      backupEncryptionKeyStore: backupKeyStore,
+    );
+    final result = await noProvider.reencryptExistingBackups();
+    expect(result.failed, 1);
+    expect(result.reencrypted, 0);
+
+    // Record unchanged: still plaintext .db pointing at its original cloud id.
+    final rec = preferences.getHistory().single;
+    expect(rec.filename, endsWith('.db'));
+    expect(rec.cloudFileId, 'Submersion Backups/noprov.sbe');
+  });
 }
 
 /// A cloud provider that fails every upload (all other calls delegate to a

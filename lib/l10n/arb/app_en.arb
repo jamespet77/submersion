@@ -97,6 +97,8 @@
   "settings_backupEncryption_recoverySavedConfirm": "I have saved my recovery code",
   "settings_backupEncryption_unlockTitle": "Enter backup password",
   "settings_backupEncryption_unlockHint": "Enter your backup password or recovery code",
+  "settings_backupEncryption_restoreUnlockTitle": "Unlock encrypted backup",
+  "settings_backupEncryption_restoreUnlockHint": "Enter the password or recovery code for this backup",
   "settings_backupEncryption_continue": "Continue",
   "settings_backupEncryption_cancel": "Cancel",
   "settings_backupEncryption_done": "Done",

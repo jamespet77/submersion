@@ -306,6 +306,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Enter your backup password or recovery code';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Unlock encrypted backup';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Enter the password or recovery code for this backup';
+
+  @override
   String get settings_backupEncryption_continue => 'Continue';
 
   @override

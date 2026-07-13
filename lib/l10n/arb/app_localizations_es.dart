@@ -315,6 +315,14 @@ class AppLocalizationsEs extends AppLocalizations {
       'Introduce tu contraseña de copia de seguridad o el código de recuperación';
 
   @override
+  String get settings_backupEncryption_restoreUnlockTitle =>
+      'Desbloquear copia de seguridad cifrada';
+
+  @override
+  String get settings_backupEncryption_restoreUnlockHint =>
+      'Introduce la contraseña o el código de recuperación de esta copia de seguridad';
+
+  @override
   String get settings_backupEncryption_continue => 'Continuar';
 
   @override
