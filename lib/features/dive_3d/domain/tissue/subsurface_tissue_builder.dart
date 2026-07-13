@@ -5,7 +5,11 @@ import 'package:submersion/core/deco/entities/deco_status.dart';
 import 'package:submersion/features/dive_3d/domain/entities/mesh_data.dart';
 import 'package:submersion/features/dive_3d/domain/geometry/scene_bounds.dart';
 import 'package:submersion/features/dive_3d/domain/scene_3d.dart';
+import 'package:submersion/features/dive_3d/domain/tissue/tissue_surface_grid.dart';
 import 'package:submersion/features/dive_log/presentation/widgets/tissue_color_schemes.dart';
+
+/// The Scene3d plus the topology-preserving grid, built in one pass.
+typedef TissueSurfaceResult = ({Scene3d scene, TissueSurfaceGrid grid});
 
 /// Builds a 3D extrusion of the Subsurface-style tissue loading heat map.
 ///
@@ -53,12 +57,23 @@ class SubsurfaceTissueBuilder {
   static Scene3d build(
     List<DecoStatus> statuses, {
     required TissueColorFn colorFn,
+  }) => buildResult(statuses, colorFn: colorFn).scene;
+
+  /// Builds the Scene3d and the topology-preserving [TissueSurfaceGrid] in a
+  /// single pass so the mesh, the draped wireframe, and the hover picker share
+  /// the exact same vertex positions.
+  static TissueSurfaceResult buildResult(
+    List<DecoStatus> statuses, {
+    required TissueColorFn colorFn,
   }) {
     if (statuses.length < 2 || statuses.first.compartments.isEmpty) {
-      return const Scene3d(
-        layers: [],
-        markers: [],
-        bounds: SceneBounds(durationSeconds: 1, maxDepthMeters: 1),
+      return (
+        scene: const Scene3d(
+          layers: [],
+          markers: [],
+          bounds: SceneBounds(durationSeconds: 1, maxDepthMeters: 1),
+        ),
+        grid: TissueSurfaceGrid.empty,
       );
     }
 
@@ -68,6 +83,7 @@ class SubsurfaceTissueBuilder {
 
     final positions = Float32List(n * k * 3);
     final colors = Float32List(n * k * 3);
+    final saturationPct = Float32List(n * k);
     // Per-column cursor target: the hottest (max %) compartment.
     final cursorXs = <double>[];
     final cursorYs = <double>[];
@@ -87,6 +103,7 @@ class SubsurfaceTissueBuilder {
         positions[vi] = x;
         positions[vi + 1] = _height(pct);
         positions[vi + 2] = z;
+        saturationPct[ci * k + c] = pct;
         final color = colorFn(pct);
         colors[vi] = color.r;
         colors[vi + 1] = color.g;
@@ -115,16 +132,30 @@ class SubsurfaceTissueBuilder {
       sceneMaxY: referenceHeight * (maxPercent / 100.0),
     );
 
-    return Scene3d(
-      layers: [SceneLayer(surface), SceneLayer(_mValuePlane())],
-      markers: const [],
-      bounds: bounds,
-      scrubPath: ScrubPath(
-        normalizedTimes: normalizedTimes,
-        xs: cursorXs,
-        ys: cursorYs,
-        zs: cursorZs,
+    final firstComps = statuses.first.compartments;
+    final grid = TissueSurfaceGrid(
+      columns: n,
+      compartments: k,
+      positions: positions,
+      normalizedTimes: normalizedTimes,
+      compartmentNumbers: [for (final c in firstComps) c.compartmentNumber],
+      halfTimesN2: [for (final c in firstComps) c.halfTimeN2],
+      saturationPct: saturationPct,
+    );
+
+    return (
+      scene: Scene3d(
+        layers: [SceneLayer(surface), SceneLayer(_mValuePlane())],
+        markers: const [],
+        bounds: bounds,
+        scrubPath: ScrubPath(
+          normalizedTimes: normalizedTimes,
+          xs: cursorXs,
+          ys: cursorYs,
+          zs: cursorZs,
+        ),
       ),
+      grid: grid,
     );
   }
 
