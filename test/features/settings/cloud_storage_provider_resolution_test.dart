@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -108,6 +110,37 @@ void main() {
       container.read(cloudStorageProviderProvider),
       isA<DropboxStorageProvider>(),
       reason: 'the singleton fallback still yields a Dropbox provider',
+    );
+  });
+
+  test('while selectedSyncAccountProvider is reloading, resolution falls back '
+      'to the legacy singleton (which holds the just-edited creds)', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    // A pending future keeps the provider in AsyncLoading: this stands in for
+    // the re-mirror reload an in-place credential edit triggers, during which
+    // account-first must NOT read the momentarily-stale per-account key.
+    final pending = Completer<domain.ConnectedAccount?>();
+    final container = ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        selectedSyncAccountProvider.overrideWith((ref) => pending.future),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(selectedCloudProviderTypeProvider.notifier).state =
+        CloudProviderType.dropbox;
+
+    // Read while the account is still loading: it must resolve to the exact
+    // type-keyed singleton, not an account-first provider off a stale key.
+    expect(
+      identical(
+        container.read(cloudStorageProviderProvider),
+        cloudProviderInstanceFor(CloudProviderType.dropbox),
+      ),
+      isTrue,
+      reason: 'a loading account resolves to the legacy singleton',
     );
   });
 }

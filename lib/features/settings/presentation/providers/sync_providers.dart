@@ -364,13 +364,20 @@ final cloudStorageProviderProvider = Provider<CloudStorageProvider?>((ref) {
   // the connect UIs still write the legacy keys — when the account is not
   // usable yet, so sync can never resolve to nothing.
   //
-  // The kind guard matters: `.value` can return the PREVIOUS account while
-  // selectedSyncAccountProvider is recomputing right after providerType
-  // changes (e.g. S3 -> Dropbox). Using a stale account of the wrong kind
-  // would resolve to the wrong backend, so we only trust the account once
-  // its kind matches the selected type; otherwise the type-keyed legacy
-  // singleton is the correct interim provider.
-  final account = ref.watch(selectedSyncAccountProvider).value;
+  // The account is trusted only once selectedSyncAccountProvider has SETTLED
+  // on data. `.value` retains the PREVIOUS account while the provider is
+  // (re)loading, which happens in two windows that must both fall back:
+  //   * providerType just changed (S3 -> Dropbox): the retained account is of
+  //     the wrong kind and would resolve to the wrong backend; and
+  //   * an in-place credential edit (S3 config save / Dropbox reconnect)
+  //     invalidates the provider to re-mirror -- during that reload the kind
+  //     still matches, but the per-account key is momentarily stale while the
+  //     legacy key already holds the new creds.
+  // Treating a loading/refreshing state as "no account" keeps both windows on
+  // the type-keyed legacy singleton, whose creds are always current. The kind
+  // guard then covers the settled-but-wrong-kind edge.
+  final accountAsync = ref.watch(selectedSyncAccountProvider);
+  final account = accountAsync.isLoading ? null : accountAsync.value;
   final matchesType =
       account != null &&
       account.kind == AccountKind.fromCloudProviderType(providerType);
