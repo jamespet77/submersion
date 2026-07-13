@@ -1,0 +1,211 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/constants/enums.dart';
+import 'package:submersion/features/checklists/domain/entities/trip_checklist_item.dart';
+import 'package:submersion/features/dive_log/domain/entities/dive.dart';
+import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
+import 'package:submersion/features/trips/domain/entities/itinerary_day.dart';
+import 'package:submersion/features/trips/domain/entities/trip.dart';
+import 'package:submersion/features/trips/domain/entities/trip_story_day.dart';
+import 'package:submersion/features/trips/domain/services/trip_story_builder.dart';
+
+Trip _trip({DateTime? start, DateTime? end}) {
+  return Trip(
+    id: 'trip-1',
+    name: 'Bonaire',
+    startDate: start ?? DateTime(2026, 3, 7),
+    endDate: end ?? DateTime(2026, 3, 10),
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+  );
+}
+
+Dive _dive(String id, DateTime dateTime, {DiveSite? site}) {
+  return Dive(id: id, dateTime: dateTime, site: site);
+}
+
+ItineraryDay _itin(int dayNumber, DateTime date, {String? port}) {
+  return ItineraryDay(
+    id: 'itin-$dayNumber',
+    tripId: 'trip-1',
+    dayNumber: dayNumber,
+    date: date,
+    dayType: DayType.diveDay,
+    portName: port,
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+  );
+}
+
+TripChecklistItem _check(String id, {bool done = false, DateTime? due}) {
+  return TripChecklistItem(
+    id: id,
+    tripId: 'trip-1',
+    title: id,
+    isDone: done,
+    dueDate: due,
+    createdAt: DateTime(2026, 1, 1),
+    updatedAt: DateTime(2026, 1, 1),
+  );
+}
+
+void main() {
+  group('buildTripStory day span', () {
+    test('emits one day per calendar day of the trip range', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [],
+        itineraryDays: [],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 6, 1),
+      );
+      expect(story.days.length, 4); // Mar 7,8,9,10
+      expect(story.days.first.dayNumber, 1);
+      expect(story.days.last.date, DateTime(2026, 3, 10));
+    });
+
+    test('extends span to cover dives outside nominal trip dates', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [_dive('d1', DateTime(2026, 3, 12, 10))],
+        itineraryDays: [],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 6, 1),
+      );
+      expect(story.days.length, 6); // Mar 7..12
+      expect(story.days.last.dives, hasLength(1));
+    });
+  });
+
+  group('buildTripStory grouping', () {
+    test('groups dives by calendar day, time-sorted within a day', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [
+          _dive('late', DateTime(2026, 3, 8, 19)),
+          _dive('early', DateTime(2026, 3, 8, 9)),
+          _dive('other-day', DateTime(2026, 3, 9, 9)),
+        ],
+        itineraryDays: [],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 6, 1),
+      );
+      final day2 = story.days[1]; // Mar 8
+      expect(day2.dives.map((d) => d.id), ['early', 'late']);
+      expect(story.days[2].dives.map((d) => d.id), ['other-day']);
+    });
+
+    test('attaches itinerary metadata, media, and sightings to the day', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [_dive('d1', DateTime(2026, 3, 8, 9))],
+        itineraryDays: [_itin(2, DateTime(2026, 3, 8), port: 'Kralendijk')],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 6, 1),
+      );
+      expect(story.days[1].itineraryDay?.portName, 'Kralendijk');
+    });
+  });
+
+  group('buildTripStory kind derivation', () {
+    test('past, today, and future kinds split on the injected today', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [],
+        itineraryDays: [],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 3, 8, 15, 30), // mid-trip, time ignored
+      );
+      expect(story.days[0].kind, TripStoryDayKind.past);
+      expect(story.days[1].kind, TripStoryDayKind.today);
+      expect(story.days[2].kind, TripStoryDayKind.future);
+      expect(story.todayIndex, 1);
+    });
+
+    test('fully future trip has null todayIndex and isEmpty when bare', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [],
+        itineraryDays: [],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 1, 1),
+      );
+      expect(story.todayIndex, isNull);
+      expect(story.isEmpty, isTrue);
+      expect(story.days.every((d) => d.kind == TripStoryDayKind.future), true);
+    });
+  });
+
+  group('buildTripStory checklist summary', () {
+    test('computes done/total and next due (undone, dated, soonest first)', () {
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [],
+        itineraryDays: [],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [
+          _check('a', done: true),
+          _check('b', due: DateTime(2026, 3, 1)),
+          _check('c', due: DateTime(2026, 2, 1)),
+          _check('d'),
+        ],
+        today: DateTime(2026, 1, 1),
+      );
+      expect(story.checklist.done, 1);
+      expect(story.checklist.total, 4);
+      expect(story.checklist.nextDue.map((i) => i.id), ['c', 'b']);
+    });
+  });
+
+  group('buildTripStory map geometry', () {
+    test('collects unique day site points and itinerary ports in order', () {
+      final site = DiveSite(
+        id: 'site-a',
+        name: 'Blue Corner',
+        location: const GeoPoint(12.1, -68.2),
+      );
+      final story = buildTripStory(
+        trip: _trip(),
+        dives: [
+          _dive('d1', DateTime(2026, 3, 8, 9), site: site),
+          _dive('d2', DateTime(2026, 3, 8, 11), site: site), // same site
+        ],
+        itineraryDays: [
+          ItineraryDay(
+            id: 'itin-1',
+            tripId: 'trip-1',
+            dayNumber: 1,
+            date: DateTime(2026, 3, 7),
+            dayType: DayType.embark,
+            portName: 'Kralendijk',
+            latitude: 12.15,
+            longitude: -68.27,
+            createdAt: DateTime(2026, 1, 1),
+            updatedAt: DateTime(2026, 1, 1),
+          ),
+        ],
+        mediaByDiveId: {},
+        sightingsByDiveId: {},
+        checklistItems: [],
+        today: DateTime(2026, 6, 1),
+      );
+      expect(story.mapGeometry.points, hasLength(2));
+      expect(story.mapGeometry.points[0].label, 'Kralendijk');
+      expect(story.mapGeometry.points[0].dayIndex, 0);
+      expect(story.mapGeometry.points[1].siteId, 'site-a');
+      expect(story.mapGeometry.points[1].dayIndex, 1);
+    });
+  });
+}
