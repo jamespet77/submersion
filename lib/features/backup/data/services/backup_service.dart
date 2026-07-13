@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
@@ -18,6 +19,7 @@ import 'package:submersion/core/services/sync/library_epoch_store.dart';
 import 'package:submersion/core/services/sync/post_restore_sync_store.dart';
 import 'package:submersion/core/services/sync/sync_preferences.dart';
 import 'package:submersion/features/backup/data/services/backup_crypto.dart';
+import 'package:submersion/features/backup/data/services/backup_encryption_key_store.dart';
 import 'package:submersion/features/backup/domain/exceptions/backup_encrypted_exception.dart';
 import 'package:submersion/features/backup/data/repositories/backup_preferences.dart';
 import 'package:submersion/features/backup/data/services/backup_database_adapter.dart';
@@ -93,6 +95,11 @@ class BackupService {
   final EncryptionKeyStore? _encryptionKeyStore;
   final SyncPreferences? _syncPreferences;
 
+  /// Backup-encryption key (issue #580). When the backupEncryptionEnabled flag
+  /// is on and this + a mirror are present, every backup write is a framed
+  /// `.sbe`. Nullable so existing constructions keep working (plaintext).
+  final BackupEncryptionKeyStore? _backupEncryptionKeyStore;
+
   /// SAF write/read/delete seam for Android custom (`content://`) backup
   /// locations. Defaults to the real platform channel; injectable for tests.
   final BackupSafPort _safPort;
@@ -112,6 +119,7 @@ class BackupService {
     BackupSafPort? safPort,
     EncryptionKeyStore? encryptionKeyStore,
     SyncPreferences? syncPreferences,
+    BackupEncryptionKeyStore? backupEncryptionKeyStore,
   }) : _dbAdapter = dbAdapter,
        _preferences = preferences,
        _cloudProvider = cloudProvider,
@@ -120,7 +128,8 @@ class BackupService {
        _postRestoreSyncStore = postRestoreSyncStore,
        _safPort = safPort ?? const MethodChannelBackupSafPort(),
        _encryptionKeyStore = encryptionKeyStore,
-       _syncPreferences = syncPreferences;
+       _syncPreferences = syncPreferences,
+       _backupEncryptionKeyStore = backupEncryptionKeyStore;
 
   // ===========================================================================
   // Backup
@@ -888,6 +897,22 @@ class BackupService {
       _log.error('Failed to get counts, using 0', error: e);
       return (diveCount: 0, siteCount: 0);
     }
+  }
+
+  /// The active backup-encryption key, or null when backup encryption is off.
+  /// Throws [BackupException] when the flag is on but the key is unavailable
+  /// (fail-closed: never silently write plaintext the user asked to protect).
+  Future<({SecretKey mlk, String libraryKeyId, Uint8List keyslotBytes})?>
+  _activeBackupKey() async {
+    if (!_preferences.getSettings().backupEncryptionEnabled) return null;
+    final key = await _backupEncryptionKeyStore?.loadKey();
+    final mirror = await _backupEncryptionKeyStore?.loadKeyslotMirror();
+    if (key == null || mirror == null) {
+      throw const BackupException(
+        'Backup encryption is enabled but the key is unavailable on this device',
+      );
+    }
+    return (mlk: key.mlk, libraryKeyId: key.libraryKeyId, keyslotBytes: mirror);
   }
 
   Future<String?> _uploadToCloud(String localPath, String filename) async {
