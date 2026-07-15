@@ -331,7 +331,7 @@ class _EquipmentEditPageState extends ConsumerState<EquipmentEditPage> {
               prefixIcon: const Icon(Icons.numbers),
             ),
           ),
-          const SizedBox(width: 24),
+          const SizedBox(height: 24),
           // Purchase Date
           _buildDateSection(context),
           const SizedBox(height: 24),
