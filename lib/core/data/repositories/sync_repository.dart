@@ -758,17 +758,27 @@ class SyncRepository {
       await ensureSyncClockConfigured();
       final hlc = SyncClock.instance.issue();
 
-      await _db
-          .into(_db.deletionLog)
-          .insert(
-            DeletionLogCompanion(
-              id: Value(id),
-              entityType: Value(entityType),
-              recordId: Value(recordId),
-              deletedAt: Value(now),
-              hlc: Value(hlc),
-            ),
-          );
+      await _db.transaction(() async {
+        // One tombstone per record: replace any prior tombstone for this key
+        // so its deletedAt/hlc advance (re-delete refreshes the stamp) and the
+        // v112 unique index is never violated.
+        await (_db.delete(_db.deletionLog)..where(
+              (t) =>
+                  t.entityType.equals(entityType) & t.recordId.equals(recordId),
+            ))
+            .go();
+        await _db
+            .into(_db.deletionLog)
+            .insert(
+              DeletionLogCompanion(
+                id: Value(id),
+                entityType: Value(entityType),
+                recordId: Value(recordId),
+                deletedAt: Value(now),
+                hlc: Value(hlc),
+              ),
+            );
+      });
 
       _log.info('Logged deletion: $entityType/$recordId');
     } catch (e, stackTrace) {

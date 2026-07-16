@@ -1958,6 +1958,11 @@ class SyncPeerCursors extends Table {
   TextColumn get provider => text()();
   IntColumn get baseSeqApplied => integer().nullable()();
   IntColumn get lastSeqApplied => integer().withDefault(const Constant(0))();
+
+  // Highest HLC applied FROM this peer's log -- published in our manifest's
+  // appliedPeerHlc map so the peer can garbage-collect tombstones we have
+  // provably seen (fleet-acked horizon).
+  TextColumn get appliedHlcHigh => text().nullable()();
   IntColumn get updatedAt => integer()();
 
   @override
@@ -2204,7 +2209,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 111;
+  static const int currentSchemaVersion = 112;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -2319,6 +2324,7 @@ class AppDatabase extends _$AppDatabase {
     109,
     110,
     111,
+    112,
   ];
 
   /// Idempotent DDL for the v106 connector-suggestion columns (Lightroom
@@ -2400,6 +2406,33 @@ class AppDatabase extends _$AppDatabase {
         'ALTER TABLE certifications ADD COLUMN buddy_id TEXT '
         'REFERENCES buddies (id) ON DELETE CASCADE',
       );
+    }
+  }
+
+  /// v112: collapse duplicate tombstones (newest deleted_at per entity_type +
+  /// record_id wins) and (re-)assert the unique index that keeps the deletion
+  /// log collapsed. Cheap when the index already exists; the dedupe DELETE
+  /// only runs when index creation fails on pre-existing duplicates. Called
+  /// from the v112 upgrade and the beforeOpen backstop (parallel-branch
+  /// schema-version collisions heal here, mirroring the v111 backstop).
+  Future<void> ensureDeletionLogIndex() async {
+    const createIndex =
+        'CREATE UNIQUE INDEX IF NOT EXISTS idx_deletion_log_entity_record '
+        'ON deletion_log (entity_type, record_id)';
+    try {
+      await customStatement(createIndex);
+    } catch (_) {
+      await customStatement('''
+        DELETE FROM deletion_log WHERE rowid NOT IN (
+          SELECT rowid FROM (
+            SELECT rowid, ROW_NUMBER() OVER (
+              PARTITION BY entity_type, record_id
+              ORDER BY deleted_at DESC, COALESCE(hlc, '') DESC, rowid DESC
+            ) AS rn FROM deletion_log
+          ) WHERE rn = 1
+        )
+      ''');
+      await customStatement(createIndex);
     }
   }
 
@@ -5527,6 +5560,11 @@ class AppDatabase extends _$AppDatabase {
           await _assertEquipmentSetDefaultAndGeofenceSchema();
         }
         if (from < 111) await reportProgress();
+        if (from < 112) {
+          await m.addColumn(syncPeerCursors, syncPeerCursors.appliedHlcHigh);
+          await ensureDeletionLogIndex();
+        }
+        if (from < 112) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
@@ -5556,6 +5594,21 @@ class AppDatabase extends _$AppDatabase {
         // v111 backstop: re-assert equipment_sets.is_default + the
         // equipment_set_geofences table (parallel-branch collision self-heal).
         await _assertEquipmentSetDefaultAndGeofenceSchema();
+
+        // v112 backstop: re-assert sync_peer_cursors.applied_hlc_high and the
+        // deletion_log unique index.
+        final peerCursorCols = await customSelect(
+          "PRAGMA table_info('sync_peer_cursors')",
+        ).get();
+        final hasAppliedHlcHigh = peerCursorCols.any(
+          (c) => c.read<String>('name') == 'applied_hlc_high',
+        );
+        if (peerCursorCols.isNotEmpty && !hasAppliedHlcHigh) {
+          await customStatement(
+            'ALTER TABLE sync_peer_cursors ADD COLUMN applied_hlc_high TEXT',
+          );
+        }
+        await ensureDeletionLogIndex();
 
         // Built-in dive types are reference data: identical on every device and
         // undeletable through DiveTypeRepository. Nothing else restores them --
