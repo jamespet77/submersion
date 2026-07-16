@@ -6,6 +6,7 @@ import 'package:submersion/l10n/l10n_extension.dart';
 import 'package:submersion/features/courses/domain/entities/course_progress.dart';
 import 'package:submersion/features/courses/domain/entities/course_requirement.dart';
 import 'package:submersion/features/courses/presentation/providers/course_requirement_providers.dart';
+import 'package:submersion/features/courses/presentation/widgets/add_requirement_sheet.dart';
 
 /// One requirement row: a checkbox for checklist items, a progress count
 /// plus expandable credited-dive list for dive requirements. Unsatisfied
@@ -32,11 +33,62 @@ class RequirementTile extends ConsumerWidget {
               .setChecklistComplete(requirement.id, checked ?? false);
         },
         title: Text(requirement.name),
+        secondary: RequirementMenuButton(requirement: requirement),
         controlAffinity: ListTileControlAffinity.leading,
         dense: true,
       );
     }
     return _DiveRequirementTile(progress: progress, suggestions: suggestions);
+  }
+}
+
+/// Edit/delete menu shared by both tile variants. Delete is immediate:
+/// requirement rows are cheap to recreate, so no confirm dialog.
+class RequirementMenuButton extends ConsumerWidget {
+  const RequirementMenuButton({super.key, required this.requirement});
+
+  final CourseRequirement requirement;
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final draft = await showAddRequirementSheet(context, existing: requirement);
+    if (draft == null) return;
+    await ref
+        .read(courseRequirementRepositoryProvider)
+        .updateRequirement(
+          requirement.copyWith(
+            name: draft.name,
+            kind: draft.kind,
+            targetCount: draft.targetCount,
+          ),
+        );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = context.l10n;
+    return PopupMenuButton<String>(
+      iconSize: 18,
+      onSelected: (action) {
+        switch (action) {
+          case 'edit':
+            _edit(context, ref);
+          case 'delete':
+            ref
+                .read(courseRequirementRepositoryProvider)
+                .deleteRequirement(requirement.id);
+        }
+      },
+      itemBuilder: (context) => [
+        PopupMenuItem(
+          value: 'edit',
+          child: Text(l10n.courses_action_editRequirement),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: Text(l10n.courses_action_deleteRequirement),
+        ),
+      ],
+    );
   }
 }
 
@@ -81,6 +133,7 @@ class _DiveRequirementTile extends ConsumerWidget {
         ),
         style: theme.textTheme.bodySmall,
       ),
+      trailing: RequirementMenuButton(requirement: requirement),
       dense: true,
       children: [
         for (final dive in progress.linkedDives)
