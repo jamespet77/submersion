@@ -13,6 +13,7 @@ import 'package:submersion/features/setup_wizard/presentation/widgets/steps/sync
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/profile_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/units_step.dart';
 import 'package:submersion/features/setup_wizard/presentation/widgets/steps/welcome_fork_step.dart';
+import 'package:submersion/features/setup_wizard/presentation/widgets/wizard_surface_style.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 import 'package:submersion/shared/widgets/wizard/wizard_step_def.dart';
 import 'package:submersion/shared/widgets/wizard/wizard_step_indicator.dart';
@@ -242,7 +243,7 @@ class _SetupWizardPageState extends ConsumerState<SetupWizardPage> {
                 padding: const EdgeInsets.all(16),
                 child: Material(
                   key: const ValueKey('setup_wizard_card'),
-                  color: theme.colorScheme.surface.withValues(alpha: 0.2),
+                  color: WizardSurfaceStyle.panel(theme),
                   borderRadius: BorderRadius.circular(16),
                   clipBehavior: Clip.antiAlias,
                   child: Column(

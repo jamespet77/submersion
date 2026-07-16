@@ -125,6 +125,53 @@ void main() {
     expect(cardHeight, lessThan(1200));
   });
 
+  testWidgets('branch steps hug their content too, not the full viewport', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final overrides = await getBaseOverrides();
+    await tester.pumpWidget(
+      testApp(
+        overrides: [
+          ...overrides,
+          isApplePlatformProvider.overrideWithValue(false),
+          dropboxConfiguredProvider.overrideWithValue(false),
+          iCloudAvailabilityProvider.overrideWith(
+            (ref) async => ICloudAvailability.unsupported,
+          ),
+          backupOperationProvider.overrideWith((ref) => _FakeBackupOp()),
+          storageConfigNotifierProvider.overrideWith(
+            (ref) => _FakeStorageNotifier(),
+          ),
+          syncInitializerProvider.overrideWithValue(_FakeSyncInit()),
+          syncStateProvider.overrideWith((ref) => _FakeSyncNotifier()),
+        ],
+        child: const SetupWizardPage(mode: SetupWizardMode.firstRun),
+      ),
+    );
+    await pumpWizard(tester);
+
+    await tester.tap(find.text('I have existing Submersion data'));
+    await pumpWizard(tester);
+    await tester.tap(find.text('Open an existing folder'));
+    await pumpWizard(tester);
+    expect(find.text('Open existing folder'), findsOneWidget);
+
+    // The open-folder step is short (a title and a button). It uses a
+    // SingleChildScrollView, which under the wizard's loose Flexible
+    // constraints sizes to min(content, available) — so it hugs here and only
+    // scrolls when a step is taller than the card, rather than filling the
+    // 2400px viewport. (Guards the fix for the branch steps that previously
+    // used filling Center/Expanded layouts.)
+    final cardHeight = tester
+        .getSize(find.byKey(const ValueKey('setup_wizard_card')))
+        .height;
+    expect(cardHeight, lessThan(1200));
+  });
+
   testWidgets('skip setup jumps from profile straight to finish placeholder', (
     tester,
   ) async {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:submersion/features/setup_wizard/presentation/widgets/wizard_option_card_style.dart';
+import 'package:submersion/features/setup_wizard/presentation/widgets/wizard_surface_style.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
 /// First-run fork: start fresh, bring existing data, or skip setup.
@@ -97,8 +97,8 @@ class _ForkCard extends StatelessWidget {
     final theme = Theme.of(context);
     return Card(
       elevation: 0,
-      color: WizardOptionCardStyle.fill(theme),
-      shape: WizardOptionCardStyle.shape(theme),
+      color: WizardSurfaceStyle.optionFill(theme),
+      shape: WizardSurfaceStyle.optionShape(theme),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
