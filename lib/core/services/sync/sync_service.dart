@@ -21,7 +21,9 @@ import 'package:submersion/core/services/sync/changeset_log/changeset_writer.dar
 import 'package:submersion/core/services/sync/changeset_log/peer_cursor_store.dart';
 import 'package:submersion/core/services/sync/changeset_log/publish_state_store.dart';
 import 'package:submersion/core/services/sync/changeset_log/stale_restore_detector.dart';
+import 'package:submersion/core/services/sync/changeset_log/sync_liveness.dart';
 import 'package:submersion/core/services/sync/changeset_log/sync_manifest.dart';
+import 'package:submersion/core/services/sync/changeset_log/tombstone_horizon.dart';
 import 'package:submersion/core/services/sync/hlc.dart';
 import 'package:submersion/core/services/sync/library_epoch.dart';
 import 'package:submersion/core/services/sync/library_epoch_store.dart';
@@ -426,7 +428,7 @@ class SyncService {
       var recordsSynced = 0;
       var conflictsFound = 0;
       var recordsFailed = 0;
-      await _changesetReader.pull(
+      final pullResult = await _changesetReader.pull(
         provider: provider,
         selfDeviceId: deviceId,
         folderId: folderId,
@@ -444,6 +446,16 @@ class SyncService {
           recordsFailed += r.recordsFailed;
         },
       );
+
+      // Acks to publish: the highest HLC applied from each peer, as recorded
+      // by the reader (including this very pull).
+      final cursorRows = await PeerCursorStore(
+        DatabaseService.instance.database,
+      ).allForProvider(provider.providerId);
+      final appliedPeerHlc = <String, String>{
+        for (final c in cursorRows)
+          if (c.appliedHlcHigh != null) c.peerDeviceId: c.appliedHlcHigh!,
+      };
 
       // ---- Upload: publish our delta ----
       _reportProgress(SyncPhase.uploading, 0.8, 'Publishing changes...');
@@ -475,6 +487,7 @@ class SyncService {
             deletions: deletions,
             epochId: currentEpochId,
             uploadNonce: uploadNonce,
+            appliedPeerHlc: appliedPeerHlc,
           );
         } catch (e) {
           // Keep the speculative nonce on a timeout (the publish may have
@@ -512,7 +525,20 @@ class SyncService {
         );
       }
       await _syncRepository.persistSyncClock();
-      await _syncRepository.clearOldDeletions();
+      // Fleet-acked tombstone GC (replaces the unconditional 90-day purge).
+      final gc = TombstoneHorizon.compute(
+        selfDeviceId: deviceId,
+        peerManifests: pullResult.peerManifests,
+        retiredPeerIds: pullResult.retiredPeerIds,
+        nowMillis: now.millisecondsSinceEpoch,
+      );
+      if (gc.allowed) {
+        await _syncRepository.clearAcknowledgedDeletions(
+          upToHlc: gc.upToHlc,
+          floorCutoffMillis:
+              now.millisecondsSinceEpoch - SyncLiveness.gcFloorMillis,
+        );
+      }
       // Clear upload-side bookkeeping only when a publish actually ran. On a
       // skipped (post-adopt, nothing-to-say) sync, an edit can land between
       // the skip decision and this cleanup; wiping its pending row here would

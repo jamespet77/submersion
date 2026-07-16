@@ -75,4 +75,58 @@ void main() {
         .get();
     expect(cols.map((r) => r.data['name']), contains('applied_hlc_high'));
   });
+
+  test(
+    'clearAcknowledgedDeletions honors hlc bound, floor, and null hlc',
+    () async {
+      final db = DatabaseService.instance.database;
+      Future<void> seed(
+        String id,
+        int deletedAt,
+        String? hlc,
+      ) => db.customStatement(
+        "INSERT INTO deletion_log (id, entity_type, record_id, deleted_at, hlc) "
+        "VALUES ('$id', 'dives', '$id', $deletedAt, ${hlc == null ? 'NULL' : "'$hlc'"})",
+      );
+      await seed('acked-old', 100, '00000000000010:000000:x');
+      await seed('unacked-old', 100, '00000000000050:000000:x');
+      await seed('acked-young', 9000, '00000000000011:000000:x');
+      await seed('no-hlc', 100, null);
+
+      await SyncRepository().clearAcknowledgedDeletions(
+        upToHlc: '00000000000020:000000:x',
+        floorCutoffMillis: 5000,
+      );
+
+      final left = (await SyncRepository().getAllDeletions())
+          .map((d) => d.recordId)
+          .toSet();
+      expect(left, {'unacked-old', 'acked-young', 'no-hlc'});
+    },
+  );
+
+  test(
+    'clearAcknowledgedDeletions with null upToHlc clears everything past the floor',
+    () async {
+      final repo = SyncRepository();
+      await repo.logDeletion(
+        entityType: 'dives',
+        recordId: 'old',
+        deletedAt: 100,
+      );
+      await repo.logDeletion(
+        entityType: 'dives',
+        recordId: 'new',
+        deletedAt: 9000,
+      );
+      await repo.clearAcknowledgedDeletions(
+        upToHlc: null,
+        floorCutoffMillis: 5000,
+      );
+      final left = (await repo.getAllDeletions())
+          .map((d) => d.recordId)
+          .toSet();
+      expect(left, {'new'});
+    },
+  );
 }
