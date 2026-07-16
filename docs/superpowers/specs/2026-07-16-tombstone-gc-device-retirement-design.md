@@ -1,7 +1,7 @@
 # Tombstone GC and Device Retirement (Fleet-Acked Horizon)
 
 Date: 2026-07-16
-Status: Approved design, pending implementation plan
+Status: Implemented (schema v112; see docs/superpowers/plans/2026-07-16-tombstone-gc-device-retirement.md)
 
 ## Problem
 
