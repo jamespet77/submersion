@@ -9488,6 +9488,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get equipment_detail_sizeLabel => 'Größe';
 
   @override
+  String get equipment_detail_thicknessLabel => 'Dicke';
+
+  @override
   String get equipment_detail_statusLabel => 'Status';
 
   @override
@@ -9683,6 +9686,12 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get equipment_edit_statusLabel => 'Status';
+
+  @override
+  String get equipment_edit_thicknessHint => 'z.B. 5mm, 7mm';
+
+  @override
+  String get equipment_edit_thicknessLabel => 'Dicke';
 
   @override
   String get equipment_edit_typeLabel => 'Typ *';

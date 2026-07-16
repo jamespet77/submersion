@@ -696,6 +696,7 @@ class Equipment extends Table {
   TextColumn get model => text().nullable()();
   TextColumn get serialNumber => text().nullable()();
   TextColumn get size => text().nullable()(); // S, M, L, XL, or specific size
+  TextColumn get thickness => text().nullable()(); // 2,3,4,5,6 or 6mm (v112)
   // Buoyancy metadata (v104): net in-water buoyancy in kg (positive floats),
   // and dry weight in kg (feeds displacement scaling).
   RealColumn get buoyancyKg => real().nullable()();
@@ -2253,7 +2254,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 112;
+  static const int currentSchemaVersion = 114;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -2369,6 +2370,7 @@ class AppDatabase extends _$AppDatabase {
     110,
     111,
     112,
+    114,
   ];
 
   /// Idempotent DDL for the v106 connector-suggestion columns (Lightroom
@@ -2450,6 +2452,16 @@ class AppDatabase extends _$AppDatabase {
         'ALTER TABLE certifications ADD COLUMN buddy_id TEXT '
         'REFERENCES buddies (id) ON DELETE CASCADE',
       );
+    }
+  }
+
+  /// v112: equipment.thickness column. Idempotent so it is safe to call from
+  /// both onUpgrade and the beforeOpen backstop.
+  Future<void> _assertEquipmentThicknessColumn() async {
+    final cols = await customSelect("PRAGMA table_info('equipment')").get();
+    final hasThickness = cols.any((c) => c.read<String>('name') == 'thickness');
+    if (cols.isNotEmpty && !hasThickness) {
+      await customStatement('ALTER TABLE equipment ADD COLUMN thickness TEXT');
     }
   }
 
@@ -5578,12 +5590,18 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 111) await reportProgress();
         if (from < 112) {
+          await _assertEquipmentThicknessColumn();
+        }
+        if (from < 112) await reportProgress();
+        // v113 is claimed by the fleet-acked tombstone GC branch (PR #600);
+        // the course requirement tracker takes the next free number, v114.
+        if (from < 114) {
           // Course requirement tracker: both tables are new, no data
           // migration. createTable is idempotent (IF NOT EXISTS).
           await m.createTable(courseRequirements);
           await m.createTable(courseRequirementDives);
         }
-        if (from < 112) await reportProgress();
+        if (from < 114) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
@@ -5614,7 +5632,10 @@ class AppDatabase extends _$AppDatabase {
         // equipment_set_geofences table (parallel-branch collision self-heal).
         await _assertEquipmentSetDefaultAndGeofenceSchema();
 
-        // v112 backstop: course requirement tables (parallel-branch
+        // v112 backstop: re-assert equipment.thickness column.
+        await _assertEquipmentThicknessColumn();
+
+        // v114 backstop: course requirement tables (parallel-branch
         // collision self-heal; createTable is idempotent).
         await createMigrator().createTable(courseRequirements);
         await createMigrator().createTable(courseRequirementDives);

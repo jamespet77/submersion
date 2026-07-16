@@ -74,8 +74,10 @@ void main() {
     },
   );
 
-  test('v111 is the current schema version (exact-latest tripwire)', () {
-    expect(AppDatabase.currentSchemaVersion, 111);
-    expect(AppDatabase.migrationVersions, contains(111));
+  test('v112 is present in the migration ladder (superseded tripwire)', () {
+    // Relaxed from an exact-latest assertion when v114 (course requirements)
+    // superseded v112 as the newest migration -- ladder convention.
+    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(112));
+    expect(AppDatabase.migrationVersions, contains(112));
   });
 }
