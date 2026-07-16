@@ -2416,6 +2416,12 @@ class AppDatabase extends _$AppDatabase {
   /// from the v112 upgrade and the beforeOpen backstop (parallel-branch
   /// schema-version collisions heal here, mirroring the v111 backstop).
   Future<void> ensureDeletionLogIndex() async {
+    // Self-guarding when the table is absent (minimal migration-test
+    // fixtures), mirroring the other beforeOpen backstop helpers.
+    final table = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='deletion_log'",
+    ).get();
+    if (table.isEmpty) return;
     const createIndex =
         'CREATE UNIQUE INDEX IF NOT EXISTS idx_deletion_log_entity_record '
         'ON deletion_log (entity_type, record_id)';
@@ -5561,7 +5567,17 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 111) await reportProgress();
         if (from < 112) {
-          await m.addColumn(syncPeerCursors, syncPeerCursors.appliedHlcHigh);
+          // Guarded like the beforeOpen backstops: minimal migration-test
+          // fixtures may lack the table entirely.
+          final peerCursorCols = await customSelect(
+            "PRAGMA table_info('sync_peer_cursors')",
+          ).get();
+          final hasAck = peerCursorCols.any(
+            (c) => c.read<String>('name') == 'applied_hlc_high',
+          );
+          if (peerCursorCols.isNotEmpty && !hasAck) {
+            await m.addColumn(syncPeerCursors, syncPeerCursors.appliedHlcHigh);
+          }
           await ensureDeletionLogIndex();
         }
         if (from < 112) await reportProgress();

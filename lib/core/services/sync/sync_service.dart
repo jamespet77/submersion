@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
+
 import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:submersion/core/data/repositories/sync_repository.dart';
 import 'package:submersion/core/database/database.dart'
@@ -404,6 +406,20 @@ class SyncService {
       final twin = await _detectTwin(provider, deviceId, folderId);
       deviceId = twin.deviceId;
       final adoptedFreshIdentity = twin.adopted;
+
+      // ---- Retirement fence ----
+      // The fleet retired this device while it was offline (the tombstone
+      // horizon has moved past what we know): rebuild from the cloud library
+      // before merging anything, or stale local rows would resurrect
+      // fleet-wide. Detected ONLY by the durable marker -- a missing manifest
+      // alone is routine listing lag and cold-starts harmlessly.
+      final fenceResult = await _checkRetirementFence(
+        provider,
+        folderId,
+        deviceId,
+        currentEpochId,
+      );
+      if (fenceResult != null) return fenceResult;
 
       // ---- Stale-restore: cold-start to re-pull the authoritative library ----
       if (await _staleRestoreDetector.isStaleRestore(
@@ -2390,6 +2406,205 @@ class SyncService {
   /// deliberately untouched: adoption changes data, not identity. The caller
   /// is responsible for the pre-adoption safety backup and any post-adoption
   /// fix-ups (active diver, follow-up sync).
+  /// Retirement fence: if the fleet retired this device while it was offline
+  /// (its retirement marker is present), rebuild from the current cloud
+  /// library before doing anything else. Returns a terminal [SyncResult] only
+  /// on failure; null means "not fenced" or "fence completed -- continue this
+  /// sync normally" (the follow-through pull/publish then republishes us).
+  Future<SyncResult?> _checkRetirementFence(
+    CloudStorageProvider provider,
+    String folderId,
+    String deviceId,
+    String? currentEpochId,
+  ) async {
+    final markerName = ChangesetLogLayout.retiredMarkerName(deviceId);
+    final files = await provider.listFiles(
+      folderId: folderId,
+      namePattern: ChangesetLogLayout.prefix,
+    );
+    final marker = files.where((f) => f.name == markerName).toList();
+    if (marker.isEmpty) return null;
+    final retiredPeers = <String>{
+      for (final f in files)
+        if (ChangesetLogLayout.isRetiredMarker(f.name) &&
+            ChangesetLogLayout.deviceIdOf(f.name) != null)
+          ChangesetLogLayout.deviceIdOf(f.name)!,
+    };
+    return _rejoinAfterRetirement(
+      provider: provider,
+      folderId: folderId,
+      deviceId: deviceId,
+      currentEpochId: currentEpochId,
+      markerId: marker.first.id,
+      retiredPeers: retiredPeers,
+    );
+  }
+
+  Future<SyncResult?> _rejoinAfterRetirement({
+    required CloudStorageProvider provider,
+    required String folderId,
+    required String deviceId,
+    required String? currentEpochId,
+    required String markerId,
+    required Set<String> retiredPeers,
+  }) async {
+    _log.warning(
+      'This device was retired while offline; rejoining from the cloud '
+      'library (cloud-wins)',
+    );
+    final db = DatabaseService.instance.database;
+
+    // 1. Snapshot unpublished local changes: everything above our last
+    //    published watermark (rows AND deletions). This is exactly what the
+    //    pending bookkeeping tracks, expressed as an HLC delta.
+    final state = await _publishStateStore.get(provider.providerId);
+    final watermark = state?.publishedHlcHigh;
+    SyncPayload? pending;
+    if (watermark != null) {
+      pending = await _serializer.exportChangeset(
+        deviceId: deviceId,
+        hlcWatermark: watermark,
+        deletions: await _syncRepository.getAllDeletions(),
+        seq: 0,
+      );
+    }
+
+    // 2. Rebuild from the current cloud library (authoritative). Excludes
+    //    other retired devices' lingering logs -- their stale data must not
+    //    ride back in through the fence.
+    final sources = await _collectEpochBaseSources(
+      provider,
+      folderId,
+      currentEpochId,
+      excludeDeviceIds: retiredPeers,
+    );
+    if (sources.baseFilePaths.isEmpty) {
+      // No readable library to rebuild from. Re-establish from the local
+      // library instead of bricking (mirrors _recoverUnreadableEpoch): drop
+      // the marker and let this same sync republish our base. Resurrection is
+      // moot -- there is no fleet state to diverge from.
+      _log.warning(
+        'Retirement fence found no readable cloud library; re-establishing '
+        'from the local library',
+      );
+      await provider.deleteFile(markerId);
+      await _publishStateStore.resetForProvider(provider.providerId);
+      await PeerCursorStore(db).resetForProvider(provider.providerId);
+      return null;
+    }
+    try {
+      await _serializer.applyInDeferredFkTransaction(
+        () => _adoptApplyStreaming(
+          baseFilePaths: sources.baseFilePaths,
+          baseExportedAt: sources.baseExportedAt,
+          changesets: sources.changesets,
+        ),
+      );
+    } finally {
+      for (final path in sources.baseFilePaths) {
+        await _baseSink.deleteQuietly(path);
+      }
+    }
+
+    // 3. Re-baseline exactly as adopt does: cloud is the authority. The
+    //    adopted watermark is captured BEFORE the pending replay so the
+    //    replayed (re-stamped) rows sort above it and publish.
+    await _syncRepository.resetSyncState(clearDeletionLog: true);
+    final cursorStore = PeerCursorStore(db);
+    for (final c in sources.cursors) {
+      await cursorStore.upsert(
+        peerDeviceId: c.deviceId,
+        provider: provider.providerId,
+        baseSeqApplied: c.baseSeq,
+        lastSeqApplied: c.appliedThrough,
+      );
+    }
+    await _publishStateStore.markAdoptedPendingBase(
+      provider.providerId,
+      await _syncRepository.maxRowHlc(),
+    );
+
+    // 4. Replay the pending snapshot: offline-created records survive.
+    if (pending != null) {
+      await _replayPendingSnapshot(pending);
+    }
+
+    // 5. Live again: drop our marker. The rest of this sync pulls (cursors
+    //    already positioned) and publishes the replayed pending records.
+    await provider.deleteFile(markerId);
+    _log.info('Rejoined after retirement');
+    return null;
+  }
+
+  /// Re-applies the pre-fence pending snapshot with FRESH HLC stamps. The
+  /// adopted watermark (maxRowHlc after the rebuild) is at or above the
+  /// snapshot's original stamps, so without re-stamping the rows would sort
+  /// below the publish watermark and never reach the cloud. Deletions are
+  /// re-logged through logDeletion (which stamps a fresh HLC) for the same
+  /// reason; their local effect still applies via the payload's deletions,
+  /// under the standard deletedAt-vs-updatedAt LWW (a peer's newer edit
+  /// legitimately revives the record -- unchanged semantics).
+  Future<void> _replayPendingSnapshot(SyncPayload pending) async {
+    await _syncRepository.ensureSyncClockConfigured();
+    final dataJson = pending.data.toJson();
+    final restamped = <String, dynamic>{};
+    for (final entry in dataJson.entries) {
+      final rows = entry.value;
+      if (rows is! List) {
+        restamped[entry.key] = rows;
+        continue;
+      }
+      restamped[entry.key] = [
+        for (final row in rows)
+          if (row is Map<String, dynamic> && row.containsKey('hlc'))
+            {...row, 'hlc': SyncClock.instance.issue()}
+          else
+            row,
+      ];
+    }
+    final data = SyncData.fromJson(restamped);
+    final payload = SyncPayload(
+      version: pending.version,
+      exportedAt: pending.exportedAt,
+      deviceId: pending.deviceId,
+      checksum: sha256
+          .convert(utf8.encode(jsonEncode(data.toJson())))
+          .toString(),
+      data: data,
+      deletions: pending.deletions,
+    );
+    await _applyRemotePayload(payload, null);
+    // Re-mark the replayed rows pending: the fence's resetSyncState cleared
+    // the pending table, and the remote-apply path above does not repopulate
+    // it, so without this _shouldSkipPublishAfterAdopt would read "nothing to
+    // say" and the replayed records would never publish until an unrelated
+    // later edit re-tripped the gate. (The publish CONTENT is selected by the
+    // HLC watermark; these marks only open the gate.)
+    final nowMillis = DateTime.now().millisecondsSinceEpoch;
+    for (final entry in restamped.entries) {
+      final rows = entry.value;
+      if (rows is! List) continue;
+      for (final row in rows) {
+        final id = row is Map<String, dynamic> ? row['id'] : null;
+        if (id is! String) continue;
+        await _syncRepository.markRecordPending(
+          entityType: entry.key,
+          recordId: id,
+          localUpdatedAt: nowMillis,
+        );
+      }
+    }
+    for (final entry in pending.deletions.entries) {
+      for (final d in entry.value) {
+        await _syncRepository.logDeletion(
+          entityType: entry.key,
+          recordId: d.id,
+          deletedAt: d.deletedAt,
+        );
+      }
+    }
+  }
+
   Future<SyncResult> adoptReplacedLibrary() async {
     final provider = _cloudProvider;
     final store = _epochStore;
@@ -2721,8 +2936,9 @@ class SyncService {
   _collectEpochBaseSources(
     CloudStorageProvider provider,
     String folderId,
-    String epochId,
-  ) async {
+    String? epochId, {
+    Set<String> excludeDeviceIds = const {},
+  }) async {
     final files = await provider.listFiles(
       folderId: folderId,
       namePattern: ChangesetLogLayout.prefix,
@@ -2738,6 +2954,7 @@ class SyncService {
     final changesets = <SyncPayload>[];
     final cursors = <({String deviceId, int baseSeq, int appliedThrough})>[];
     for (final deviceId in deviceIds) {
+      if (excludeDeviceIds.contains(deviceId)) continue;
       final manifestFile = byName[ChangesetLogLayout.manifestName(deviceId)];
       if (manifestFile == null) continue;
       SyncManifest manifest;
