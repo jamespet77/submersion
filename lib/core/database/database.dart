@@ -2032,6 +2032,52 @@ class Courses extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Countable requirements for a training course (requirement tracker spec,
+/// docs/superpowers/specs/2026-07-16-course-requirement-tracker-design.md).
+/// kind is a RequirementKind enum name: 'dive' rows derive progress from
+/// course_requirement_dives links; 'checklist' rows complete via completedAt.
+@DataClassName('CourseRequirementRow')
+class CourseRequirements extends Table {
+  TextColumn get id => text()();
+  TextColumn get courseId =>
+      text().references(Courses, #id, onDelete: KeyAction.cascade)();
+  TextColumn get name => text()();
+  TextColumn get kind => text()();
+  IntColumn get targetCount => integer().withDefault(const Constant(1))();
+  IntColumn get completedAt => integer().nullable()(); // Unix ms, checklist
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  TextColumn get notes => text().nullable()();
+  IntColumn get createdAt => integer()();
+  IntColumn get updatedAt => integer()();
+
+  /// Hybrid Logical Clock for cross-device conflict resolution
+  /// (nullable: rows written before HLC rollout fall back to updatedAt).
+  TextColumn get hlc => text().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Junction crediting a logged dive toward a course requirement.
+///
+/// The id is a DETERMINISTIC UUIDv5 of (requirementId, diveId) -- see
+/// CourseRequirementRepository.linkIdFor -- so the same link created on two
+/// devices converges to a single row under sync upsert; no unique index is
+/// needed. No hlc column: delta export is gated by the parent requirement's
+/// hlc, which linkDive/unlinkDive bump (equipment_set_items pattern).
+@DataClassName('CourseRequirementDiveRow')
+class CourseRequirementDives extends Table {
+  TextColumn get id => text()();
+  TextColumn get requirementId =>
+      text().references(CourseRequirements, #id, onDelete: KeyAction.cascade)();
+  TextColumn get diveId =>
+      text().references(Dives, #id, onDelete: KeyAction.cascade)();
+  IntColumn get createdAt => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 /// Junction table for expected species at dive sites (manual curation)
 class SiteSpecies extends Table {
   TextColumn get id => text()();
@@ -2159,6 +2205,9 @@ class FieldPresets extends Table {
     SiteSpecies,
     // Training courses (v1.5)
     Courses,
+    // Course requirement tracker (v112)
+    CourseRequirements,
+    CourseRequirementDives,
     // Sync tables
     SyncMetadata,
     SyncRecords,
@@ -2204,7 +2253,7 @@ class AppDatabase extends _$AppDatabase {
 
   /// The current schema version as a static constant so that pre-open checks
   /// (e.g. version-mismatch guard) can reference it without an instance.
-  static const int currentSchemaVersion = 111;
+  static const int currentSchemaVersion = 112;
 
   /// Every schema version that has a migration block in onUpgrade.
   /// Used to calculate progress step counts. When adding a new migration,
@@ -2319,6 +2368,7 @@ class AppDatabase extends _$AppDatabase {
     109,
     110,
     111,
+    112,
   ];
 
   /// Idempotent DDL for the v106 connector-suggestion columns (Lightroom
@@ -5527,6 +5577,13 @@ class AppDatabase extends _$AppDatabase {
           await _assertEquipmentSetDefaultAndGeofenceSchema();
         }
         if (from < 111) await reportProgress();
+        if (from < 112) {
+          // Course requirement tracker: both tables are new, no data
+          // migration. createTable is idempotent (IF NOT EXISTS).
+          await m.createTable(courseRequirements);
+          await m.createTable(courseRequirementDives);
+        }
+        if (from < 112) await reportProgress();
       },
       beforeOpen: (details) async {
         // Enable foreign keys
@@ -5556,6 +5613,11 @@ class AppDatabase extends _$AppDatabase {
         // v111 backstop: re-assert equipment_sets.is_default + the
         // equipment_set_geofences table (parallel-branch collision self-heal).
         await _assertEquipmentSetDefaultAndGeofenceSchema();
+
+        // v112 backstop: course requirement tables (parallel-branch
+        // collision self-heal; createTable is idempotent).
+        await createMigrator().createTable(courseRequirements);
+        await createMigrator().createTable(courseRequirementDives);
 
         // Built-in dive types are reference data: identical on every device and
         // undeletable through DiveTypeRepository. Nothing else restores them --
