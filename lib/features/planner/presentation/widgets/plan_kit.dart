@@ -24,6 +24,56 @@ class PlanSectionHeader extends StatelessWidget {
   }
 }
 
+class PlanStatTile extends StatelessWidget {
+  const PlanStatTile({
+    required this.label,
+    required this.value,
+    this.emphasisColor,
+    super.key,
+  });
+
+  final String label;
+  final String value;
+  final Color? emphasisColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final tint = emphasisColor;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: tint != null
+            ? Color.alphaBlend(tint.withValues(alpha: 0.12), scheme.surface)
+            : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label.toUpperCase(),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: tint ?? scheme.onSurfaceVariant,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: tint ?? scheme.onSurface,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class PlanWarningRow extends StatelessWidget {
   const PlanWarningRow({
     required this.icon,

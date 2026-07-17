@@ -31,13 +31,15 @@ class SegmentList extends ConsumerWidget {
               children: [
                 Icon(Icons.timeline, color: theme.colorScheme.primary),
                 const SizedBox(width: 8),
-                Text(
-                  context.l10n.divePlanner_segmentList_title,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: theme.colorScheme.primary,
+                Expanded(
+                  child: Text(
+                    context.l10n.divePlanner_segmentList_title,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 IconButton(
                   icon: const Icon(Icons.add),
                   tooltip: context.l10n.divePlanner_segmentList_addSegment,
