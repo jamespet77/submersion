@@ -56,7 +56,15 @@ String formatAttributeValue(
     case AttributeKind.text:
       return attr.valueText ?? '';
     case AttributeKind.thickness:
-      return attr.valueText == null ? '' : '${attr.valueText} mm';
+      if (attr.valueText == null) return '';
+      // Strip any unit the stored designation already carries (legacy values
+      // like "6mm" that the v115 migration preserved verbatim) so the unit is
+      // appended exactly once.
+      final raw = attr.valueText!.trim();
+      final base = raw.toLowerCase().endsWith('mm')
+          ? raw.substring(0, raw.length - 2).trim()
+          : raw;
+      return base.isEmpty ? '' : '$base mm';
     case AttributeKind.number:
       if (attr.valueNum == null) return '';
       final display = attributeDisplayFromMetric(

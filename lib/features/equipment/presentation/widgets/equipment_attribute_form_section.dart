@@ -73,13 +73,9 @@ class EquipmentAttributeFormSection extends StatelessWidget {
             labelText: label,
             hintText: '5, 5/4, 7/5/3',
           ),
-          validator: (text) {
-            final t = text?.trim() ?? '';
-            if (t.isEmpty) return null;
-            return RegExp(r'^\d+(\.\d+)?(/\d+(\.\d+)?)*$').hasMatch(t)
-                ? null
-                : context.l10n.equipment_edit_invalidThickness;
-          },
+          validator: (text) => isValidThicknessDesignation(text ?? '')
+              ? null
+              : context.l10n.equipment_edit_invalidThickness,
           onChanged: (text) {
             final trimmed = text.trim();
             if (trimmed.isEmpty) {
@@ -116,10 +112,13 @@ class EquipmentAttributeFormSection extends StatelessWidget {
             signed: true,
           ),
           onChanged: (text) {
-            final parsed = double.tryParse(text.trim());
-            if (parsed == null) {
+            final trimmed = text.trim();
+            if (trimmed.isEmpty) {
               onCleared(def.key);
-            } else {
+              return;
+            }
+            final parsed = double.tryParse(trimmed);
+            if (parsed != null) {
               onChanged(
                 _base(def.key).copyWith(
                   valueNum: attributeMetricFromDisplay(
@@ -130,6 +129,8 @@ class EquipmentAttributeFormSection extends StatelessWidget {
                 ),
               );
             }
+            // Non-empty but unparseable (transient like "-", or invalid): keep
+            // the last pending value rather than silently dropping the field.
           },
         );
 

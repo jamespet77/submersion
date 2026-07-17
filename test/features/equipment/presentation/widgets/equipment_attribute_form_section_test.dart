@@ -85,4 +85,33 @@ void main() {
     await tester.pump();
     expect(emitted!.valueNum, 1.0);
   });
+
+  testWidgets('number field keeps value on transient invalid input, clears '
+      'only on empty', (tester) async {
+    final cleared = <String>[];
+    EquipmentAttribute? emitted;
+    await pumpSection(
+      tester,
+      type: EquipmentType.wetsuit,
+      values: const {},
+      onChanged: (a) => emitted = a,
+      onCleared: cleared.add,
+    );
+    final buoyancy = find.byKey(const ValueKey('attr-field-buoyancy_kg'));
+    await tester.ensureVisible(buoyancy);
+
+    // Transient invalid input (typing the sign of a negative number first)
+    // must not drop the attribute from pending state.
+    await tester.enterText(buoyancy, '-');
+    expect(cleared, isEmpty);
+
+    // Completing a valid number emits it.
+    await tester.enterText(buoyancy, '-2.5');
+    expect(emitted?.key, 'buoyancy_kg');
+    expect(emitted?.valueNum, closeTo(-2.5, 0.001));
+
+    // Emptying the field is the only thing that clears it.
+    await tester.enterText(buoyancy, '');
+    expect(cleared, contains('buoyancy_kg'));
+  });
 }
