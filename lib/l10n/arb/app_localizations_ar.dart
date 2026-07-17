@@ -2110,235 +2110,237 @@ class AppLocalizationsAr extends AppLocalizations {
   String get checklists_template_addItem => 'إضافة عنصر';
 
   @override
-  String get preDive_templates_title => 'Pre-Dive Checklists';
+  String get preDive_templates_title => 'قوائم تحقق ما قبل الغوص';
 
   @override
-  String get preDive_templates_empty => 'No pre-dive checklists yet';
+  String get preDive_templates_empty => 'لا توجد قوائم تحقق ما قبل الغوص بعد';
 
   @override
-  String get preDive_templates_builtInBadge => 'Built-in';
+  String get preDive_templates_builtInBadge => 'مدمجة';
 
   @override
-  String get preDive_templates_clone => 'Clone';
+  String get preDive_templates_clone => 'استنساخ';
 
   @override
-  String get preDive_templates_cloneSuffix => ' (copy)';
+  String get preDive_templates_cloneSuffix => ' (نسخة)';
 
   @override
-  String get preDive_templates_delete => 'Delete';
+  String get preDive_templates_delete => 'حذف';
 
   @override
   String get preDive_templates_deleteConfirm =>
-      'Delete this checklist template?';
+      'هل تريد حذف قالب قائمة التحقق هذا؟';
 
   @override
-  String get preDive_templates_strictOrderBadge => 'Strict order';
+  String get preDive_templates_strictOrderBadge => 'ترتيب صارم';
 
   @override
-  String get preDive_edit_titleNew => 'New Pre-Dive Checklist';
+  String get preDive_edit_titleNew => 'قائمة تحقق جديدة لما قبل الغوص';
 
   @override
-  String get preDive_edit_titleEdit => 'Edit Pre-Dive Checklist';
+  String get preDive_edit_titleEdit => 'تعديل قائمة تحقق ما قبل الغوص';
 
   @override
-  String get preDive_edit_name => 'Name';
+  String get preDive_edit_name => 'الاسم';
 
   @override
-  String get preDive_edit_description => 'Description';
+  String get preDive_edit_description => 'الوصف';
 
   @override
-  String get preDive_edit_category => 'Category';
+  String get preDive_edit_category => 'الفئة';
 
   @override
-  String get preDive_edit_strictOrder => 'Strict order';
+  String get preDive_edit_strictOrder => 'ترتيب صارم';
 
   @override
   String get preDive_edit_strictOrderHelp =>
-      'Items must be completed top to bottom';
+      'يجب إكمال العناصر من الأعلى إلى الأسفل';
 
   @override
-  String get preDive_edit_addItem => 'Add item';
+  String get preDive_edit_addItem => 'إضافة عنصر';
 
   @override
-  String get preDive_edit_nameRequired => 'Enter a name';
+  String get preDive_edit_nameRequired => 'أدخل اسمًا';
 
   @override
-  String get preDive_item_title => 'Title';
+  String get preDive_item_title => 'العنوان';
 
   @override
-  String get preDive_item_section => 'Section';
+  String get preDive_item_section => 'القسم';
 
   @override
-  String get preDive_item_notes => 'Notes';
+  String get preDive_item_notes => 'ملاحظات';
 
   @override
-  String get preDive_item_required => 'Required';
+  String get preDive_item_required => 'مطلوب';
 
   @override
-  String get preDive_item_type_check => 'Checkbox';
+  String get preDive_item_type_check => 'خانة اختيار';
 
   @override
-  String get preDive_item_type_value => 'Recorded value';
+  String get preDive_item_type_value => 'قيمة مسجَّلة';
 
   @override
-  String get preDive_item_type_equipmentSet => 'Equipment set items';
+  String get preDive_item_type_equipmentSet => 'عناصر طقم المعدات';
 
   @override
-  String get preDive_item_valueLabel => 'Value label';
+  String get preDive_item_valueLabel => 'تسمية القيمة';
 
   @override
-  String get preDive_item_valueUnit => 'Unit';
+  String get preDive_item_valueUnit => 'الوحدة';
 
   @override
-  String get preDive_item_valueMin => 'Min (warning)';
+  String get preDive_item_valueMin => 'الحد الأدنى (تحذير)';
 
   @override
-  String get preDive_item_valueMax => 'Max (warning)';
+  String get preDive_item_valueMax => 'الحد الأقصى (تحذير)';
 
   @override
   String preDive_runner_progress(int done, int total) {
-    return '$done of $total';
+    return '$done من $total';
   }
 
   @override
-  String get preDive_runner_complete => 'Complete';
+  String get preDive_runner_complete => 'إكمال';
 
   @override
   String preDive_runner_completeFlagged(int count) {
-    return 'Complete with $count flagged items?';
+    return 'هل تريد الإكمال مع $count من العناصر المعلَّمة؟';
   }
 
   @override
-  String get preDive_runner_abort => 'Abort checklist';
+  String get preDive_runner_abort => 'إلغاء قائمة التحقق';
 
   @override
   String get preDive_runner_abortConfirm =>
-      'Abort this checklist? It will be kept in history as aborted.';
+      'هل تريد إلغاء قائمة التحقق هذه؟ سيتم الاحتفاظ بها في السجل كملغاة.';
 
   @override
-  String get preDive_runner_skip => 'Skip';
+  String get preDive_runner_skip => 'تخطي';
 
   @override
-  String get preDive_runner_flag => 'Flag';
+  String get preDive_runner_flag => 'وضع علامة';
 
   @override
-  String get preDive_runner_undo => 'Reset to pending';
+  String get preDive_runner_undo => 'إعادة إلى قيد الانتظار';
 
   @override
-  String get preDive_runner_addNote => 'Add note';
+  String get preDive_runner_addNote => 'إضافة ملاحظة';
 
   @override
-  String get preDive_runner_enterValue => 'Enter value';
+  String get preDive_runner_enterValue => 'أدخل القيمة';
 
   @override
   String preDive_runner_flaggedBadge(int count) {
-    return '$count flagged';
+    return '$count معلَّمة';
   }
 
   @override
-  String get preDive_runner_locked => 'This checklist is locked';
+  String get preDive_runner_locked => 'قائمة التحقق هذه مقفلة';
 
   @override
-  String get preDive_sessions_title => 'Pre-Dive Checklists';
+  String get preDive_sessions_title => 'قوائم تحقق ما قبل الغوص';
 
   @override
-  String get preDive_sessions_empty => 'No checklist runs yet';
+  String get preDive_sessions_empty => 'لم يتم تنفيذ أي قائمة تحقق بعد';
 
   @override
-  String get preDive_sessions_resume => 'Resume';
+  String get preDive_sessions_resume => 'استئناف';
 
   @override
-  String get preDive_sessions_start => 'Start checklist';
+  String get preDive_sessions_start => 'بدء قائمة التحقق';
 
   @override
-  String get preDive_sessions_statusCompleted => 'Completed';
+  String get preDive_sessions_statusCompleted => 'مكتملة';
 
   @override
-  String get preDive_sessions_statusAborted => 'Aborted';
+  String get preDive_sessions_statusAborted => 'ملغاة';
 
   @override
-  String get preDive_sessions_statusInProgress => 'In progress';
+  String get preDive_sessions_statusInProgress => 'قيد التنفيذ';
 
   @override
-  String get preDive_sessions_linkedDive => 'Linked dive';
+  String get preDive_sessions_linkedDive => 'الغطسة المرتبطة';
 
   @override
-  String get preDive_sessions_delete => 'Delete';
+  String get preDive_sessions_delete => 'حذف';
 
   @override
-  String get preDive_sessions_deleteConfirm => 'Delete this checklist record?';
+  String get preDive_sessions_deleteConfirm =>
+      'هل تريد حذف سجل قائمة التحقق هذا؟';
 
   @override
-  String get preDive_start_title => 'Start pre-dive checklist';
+  String get preDive_start_title => 'بدء قائمة تحقق ما قبل الغوص';
 
   @override
-  String get preDive_start_template => 'Checklist';
+  String get preDive_start_template => 'قائمة التحقق';
 
   @override
-  String get preDive_start_equipmentSet => 'Equipment set';
+  String get preDive_start_equipmentSet => 'طقم المعدات';
 
   @override
-  String get preDive_start_noEquipmentSet => 'None';
+  String get preDive_start_noEquipmentSet => 'بدون';
 
   @override
-  String get preDive_start_begin => 'Begin';
+  String get preDive_start_begin => 'بدء';
 
   @override
-  String get preDive_section_title => 'Pre-Dive Check';
+  String get preDive_section_title => 'فحص ما قبل الغوص';
 
   @override
-  String get preDive_section_link => 'Link a checklist session';
+  String get preDive_section_link => 'ربط جلسة قائمة تحقق';
 
   @override
-  String get preDive_section_unlink => 'Unlink';
+  String get preDive_section_unlink => 'إلغاء الربط';
 
   @override
-  String get preDive_section_run => 'Run pre-dive checklist';
+  String get preDive_section_run => 'تشغيل قائمة تحقق ما قبل الغوص';
 
   @override
-  String get preDive_section_noUnlinked => 'No unlinked checklist sessions';
+  String get preDive_section_noUnlinked =>
+      'لا توجد جلسات قوائم تحقق غير مرتبطة';
 
   @override
-  String get diveDetailSection_preDiveChecklist_name => 'Pre-Dive Check';
+  String get diveDetailSection_preDiveChecklist_name => 'فحص ما قبل الغوص';
 
   @override
   String get diveDetailSection_preDiveChecklist_description =>
-      'Linked pre-dive checklist session';
+      'جلسة قائمة تحقق ما قبل الغوص المرتبطة';
 
   @override
   String get diveLog_listPage_bottomSheet_preDiveChecklist =>
-      'Start pre-dive checklist';
+      'بدء قائمة تحقق ما قبل الغوص';
 
   @override
-  String get preDive_dashboard_title => 'Pre-Dive Check';
+  String get preDive_dashboard_title => 'فحص ما قبل الغوص';
 
   @override
   String preDive_dashboard_resume(int done, int total) {
-    return 'Resume - $done of $total';
+    return 'استئناف - $done من $total';
   }
 
   @override
-  String get preDive_dashboard_start => 'Start pre-dive check';
+  String get preDive_dashboard_start => 'بدء فحص ما قبل الغوص';
 
   @override
-  String get tools_preDive_title => 'Pre-Dive Checklists';
+  String get tools_preDive_title => 'قوائم تحقق ما قبل الغوص';
 
   @override
-  String get tools_preDive_subtitle => 'Run and review checklist sessions';
+  String get tools_preDive_subtitle => 'تشغيل جلسات قوائم التحقق ومراجعتها';
 
   @override
   String get tools_preDive_description =>
-      'Buddy checks, CCR build lists, and gear packing with an audit trail';
+      'فحوصات رفيق الغوص، وقوائم تجهيز CCR، وتوضيب المعدات مع سجل تدقيق';
 
   @override
-  String get trips_detail_preDive_action => 'Pre-dive checklist';
+  String get trips_detail_preDive_action => 'قائمة تحقق ما قبل الغوص';
 
   @override
-  String get settings_manage_preDiveChecklists => 'Pre-Dive Checklists';
+  String get settings_manage_preDiveChecklists => 'قوائم تحقق ما قبل الغوص';
 
   @override
   String get settings_manage_preDiveChecklists_subtitle =>
-      'Buddy checks, CCR build lists, gear packing';
+      'فحوصات رفيق الغوص، قوائم تجهيز CCR، توضيب المعدات';
 
   @override
   String get common_action_back => 'رجوع';

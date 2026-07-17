@@ -2091,235 +2091,235 @@ class AppLocalizationsHe extends AppLocalizations {
   String get checklists_template_addItem => 'הוסף פריט';
 
   @override
-  String get preDive_templates_title => 'Pre-Dive Checklists';
+  String get preDive_templates_title => 'רשימות בדיקה לפני צלילה';
 
   @override
-  String get preDive_templates_empty => 'No pre-dive checklists yet';
+  String get preDive_templates_empty => 'עדיין אין רשימות בדיקה לפני צלילה';
 
   @override
-  String get preDive_templates_builtInBadge => 'Built-in';
+  String get preDive_templates_builtInBadge => 'מובנית';
 
   @override
-  String get preDive_templates_clone => 'Clone';
+  String get preDive_templates_clone => 'שכפול';
 
   @override
-  String get preDive_templates_cloneSuffix => ' (copy)';
+  String get preDive_templates_cloneSuffix => ' (עותק)';
 
   @override
-  String get preDive_templates_delete => 'Delete';
+  String get preDive_templates_delete => 'מחיקה';
 
   @override
   String get preDive_templates_deleteConfirm =>
-      'Delete this checklist template?';
+      'למחוק את תבנית רשימת הבדיקה הזו?';
 
   @override
-  String get preDive_templates_strictOrderBadge => 'Strict order';
+  String get preDive_templates_strictOrderBadge => 'סדר מחייב';
 
   @override
-  String get preDive_edit_titleNew => 'New Pre-Dive Checklist';
+  String get preDive_edit_titleNew => 'רשימת בדיקה חדשה לפני צלילה';
 
   @override
-  String get preDive_edit_titleEdit => 'Edit Pre-Dive Checklist';
+  String get preDive_edit_titleEdit => 'עריכת רשימת בדיקה לפני צלילה';
 
   @override
-  String get preDive_edit_name => 'Name';
+  String get preDive_edit_name => 'שם';
 
   @override
-  String get preDive_edit_description => 'Description';
+  String get preDive_edit_description => 'תיאור';
 
   @override
-  String get preDive_edit_category => 'Category';
+  String get preDive_edit_category => 'קטגוריה';
 
   @override
-  String get preDive_edit_strictOrder => 'Strict order';
+  String get preDive_edit_strictOrder => 'סדר מחייב';
 
   @override
-  String get preDive_edit_strictOrderHelp =>
-      'Items must be completed top to bottom';
+  String get preDive_edit_strictOrderHelp => 'יש להשלים את הפריטים מלמעלה למטה';
 
   @override
-  String get preDive_edit_addItem => 'Add item';
+  String get preDive_edit_addItem => 'הוסף פריט';
 
   @override
-  String get preDive_edit_nameRequired => 'Enter a name';
+  String get preDive_edit_nameRequired => 'הזן שם';
 
   @override
-  String get preDive_item_title => 'Title';
+  String get preDive_item_title => 'כותרת';
 
   @override
-  String get preDive_item_section => 'Section';
+  String get preDive_item_section => 'מקטע';
 
   @override
-  String get preDive_item_notes => 'Notes';
+  String get preDive_item_notes => 'הערות';
 
   @override
-  String get preDive_item_required => 'Required';
+  String get preDive_item_required => 'חובה';
 
   @override
-  String get preDive_item_type_check => 'Checkbox';
+  String get preDive_item_type_check => 'תיבת סימון';
 
   @override
-  String get preDive_item_type_value => 'Recorded value';
+  String get preDive_item_type_value => 'ערך מתועד';
 
   @override
-  String get preDive_item_type_equipmentSet => 'Equipment set items';
+  String get preDive_item_type_equipmentSet => 'פריטי סט ציוד';
 
   @override
-  String get preDive_item_valueLabel => 'Value label';
+  String get preDive_item_valueLabel => 'תווית ערך';
 
   @override
-  String get preDive_item_valueUnit => 'Unit';
+  String get preDive_item_valueUnit => 'יחידה';
 
   @override
-  String get preDive_item_valueMin => 'Min (warning)';
+  String get preDive_item_valueMin => 'מינימום (אזהרה)';
 
   @override
-  String get preDive_item_valueMax => 'Max (warning)';
+  String get preDive_item_valueMax => 'מקסימום (אזהרה)';
 
   @override
   String preDive_runner_progress(int done, int total) {
-    return '$done of $total';
+    return '$done מתוך $total';
   }
 
   @override
-  String get preDive_runner_complete => 'Complete';
+  String get preDive_runner_complete => 'סיום';
 
   @override
   String preDive_runner_completeFlagged(int count) {
-    return 'Complete with $count flagged items?';
+    return 'לסיים עם $count פריטים מסומנים בדגל?';
   }
 
   @override
-  String get preDive_runner_abort => 'Abort checklist';
+  String get preDive_runner_abort => 'ביטול רשימת הבדיקה';
 
   @override
   String get preDive_runner_abortConfirm =>
-      'Abort this checklist? It will be kept in history as aborted.';
+      'לבטל את רשימת הבדיקה הזו? היא תישמר בהיסטוריה כמבוטלת.';
 
   @override
-  String get preDive_runner_skip => 'Skip';
+  String get preDive_runner_skip => 'דלג';
 
   @override
-  String get preDive_runner_flag => 'Flag';
+  String get preDive_runner_flag => 'סמן בדגל';
 
   @override
-  String get preDive_runner_undo => 'Reset to pending';
+  String get preDive_runner_undo => 'אפס לממתין';
 
   @override
-  String get preDive_runner_addNote => 'Add note';
+  String get preDive_runner_addNote => 'הוסף הערה';
 
   @override
-  String get preDive_runner_enterValue => 'Enter value';
+  String get preDive_runner_enterValue => 'הזן ערך';
 
   @override
   String preDive_runner_flaggedBadge(int count) {
-    return '$count flagged';
+    return '$count מסומנים בדגל';
   }
 
   @override
-  String get preDive_runner_locked => 'This checklist is locked';
+  String get preDive_runner_locked => 'רשימת הבדיקה הזו נעולה';
 
   @override
-  String get preDive_sessions_title => 'Pre-Dive Checklists';
+  String get preDive_sessions_title => 'רשימות בדיקה לפני צלילה';
 
   @override
-  String get preDive_sessions_empty => 'No checklist runs yet';
+  String get preDive_sessions_empty => 'עדיין אין הרצות של רשימות בדיקה';
 
   @override
-  String get preDive_sessions_resume => 'Resume';
+  String get preDive_sessions_resume => 'המשך';
 
   @override
-  String get preDive_sessions_start => 'Start checklist';
+  String get preDive_sessions_start => 'התחל רשימת בדיקה';
 
   @override
-  String get preDive_sessions_statusCompleted => 'Completed';
+  String get preDive_sessions_statusCompleted => 'הושלמה';
 
   @override
-  String get preDive_sessions_statusAborted => 'Aborted';
+  String get preDive_sessions_statusAborted => 'בוטלה';
 
   @override
-  String get preDive_sessions_statusInProgress => 'In progress';
+  String get preDive_sessions_statusInProgress => 'בתהליך';
 
   @override
-  String get preDive_sessions_linkedDive => 'Linked dive';
+  String get preDive_sessions_linkedDive => 'צלילה מקושרת';
 
   @override
-  String get preDive_sessions_delete => 'Delete';
+  String get preDive_sessions_delete => 'מחיקה';
 
   @override
-  String get preDive_sessions_deleteConfirm => 'Delete this checklist record?';
+  String get preDive_sessions_deleteConfirm =>
+      'למחוק את רשומת רשימת הבדיקה הזו?';
 
   @override
-  String get preDive_start_title => 'Start pre-dive checklist';
+  String get preDive_start_title => 'התחלת רשימת בדיקה לפני צלילה';
 
   @override
-  String get preDive_start_template => 'Checklist';
+  String get preDive_start_template => 'רשימת בדיקה';
 
   @override
-  String get preDive_start_equipmentSet => 'Equipment set';
+  String get preDive_start_equipmentSet => 'סט ציוד';
 
   @override
-  String get preDive_start_noEquipmentSet => 'None';
+  String get preDive_start_noEquipmentSet => 'ללא';
 
   @override
-  String get preDive_start_begin => 'Begin';
+  String get preDive_start_begin => 'התחל';
 
   @override
-  String get preDive_section_title => 'Pre-Dive Check';
+  String get preDive_section_title => 'בדיקה לפני צלילה';
 
   @override
-  String get preDive_section_link => 'Link a checklist session';
+  String get preDive_section_link => 'קשר הרצת רשימת בדיקה';
 
   @override
-  String get preDive_section_unlink => 'Unlink';
+  String get preDive_section_unlink => 'בטל קישור';
 
   @override
-  String get preDive_section_run => 'Run pre-dive checklist';
+  String get preDive_section_run => 'הרץ רשימת בדיקה לפני צלילה';
 
   @override
-  String get preDive_section_noUnlinked => 'No unlinked checklist sessions';
+  String get preDive_section_noUnlinked => 'אין הרצות רשימת בדיקה לא מקושרות';
 
   @override
-  String get diveDetailSection_preDiveChecklist_name => 'Pre-Dive Check';
+  String get diveDetailSection_preDiveChecklist_name => 'בדיקה לפני צלילה';
 
   @override
   String get diveDetailSection_preDiveChecklist_description =>
-      'Linked pre-dive checklist session';
+      'הרצת רשימת בדיקה לפני צלילה מקושרת';
 
   @override
   String get diveLog_listPage_bottomSheet_preDiveChecklist =>
-      'Start pre-dive checklist';
+      'התחל רשימת בדיקה לפני צלילה';
 
   @override
-  String get preDive_dashboard_title => 'Pre-Dive Check';
+  String get preDive_dashboard_title => 'בדיקה לפני צלילה';
 
   @override
   String preDive_dashboard_resume(int done, int total) {
-    return 'Resume - $done of $total';
+    return 'המשך - $done מתוך $total';
   }
 
   @override
-  String get preDive_dashboard_start => 'Start pre-dive check';
+  String get preDive_dashboard_start => 'התחל בדיקה לפני צלילה';
 
   @override
-  String get tools_preDive_title => 'Pre-Dive Checklists';
+  String get tools_preDive_title => 'רשימות בדיקה לפני צלילה';
 
   @override
-  String get tools_preDive_subtitle => 'Run and review checklist sessions';
+  String get tools_preDive_subtitle => 'הרץ וסקור הרצות של רשימות בדיקה';
 
   @override
   String get tools_preDive_description =>
-      'Buddy checks, CCR build lists, and gear packing with an audit trail';
+      'בדיקות באדי, רשימות הרכבת CCR ואריזת ציוד עם תיעוד ביקורת';
 
   @override
-  String get trips_detail_preDive_action => 'Pre-dive checklist';
+  String get trips_detail_preDive_action => 'רשימת בדיקה לפני צלילה';
 
   @override
-  String get settings_manage_preDiveChecklists => 'Pre-Dive Checklists';
+  String get settings_manage_preDiveChecklists => 'רשימות בדיקה לפני צלילה';
 
   @override
   String get settings_manage_preDiveChecklists_subtitle =>
-      'Buddy checks, CCR build lists, gear packing';
+      'בדיקות באדי, רשימות הרכבת CCR, אריזת ציוד';
 
   @override
   String get common_action_back => 'חזרה';
