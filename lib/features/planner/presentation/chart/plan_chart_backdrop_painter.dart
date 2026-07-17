@@ -53,7 +53,12 @@ class PlanChartBackdropPainter extends CustomPainter {
       );
     }
 
-    // Vertical time grid + labels.
+    // Vertical time grid + labels. The time axis-unit label owns the
+    // bottom-right corner, so tick labels that would collide with it are
+    // drawn as grid lines only.
+    final timeUnit = layoutLabel(timeAxisLabel, style, textDirection);
+    final timeUnitOrigin = Offset(plot.right - timeUnit.width, plot.bottom + 4);
+    final timeUnitRect = timeUnitOrigin & Size(timeUnit.width, timeUnit.height);
     final timeStep = geometry.timeTickIntervalSeconds;
     for (var t = timeStep; t < geometry.maxTimeSeconds * 1.05; t += timeStep) {
       final x = geometry.xFor(t);
@@ -63,17 +68,17 @@ class PlanChartBackdropPainter extends CustomPainter {
         style,
         textDirection,
       );
-      label.paint(canvas, Offset(x - label.width / 2, plot.bottom + 4));
+      final labelOrigin = Offset(x - label.width / 2, plot.bottom + 4);
+      final labelRect = labelOrigin & Size(label.width, label.height);
+      if (!labelRect.inflate(4).overlaps(timeUnitRect)) {
+        label.paint(canvas, labelOrigin);
+      }
     }
 
     // Axis unit labels: depth unit top-left, time unit bottom-right.
     final depthUnit = layoutLabel(depthAxisLabel, style, textDirection);
     depthUnit.paint(canvas, Offset(plot.left - depthUnit.width - 6, plot.top));
-    final timeUnit = layoutLabel(timeAxisLabel, style, textDirection);
-    timeUnit.paint(
-      canvas,
-      Offset(plot.right - timeUnit.width, plot.bottom + 4),
-    );
+    timeUnit.paint(canvas, timeUnitOrigin);
 
     // Ceiling no-go band: the region shallower than the ceiling.
     if (ceiling.length >= 2) {
