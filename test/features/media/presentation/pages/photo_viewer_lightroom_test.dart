@@ -105,4 +105,26 @@ void main() {
     );
     expect(find.byTooltip('Open in Lightroom'), findsNothing);
   });
+
+  testWidgets('a connector video shows the poster + Open in Lightroom, not '
+      'the local player (which fails with "video file not found")', (
+    tester,
+  ) async {
+    final video = MediaItem(
+      id: 'm1',
+      diveId: 'd1',
+      mediaType: MediaType.video,
+      sourceType: MediaSourceType.serviceConnector,
+      remoteAssetId: 'lr1',
+      takenAt: DateTime.utc(2026, 7, 1, 10),
+      createdAt: DateTime.utc(2026, 7, 1),
+      updatedAt: DateTime.utc(2026, 7, 1),
+    );
+    await pump(tester, media: video, withAccount: account);
+
+    // The connector-video body renders the Open-in-Lightroom play affordance
+    // (a Text label) and never routes to the local player's error.
+    expect(find.text('Open in Lightroom'), findsOneWidget);
+    expect(find.text('Video file not found'), findsNothing);
+  });
 }
