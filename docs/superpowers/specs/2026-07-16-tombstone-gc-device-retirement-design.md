@@ -1,7 +1,7 @@
 # Tombstone GC and Device Retirement (Fleet-Acked Horizon)
 
 Date: 2026-07-16
-Status: Implemented (schema v112; see docs/superpowers/plans/2026-07-16-tombstone-gc-device-retirement.md)
+Status: Implemented (schema v113 -- renumbered from v112 after main claimed it for equipment.thickness; see docs/superpowers/plans/2026-07-16-tombstone-gc-device-retirement.md)
 
 ## Problem
 
@@ -75,11 +75,16 @@ than today's unconditional 90-day purge — until all devices upgrade.
 At compaction/publish time, device A may drop a tombstone with HLC `H` when
 both hold:
 
-- For every peer manifest that is **live** (`updatedAt` within the retirement
-  period), `appliedPeerHlc[A] >= H`. A live manifest with no `appliedPeerHlc`
-  entry for A (a device that has not yet pulled A's log, or an old-format
-  manifest) acknowledges nothing and blocks GC. Retired and absent peers do
-  not count.
+- For every peer manifest that is **not durably fenced** (no retirement
+  marker confirmed present in the bucket), `appliedPeerHlc[A] >= H`. A
+  manifest with no `appliedPeerHlc` entry for A (a device that has not yet
+  pulled A's log, or an old-format manifest) acknowledges nothing and blocks
+  GC. Manifest age deliberately does NOT exempt a peer: a stale peer whose
+  retirement-marker upload failed is unfenced, and GC'ing past it would let
+  it later rejoin without the fence and resurrect deleted rows. The
+  retirement sweep reports exactly which markers are durably present, and GC
+  exempts only that set (a stale peer therefore blocks GC for at most the one
+  sync in which its marker is written).
 - `deletedAt` is older than the 30-day safety floor (covers in-flight device
   joins and twin splits).
 
@@ -113,9 +118,11 @@ and HLC, which is the desired semantics.
 During sync, any device that observes a peer manifest with `updatedAt` older
 than 12 months:
 
-1. Writes an idempotent retirement marker `ssv1.<deviceId>.retired.json`.
-   Content is deterministic (retiree device id, retiring epoch, marker format
-   version), so concurrent retirers converge on identical content.
+1. Writes a retirement marker `ssv1.<deviceId>.retired.json` with fields
+   `{formatVersion, deviceId, retiredAt}`. Concurrent retirers write the same
+   file name with semantically equivalent content (retiredAt may differ by
+   the race window); last write wins and either copy fences identically, so
+   the operation is idempotent in effect.
 2. Deletes the retiree's manifest, base parts, and changesets.
 
 Order matters: marker first, then file deletion, so a partially-completed

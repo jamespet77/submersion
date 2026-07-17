@@ -23,7 +23,6 @@ void main() {
       selfDeviceId: 'self',
       peerManifests: const [],
       retiredPeerIds: const {},
-      nowMillis: now,
     );
     expect(d.allowed, isTrue);
     expect(d.upToHlc, isNull);
@@ -34,7 +33,6 @@ void main() {
       selfDeviceId: 'self',
       peerManifests: [peer('p1')],
       retiredPeerIds: const {},
-      nowMillis: now,
     );
     expect(d.allowed, isFalse);
   });
@@ -47,25 +45,54 @@ void main() {
         peer('p2', applied: {'self': '00000000000010:000000:x'}),
       ],
       retiredPeerIds: const {},
-      nowMillis: now,
     );
     expect(d.allowed, isTrue);
     expect(d.upToHlc, '00000000000010:000000:x');
   });
 
-  test('stale (13-month) and retired peers do not count', () {
+  test('retired (marker-durable) peers do not count', () {
     final d = TombstoneHorizon.compute(
       selfDeviceId: 'self',
       peerManifests: [
-        peer('stale', ageMillis: 13 * month), // beyond retirement period
-        peer('gone', applied: const {}), // retired below
+        peer('gone', ageMillis: 13 * month), // retired below
         peer('live', applied: {'self': '00000000000030:000000:x'}),
       ],
       retiredPeerIds: const {'gone'},
-      nowMillis: now,
     );
     expect(d.allowed, isTrue);
     expect(d.upToHlc, '00000000000030:000000:x');
+  });
+
+  test('a stale peer WITHOUT a durable marker still blocks GC', () {
+    // Age alone must never remove a peer from the constraint set: if the
+    // retirement sweep failed to write the marker, the peer is unfenced and
+    // could later rejoin holding rows whose tombstones we would have GC'd.
+    final d = TombstoneHorizon.compute(
+      selfDeviceId: 'self',
+      peerManifests: [
+        peer('stale-unfenced', ageMillis: 13 * month),
+        peer('live', applied: {'self': '00000000000030:000000:x'}),
+      ],
+      retiredPeerIds: const {},
+    );
+    expect(d.allowed, isFalse);
+  });
+
+  test('a stale unmarked peer WITH an ack constrains the horizon', () {
+    final d = TombstoneHorizon.compute(
+      selfDeviceId: 'self',
+      peerManifests: [
+        peer(
+          'stale-acked',
+          ageMillis: 13 * month,
+          applied: {'self': '00000000000005:000000:x'},
+        ),
+        peer('live', applied: {'self': '00000000000030:000000:x'}),
+      ],
+      retiredPeerIds: const {},
+    );
+    expect(d.allowed, isTrue);
+    expect(d.upToHlc, '00000000000005:000000:x');
   });
 
   test('own manifest is ignored', () {
@@ -73,7 +100,6 @@ void main() {
       selfDeviceId: 'self',
       peerManifests: [peer('self')],
       retiredPeerIds: const {},
-      nowMillis: now,
     );
     expect(d.allowed, isTrue);
     expect(d.upToHlc, isNull);

@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Schema migration is **v112** (current is v111; append to `migrationVersions`, never renumber).
+- Schema migration is **v113** (originally planned as v112; renumbered when main claimed v112 for equipment.thickness while the PR was open).
 - Constants: retirement period **365 days**, heartbeat max age **7 days**, GC safety floor **30 days**.
 - HLC comparisons use the fixed-width zero-padded canonical **string** form (`compareTo`), matching the existing v86 deletion filters. Never switch to parsed `Hlc.compareTo` in isolation.
 - Manifest changes are **additive JSON fields**; a manifest missing `appliedPeerHlc` acknowledges nothing (blocks GC).

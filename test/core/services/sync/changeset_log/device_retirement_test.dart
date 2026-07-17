@@ -6,9 +6,9 @@ import 'package:submersion/core/services/sync/changeset_log/sync_manifest.dart';
 import 'package:submersion/features/dive_log/data/repositories/dive_repository_impl.dart';
 
 import '../../../../helpers/changeset_test_helpers.dart';
+import '../../../../helpers/fake_cloud_storage_provider.dart';
 import '../../../../helpers/mock_providers.dart';
 import '../../../../helpers/test_database.dart';
-import '../../../../support/fake_cloud_storage_provider.dart';
 
 void main() {
   late FakeCloudStorageProvider cloud;
@@ -23,10 +23,18 @@ void main() {
   });
   tearDown(() => tearDownTestDatabase());
 
+  Future<String> fileIdOf(String name) async {
+    final files = await cloud.listFiles(
+      folderId: folder,
+      namePattern: ChangesetLogLayout.prefix,
+    );
+    return files.singleWhere((f) => f.name == name).id;
+  }
+
   Future<SyncManifest> agePeerManifest(String peerId, int updatedAt) async {
     final name = ChangesetLogLayout.manifestName(peerId);
     final fresh = SyncManifest.fromBytes(
-      await cloud.downloadFile('$folder/$name'),
+      await cloud.downloadFile(await fileIdOf(name)),
     );
     final aged = SyncManifest(
       deviceId: fresh.deviceId,
@@ -69,7 +77,7 @@ void main() {
       nowMillis: now,
     );
 
-    expect(retired, 1);
+    expect(retired, {'peer-old'});
     final ns = await names();
     expect(ns, contains(ChangesetLogLayout.retiredMarkerName('peer-old')));
     expect(
@@ -81,7 +89,7 @@ void main() {
     );
     final marker = RetirementMarker.fromBytes(
       await cloud.downloadFile(
-        '$folder/${ChangesetLogLayout.retiredMarkerName('peer-old')}',
+        await fileIdOf(ChangesetLogLayout.retiredMarkerName('peer-old')),
       ),
     );
     expect(marker.deviceId, 'peer-old');
@@ -111,13 +119,43 @@ void main() {
       nowMillis: now,
     );
 
-    expect(retired, 0);
+    expect(retired, isEmpty);
     final ns = await names();
     expect(
       ns,
       isNot(contains(ChangesetLogLayout.retiredMarkerName('peer-fresh'))),
     );
     expect(ns, isNot(contains(ChangesetLogLayout.retiredMarkerName('self'))));
+  });
+
+  test('a failed marker upload is not reported as durably fenced', () async {
+    await DiveRepository().createDive(
+      createTestDiveWithBottomTime(id: 'p1', diveNumber: 1),
+    );
+    await seedPeerLog(cloud, 'peer-flaky');
+    final aged = await agePeerManifest('peer-flaky', now - thirteenMonths);
+    cloud.failUploads = true;
+
+    final retired = await DeviceRetirement().sweep(
+      provider: cloud,
+      folderId: folder,
+      selfDeviceId: 'self',
+      peerManifests: [aged],
+      alreadyRetired: const {},
+      retiredPeerHasFiles: false,
+      nowMillis: now,
+    );
+
+    expect(
+      retired,
+      isEmpty,
+      reason: 'an unfenced stale peer must keep blocking tombstone GC',
+    );
+    cloud.failUploads = false;
+    expect(
+      await names(),
+      isNot(contains(ChangesetLogLayout.retiredMarkerName('peer-flaky'))),
+    );
   });
 
   test(
@@ -146,7 +184,7 @@ void main() {
         nowMillis: now,
       );
 
-      expect(retired, 0);
+      expect(retired, {'peer-partial'});
       final ns = await names();
       expect(
         ns,

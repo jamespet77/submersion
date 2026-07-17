@@ -18,8 +18,13 @@ class DeviceRetirement {
 
   final int retirementPeriodMillis;
 
-  /// Returns the count of newly retired devices.
-  Future<int> sweep({
+  /// Returns the set of peer device ids whose retirement markers are durably
+  /// present after this sweep: [alreadyRetired] (markers observed in the
+  /// listing) plus every candidate whose marker upload succeeded just now.
+  /// Tombstone GC treats EXACTLY this set as fenced -- a stale peer whose
+  /// marker upload failed stays in the GC constraint set, so GC can never
+  /// outrun the fence.
+  Future<Set<String>> sweep({
     required CloudStorageProvider provider,
     required String folderId,
     required String selfDeviceId,
@@ -35,20 +40,26 @@ class DeviceRetirement {
             nowMillis - m.updatedAt > retirementPeriodMillis)
           m.deviceId,
     ];
-    if (candidates.isEmpty && !retiredPeerHasFiles) return 0;
+    final durablyMarked = {...alreadyRetired};
+    if (candidates.isEmpty && !retiredPeerHasFiles) return durablyMarked;
 
     final toDelete = {...alreadyRetired};
-    var retired = 0;
     for (final id in candidates) {
       // Marker BEFORE deletion: a partially retired device must still fence.
-      final marker = RetirementMarker(deviceId: id, retiredAt: nowMillis);
-      await provider.uploadFile(
-        marker.toBytes(),
-        ChangesetLogLayout.retiredMarkerName(id),
-        folderId: folderId,
-      );
+      // Per-candidate failure tolerance: one failed upload must not abort the
+      // others, and a failed id is simply not reported as durably marked.
+      try {
+        final marker = RetirementMarker(deviceId: id, retiredAt: nowMillis);
+        await provider.uploadFile(
+          marker.toBytes(),
+          ChangesetLogLayout.retiredMarkerName(id),
+          folderId: folderId,
+        );
+      } catch (_) {
+        continue; // retried next sync; peer keeps blocking GC until then
+      }
       toDelete.add(id);
-      retired++;
+      durablyMarked.add(id);
     }
 
     try {
@@ -69,6 +80,6 @@ class DeviceRetirement {
     } catch (_) {
       // Listing failed; markers are durable, deletion retries later.
     }
-    return retired;
+    return durablyMarked;
   }
 }

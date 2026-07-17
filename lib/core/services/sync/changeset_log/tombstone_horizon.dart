@@ -1,4 +1,3 @@
-import 'package:submersion/core/services/sync/changeset_log/sync_liveness.dart';
 import 'package:submersion/core/services/sync/changeset_log/sync_manifest.dart';
 
 /// Outcome of a fleet-acked GC computation. [upToHlc] == null with [allowed]
@@ -15,29 +14,33 @@ class TombstoneGcDecision {
 }
 
 /// Computes how far this device may garbage-collect its own tombstones: the
-/// minimum HLC every LIVE peer's manifest acknowledges having applied from us.
-/// A live peer with no ack entry (old-format manifest, or a device that has
-/// not pulled our log yet) blocks GC entirely -- the safe default.
+/// minimum HLC every constraining peer's manifest acknowledges having applied
+/// from us. A peer with no ack entry (old-format manifest, or a device that
+/// has not pulled our log yet) blocks GC entirely -- the safe default.
+///
+/// The ONLY thing that removes a peer from the constraint set is a durably
+/// present retirement marker ([retiredPeerIds]) -- retirement fences the peer,
+/// so it can never republish rows whose tombstones we drop here. Manifest age
+/// deliberately does NOT exempt a peer: a stale peer whose retirement-marker
+/// upload failed is unfenced, and GC'ing past it would let it resurrect
+/// deleted rows when it returns.
 class TombstoneHorizon {
   static TombstoneGcDecision compute({
     required String selfDeviceId,
     required Iterable<SyncManifest> peerManifests,
     required Set<String> retiredPeerIds,
-    required int nowMillis,
-    int retirementPeriodMillis = SyncLiveness.retirementPeriodMillis,
   }) {
     String? min;
-    var anyLivePeer = false;
+    var anyPeer = false;
     for (final m in peerManifests) {
       if (m.deviceId == selfDeviceId) continue;
       if (retiredPeerIds.contains(m.deviceId)) continue;
-      if (nowMillis - m.updatedAt > retirementPeriodMillis) continue;
       final acked = m.appliedPeerHlc[selfDeviceId];
       if (acked == null) return const TombstoneGcDecision.blocked();
-      anyLivePeer = true;
+      anyPeer = true;
       if (min == null || acked.compareTo(min) < 0) min = acked;
     }
-    if (!anyLivePeer) return const TombstoneGcDecision.unbounded();
+    if (!anyPeer) return const TombstoneGcDecision.unbounded();
     return TombstoneGcDecision.upTo(min!);
   }
 }

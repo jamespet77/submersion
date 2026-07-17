@@ -475,9 +475,14 @@ class SyncService {
       };
 
       // Retire peers idle past the retirement period (best-effort; never
-      // fatal to the sync). Marker-first ordering guarantees the fence.
+      // fatal to the sync). Marker-first ordering guarantees the fence. The
+      // sweep reports which peers have DURABLE markers -- tombstone GC below
+      // treats exactly that set as fenced, so a peer whose marker upload
+      // failed keeps blocking GC (it is stale but unfenced). On a sweep
+      // failure fall back to the markers observed in the pull listing.
+      var fencedPeerIds = pullResult.retiredPeerIds;
       try {
-        await DeviceRetirement().sweep(
+        fencedPeerIds = await DeviceRetirement().sweep(
           provider: provider,
           folderId: folderId,
           selfDeviceId: deviceId,
@@ -559,11 +564,12 @@ class SyncService {
       }
       await _syncRepository.persistSyncClock();
       // Fleet-acked tombstone GC (replaces the unconditional 90-day purge).
+      // Only durably fenced peers (retirement marker confirmed present) are
+      // exempt from the ack constraint -- see the sweep above.
       final gc = TombstoneHorizon.compute(
         selfDeviceId: deviceId,
         peerManifests: pullResult.peerManifests,
-        retiredPeerIds: pullResult.retiredPeerIds,
-        nowMillis: now.millisecondsSinceEpoch,
+        retiredPeerIds: fencedPeerIds,
       );
       if (gc.allowed) {
         await _syncRepository.clearAcknowledgedDeletions(
