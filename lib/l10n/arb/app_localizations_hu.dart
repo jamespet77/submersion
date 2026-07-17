@@ -11889,6 +11889,25 @@ class AppLocalizationsHu extends AppLocalizations {
   String get buoyancy_chartRig => 'Felszerelés + ólom';
 
   @override
+  String get buoyancy_historyTitle => 'Ólomelőzmények';
+
+  @override
+  String get buoyancy_historyCarried => 'Vitt';
+
+  @override
+  String get buoyancy_historyModeled => 'Modellezett';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'Általában $delta-mal többet viszel, mint amit a modell javasol';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'Általában $delta-mal kevesebbet viszel, mint amit a modell javasol';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Palackok';
 
   @override

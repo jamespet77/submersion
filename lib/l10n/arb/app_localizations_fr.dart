@@ -11967,6 +11967,25 @@ class AppLocalizationsFr extends AppLocalizations {
   String get buoyancy_chartRig => 'Équipement + lest';
 
   @override
+  String get buoyancy_historyTitle => 'Historique de lestage';
+
+  @override
+  String get buoyancy_historyCarried => 'Porté';
+
+  @override
+  String get buoyancy_historyModeled => 'Modélisé';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'Vous portez généralement $delta de plus que ce que le modèle suggère';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'Vous portez généralement $delta de moins que ce que le modèle suggère';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Bouteilles';
 
   @override

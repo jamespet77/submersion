@@ -11923,6 +11923,25 @@ class AppLocalizationsIt extends AppLocalizations {
   String get buoyancy_chartRig => 'Attrezzatura + zavorra';
 
   @override
+  String get buoyancy_historyTitle => 'Cronologia zavorra';
+
+  @override
+  String get buoyancy_historyCarried => 'Portato';
+
+  @override
+  String get buoyancy_historyModeled => 'Modellato';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'Di solito porti $delta in più rispetto al modello';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'Di solito porti $delta in meno rispetto al modello';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Bombole';
 
   @override

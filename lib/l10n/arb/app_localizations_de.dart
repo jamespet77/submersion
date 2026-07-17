@@ -11917,6 +11917,25 @@ class AppLocalizationsDe extends AppLocalizations {
   String get buoyancy_chartRig => 'Rig + Blei';
 
   @override
+  String get buoyancy_historyTitle => 'Bleiverlauf';
+
+  @override
+  String get buoyancy_historyCarried => 'Getragen';
+
+  @override
+  String get buoyancy_historyModeled => 'Modelliert';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'Du trägst typischerweise $delta mehr als vom Modell vorgeschlagen';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'Du trägst typischerweise $delta weniger als vom Modell vorgeschlagen';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Flaschen';
 
   @override

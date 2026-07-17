@@ -11620,6 +11620,25 @@ class AppLocalizationsHe extends AppLocalizations {
   String get buoyancy_chartRig => 'ציוד + משקולות';
 
   @override
+  String get buoyancy_historyTitle => 'היסטוריית משקולות';
+
+  @override
+  String get buoyancy_historyCarried => 'נישא';
+
+  @override
+  String get buoyancy_historyModeled => 'ממודל';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'בדרך כלל אתה נושא $delta יותר ממה שהמודל מציע';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'בדרך כלל אתה נושא $delta פחות ממה שהמודל מציע';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'בלונים';
 
   @override

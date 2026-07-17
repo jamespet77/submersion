@@ -11924,6 +11924,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String get buoyancy_chartRig => 'Equipamento + lastro';
 
   @override
+  String get buoyancy_historyTitle => 'Histórico de lastro';
+
+  @override
+  String get buoyancy_historyCarried => 'Levado';
+
+  @override
+  String get buoyancy_historyModeled => 'Modelado';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'Você costuma levar $delta a mais do que o modelo sugere';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'Você costuma levar $delta a menos do que o modelo sugere';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Cilindros';
 
   @override

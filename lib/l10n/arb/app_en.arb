@@ -6631,6 +6631,17 @@
   "buoyancy_linkSuitHint": "Link an exposure suit to this dive for a fuller picture",
   "buoyancy_chartNet": "Net",
   "buoyancy_chartRig": "Rig + lead",
+  "buoyancy_historyTitle": "Weighting history",
+  "buoyancy_historyCarried": "Carried",
+  "buoyancy_historyModeled": "Modeled",
+  "buoyancy_historyMore": "You typically carry {delta} more than the model suggests",
+  "@buoyancy_historyMore": {
+    "placeholders": { "delta": { "type": "String" } }
+  },
+  "buoyancy_historyLess": "You typically carry {delta} less than the model suggests",
+  "@buoyancy_historyLess": {
+    "placeholders": { "delta": { "type": "String" } }
+  },
   "diveDetailSection_tanks_name": "Cylinders",
   "diveDetailSection_tanks_description": "Cylinder list, gas mixes, pressures, MOD/MND, per-tank SAC",
   "diveDetailSection_buddies_name": "Buddies",

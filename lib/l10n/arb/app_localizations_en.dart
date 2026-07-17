@@ -11731,6 +11731,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get buoyancy_chartRig => 'Rig + lead';
 
   @override
+  String get buoyancy_historyTitle => 'Weighting history';
+
+  @override
+  String get buoyancy_historyCarried => 'Carried';
+
+  @override
+  String get buoyancy_historyModeled => 'Modeled';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'You typically carry $delta more than the model suggests';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'You typically carry $delta less than the model suggests';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Cylinders';
 
   @override

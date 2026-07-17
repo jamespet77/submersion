@@ -11705,6 +11705,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get buoyancy_chartRig => 'المعدات + الرصاص';
 
   @override
+  String get buoyancy_historyTitle => 'سجل الترصيص';
+
+  @override
+  String get buoyancy_historyCarried => 'المحمول';
+
+  @override
+  String get buoyancy_historyModeled => 'المُنمذَج';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'عادةً ما تحمل $delta أكثر مما يقترحه النموذج';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'عادةً ما تحمل $delta أقل مما يقترحه النموذج';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'الأسطوانات';
 
   @override

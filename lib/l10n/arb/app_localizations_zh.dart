@@ -11354,6 +11354,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get buoyancy_chartRig => '装备 + 配重';
 
   @override
+  String get buoyancy_historyTitle => '配重历史';
+
+  @override
+  String get buoyancy_historyCarried => '实际携带';
+
+  @override
+  String get buoyancy_historyModeled => '模型建议';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return '你通常比模型建议多带 $delta';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return '你通常比模型建议少带 $delta';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => '气瓶';
 
   @override

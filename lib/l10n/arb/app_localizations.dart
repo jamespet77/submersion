@@ -20294,6 +20294,36 @@ abstract class AppLocalizations {
   /// **'Rig + lead'**
   String get buoyancy_chartRig;
 
+  /// No description provided for @buoyancy_historyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Weighting history'**
+  String get buoyancy_historyTitle;
+
+  /// No description provided for @buoyancy_historyCarried.
+  ///
+  /// In en, this message translates to:
+  /// **'Carried'**
+  String get buoyancy_historyCarried;
+
+  /// No description provided for @buoyancy_historyModeled.
+  ///
+  /// In en, this message translates to:
+  /// **'Modeled'**
+  String get buoyancy_historyModeled;
+
+  /// No description provided for @buoyancy_historyMore.
+  ///
+  /// In en, this message translates to:
+  /// **'You typically carry {delta} more than the model suggests'**
+  String buoyancy_historyMore(String delta);
+
+  /// No description provided for @buoyancy_historyLess.
+  ///
+  /// In en, this message translates to:
+  /// **'You typically carry {delta} less than the model suggests'**
+  String buoyancy_historyLess(String delta);
+
   /// No description provided for @diveDetailSection_tanks_name.
   ///
   /// In en, this message translates to:

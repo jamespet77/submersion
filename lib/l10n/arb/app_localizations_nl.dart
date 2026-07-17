@@ -11836,6 +11836,25 @@ class AppLocalizationsNl extends AppLocalizations {
   String get buoyancy_chartRig => 'Uitrusting + lood';
 
   @override
+  String get buoyancy_historyTitle => 'Loodgeschiedenis';
+
+  @override
+  String get buoyancy_historyCarried => 'Gedragen';
+
+  @override
+  String get buoyancy_historyModeled => 'Gemodelleerd';
+
+  @override
+  String buoyancy_historyMore(String delta) {
+    return 'Je draagt doorgaans $delta meer dan het model voorstelt';
+  }
+
+  @override
+  String buoyancy_historyLess(String delta) {
+    return 'Je draagt doorgaans $delta minder dan het model voorstelt';
+  }
+
+  @override
   String get diveDetailSection_tanks_name => 'Flessen';
 
   @override
