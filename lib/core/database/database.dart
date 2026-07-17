@@ -2581,17 +2581,29 @@ class AppDatabase extends _$AppDatabase {
     }
 
     // Indexes: onCreate's createAll() never builds raw-SQL indexes, so they
-    // must be asserted here to exist on fresh installs too.
+    // must be asserted here to exist on fresh installs too. The
+    // service_records index is guarded on the table existing so this helper
+    // stays self-guarding for partial fixture databases (old-migration
+    // tests) where service_records is absent.
     await customStatement(
       'CREATE INDEX IF NOT EXISTS idx_service_schedules_equipment '
       'ON service_schedules(equipment_id)',
     );
-    await customStatement(
-      'CREATE INDEX IF NOT EXISTS idx_service_records_kind '
-      'ON service_records(equipment_id, service_kind_id)',
-    );
+    if (srCols.isNotEmpty) {
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_service_records_kind '
+        'ON service_records(equipment_id, service_kind_id)',
+      );
+    }
 
-    await customStatement(kSeedBuiltInServiceKindsSql);
+    // Seed built-ins only when the divers FK parent exists (self-guard for
+    // partial fixture databases; real databases always have divers).
+    final diversTable = await customSelect(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='divers'",
+    ).get();
+    if (diversTable.isNotEmpty) {
+      await customStatement(kSeedBuiltInServiceKindsSql);
+    }
   }
 
   /// v113 one-time data copy: items with a legacy single-clock interval get
@@ -2602,6 +2614,13 @@ class AppDatabase extends _$AppDatabase {
   /// INSERT OR IGNORE makes independent per-device migrations converge to
   /// one row under sync instead of duplicating.
   Future<void> _backfillLegacyServiceSchedules() async {
+    // Self-guard for partial fixture databases: skip unless the equipment
+    // table exists WITH the legacy columns the copy reads.
+    final eqCols = await customSelect("PRAGMA table_info('equipment')").get();
+    final names = eqCols.map((c) => c.read<String>('name')).toSet();
+    if (!names.containsAll({'service_interval_days', 'last_service_date'})) {
+      return;
+    }
     await customStatement('''
       INSERT OR IGNORE INTO service_schedules
         (id, equipment_id, service_kind_id, interval_days, anchor_date,
