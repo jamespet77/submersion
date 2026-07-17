@@ -1,118 +1,74 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/deco/entities/breathing_config.dart';
 
-/// Validates the passive-addition SCR (pSCR) breathing model. The loop O2 is a
-/// closed-form mass balance, so the vectors here are hand-computed from
-/// loopFO2 = (Q*Fsupply - VO2) / (Q - VO2), with Q = rmv * dumpFraction.
+/// Validates the passive-addition SCR (pSCR) breathing model, a faithful port
+/// of Subsurface's `pscr_o2` (core/gas.cpp). The inspired ppO2 is the supply
+/// ppO2 minus a depth-independent metabolic drop:
+///
+///   drop_bar = (1 - fO2) * o2Consumption / (sac * pscrRatio) * 1000
+///
+/// clamped at zero, with the remaining pressure split as inert by the supply
+/// He:N2 ratio. Vectors here are hand-computed from that formula with
+/// Subsurface's default settings (720 / 20000 / 100), which give a 0.36*(1-fO2)
+/// bar drop.
 void main() {
-  group('PassiveScr steady-state loop', () {
-    test('loop FO2 follows the passive mass balance (hand-computed)', () {
-      // Q = 20 * 0.25 = 5 L/min; loopFO2 = (5*0.40 - 1.0)/(5 - 1.0) = 0.25.
-      final p = PassiveScr(
-        supplyFO2: 0.40,
-        dumpFraction: 0.25,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      expect(p.loopFO2, closeTo(0.25, 1e-12));
-      expect(p.hypoxicLoop, isFalse);
-    });
-
-    test('loop O2 is depleted below the supply O2', () {
-      final p = PassiveScr(
-        supplyFO2: 0.40,
-        dumpFraction: 0.25,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      expect(p.loopFO2, lessThan(0.40));
-    });
-
-    test('inspired gas is the loop mix breathed open circuit', () {
-      final p = PassiveScr(
-        supplyFO2: 0.40,
-        dumpFraction: 0.25,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      final oc = OpenCircuit(fO2: p.loopFO2);
-      for (final amb in [1.0, 2.0, 4.0]) {
-        expect(p.inspiredAt(amb).pO2, closeTo(oc.inspiredAt(amb).pO2, 1e-12));
-        expect(p.inspiredAt(amb).pN2, closeTo(oc.inspiredAt(amb).pN2, 1e-12));
-      }
+  group('PassiveScr (Subsurface pscr_o2 model)', () {
+    test('O2 drop matches the Subsurface formula (hand-computed)', () {
+      // air: (1 - 0.21) * 720 / (20000 * 100) * 1000 = 0.79 * 0.36 = 0.2844.
+      expect(PassiveScr(supplyFO2: 0.21).o2DropBar, closeTo(0.2844, 1e-9));
+      // EAN50: 0.50 * 0.36 = 0.18.
+      expect(PassiveScr(supplyFO2: 0.50).o2DropBar, closeTo(0.18, 1e-9));
     });
 
     test(
-      'inspired ppO2 scales linearly with depth (constant loop fraction)',
+      'inspired pO2 is supply ppO2 minus the fixed drop, clamped at zero',
       () {
-        final p = PassiveScr(
-          supplyFO2: 0.40,
-          dumpFraction: 0.25,
-          rmvLpm: 20,
-          vo2: 1.0,
-        );
-        final p2 = p.inspiredAt(2.0).pO2;
-        final p3 = p.inspiredAt(3.0).pO2;
-        final p4 = p.inspiredAt(4.0).pO2;
-        expect(p3 - p2, closeTo(p4 - p3, 1e-12));
+        final air = PassiveScr(supplyFO2: 0.21);
+        // 4 bar: 0.21*4 - 0.2844 = 0.5556.
+        expect(air.inspiredAt(4.0).pO2, closeTo(0.5556, 1e-9));
+        // Surface: 0.21 - 0.2844 < 0 -> clamped to 0 (a hypoxic loop).
+        expect(air.inspiredAt(1.0).pO2, 0.0);
       },
     );
 
-    test('supply He:N2 ratio is preserved in the loop', () {
-      // Supply 21/35 trimix. He fraction of total inert (1 - FO2) is
-      // preserved by the metabolism-removes-only-O2 model.
-      final p = PassiveScr(
-        supplyFO2: 0.21,
-        supplyFHe: 0.35,
-        dumpFraction: 0.3,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      final g = p.inspiredAt(4.0);
-      final loopInert = g.pN2 + g.pHe;
-      expect(g.pHe / loopInert, closeTo(0.35 / (1.0 - 0.21), 1e-9));
+    test('the O2 drop is depth-independent (Subsurface steady state)', () {
+      final air = PassiveScr(supplyFO2: 0.21);
+      double drop(double amb) => 0.21 * amb - air.inspiredAt(amb).pO2;
+      // Where not clamped, OC ppO2 minus loop ppO2 is the constant drop.
+      expect(drop(3.0), closeTo(0.2844, 1e-9));
+      expect(drop(5.0), closeTo(0.2844, 1e-9));
     });
 
-    test('insufficient fresh-gas flow falls back to the supply mix', () {
-      // Q = 15 * 0.05 = 0.75 <= VO2 1.0 -> hypoxic, no valid steady state.
-      final p = PassiveScr(
-        supplyFO2: 0.32,
-        dumpFraction: 0.05,
-        rmvLpm: 15,
-        vo2: 1.0,
-      );
-      expect(p.hypoxicLoop, isTrue);
-      expect(p.loopFO2, closeTo(0.32, 1e-12));
+    test('inspired partials sum to ambient (no water-vapor term)', () {
+      final g = PassiveScr(supplyFO2: 0.32).inspiredAt(4.0);
+      expect(g.pO2 + g.pN2 + g.pHe, closeTo(4.0, 1e-9));
     });
 
-    test('leaner supply and less fresh gas both lower the loop O2', () {
-      final rich = PassiveScr(
-        supplyFO2: 0.50,
-        dumpFraction: 0.3,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      final lean = PassiveScr(
-        supplyFO2: 0.40,
-        dumpFraction: 0.3,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      expect(lean.loopFO2, lessThan(rich.loopFO2));
+    test('remaining pressure is inert, split by the supply He:N2 ratio', () {
+      // 21/35 trimix: inert is He 0.35 : N2 0.44 of total inert (0.79).
+      final g = PassiveScr(supplyFO2: 0.21, supplyFHe: 0.35).inspiredAt(4.0);
+      final inert = g.pN2 + g.pHe;
+      expect(g.pHe / inert, closeTo(0.35 / 0.79, 1e-9));
+      expect(g.pN2 / inert, closeTo(0.44 / 0.79, 1e-9));
+    });
 
-      final moreFresh = PassiveScr(
-        supplyFO2: 0.40,
-        dumpFraction: 0.4,
-        rmvLpm: 20,
-        vo2: 1.0,
+    test('the loop is hypoxic shallow but breathable at depth (lean gas)', () {
+      final air = PassiveScr(supplyFO2: 0.21);
+      expect(air.hypoxicAt(1.0), isTrue); // clamped ppO2 0 near the surface
+      expect(air.hypoxicAt(4.0), isFalse); // 0.556 bar at 30 m
+    });
+
+    test('a leaner supply gas produces a larger O2 drop', () {
+      expect(
+        PassiveScr(supplyFO2: 0.21).o2DropBar,
+        greaterThan(PassiveScr(supplyFO2: 0.50).o2DropBar),
       );
-      final lessFresh = PassiveScr(
-        supplyFO2: 0.40,
-        dumpFraction: 0.25,
-        rmvLpm: 20,
-        vo2: 1.0,
-      );
-      expect(lessFresh.loopFO2, lessThan(moreFresh.loopFO2));
+    });
+
+    test('a larger pSCR ratio shrinks the drop proportionally', () {
+      final base = PassiveScr(supplyFO2: 0.32);
+      final doubled = PassiveScr(supplyFO2: 0.32, pscrRatio: 200);
+      expect(doubled.o2DropBar, closeTo(base.o2DropBar / 2.0, 1e-12));
     });
   });
 }

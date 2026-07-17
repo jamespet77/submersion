@@ -3,6 +3,7 @@ import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_planner/domain/entities/plan_segment.dart';
 import 'package:submersion/features/planner/domain/entities/dive_plan.dart'
     as domain;
+import 'package:submersion/features/planner/domain/entities/plan_outcome.dart';
 import 'package:submersion/features/planner/domain/services/plan_engine.dart';
 
 const _air = GasMix(o2: 21);
@@ -66,11 +67,9 @@ void main() {
   });
 
   test('a passive SCR plan depletes loop O2 below OC (lower CNS)', () {
-    // Enough fresh-gas flow (Q = 20 * 0.3 = 6 L/min > VO2) that the EAN32
-    // loop has a valid, depleted steady state rather than hypoxic fallback.
-    const engine = PlanEngine(
-      config: PlanEngineConfig(pscrDumpFraction: 0.3, pscrRmvLpm: 20),
-    );
+    // Subsurface's default pSCR settings give an EAN32 loop that stays above
+    // the hypoxia threshold at 30 m while sitting well below the OC ppO2.
+    const engine = PlanEngine();
     final oc = engine.compute(_pscrPlan(domain.PlanMode.oc));
     final pscr = engine.compute(_pscrPlan(domain.PlanMode.pscr));
 
@@ -78,6 +77,30 @@ void main() {
     // Loop O2 is metabolically depleted below the supply, so inspired ppO2 —
     // and therefore CNS accumulation — is strictly lower than open circuit.
     expect(pscr.cnsEnd, lessThan(oc.cnsEnd));
+  });
+
+  test('the pSCR ratio flows through config into the loop O2 drop', () {
+    // Larger ratio -> more fresh gas -> smaller O2 drop -> higher inspired
+    // ppO2 -> more CNS accumulation.
+    final tight = const PlanEngine(
+      config: PlanEngineConfig(pscrRatio: 100),
+    ).compute(_pscrPlan(domain.PlanMode.pscr));
+    final loose = const PlanEngine(
+      config: PlanEngineConfig(pscrRatio: 300),
+    ).compute(_pscrPlan(domain.PlanMode.pscr));
+    expect(loose.cnsEnd, greaterThan(tight.cnsEnd));
+  });
+
+  test('a pSCR plan surfaces a hypoxic-loop warning that OC does not', () {
+    const engine = PlanEngine();
+    final pscr = engine.compute(_pscrPlan(domain.PlanMode.pscr));
+    final oc = engine.compute(_pscrPlan(domain.PlanMode.oc));
+
+    // On EAN32 the pSCR loop O2 falls below the hypoxia threshold near the
+    // surface (the fixed metabolic drop exceeds the supply ppO2), so the
+    // mode-aware hypoxia check fires. Open circuit on the same gas does not.
+    expect(pscr.issues.any((i) => i.type == PlanIssueType.hypoxicGas), isTrue);
+    expect(oc.issues.any((i) => i.type == PlanIssueType.hypoxicGas), isFalse);
   });
 }
 

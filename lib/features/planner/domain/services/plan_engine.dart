@@ -35,13 +35,17 @@ class PlanEngineConfig {
   /// SCR supply injection rate (surface liters per minute) for the CMF loop.
   final double scrInjectionRateLpm;
 
-  /// pSCR fraction of each breath vented and replaced with fresh gas (e.g.
-  /// 0.1 for a 1:10 unit). Fresh-gas flow = [pscrRmvLpm] * this.
-  final double pscrDumpFraction;
+  /// pSCR metabolic O2 consumption in surface mL/min (Subsurface
+  /// `o2consumption`, default 720).
+  final double pscrO2ConsumptionMlMin;
 
-  /// pSCR respiratory minute volume (surface liters per minute), which sets
-  /// the ventilation-coupled fresh-gas flow.
-  final double pscrRmvLpm;
+  /// pSCR bottom surface air consumption in mL/min (Subsurface `bottomsac`,
+  /// default 20000).
+  final double pscrSacMlMin;
+
+  /// pSCR ratio (Subsurface `pscr_ratio`, default 100). Larger dumps/adds more
+  /// fresh gas and shrinks the inspired-O2 drop.
+  final double pscrRatio;
 
   const PlanEngineConfig({
     this.ppO2Working = 1.4,
@@ -54,8 +58,9 @@ class PlanEngineConfig {
     this.loopVolumeLiters = 6.0,
     this.buddyFactor = 2.0,
     this.scrInjectionRateLpm = 12.0,
-    this.pscrDumpFraction = 0.1,
-    this.pscrRmvLpm = 15.0,
+    this.pscrO2ConsumptionMlMin = 720.0,
+    this.pscrSacMlMin = 20000.0,
+    this.pscrRatio = 100.0,
   });
 }
 
@@ -117,13 +122,14 @@ class PlanEngine {
       );
     }
     if (mode == domain.PlanMode.pscr) {
-      // Passive-addition semi-closed loop: fresh gas is ventilation-coupled,
-      // so the steady-state loop O2 depends on the dump fraction and RMV.
+      // Passive-addition semi-closed loop (Subsurface pscr_o2 model): the
+      // inspired O2 is the supply ppO2 minus a fixed metabolic drop.
       return PassiveScr(
         supplyFO2: gas.o2 / 100.0,
         supplyFHe: gas.he / 100.0,
-        dumpFraction: config.pscrDumpFraction,
-        rmvLpm: config.pscrRmvLpm,
+        o2ConsumptionMlMin: config.pscrO2ConsumptionMlMin,
+        sacMlMin: config.pscrSacMlMin,
+        pscrRatio: config.pscrRatio,
       );
     }
     return OpenCircuit(fO2: gas.o2 / 100.0, fHe: gas.he / 100.0);

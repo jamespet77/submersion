@@ -3574,6 +3574,8 @@
   "plannerCanvas_ccr_setpointHigh": "Setpoint alto (bar)",
   "plannerCanvas_ccr_setpointLow": "Setpoint bajo (bar)",
   "plannerCanvas_ccr_switchDepth": "Profundidad de cambio de setpoint",
+  "plannerCanvas_pscr_ratio": "Relación pSCR",
+  "plannerCanvas_pscr_ratio_hint": "Mayor = más gas fresco, menor caída de O₂",
   "plannerCanvas_chip_cns": "CNS {value}%",
   "plannerCanvas_chip_issues": "{count, plural, =1{1 problema} other{{count} problemas}}",
   "plannerCanvas_compare_action": "Comparar",

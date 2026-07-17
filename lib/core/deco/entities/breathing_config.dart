@@ -122,48 +122,34 @@ class Scr extends BreathingConfig {
       _loop.inspiredAt(ambientPressureBar);
 }
 
-/// Passive-addition semi-closed rebreather (pSCR) at steady state.
+/// Passive-addition semi-closed rebreather (pSCR), Subsurface's steady-state
+/// model.
 ///
-/// Where CMF [Scr] injects a constant mass flow, a passive SCR vents a fixed
-/// fraction of each breath and replaces it with fresh supply gas, so the
-/// fresh-gas flow is coupled to ventilation: `fresh = rmv * dumpFraction`
-/// (a 1:10 unit dumps 1/10 of each breath, dumpFraction = 0.1). At steady
-/// state the loop then behaves like open circuit on a mix whose O2 is depleted
-/// from the supply by metabolism relative to that fresh-gas flow — the same
-/// well-mixed-loop balance the CMF calculation uses, only with the effective
-/// injection rate derived from breathing rate.
+/// A passive SCR vents a fixed fraction of each breath and replaces it with
+/// fresh supply gas; the recirculated loop is depleted of O2 by metabolism.
+/// This is a faithful port of Subsurface's `pscr_o2` (core/gas.cpp): the
+/// inspired ppO2 is the supply ppO2 minus a depth-INDEPENDENT metabolic drop,
 ///
-/// This is the physically-rigorous mass-balance model (constant loop fraction,
-/// so inspired ppO2 scales with depth). It differs from Subsurface's `pscr_o2`,
-/// which uses a depth-independent absolute ppO2-drop approximation; the pSCR
-/// *mode* is the parity feature, not that specific numeric approximation.
+///   drop_bar = (1 - fO2_supply) * o2Consumption / (sac * pscrRatio) * 1000
 ///
-/// The supply He:N2 ratio is preserved (metabolism removes only O2). If the
-/// fresh-gas flow cannot outpace metabolic consumption ([hypoxicLoop] true),
-/// the model falls back to the supply mix and [loopFO2] equals [supplyFO2];
-/// callers should surface the hypoxia risk.
+/// clamped at zero (a hypoxic loop). The remaining pressure is inert, split by
+/// the supply He:N2 ratio — exactly matching Subsurface's `fill_pressures`
+/// PSCR branch. Following that source, ambient pressure is used directly with
+/// no separate alveolar water-vapor term.
+///
+/// Rates are in surface mL/min to match Subsurface's stored units; the defaults
+/// are Subsurface's own (o2Consumption 720, sac 20000, pscrRatio 100), which
+/// give a ~0.285 bar O2 drop on air. Because the drop is a fixed pressure, a
+/// lean gas is hypoxic near the surface (drop exceeds the supply ppO2) but
+/// breathable at depth — the real behavior that makes pSCR demand rich gas.
 class PassiveScr extends BreathingConfig {
   PassiveScr({
     required this.supplyFO2,
     this.supplyFHe = 0.0,
-    required this.dumpFraction,
-    this.rmvLpm = 15.0,
-    this.vo2 = ScrCalculator.defaultVo2,
-  }) : loopFO2 =
-           ScrCalculator.calculatePascrSteadyStateFo2(
-             supplyO2Percent: supplyFO2 * 100.0,
-             additionRatio: dumpFraction,
-             vo2: vo2,
-             rmv: rmvLpm,
-           ) ??
-           supplyFO2,
-       _loop = _steadyStateLoop(
-         supplyFO2,
-         supplyFHe,
-         dumpFraction,
-         rmvLpm,
-         vo2,
-       );
+    this.o2ConsumptionMlMin = 720.0,
+    this.sacMlMin = 20000.0,
+    this.pscrRatio = 100.0,
+  });
 
   /// Supply gas O2 fraction (0-1).
   final double supplyFO2;
@@ -171,55 +157,42 @@ class PassiveScr extends BreathingConfig {
   /// Supply gas He fraction (0-1).
   final double supplyFHe;
 
-  /// Fraction of each breath vented and replaced with fresh gas (e.g. 0.1 for
-  /// a 1:10 unit). Fresh-gas flow = [rmvLpm] * dumpFraction.
-  final double dumpFraction;
+  /// Metabolic O2 consumption in surface mL/min (Subsurface `o2consumption`).
+  final double o2ConsumptionMlMin;
 
-  /// Respiratory minute volume (surface L/min); sets the fresh-gas flow.
-  final double rmvLpm;
+  /// Bottom surface air consumption in mL/min (Subsurface `bottomsac`).
+  final double sacMlMin;
 
-  /// Metabolic O2 consumption (surface L/min).
-  final double vo2;
+  /// pSCR ratio (Subsurface `pscr_ratio`, default 100). Larger values dump/add
+  /// more fresh gas and shrink the O2 drop.
+  final double pscrRatio;
 
-  /// Steady-state loop O2 fraction the diver actually breathes. Equals
-  /// [supplyFO2] when the loop is hypoxic (fallback); see [hypoxicLoop].
-  final double loopFO2;
+  /// Supply gas N2 fraction (0-1).
+  double get supplyFN2 => 1.0 - supplyFO2 - supplyFHe;
 
-  final OpenCircuit _loop;
-
-  /// True when the fresh-gas flow cannot sustain the loop (metabolic O2
-  /// consumption outpaces addition), so [loopFO2] fell back to [supplyFO2].
-  bool get hypoxicLoop =>
-      ScrCalculator.calculatePascrSteadyStateFo2(
-        supplyO2Percent: supplyFO2 * 100.0,
-        additionRatio: dumpFraction,
-        vo2: vo2,
-        rmv: rmvLpm,
-      ) ==
-      null;
-
-  static OpenCircuit _steadyStateLoop(
-    double supplyFO2,
-    double supplyFHe,
-    double dumpFraction,
-    double rmvLpm,
-    double vo2,
-  ) {
-    final loopFO2 =
-        ScrCalculator.calculatePascrSteadyStateFo2(
-          supplyO2Percent: supplyFO2 * 100.0,
-          additionRatio: dumpFraction,
-          vo2: vo2,
-          rmv: rmvLpm,
-        ) ??
-        supplyFO2;
-    final supplyInert = 1.0 - supplyFO2;
-    final heShare = supplyInert > 0 ? supplyFHe / supplyInert : 0.0;
-    final loopInert = 1.0 - loopFO2;
-    return OpenCircuit(fO2: loopFO2, fHe: loopInert * heShare);
-  }
+  /// The depth-independent inspired-O2 drop (bar) from metabolic consumption of
+  /// the recirculated loop gas. ~0.285 bar for air at the default settings.
+  double get o2DropBar =>
+      (1.0 - supplyFO2) * o2ConsumptionMlMin / (sacMlMin * pscrRatio) * 1000.0;
 
   @override
-  InspiredGas inspiredAt(double ambientPressureBar) =>
-      _loop.inspiredAt(ambientPressureBar);
+  InspiredGas inspiredAt(double ambientPressureBar) {
+    final pO2 = math.max(0.0, supplyFO2 * ambientPressureBar - o2DropBar);
+    final inert = ambientPressureBar - pO2;
+    final supplyInert = supplyFHe + supplyFN2; // == 1 - supplyFO2
+    if (supplyInert <= 0) {
+      return InspiredGas(pN2: 0, pHe: 0, pO2: pO2);
+    }
+    return InspiredGas(
+      pN2: inert * (supplyFN2 / supplyInert),
+      pHe: inert * (supplyFHe / supplyInert),
+      pO2: pO2,
+    );
+  }
+
+  /// True when the loop is hypoxic at [ambientPressureBar] — inspired ppO2
+  /// below the 0.16 bar hypoxia threshold. pSCR loops go hypoxic shallow, so
+  /// this is depth-dependent (unlike a fixed loop fraction).
+  bool hypoxicAt(double ambientPressureBar) =>
+      inspiredAt(ambientPressureBar).pO2 < 0.16;
 }

@@ -11282,6 +11282,13 @@ class AppLocalizationsIt extends AppLocalizations {
   String get plannerCanvas_ccr_switchDepth => 'Profondità di cambio setpoint';
 
   @override
+  String get plannerCanvas_pscr_ratio => 'Rapporto pSCR';
+
+  @override
+  String get plannerCanvas_pscr_ratio_hint =>
+      'Maggiore = più gas fresco, minore calo di O₂';
+
+  @override
   String plannerCanvas_chip_cns(String value) {
     return 'CNS $value%';
   }

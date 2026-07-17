@@ -149,7 +149,7 @@ void main() {
     expect(
       () => solver().maxNoDecoBottomTimeSeconds(
         depthMeters: 30,
-        breathing: PassiveScr(supplyFO2: 0.32, dumpFraction: 0.3),
+        breathing: PassiveScr(supplyFO2: 0.32),
       ),
       throwsArgumentError,
     );

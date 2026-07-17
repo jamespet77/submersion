@@ -11281,6 +11281,13 @@ class AppLocalizationsDe extends AppLocalizations {
   String get plannerCanvas_ccr_switchDepth => 'Setpoint-Wechseltiefe';
 
   @override
+  String get plannerCanvas_pscr_ratio => 'pSCR-Verhältnis';
+
+  @override
+  String get plannerCanvas_pscr_ratio_hint =>
+      'Größer = mehr Frischgas, geringerer O₂-Abfall';
+
+  @override
   String plannerCanvas_chip_cns(String value) {
     return 'CNS $value%';
   }

@@ -3725,6 +3725,8 @@
   "plannerCanvas_ccr_setpointHigh": "高设定点（bar）",
   "plannerCanvas_ccr_setpointLow": "低设定点（bar）",
   "plannerCanvas_ccr_switchDepth": "设定点切换深度",
+  "plannerCanvas_pscr_ratio": "pSCR 比率",
+  "plannerCanvas_pscr_ratio_hint": "越大 = 新鲜气体越多，氧分压下降越小",
   "plannerCanvas_chip_cns": "CNS {value}%",
   "plannerCanvas_chip_issues": "{count, plural, other{{count} 个问题}}",
   "plannerCanvas_compare_action": "比较",

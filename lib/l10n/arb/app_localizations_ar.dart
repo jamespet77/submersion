@@ -11071,6 +11071,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get plannerCanvas_ccr_switchDepth => 'عمق تبديل نقطة الضبط';
 
   @override
+  String get plannerCanvas_pscr_ratio => 'نسبة pSCR';
+
+  @override
+  String get plannerCanvas_pscr_ratio_hint =>
+      'أكبر = غاز طازج أكثر وانخفاض أقل في الأكسجين';
+
+  @override
   String plannerCanvas_chip_cns(String value) {
     return 'CNS $value%';
   }

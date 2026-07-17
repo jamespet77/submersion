@@ -11323,6 +11323,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Profondeur de bascule du setpoint';
 
   @override
+  String get plannerCanvas_pscr_ratio => 'Ratio pSCR';
+
+  @override
+  String get plannerCanvas_pscr_ratio_hint =>
+      'Plus grand = plus de gaz frais, chute d\'O₂ plus faible';
+
+  @override
   String plannerCanvas_chip_cns(String value) {
     return 'CNS $value%';
   }

@@ -10995,6 +10995,13 @@ class AppLocalizationsHe extends AppLocalizations {
   String get plannerCanvas_ccr_switchDepth => 'עומק החלפת נקודת הכיוון';
 
   @override
+  String get plannerCanvas_pscr_ratio => 'יחס pSCR';
+
+  @override
+  String get plannerCanvas_pscr_ratio_hint =>
+      'גדול יותר = יותר גז טרי, ירידת חמצן קטנה יותר';
+
+  @override
   String plannerCanvas_chip_cns(String value) {
     return 'CNS $value%';
   }

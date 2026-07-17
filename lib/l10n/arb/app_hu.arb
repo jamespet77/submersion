@@ -3540,6 +3540,8 @@
   "plannerCanvas_ccr_setpointHigh": "Magas setpoint (bar)",
   "plannerCanvas_ccr_setpointLow": "Alacsony setpoint (bar)",
   "plannerCanvas_ccr_switchDepth": "Setpoint váltási mélység",
+  "plannerCanvas_pscr_ratio": "pSCR arány",
+  "plannerCanvas_pscr_ratio_hint": "Nagyobb = több friss gáz, kisebb O₂-esés",
   "plannerCanvas_chip_cns": "CNS {value}%",
   "plannerCanvas_chip_issues": "{count, plural, =1{1 probléma} other{{count} probléma}}",
   "plannerCanvas_compare_action": "Összehasonlítás",

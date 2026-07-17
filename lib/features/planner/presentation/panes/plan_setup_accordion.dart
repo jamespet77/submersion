@@ -12,6 +12,7 @@ import 'package:submersion/features/planner/domain/entities/dive_plan.dart'
 import 'package:submersion/features/planner/presentation/providers/planner_layout_providers.dart';
 import 'package:submersion/features/planner/presentation/widgets/ccr_settings_section.dart';
 import 'package:submersion/features/planner/presentation/widgets/contingency_settings_section.dart';
+import 'package:submersion/features/planner/presentation/widgets/pscr_settings_section.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
 /// The Plan Setup accordion: every plan-level setting grouped by topic.
@@ -80,6 +81,8 @@ class _PlanSetupAccordionState extends ConsumerState<PlanSetupAccordion> {
       ),
       if (mode == domain.PlanMode.ccr)
         ('ccr', 'CCR', const CcrSettingsSection()),
+      if (mode == domain.PlanMode.pscr)
+        ('pscr', 'pSCR', const PscrSettingsSection()),
       (
         'contingencies',
         context.l10n.plannerCanvas_contingency_title,

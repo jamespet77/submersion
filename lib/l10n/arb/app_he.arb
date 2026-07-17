@@ -3540,6 +3540,8 @@
   "plannerCanvas_ccr_setpointHigh": "נקודת כיוון גבוהה (bar)",
   "plannerCanvas_ccr_setpointLow": "נקודת כיוון נמוכה (bar)",
   "plannerCanvas_ccr_switchDepth": "עומק החלפת נקודת הכיוון",
+  "plannerCanvas_pscr_ratio": "יחס pSCR",
+  "plannerCanvas_pscr_ratio_hint": "גדול יותר = יותר גז טרי, ירידת חמצן קטנה יותר",
   "plannerCanvas_chip_cns": "CNS {value}%",
   "plannerCanvas_chip_issues": "{count, plural, =1{בעיה אחת} other{{count} בעיות}}",
   "plannerCanvas_compare_action": "השוואה",
