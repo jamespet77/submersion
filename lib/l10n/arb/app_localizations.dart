@@ -3702,6 +3702,126 @@ abstract class AppLocalizations {
   /// **'Strict order'**
   String get preDive_templates_strictOrderBadge;
 
+  /// No description provided for @preDive_edit_titleNew.
+  ///
+  /// In en, this message translates to:
+  /// **'New Pre-Dive Checklist'**
+  String get preDive_edit_titleNew;
+
+  /// No description provided for @preDive_edit_titleEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Pre-Dive Checklist'**
+  String get preDive_edit_titleEdit;
+
+  /// No description provided for @preDive_edit_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get preDive_edit_name;
+
+  /// No description provided for @preDive_edit_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get preDive_edit_description;
+
+  /// No description provided for @preDive_edit_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get preDive_edit_category;
+
+  /// No description provided for @preDive_edit_strictOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Strict order'**
+  String get preDive_edit_strictOrder;
+
+  /// No description provided for @preDive_edit_strictOrderHelp.
+  ///
+  /// In en, this message translates to:
+  /// **'Items must be completed top to bottom'**
+  String get preDive_edit_strictOrderHelp;
+
+  /// No description provided for @preDive_edit_addItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Add item'**
+  String get preDive_edit_addItem;
+
+  /// No description provided for @preDive_edit_nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a name'**
+  String get preDive_edit_nameRequired;
+
+  /// No description provided for @preDive_item_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Title'**
+  String get preDive_item_title;
+
+  /// No description provided for @preDive_item_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Section'**
+  String get preDive_item_section;
+
+  /// No description provided for @preDive_item_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get preDive_item_notes;
+
+  /// No description provided for @preDive_item_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get preDive_item_required;
+
+  /// No description provided for @preDive_item_type_check.
+  ///
+  /// In en, this message translates to:
+  /// **'Checkbox'**
+  String get preDive_item_type_check;
+
+  /// No description provided for @preDive_item_type_value.
+  ///
+  /// In en, this message translates to:
+  /// **'Recorded value'**
+  String get preDive_item_type_value;
+
+  /// No description provided for @preDive_item_type_equipmentSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment set items'**
+  String get preDive_item_type_equipmentSet;
+
+  /// No description provided for @preDive_item_valueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Value label'**
+  String get preDive_item_valueLabel;
+
+  /// No description provided for @preDive_item_valueUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit'**
+  String get preDive_item_valueUnit;
+
+  /// No description provided for @preDive_item_valueMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Min (warning)'**
+  String get preDive_item_valueMin;
+
+  /// No description provided for @preDive_item_valueMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Max (warning)'**
+  String get preDive_item_valueMax;
+
   /// No description provided for @settings_manage_preDiveChecklists.
   ///
   /// In en, this message translates to:

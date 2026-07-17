@@ -2189,6 +2189,67 @@ class AppLocalizationsDe extends AppLocalizations {
   String get preDive_templates_strictOrderBadge => 'Strict order';
 
   @override
+  String get preDive_edit_titleNew => 'New Pre-Dive Checklist';
+
+  @override
+  String get preDive_edit_titleEdit => 'Edit Pre-Dive Checklist';
+
+  @override
+  String get preDive_edit_name => 'Name';
+
+  @override
+  String get preDive_edit_description => 'Description';
+
+  @override
+  String get preDive_edit_category => 'Category';
+
+  @override
+  String get preDive_edit_strictOrder => 'Strict order';
+
+  @override
+  String get preDive_edit_strictOrderHelp =>
+      'Items must be completed top to bottom';
+
+  @override
+  String get preDive_edit_addItem => 'Add item';
+
+  @override
+  String get preDive_edit_nameRequired => 'Enter a name';
+
+  @override
+  String get preDive_item_title => 'Title';
+
+  @override
+  String get preDive_item_section => 'Section';
+
+  @override
+  String get preDive_item_notes => 'Notes';
+
+  @override
+  String get preDive_item_required => 'Required';
+
+  @override
+  String get preDive_item_type_check => 'Checkbox';
+
+  @override
+  String get preDive_item_type_value => 'Recorded value';
+
+  @override
+  String get preDive_item_type_equipmentSet => 'Equipment set items';
+
+  @override
+  String get preDive_item_valueLabel => 'Value label';
+
+  @override
+  String get preDive_item_valueUnit => 'Unit';
+
+  @override
+  String get preDive_item_valueMin => 'Min (warning)';
+
+  @override
+  String get preDive_item_valueMax => 'Max (warning)';
+
+  @override
   String get settings_manage_preDiveChecklists => 'Pre-Dive Checklists';
 
   @override
