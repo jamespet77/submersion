@@ -12931,6 +12931,13 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_lightroom_connect => 'Lightroom csatlakoztatása';
 
   @override
+  String get settings_lightroom_connectEmbedded => 'Csatlakozás az Adobe-hoz';
+
+  @override
+  String get settings_lightroom_advancedByo =>
+      'Saját Adobe hitelesítő adatok használata';
+
+  @override
   String get settings_lightroom_connect_codeLabel =>
       'Átirányított URL vagy kód';
 

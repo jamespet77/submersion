@@ -21949,6 +21949,18 @@ abstract class AppLocalizations {
   /// **'Connect Lightroom'**
   String get settings_lightroom_connect;
 
+  /// Primary button to connect Lightroom with the app's bundled Adobe credential
+  ///
+  /// In en, this message translates to:
+  /// **'Connect with Adobe'**
+  String get settings_lightroom_connectEmbedded;
+
+  /// Header for the advanced BYO client-id connect path
+  ///
+  /// In en, this message translates to:
+  /// **'Use your own Adobe credentials'**
+  String get settings_lightroom_advancedByo;
+
   /// No description provided for @settings_lightroom_connect_codeLabel.
   ///
   /// In en, this message translates to:

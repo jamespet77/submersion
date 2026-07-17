@@ -12746,6 +12746,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings_lightroom_connect => 'Connect Lightroom';
 
   @override
+  String get settings_lightroom_connectEmbedded => 'Connect with Adobe';
+
+  @override
+  String get settings_lightroom_advancedByo => 'Use your own Adobe credentials';
+
+  @override
   String get settings_lightroom_connect_codeLabel => 'Redirected URL or code';
 
   @override

@@ -12625,6 +12625,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get settings_lightroom_connect => 'חיבור Lightroom';
 
   @override
+  String get settings_lightroom_connectEmbedded => 'התחברות עם Adobe';
+
+  @override
+  String get settings_lightroom_advancedByo => 'שימוש בפרטי הכניסה שלך ב-Adobe';
+
+  @override
   String get settings_lightroom_connect_codeLabel => 'כתובת URL מופנית או קוד';
 
   @override

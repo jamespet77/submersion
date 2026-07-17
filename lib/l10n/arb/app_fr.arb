@@ -3936,6 +3936,8 @@
   "settings_lightroom_clientId_label": "ID client Adobe",
   "settings_lightroom_clientSecret_label": "Secret client (facultatif)",
   "settings_lightroom_connect": "Connecter Lightroom",
+  "settings_lightroom_connectEmbedded": "Se connecter avec Adobe",
+  "settings_lightroom_advancedByo": "Utiliser vos propres identifiants Adobe",
   "settings_lightroom_connect_codeLabel": "URL redirigée ou code",
   "settings_lightroom_connect_emptyCode": "Collez l'URL redirigée ou le code d'autorisation",
   "settings_lightroom_connect_failed": "Impossible de se connecter à Lightroom : {error}",

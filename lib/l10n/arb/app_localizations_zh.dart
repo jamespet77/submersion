@@ -12329,6 +12329,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_lightroom_connect => '连接 Lightroom';
 
   @override
+  String get settings_lightroom_connectEmbedded => '使用 Adobe 连接';
+
+  @override
+  String get settings_lightroom_advancedByo => '使用您自己的 Adobe 凭据';
+
+  @override
   String get settings_lightroom_connect_codeLabel => '重定向的网址或代码';
 
   @override

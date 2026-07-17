@@ -12720,6 +12720,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_lightroom_connect => 'ربط Lightroom';
 
   @override
+  String get settings_lightroom_connectEmbedded => 'الاتصال عبر Adobe';
+
+  @override
+  String get settings_lightroom_advancedByo =>
+      'استخدم بيانات اعتماد Adobe الخاصة بك';
+
+  @override
   String get settings_lightroom_connect_codeLabel =>
       'عنوان URL المُعاد توجيهه أو الرمز';
 

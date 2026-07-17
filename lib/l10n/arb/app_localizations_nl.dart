@@ -12861,6 +12861,13 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_lightroom_connect => 'Lightroom koppelen';
 
   @override
+  String get settings_lightroom_connectEmbedded => 'Verbinden met Adobe';
+
+  @override
+  String get settings_lightroom_advancedByo =>
+      'Je eigen Adobe-inloggegevens gebruiken';
+
+  @override
   String get settings_lightroom_connect_codeLabel =>
       'Doorgestuurde URL of code';
 

@@ -8,6 +8,7 @@ import 'package:submersion/core/services/accounts/connected_account.dart'
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
 import 'package:submersion/core/services/lightroom/adobe_ims_auth_manager.dart';
 import 'package:submersion/core/services/lightroom/lightroom_auth_store.dart';
+import 'package:submersion/core/services/lightroom/lightroom_embedded_connect.dart';
 import 'package:submersion/core/services/lightroom/lightroom_models.dart';
 import 'package:submersion/features/dive_log/presentation/providers/dive_repository_provider.dart';
 import 'package:submersion/features/media/presentation/helpers/lightroom_scan_helper.dart';
@@ -40,7 +41,6 @@ class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
   }
 
   Future<void> _connect() async {
-    final l10n = context.l10n;
     final authManager = ref.read(lightroomAuthManagerProvider);
     final clientId = _clientIdController.text.trim();
     if (clientId.isEmpty) return;
@@ -54,11 +54,49 @@ class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
       ),
     );
     if (connected != true || !mounted) return;
+    await _finishConnect();
+  }
 
+  /// One-tap connect with Submersion's bundled Native App credential: sign
+  /// in via the in-app auth session (no client id, no paste), then run the
+  /// shared account-creation path.
+  Future<void> _connectEmbedded() async {
+    final authManager = ref.read(lightroomAuthManagerProvider);
+    final capture = ref.read(lightroomRedirectCaptureProvider);
     setState(() => _busy = true);
     try {
-      // Fetch identity and catalog, persist them on the auth blob, then
-      // create the connector account row that flips every provider.
+      await signInWithEmbeddedCredential(
+        authManager: authManager,
+        capture: capture,
+      );
+    } on Exception catch (e) {
+      if (!mounted) return;
+      final message = switch (e) {
+        CloudStorageException(:final displayMessage) => displayMessage,
+        _ => e.toString(),
+      };
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.l10n.settings_lightroom_connect_failed(message),
+          ),
+        ),
+      );
+      setState(() => _busy = false);
+      return;
+    }
+    if (!mounted) return;
+    await _finishConnect();
+  }
+
+  /// Shared post-sign-in work for both connect paths: fetch identity +
+  /// catalog, persist them, create or reuse the roster row, move tokens to
+  /// the account's own key, and refresh the providers.
+  Future<void> _finishConnect() async {
+    final l10n = context.l10n;
+    final authManager = ref.read(lightroomAuthManagerProvider);
+    setState(() => _busy = true);
+    try {
       final api = ref.read(lightroomApiClientProvider);
       final account = await api.getAccount();
       final catalogId = await api.getCatalogId();
@@ -247,6 +285,17 @@ class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
       children: [
         Text(l10n.settings_lightroom_subtitle),
         const SizedBox(height: 16),
+        FilledButton.icon(
+          onPressed: _busy ? null : _connectEmbedded,
+          icon: const Icon(Icons.link),
+          label: Text(l10n.settings_lightroom_connectEmbedded),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          l10n.settings_lightroom_advancedByo,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 8),
         TextField(
           controller: _clientIdController,
           enabled: !_busy,

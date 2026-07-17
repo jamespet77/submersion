@@ -3936,6 +3936,8 @@
   "settings_lightroom_clientId_label": "Adobe kliensazonosító",
   "settings_lightroom_clientSecret_label": "Klienstitok (nem kötelező)",
   "settings_lightroom_connect": "Lightroom csatlakoztatása",
+  "settings_lightroom_connectEmbedded": "Csatlakozás az Adobe-hoz",
+  "settings_lightroom_advancedByo": "Saját Adobe hitelesítő adatok használata",
   "settings_lightroom_connect_codeLabel": "Átirányított URL vagy kód",
   "settings_lightroom_connect_emptyCode": "Illeszd be az átirányított URL-t vagy az engedélyezési kódot",
   "settings_lightroom_connect_failed": "Nem sikerült csatlakozni a Lightroomhoz: {error}",
