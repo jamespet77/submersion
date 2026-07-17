@@ -11,6 +11,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:submersion/core/constants/dive_detail_sections.dart';
 import 'package:submersion/core/constants/enums.dart';
+import 'package:submersion/features/data_quality/data/services/quality_scan_service.dart';
 import 'package:submersion/features/marine_life/presentation/utils/species_category_icon.dart';
 import 'package:submersion/core/constants/list_view_mode.dart';
 import 'package:submersion/core/constants/units.dart';
@@ -4599,9 +4600,11 @@ class _DiveDetailPageState extends ConsumerState<DiveDetailPage> {
     );
     if (confirmed != true || !mounted) return;
     try {
-      await ref
+      final newDiveId = await ref
           .read(diveSplitServiceProvider)
           .split(diveId: dive.id, sourceId: sourceId);
+      // Re-scan both the original and the newly split dive (fire-and-forget).
+      scheduleQualityScan([dive.id, newDiveId]);
       if (!mounted) return;
       ref.invalidate(diveProvider(dive.id));
       ref.invalidate(diveProfileProvider(dive.id));
