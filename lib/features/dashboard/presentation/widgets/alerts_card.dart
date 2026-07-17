@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:submersion/features/dashboard/presentation/providers/dashboard_providers.dart';
 import 'package:submersion/features/equipment/domain/entities/service_clock_status.dart';
+import 'package:submersion/features/safety/presentation/pages/safety_hub_page.dart'
+    show formatNoFlyRemaining;
 import 'package:submersion/l10n/l10n_extension.dart';
 
 /// A compact single-line banner showing alerts and reminders.
@@ -33,6 +35,12 @@ class _CompactAlertsBanner extends StatelessWidget {
   const _CompactAlertsBanner({required this.alerts});
 
   String _alertText(BuildContext context) {
+    final noFly = alerts.noFlyStatus;
+    if (noFly != null) {
+      return context.l10n.safetyHub_alert_noFly(
+        formatNoFlyRemaining(noFly.remaining(DateTime.now().toUtc())),
+      );
+    }
     if (alerts.insuranceExpired) {
       return context.l10n.dashboard_alerts_insuranceExpired;
     }
@@ -53,6 +61,10 @@ class _CompactAlertsBanner extends StatelessWidget {
   }
 
   void _onTap(BuildContext context) {
+    if (alerts.noFlyStatus != null) {
+      context.push('/safety');
+      return;
+    }
     if (alerts.alertCount == 1) {
       if (alerts.insuranceExpired || alerts.insuranceExpiringSoon) {
         context.go('/settings');
