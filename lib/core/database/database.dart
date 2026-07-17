@@ -1782,6 +1782,109 @@ class DiveRoles extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Built-in pre-dive checklist templates. INSERT OR IGNORE keyed on stable
+/// ids so re-seeding on every open is idempotent and restores replace-adopt
+/// wipes. Built-ins are read-only in the UI and skipped by sync export.
+/// Timestamps are the constant 0: built-ins are device-local reference data,
+/// never synced, and deterministic values keep the statement idempotent.
+const String kSeedBuiltInPreDiveTemplatesSql = '''
+  INSERT OR IGNORE INTO pre_dive_checklist_templates
+    (id, name, description, category, strict_order, is_built_in,
+     builtin_key, created_at, updated_at)
+  VALUES
+    ('builtin-predive-bwraf', 'BWRAF Buddy Check',
+     'Standard recreational pre-dive safety check',
+     'Safety', 0, 1, 'builtin-predive-bwraf', 0, 0),
+    ('builtin-predive-gue-edge', 'GUE EDGE',
+     'Team pre-dive sequence',
+     'Safety', 0, 1, 'builtin-predive-gue-edge', 0, 0),
+    ('builtin-predive-ccr-build', 'CCR Build (generic)',
+     'Generic rebreather assembly and pre-breathe checklist',
+     'CCR', 1, 1, 'builtin-predive-ccr-build', 0, 0),
+    ('builtin-predive-gear-packing', 'Gear Packing',
+     'Pack and stage everything before leaving for the site',
+     'Packing', 0, 1, 'builtin-predive-gear-packing', 0, 0)
+''';
+
+/// Items for the built-in pre-dive templates. Same idempotence contract as
+/// [kSeedBuiltInPreDiveTemplatesSql].
+const String kSeedBuiltInPreDiveTemplateItemsSql = '''
+  INSERT OR IGNORE INTO pre_dive_checklist_template_items
+    (id, template_id, section, title, notes, sort_order, item_type,
+     value_label, value_unit, value_min, value_max, is_required,
+     created_at, updated_at)
+  VALUES
+    ('builtin-predive-bwraf-0', 'builtin-predive-bwraf', NULL,
+     'BCD / Buoyancy: inflate, deflate, dump valves', '', 0, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-bwraf-1', 'builtin-predive-bwraf', NULL,
+     'Weights: in place, releases clear', '', 1, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-bwraf-2', 'builtin-predive-bwraf', NULL,
+     'Releases: locate and check all buckles', '', 2, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-bwraf-3', 'builtin-predive-bwraf', NULL,
+     'Air: valve open, breathe both regs, check gauge', '', 3, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-bwraf-4', 'builtin-predive-bwraf', NULL,
+     'Final OK: mask, fins, computer set, buddy signal', '', 4, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-gue-0', 'builtin-predive-gue-edge', NULL,
+     'Equipment: full gear check head to toe', '', 0, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-gue-1', 'builtin-predive-gue-edge', NULL,
+     'Descent: agree on descent method and reference', '', 1, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-gue-2', 'builtin-predive-gue-edge', NULL,
+     'Gas: analyze, label, confirm MOD and turn pressure', '', 2, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-gue-3', 'builtin-predive-gue-edge', NULL,
+     'Environment: conditions, entry/exit, hazards', '', 3, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-0', 'builtin-predive-ccr-build', 'Assembly',
+     'Scrubber packed and within duration limits', '', 0, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-1', 'builtin-predive-ccr-build', 'Assembly',
+     'Loop assembled, mushroom valves checked', '', 1, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-2', 'builtin-predive-ccr-build', 'Tests',
+     'Negative pressure test held 60 s', '', 2, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-3', 'builtin-predive-ccr-build', 'Tests',
+     'Positive pressure test held 60 s', '', 3, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-4', 'builtin-predive-ccr-build', 'Cells',
+     'Cell 1 mV in air', '', 4, 'value',
+     'Cell 1', 'mV', 8.5, 13.0, 1, 0, 0),
+    ('builtin-predive-ccr-5', 'builtin-predive-ccr-build', 'Cells',
+     'Cell 2 mV in air', '', 5, 'value',
+     'Cell 2', 'mV', 8.5, 13.0, 1, 0, 0),
+    ('builtin-predive-ccr-6', 'builtin-predive-ccr-build', 'Cells',
+     'Cell 3 mV in air', '', 6, 'value',
+     'Cell 3', 'mV', 8.5, 13.0, 1, 0, 0),
+    ('builtin-predive-ccr-7', 'builtin-predive-ccr-build', 'Gas',
+     'Diluent and O2 analyzed, MOD labels on', '', 7, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-8', 'builtin-predive-ccr-build', 'Pre-breathe',
+     'Five-minute pre-breathe, setpoint holds', '', 8, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-ccr-9', 'builtin-predive-ccr-build', 'Bailout',
+     'Bailout analyzed, pressurized, clipped', '', 9, 'check',
+     NULL, NULL, NULL, NULL, 1, 0, 0),
+    ('builtin-predive-pack-0', 'builtin-predive-gear-packing', NULL,
+     'Certification card and insurance', '', 0, 'check',
+     NULL, NULL, NULL, NULL, 0, 0, 0),
+    ('builtin-predive-pack-1', 'builtin-predive-gear-packing', NULL,
+     'Equipment set', '', 1, 'equipmentSet',
+     NULL, NULL, NULL, NULL, 0, 0, 0),
+    ('builtin-predive-pack-2', 'builtin-predive-gear-packing', NULL,
+     'Save-a-dive kit and spares', '', 2, 'check',
+     NULL, NULL, NULL, NULL, 0, 0, 0),
+    ('builtin-predive-pack-3', 'builtin-predive-gear-packing', NULL,
+     'Water, sun protection, logbook', '', 3, 'check',
+     NULL, NULL, NULL, NULL, 0, 0, 0)
+''';
+
 /// Seeds the nine built-in dive roles. Mirrors [kSeedBuiltInDiveTypesSql]:
 /// INSERT OR IGNORE keyed on stable slug ids keeps it idempotent, and the
 /// seed is re-asserted in beforeOpen so replace-adopt flows that clear the
@@ -2878,6 +2981,11 @@ class AppDatabase extends _$AppDatabase {
         // Seed built-in dive roles (the v103 migration backfills these for
         // upgraded databases).
         await customStatement(kSeedBuiltInDiveRolesSql);
+
+        // Seed built-in pre-dive checklist templates (the v113 migration
+        // backfills these for upgraded databases).
+        await customStatement(kSeedBuiltInPreDiveTemplatesSql);
+        await customStatement(kSeedBuiltInPreDiveTemplateItemsSql);
       },
       onUpgrade: (Migrator m, int from, int to) async {
         int completedSteps = 0;
@@ -5730,6 +5838,8 @@ class AppDatabase extends _$AppDatabase {
         if (from < 112) await reportProgress();
         if (from < 113) {
           await _assertPreDiveChecklistSchema();
+          await customStatement(kSeedBuiltInPreDiveTemplatesSql);
+          await customStatement(kSeedBuiltInPreDiveTemplateItemsSql);
         }
         if (from < 113) await reportProgress();
       },
@@ -5765,8 +5875,11 @@ class AppDatabase extends _$AppDatabase {
         // v112 backstop: re-assert equipment.thickness column.
         await _assertEquipmentThicknessColumn();
 
-        // v113 backstop: re-assert the pre-dive checklist tables.
+        // v113 backstop: re-assert the pre-dive checklist tables and their
+        // built-in templates (same rationale as the dive-types re-seed).
         await _assertPreDiveChecklistSchema();
+        await customStatement(kSeedBuiltInPreDiveTemplatesSql);
+        await customStatement(kSeedBuiltInPreDiveTemplateItemsSql);
 
         // Built-in dive types are reference data: identical on every device and
         // undeletable through DiveTypeRepository. Nothing else restores them --
