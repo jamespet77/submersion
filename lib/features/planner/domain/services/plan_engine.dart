@@ -32,6 +32,9 @@ class PlanEngineConfig {
   /// Rock-bottom sizing: how many divers share the emergency ascent.
   final double buddyFactor;
 
+  /// SCR supply injection rate (surface liters per minute) for the CMF loop.
+  final double scrInjectionRateLpm;
+
   const PlanEngineConfig({
     this.ppO2Working = 1.4,
     this.ppO2Deco = 1.6,
@@ -42,6 +45,7 @@ class PlanEngineConfig {
     this.o2MetabolicRateLpm = 1.0,
     this.loopVolumeLiters = 6.0,
     this.buddyFactor = 2.0,
+    this.scrInjectionRateLpm = 12.0,
   });
 }
 
@@ -75,6 +79,15 @@ class PlanEngine {
         setpoint: _setpointAt(plan, depth),
         diluentFO2: gas.o2 / 100.0,
         diluentFHe: gas.he / 100.0,
+      );
+    }
+    if (plan.mode == domain.PlanMode.scr) {
+      // CMF semi-closed loop: the segment gas is the supply, and the loop
+      // fraction is the validated steady-state CMF calculation.
+      return Scr(
+        supplyFO2: gas.o2 / 100.0,
+        supplyFHe: gas.he / 100.0,
+        injectionRateLpm: config.scrInjectionRateLpm,
       );
     }
     return OpenCircuit(fO2: gas.o2 / 100.0, fHe: gas.he / 100.0);

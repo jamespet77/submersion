@@ -6,7 +6,7 @@ import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_planner/domain/entities/plan_segment.dart';
 
 /// Breathing mode of a saved dive plan.
-enum PlanMode { oc, ccr }
+enum PlanMode { oc, ccr, scr }
 
 /// Gas turn-pressure rule for penetration planning (Phase 5).
 enum TurnPressureRule { allUsable, halves, thirds, custom }
