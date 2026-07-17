@@ -188,22 +188,5 @@ void main() {
       );
       handle.dispose();
     });
-
-    testWidgets('hero renders as first body child while param exists', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          FormSection(
-            label: 'Dive Info',
-            expanded: true,
-            onToggle: () {},
-            hero: const Text('hero widget'),
-            children: const [Text('row one')],
-          ),
-        ),
-      );
-      expect(find.text('hero widget'), findsOneWidget);
-    });
   });
 }

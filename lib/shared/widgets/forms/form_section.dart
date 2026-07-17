@@ -30,7 +30,6 @@ class FormSection extends StatelessWidget {
     this.emptyInvitation,
     this.isEmpty = false,
     this.errorCount = 0,
-    this.hero,
   });
 
   final String label;
@@ -42,10 +41,6 @@ class FormSection extends StatelessWidget {
   final String? emptyInvitation;
   final bool isEmpty;
   final int errorCount;
-
-  /// Transitional slot from the v1 chrome; renders as the first body child.
-  /// Scheduled for removal once no caller passes it.
-  final Widget? hero;
 
   @override
   Widget build(BuildContext context) {
@@ -167,10 +162,6 @@ class FormSection extends StatelessWidget {
       color: FormStyle.dividerColor(context),
     );
     final rows = <Widget>[divider];
-    if (hero != null) {
-      rows.add(hero!);
-      if (children.isNotEmpty) rows.add(divider);
-    }
     for (var i = 0; i < children.length; i++) {
       rows.add(children[i]);
       if (i < children.length - 1) rows.add(divider);

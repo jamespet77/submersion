@@ -191,3 +191,33 @@ overline.
 - Picker sheets, suggestion providers, save/validation logic, providers.
 - Dive detail / site detail views (heroes live there intentionally).
 - New fields or data model changes.
+
+## Deviations (recorded during implementation, 2026-07-17)
+
+- `FormRow.text` editing state also became row-shaped (label stays, bare
+  inline field on the right) rather than only the resting state; rows with
+  validators are therefore fully row-styled while staying mounted.
+- Site rating: the 32px stars' per-star tooltips and the "Clear rating"
+  text button were replaced by the shared 22px rating row with a small
+  clear icon (`FormRow.rating.onClear`).
+- Helper texts removed with the quiet design: GPS format helper, altitude
+  helper, hazards helper, surface-pressure helper (+ its prefix icon),
+  and the marine-life helper/merge-helper lines. The surface-pressure
+  default remains as the row placeholder.
+- Site min/max depth rows reuse the existing `diveSites_edit_depth_minLabel/
+  maxLabel(symbol)` keys, so the unit appears in the label instead of as a
+  suffix; the altitude row uses the plain `diveSites_edit_section_altitude`
+  label with a unit suffix (the `altitude_label(symbol)` key is no longer
+  referenced by this page).
+- Merge mode's separate boxed depth-range editor was removed: min/max
+  depth rows are identical in normal and merge modes, with per-field
+  source caption + cycle button.
+- The bulk form's `_bulkTanksEditor` also moved to `TankRow` (same
+  parameter surface); bulk interiors otherwise keep their existing field
+  styles and only inherit the v2 chrome, as scoped.
+- `StatStrip` was retained as a widget (trip-story consumers); only its
+  edit-form usage was removed. `FormStyle.labelStyle`/`labelGap` tokens
+  were deleted (no remaining consumers).
+- l10n bonus: the profile block's hardcoded English strings ("Dive
+  Profile", "Edit Profile", "Draw Profile", the outlier chip) were
+  replaced with new localized keys in all 11 locales.
