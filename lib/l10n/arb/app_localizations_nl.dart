@@ -10848,6 +10848,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get media_photoPicker_appBarTitle => 'Foto\'s selecteren';
 
   @override
+  String get media_photoPicker_tab_gallery => 'Galerij';
+
+  @override
+  String get media_photoPicker_tab_files => 'Bestanden';
+
+  @override
+  String get media_photoPicker_tab_url => 'URL';
+
+  @override
   String get media_photoPicker_clearSelectionButton => 'Wissen';
 
   @override
@@ -12112,7 +12121,7 @@ class AppLocalizationsNl extends AppLocalizations {
   String get settings_backToSettings_tooltip => 'Terug naar instellingen';
 
   @override
-  String get settings_cloudSync_appBar_title => 'Cloudsynchronisatie';
+  String get settings_cloudSync_appBar_title => 'Database-cloudsynchronisatie';
 
   @override
   String get settings_cloudSync_autoSync => 'Automatische synchronisatie';
@@ -12575,7 +12584,7 @@ class AppLocalizationsNl extends AppLocalizations {
       'Maak een back-up van je gegevens';
 
   @override
-  String get settings_data_cloudSync => 'Cloudsynchronisatie';
+  String get settings_data_cloudSync => 'Database-cloudsynchronisatie';
 
   @override
   String get settings_data_customFolder => 'Aangepaste map';

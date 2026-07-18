@@ -18609,6 +18609,24 @@ abstract class AppLocalizations {
   /// **'Select Photos'**
   String get media_photoPicker_appBarTitle;
 
+  /// No description provided for @media_photoPicker_tab_gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get media_photoPicker_tab_gallery;
+
+  /// No description provided for @media_photoPicker_tab_files.
+  ///
+  /// In en, this message translates to:
+  /// **'Files'**
+  String get media_photoPicker_tab_files;
+
+  /// No description provided for @media_photoPicker_tab_url.
+  ///
+  /// In en, this message translates to:
+  /// **'URL'**
+  String get media_photoPicker_tab_url;
+
   /// No description provided for @media_photoPicker_clearSelectionButton.
   ///
   /// In en, this message translates to:
@@ -20763,7 +20781,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_cloudSync_appBar_title.
   ///
   /// In en, this message translates to:
-  /// **'Cloud Sync'**
+  /// **'Database Cloud Sync'**
   String get settings_cloudSync_appBar_title;
 
   /// No description provided for @settings_cloudSync_autoSync.
@@ -21438,7 +21456,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_data_cloudSync.
   ///
   /// In en, this message translates to:
-  /// **'Cloud Sync'**
+  /// **'Database Cloud Sync'**
   String get settings_data_cloudSync;
 
   /// No description provided for @settings_data_customFolder.

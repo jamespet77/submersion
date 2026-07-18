@@ -10897,6 +10897,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get media_photoPicker_appBarTitle => 'Fotok kivalasztasa';
 
   @override
+  String get media_photoPicker_tab_gallery => 'Galeria';
+
+  @override
+  String get media_photoPicker_tab_files => 'Fajlok';
+
+  @override
+  String get media_photoPicker_tab_url => 'URL';
+
+  @override
   String get media_photoPicker_clearSelectionButton => 'Törlés';
 
   @override
@@ -12167,7 +12176,8 @@ class AppLocalizationsHu extends AppLocalizations {
   String get settings_backToSettings_tooltip => 'Vissza a beallitasokhoz';
 
   @override
-  String get settings_cloudSync_appBar_title => 'Felho szinkronizalas';
+  String get settings_cloudSync_appBar_title =>
+      'Adatbazis felho szinkronizalas';
 
   @override
   String get settings_cloudSync_autoSync => 'Automatikus szinkronizalas';
@@ -12638,7 +12648,7 @@ class AppLocalizationsHu extends AppLocalizations {
       'Biztonsagi mentes keszitese az adatokrol';
 
   @override
-  String get settings_data_cloudSync => 'Felho szinkronizalas';
+  String get settings_data_cloudSync => 'Adatbazis felho szinkronizalas';
 
   @override
   String get settings_data_customFolder => 'Egyedi mappa';

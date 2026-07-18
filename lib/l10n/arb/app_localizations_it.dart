@@ -10925,6 +10925,15 @@ class AppLocalizationsIt extends AppLocalizations {
   String get media_photoPicker_appBarTitle => 'Seleziona foto';
 
   @override
+  String get media_photoPicker_tab_gallery => 'Galleria';
+
+  @override
+  String get media_photoPicker_tab_files => 'File';
+
+  @override
+  String get media_photoPicker_tab_url => 'URL';
+
+  @override
   String get media_photoPicker_clearSelectionButton => 'Cancella';
 
   @override
@@ -12201,7 +12210,8 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_backToSettings_tooltip => 'Torna alle impostazioni';
 
   @override
-  String get settings_cloudSync_appBar_title => 'Sincronizzazione cloud';
+  String get settings_cloudSync_appBar_title =>
+      'Sincronizzazione cloud del database';
 
   @override
   String get settings_cloudSync_autoSync => 'Sincronizzazione automatica';
@@ -12672,7 +12682,7 @@ class AppLocalizationsIt extends AppLocalizations {
   String get settings_data_backup_subtitle => 'Crea un backup dei tuoi dati';
 
   @override
-  String get settings_data_cloudSync => 'Sincronizzazione cloud';
+  String get settings_data_cloudSync => 'Sincronizzazione cloud del database';
 
   @override
   String get settings_data_customFolder => 'Cartella personalizzata';
