@@ -124,7 +124,10 @@ class ServiceDueEngine {
     required int dueSoonWindowDays,
     required DateTime now,
   }) {
-    if ((dueDate != null && !now.isBefore(dueDate)) ||
+    // Date trigger becomes overdue strictly after the due date, matching the
+    // legacy single-clock EquipmentItem.isServiceDue (now.isAfter(dueDate)).
+    // At exactly the due instant the clock reads dueSoon, not overdue.
+    if ((dueDate != null && now.isAfter(dueDate)) ||
         (divesRemaining != null && divesRemaining <= 0) ||
         (hoursRemaining != null && hoursRemaining <= 0)) {
       return ServiceClockSeverity.overdue;

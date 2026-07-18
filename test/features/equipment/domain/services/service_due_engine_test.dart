@@ -124,6 +124,19 @@ void main() {
     expect(statuses.single.daysUntilDue, isNegative);
   });
 
+  test('at the exact due instant reads dueSoon, not overdue', () {
+    // Regression: the date trigger must become overdue strictly AFTER the due
+    // date (now.isAfter), matching legacy EquipmentItem.isServiceDue. At the
+    // exact due instant it should still read dueSoon (within the window).
+    final anchor = now.subtract(const Duration(days: 1825)); // due == now
+    final statuses = run(
+      schedules: [sched('hydro', anchor: anchor)],
+      kinds: [hydro()],
+    );
+    expect(statuses.single.dueDate, now);
+    expect(statuses.single.severity, ServiceClockSeverity.dueSoon);
+  });
+
   test('dueSoon when date within window', () {
     // due = anchor + 1825d; pick anchor so due lands 20 days from now.
     final anchor = now.add(const Duration(days: 20 - 1825));
