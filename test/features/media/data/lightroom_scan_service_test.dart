@@ -157,6 +157,26 @@ void main() {
     }
   });
 
+  test('scan early-stops when the pager returns an asset older than the '
+      'window start (nothing attaches)', () async {
+    final dive = await createDive(
+      entry: DateTime.utc(2026, 7, 1, 10),
+      exit: DateTime.utc(2026, 7, 1, 11),
+    );
+    // Window is [09:30, 12:00]; this asset predates the start. The listing is
+    // newest-first, so crossing below the start means every later asset is
+    // older too -- the scan stops here and attaches nothing.
+    final api = _FakeLightroomApi(
+      assets: [image('old', DateTime.utc(2026, 7, 1, 9))],
+    );
+    final summary = await service(
+      api,
+    ).scanDives(account: account, dives: [dive], state: state);
+
+    expect(summary.attached, 0);
+    expect(api.assetCalls, isNotEmpty);
+  });
+
   test('confident match attaches a connector media row with enrichment and '
       'enqueues an upload', () async {
     final dive = await createDive(
