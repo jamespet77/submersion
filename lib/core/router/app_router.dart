@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:submersion/core/accessibility/app_shortcuts.dart';
+import 'package:submersion/core/constants/feature_flags.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -939,9 +940,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
+              // Lightroom settings page hidden pending Adobe review
+              // (lightroomUiEnabled). The route stays defined so any lingering
+              // navigation to it (a deep link, or PendingSetupService which
+              // computes '/settings/lightroom' for an on-device Lightroom
+              // account) degrades gracefully by redirecting to the media
+              // sources page instead of hitting an unknown-route error screen.
               GoRoute(
                 path: 'lightroom',
                 name: 'lightroom',
+                redirect: (context, state) =>
+                    lightroomUiEnabled ? null : '/settings/media-sources',
                 builder: (context, state) => const LightroomSettingsPage(),
               ),
               GoRoute(
