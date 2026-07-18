@@ -18112,6 +18112,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get gpsLogger_tracksHeader => 'Recorded tracks';
 
   @override
+  String get maps_compass_resetLabel => 'Reset map orientation to north';
+
+  @override
+  String get maps_compass_resetTooltip => 'North up';
+
+  @override
   String get maps_heatMap_hide => 'Hide Heat Map';
 
   @override

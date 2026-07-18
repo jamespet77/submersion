@@ -17951,6 +17951,12 @@ class AppLocalizationsHe extends AppLocalizations {
   String get gpsLogger_tracksHeader => 'מסלולים שהוקלטו';
 
   @override
+  String get maps_compass_resetLabel => 'איפוס כיוון המפה לצפון';
+
+  @override
+  String get maps_compass_resetTooltip => 'צפון למעלה';
+
+  @override
   String get maps_heatMap_hide => 'הסתר מפת חום';
 
   @override

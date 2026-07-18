@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
+import 'package:submersion/l10n/l10n_extension.dart';
+
 /// A compass control that resets a rotated [FlutterMap] back to north.
 ///
 /// `flutter_map` enables two-finger rotation by default but ships no visible
@@ -118,36 +120,41 @@ class _MapCompassButtonState extends State<MapCompassButton>
     final colorScheme = Theme.of(context).colorScheme;
     final northUp = _isNorthUp;
 
-    return IgnorePointer(
-      ignoring: northUp,
-      child: AnimatedOpacity(
-        opacity: northUp ? 0 : 1,
-        duration: const Duration(milliseconds: 200),
-        child: Tooltip(
-          message: 'North up',
-          child: Material(
-            color: colorScheme.surface,
-            elevation: 2,
-            shape: CircleBorder(
-              side: BorderSide(color: colorScheme.outlineVariant),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: _resetToNorth,
-              child: Semantics(
-                button: true,
-                label: 'Reset map orientation to north',
-                child: SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: Center(
-                    child: Transform.rotate(
-                      angle: -_rotation * math.pi / 180,
-                      child: CustomPaint(
-                        size: const Size.square(22),
-                        painter: _CompassNeedlePainter(
-                          northColor: Colors.red.shade600,
-                          southColor: colorScheme.onSurfaceVariant,
+    // Exclude from the semantics tree while hidden: an invisible,
+    // non-interactive button should not be reachable by screen readers.
+    return ExcludeSemantics(
+      excluding: northUp,
+      child: IgnorePointer(
+        ignoring: northUp,
+        child: AnimatedOpacity(
+          opacity: northUp ? 0 : 1,
+          duration: const Duration(milliseconds: 200),
+          child: Tooltip(
+            message: context.l10n.maps_compass_resetTooltip,
+            child: Material(
+              color: colorScheme.surface,
+              elevation: 2,
+              shape: CircleBorder(
+                side: BorderSide(color: colorScheme.outlineVariant),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: _resetToNorth,
+                child: Semantics(
+                  button: true,
+                  label: context.l10n.maps_compass_resetLabel,
+                  child: SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: -_rotation * math.pi / 180,
+                        child: CustomPaint(
+                          size: const Size.square(22),
+                          painter: _CompassNeedlePainter(
+                            northColor: Colors.red.shade600,
+                            southColor: colorScheme.onSurfaceVariant,
+                          ),
                         ),
                       ),
                     ),

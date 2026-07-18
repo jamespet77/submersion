@@ -4,29 +4,31 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:submersion/features/maps/presentation/widgets/map_compass_button.dart';
 
+import '../../../../helpers/test_app.dart';
+
 void main() {
   Future<MapController> pumpCompass(WidgetTester tester) async {
     final controller = MapController();
     await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(
-          body: Stack(
-            children: [
-              FlutterMap(
-                mapController: controller,
-                options: const MapOptions(
-                  initialCenter: LatLng(0, 0),
-                  initialZoom: 5,
-                ),
-                children: const [],
+      // Pinned to English so the tooltip finder is deterministic.
+      testApp(
+        locale: const Locale('en'),
+        child: Stack(
+          children: [
+            FlutterMap(
+              mapController: controller,
+              options: const MapOptions(
+                initialCenter: LatLng(0, 0),
+                initialZoom: 5,
               ),
-              Positioned(
-                top: 16,
-                right: 16,
-                child: MapCompassButton(controller: controller),
-              ),
-            ],
-          ),
+              children: const [],
+            ),
+            Positioned(
+              top: 16,
+              right: 16,
+              child: MapCompassButton(controller: controller),
+            ),
+          ],
         ),
       ),
     );
