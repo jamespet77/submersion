@@ -18,7 +18,24 @@ class RecreationalNdlSolver {
     required this.model,
     this.descentRate = 18.0,
     this.marginSeconds = 0,
-  });
+  }) {
+    if (descentRate <= 0) {
+      throw ArgumentError.value(
+        descentRate,
+        'descentRate',
+        'must be positive (m/min); it divides the descent-time calculation',
+      );
+    }
+    // A negative margin would add time and report an NDL beyond the model's
+    // boundary — anti-conservative for a deco tool, so reject it outright.
+    if (marginSeconds < 0) {
+      throw ArgumentError.value(
+        marginSeconds,
+        'marginSeconds',
+        'must not be negative',
+      );
+    }
+  }
 
   /// The decompression model whose empty-schedule boundary defines the NDL.
   final DecoModel model;
@@ -45,6 +62,13 @@ class RecreationalNdlSolver {
     AscentGasPlan? ascentGases,
     int capMinutes = 300,
   }) {
+    if (capMinutes <= 0) {
+      throw ArgumentError.value(
+        capMinutes,
+        'capMinutes',
+        'must be positive (minutes); it is the binary-search upper bound',
+      );
+    }
     if (depthMeters <= 0) return capMinutes * 60;
     final gases = ascentGases ?? _fixedAscentFor(breathing);
 

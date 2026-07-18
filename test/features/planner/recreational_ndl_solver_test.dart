@@ -154,4 +154,33 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test('a non-positive descent rate is rejected at construction', () {
+    expect(
+      () => RecreationalNdlSolver(model: model(), descentRate: 0),
+      throwsArgumentError,
+    );
+    expect(
+      () => RecreationalNdlSolver(model: model(), descentRate: -18),
+      throwsArgumentError,
+    );
+  });
+
+  test('a negative conservatism margin is rejected at construction', () {
+    expect(
+      () => RecreationalNdlSolver(model: model(), marginSeconds: -60),
+      throwsArgumentError,
+    );
+  });
+
+  test('a non-positive search cap is rejected', () {
+    expect(
+      () => solver().maxNoDecoBottomTimeSeconds(
+        depthMeters: 30,
+        breathing: air,
+        capMinutes: 0,
+      ),
+      throwsArgumentError,
+    );
+  });
 }
