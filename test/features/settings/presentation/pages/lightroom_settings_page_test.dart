@@ -145,6 +145,7 @@ void main() {
         lightroomRedirectCaptureProvider.overrideWithValue(capture),
     ],
     child: const MaterialApp(
+      locale: Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: LightroomSettingsPage(),
@@ -353,6 +354,7 @@ void main() {
               ),
             ],
             child: const MaterialApp(
+              locale: Locale('en'),
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: LightroomSettingsPage(),
