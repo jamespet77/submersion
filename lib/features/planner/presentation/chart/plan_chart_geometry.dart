@@ -52,8 +52,9 @@ class PlanChartGeometry {
     return t.clamp(0.0, maxTimeSeconds);
   }
 
-  /// Inverse of [yFor], clamped to the data depth range so a drag never
-  /// pushes a waypoint past the deepest planned point's padding.
+  /// Inverse of [yFor], clamped to the padded depth range (unlike [timeAtDx],
+  /// which clamps to the data range): a drag may extend a waypoint into the
+  /// padding below the deepest planned point, but never past the axis edge.
   double depthAtDy(double dy) {
     final d = (dy - plotRect.top) / plotRect.height * _paddedMaxDepth;
     return d.clamp(0.0, _paddedMaxDepth);

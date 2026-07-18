@@ -134,8 +134,10 @@ class Scr extends BreathingConfig {
 ///
 /// clamped at zero (a hypoxic loop). The remaining pressure is inert, split by
 /// the supply He:N2 ratio — exactly matching Subsurface's `fill_pressures`
-/// PSCR branch. Following that source, ambient pressure is used directly with
-/// no separate alveolar water-vapor term.
+/// PSCR branch. Following that source, ambient pressure is used directly: this
+/// is a deliberate exception to the alveolar water-vapor subtraction the
+/// open-circuit and CCR configs in this file apply, so the two models are not
+/// directly comparable at the same ambient pressure.
 ///
 /// Rates are in surface mL/min to match Subsurface's stored units; the defaults
 /// are Subsurface's own (o2Consumption 720, sac 20000, pscrRatio 100), which

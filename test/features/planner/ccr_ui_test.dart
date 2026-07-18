@@ -69,10 +69,7 @@ void main() {
 
     await tester.tap(find.text('SCR'));
     await tester.pumpAndSettle();
-    expect(
-      container.read(divePlanNotifierProvider).mode,
-      domain.PlanMode.pscr,
-    );
+    expect(container.read(divePlanNotifierProvider).mode, domain.PlanMode.pscr);
     expect(find.text('PSCR'), findsOneWidget);
 
     await tester.tap(find.text('PSCR'));
