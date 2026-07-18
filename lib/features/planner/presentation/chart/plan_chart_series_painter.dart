@@ -184,5 +184,8 @@ class PlanChartSeriesPainter extends CustomPainter {
       oldDelegate.series != series ||
       oldDelegate.ghost != ghost ||
       oldDelegate.meanDepthLabel != meanDepthLabel ||
-      !listEquals(oldDelegate.stopTagLabels, stopTagLabels);
+      !listEquals(oldDelegate.stopTagLabels, stopTagLabels) ||
+      oldDelegate.labelStyle != labelStyle ||
+      oldDelegate.tagStyle != tagStyle ||
+      oldDelegate.textDirection != textDirection;
 }

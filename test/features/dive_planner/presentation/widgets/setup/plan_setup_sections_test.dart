@@ -23,6 +23,9 @@ class _TestSettingsNotifier extends StateNotifier<AppSettings>
 }
 
 Widget _harness(Widget child) => testApp(
+  // Pin English so finders on localized labels ("Must be greater than 0",
+  // "Group 2", etc.) stay deterministic regardless of the platform locale.
+  locale: const Locale('en'),
   overrides: [settingsProvider.overrideWith((ref) => _TestSettingsNotifier())],
   child: SingleChildScrollView(child: child),
 );

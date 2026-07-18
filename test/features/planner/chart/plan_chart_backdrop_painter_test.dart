@@ -12,24 +12,27 @@ void main() {
   final palette = PlanChartPalette.of(
     ThemeData(colorScheme: const ColorScheme.dark()),
   );
-  PlanChartBackdropPainter painter({PlanChartGeometry? geometry}) =>
-      PlanChartBackdropPainter(
-        geometry:
-            geometry ??
-            const PlanChartGeometry(
-              size: Size(500, 400),
-              maxTimeSeconds: 3100,
-              maxDepthMeters: 45,
-              depthUnitScale: 1,
-            ),
-        palette: palette,
-        ceiling: decoSeries().ceiling,
-        depthUnitScale: 1,
-        depthAxisLabel: 'm',
-        timeAxisLabel: 'min',
-        labelStyle: const TextStyle(fontSize: 10),
-        textDirection: TextDirection.ltr,
-      );
+  PlanChartBackdropPainter painter({
+    PlanChartGeometry? geometry,
+    TextStyle labelStyle = const TextStyle(fontSize: 10),
+    TextDirection textDirection = TextDirection.ltr,
+  }) => PlanChartBackdropPainter(
+    geometry:
+        geometry ??
+        const PlanChartGeometry(
+          size: Size(500, 400),
+          maxTimeSeconds: 3100,
+          maxDepthMeters: 45,
+          depthUnitScale: 1,
+        ),
+    palette: palette,
+    ceiling: decoSeries().ceiling,
+    depthUnitScale: 1,
+    depthAxisLabel: 'm',
+    timeAxisLabel: 'min',
+    labelStyle: labelStyle,
+    textDirection: textDirection,
+  );
 
   test('paints without throwing on a real canvas', () {
     final recorder = ui.PictureRecorder();
@@ -72,5 +75,17 @@ void main() {
       ),
     );
     expect(moved.shouldRepaint(a), isTrue);
+  });
+
+  test('shouldRepaint on labelStyle change (typography/theme)', () {
+    final a = painter();
+    final restyled = painter(labelStyle: const TextStyle(fontSize: 14));
+    expect(restyled.shouldRepaint(a), isTrue);
+  });
+
+  test('shouldRepaint on textDirection change (LTR <-> RTL)', () {
+    final a = painter();
+    final rtl = painter(textDirection: TextDirection.rtl);
+    expect(rtl.shouldRepaint(a), isTrue);
   });
 }

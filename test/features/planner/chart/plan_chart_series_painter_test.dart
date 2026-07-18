@@ -19,18 +19,22 @@ void main() {
     depthUnitScale: 1,
   );
 
-  PlanChartSeriesPainter painter({bool withGhost = false}) =>
-      PlanChartSeriesPainter(
-        geometry: geometry,
-        palette: palette,
-        series: decoSeries(),
-        ghost: withGhost ? ndlSeries() : null,
-        stopTagLabels: const ["21m 1'", "12m 3'", "9m 5'", "6m 12'"],
-        meanDepthLabel: 'mean 32m',
-        labelStyle: const TextStyle(fontSize: 10),
-        tagStyle: const TextStyle(fontSize: 9),
-        textDirection: TextDirection.ltr,
-      );
+  PlanChartSeriesPainter painter({
+    bool withGhost = false,
+    TextStyle labelStyle = const TextStyle(fontSize: 10),
+    TextStyle tagStyle = const TextStyle(fontSize: 9),
+    TextDirection textDirection = TextDirection.ltr,
+  }) => PlanChartSeriesPainter(
+    geometry: geometry,
+    palette: palette,
+    series: decoSeries(),
+    ghost: withGhost ? ndlSeries() : null,
+    stopTagLabels: const ["21m 1'", "12m 3'", "9m 5'", "6m 12'"],
+    meanDepthLabel: 'mean 32m',
+    labelStyle: labelStyle,
+    tagStyle: tagStyle,
+    textDirection: textDirection,
+  );
 
   test('paints deco plan with ghost, tags, and flags without throwing', () {
     final recorder = ui.PictureRecorder();
@@ -67,5 +71,25 @@ void main() {
   test('shouldRepaint when the ghost appears', () {
     expect(painter(withGhost: true).shouldRepaint(painter()), isTrue);
     expect(painter().shouldRepaint(painter()), isFalse);
+  });
+
+  test('shouldRepaint on labelStyle / tagStyle change (typography/theme)', () {
+    expect(
+      painter(
+        labelStyle: const TextStyle(fontSize: 14),
+      ).shouldRepaint(painter()),
+      isTrue,
+    );
+    expect(
+      painter(tagStyle: const TextStyle(fontSize: 12)).shouldRepaint(painter()),
+      isTrue,
+    );
+  });
+
+  test('shouldRepaint on textDirection change (LTR <-> RTL)', () {
+    expect(
+      painter(textDirection: TextDirection.rtl).shouldRepaint(painter()),
+      isTrue,
+    );
   });
 }

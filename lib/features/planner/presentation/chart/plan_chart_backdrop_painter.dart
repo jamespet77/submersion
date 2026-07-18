@@ -123,5 +123,7 @@ class PlanChartBackdropPainter extends CustomPainter {
       oldDelegate.ceiling != ceiling ||
       oldDelegate.depthUnitScale != depthUnitScale ||
       oldDelegate.depthAxisLabel != depthAxisLabel ||
-      oldDelegate.timeAxisLabel != timeAxisLabel;
+      oldDelegate.timeAxisLabel != timeAxisLabel ||
+      oldDelegate.labelStyle != labelStyle ||
+      oldDelegate.textDirection != textDirection;
 }
