@@ -492,24 +492,33 @@ class _ConnectorVideoItem extends ConsumerWidget {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow,
-                  color: Colors.white,
-                  size: 48,
+              Semantics(
+                button: url != null,
+                label: context.l10n.media_lightroom_openInLightroom,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow,
+                    color: Colors.white,
+                    size: 48,
+                  ),
                 ),
               ),
               if (url != null) ...[
                 const SizedBox(height: 12),
-                Text(
-                  context.l10n.media_lightroom_openInLightroom,
-                  style: TextStyle(color: Colors.white.withValues(alpha: 0.85)),
+                // Label already voiced by the Semantics button above.
+                ExcludeSemantics(
+                  child: Text(
+                    context.l10n.media_lightroom_openInLightroom,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                    ),
+                  ),
                 ),
               ],
             ],

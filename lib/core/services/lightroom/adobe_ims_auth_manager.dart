@@ -9,10 +9,14 @@ import 'package:submersion/core/services/oauth/oauth_pkce.dart';
 
 /// Thrown when a Native App connection's access token has expired and there
 /// is no refresh token to renew it. The user must sign in again.
-class LightroomReauthRequiredException implements Exception {
-  const LightroomReauthRequiredException();
-  @override
-  String toString() => 'Lightroom sign-in has expired; sign in again.';
+///
+/// Extends [CloudStorageException] so it flows through the same user-facing
+/// error handling as other connector failures (surfaced via `displayMessage`,
+/// no `Exception:`/class-name prefix in snackbars). It is thrown in normal
+/// runtime paths such as media scans.
+class LightroomReauthRequiredException extends CloudStorageException {
+  const LightroomReauthRequiredException()
+    : super('Lightroom sign-in has expired; sign in again.');
 }
 
 /// OAuth 2 PKCE lifecycle against Adobe IMS for the Lightroom connector:

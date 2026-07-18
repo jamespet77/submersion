@@ -320,6 +320,53 @@ void main() {
     );
   });
 
+  test('non-401 error surfaces the concise Adobe detail, abuse guard '
+      'stripped', () async {
+    final c = await client(
+      (req) async => http.Response(
+        '$_guard${jsonEncode({'error_description': 'Invalid redirect_uri', 'code': 'bad_request'})}',
+        400,
+      ),
+    );
+    await expectLater(
+      c.getCatalogId(),
+      throwsA(
+        isA<LightroomApiException>()
+            .having((e) => e.statusCode, 'status', 400)
+            .having((e) => e.message, 'msg', contains('Invalid redirect_uri'))
+            .having((e) => e.message, 'no guard', isNot(contains('while (1)'))),
+      ),
+    );
+  });
+
+  test('non-JSON error body is whitespace-compacted and truncated', () async {
+    final noisy = '  <html>\n\n${'x' * 400}\n</html>  ';
+    final c = await client((req) async => http.Response(noisy, 500));
+    await expectLater(
+      c.getCatalogId(),
+      throwsA(
+        isA<LightroomApiException>()
+            .having((e) => e.statusCode, 'status', 500)
+            .having((e) => e.message, 'compacted', isNot(contains('\n')))
+            .having((e) => e.message, 'truncated', contains('...')),
+      ),
+    );
+  });
+
+  test('an empty error body yields just the status code', () async {
+    final c = await client((req) async => http.Response('', 503));
+    await expectLater(
+      c.getCatalogId(),
+      throwsA(
+        isA<LightroomApiException>().having(
+          (e) => e.message,
+          'msg',
+          'Lightroom API error 503',
+        ),
+      ),
+    );
+  });
+
   test('assetWebUrl builds the lightroom.adobe.com link', () {
     expect(
       LightroomApiClient.assetWebUrl('cat1', 'a1'),

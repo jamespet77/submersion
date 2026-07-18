@@ -7002,7 +7002,7 @@
   "settings_lightroom_albumFilter_all": "Entire catalog",
   "settings_lightroom_albumFilter_title": "Albums to scan",
   "settings_lightroom_autoPoll_title": "Check for new photos automatically",
-  "settings_lightroom_clientId_help": "Create an integration in the Adobe Developer Console with the Lightroom Services API and a credential type that supports PKCE. Set the redirect URI to {redirectUri}.",
+  "settings_lightroom_clientId_help": "Create an integration in the Adobe Developer Console with the Lightroom Services API and a credential type that supports PKCE. Enter your credential's redirect URI below — Native App credentials use a custom scheme — or leave it blank to use {redirectUri}.",
   "@settings_lightroom_clientId_help": {
     "placeholders": {
       "redirectUri": {
@@ -7012,6 +7012,7 @@
   },
   "settings_lightroom_clientId_label": "Adobe client ID",
   "settings_lightroom_clientSecret_label": "Client secret (optional)",
+  "settings_lightroom_redirectUri_label": "Redirect URI (optional)",
   "settings_lightroom_connect": "Connect Lightroom",
   "settings_lightroom_connectEmbedded": "Connect with Adobe",
   "@settings_lightroom_connectEmbedded": {

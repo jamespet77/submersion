@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -31,12 +33,24 @@ class LightroomSettingsPage extends ConsumerStatefulWidget {
 class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
   final _clientIdController = TextEditingController();
   final _clientSecretController = TextEditingController();
+  final _redirectUriController = TextEditingController();
   bool _busy = false;
+
+  /// The embedded "Connect with Adobe" flow relies on a custom-scheme redirect
+  /// registered only on iOS/Android/macOS; on Windows/Linux it cannot complete,
+  /// so the button is hidden there and only the BYO path is offered.
+  static bool get _embeddedConnectSupported => switch (defaultTargetPlatform) {
+    TargetPlatform.iOS ||
+    TargetPlatform.android ||
+    TargetPlatform.macOS => true,
+    _ => false,
+  };
 
   @override
   void dispose() {
     _clientIdController.dispose();
     _clientSecretController.dispose();
+    _redirectUriController.dispose();
     super.dispose();
   }
 
@@ -45,12 +59,14 @@ class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
     final clientId = _clientIdController.text.trim();
     if (clientId.isEmpty) return;
 
+    final redirectUri = _redirectUriController.text.trim();
     final connected = await showDialog<bool>(
       context: context,
       builder: (_) => LightroomConnectDialog(
         authManager: authManager,
         clientId: clientId,
         clientSecret: _clientSecretController.text,
+        redirectUri: redirectUri.isEmpty ? null : redirectUri,
       ),
     );
     if (connected != true || !mounted) return;
@@ -285,12 +301,14 @@ class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
       children: [
         Text(l10n.settings_lightroom_subtitle),
         const SizedBox(height: 16),
-        FilledButton.icon(
-          onPressed: _busy ? null : _connectEmbedded,
-          icon: const Icon(Icons.link),
-          label: Text(l10n.settings_lightroom_connectEmbedded),
-        ),
-        const SizedBox(height: 24),
+        if (_embeddedConnectSupported) ...[
+          FilledButton.icon(
+            onPressed: _busy ? null : _connectEmbedded,
+            icon: const Icon(Icons.link),
+            label: Text(l10n.settings_lightroom_connectEmbedded),
+          ),
+          const SizedBox(height: 24),
+        ],
         Text(
           l10n.settings_lightroom_advancedByo,
           style: Theme.of(context).textTheme.titleSmall,
@@ -312,6 +330,16 @@ class _LightroomSettingsPageState extends ConsumerState<LightroomSettingsPage> {
           obscureText: true,
           decoration: InputDecoration(
             labelText: l10n.settings_lightroom_clientSecret_label,
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: _redirectUriController,
+          enabled: !_busy,
+          keyboardType: TextInputType.url,
+          decoration: InputDecoration(
+            labelText: l10n.settings_lightroom_redirectUri_label,
             border: const OutlineInputBorder(),
           ),
         ),

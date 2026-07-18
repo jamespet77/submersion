@@ -21928,7 +21928,7 @@ abstract class AppLocalizations {
   /// No description provided for @settings_lightroom_clientId_help.
   ///
   /// In en, this message translates to:
-  /// **'Create an integration in the Adobe Developer Console with the Lightroom Services API and a credential type that supports PKCE. Set the redirect URI to {redirectUri}.'**
+  /// **'Create an integration in the Adobe Developer Console with the Lightroom Services API and a credential type that supports PKCE. Enter your credential\'s redirect URI below — Native App credentials use a custom scheme — or leave it blank to use {redirectUri}.'**
   String settings_lightroom_clientId_help(String redirectUri);
 
   /// No description provided for @settings_lightroom_clientId_label.
@@ -21942,6 +21942,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Client secret (optional)'**
   String get settings_lightroom_clientSecret_label;
+
+  /// No description provided for @settings_lightroom_redirectUri_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Redirect URI (optional)'**
+  String get settings_lightroom_redirectUri_label;
 
   /// No description provided for @settings_lightroom_connect.
   ///

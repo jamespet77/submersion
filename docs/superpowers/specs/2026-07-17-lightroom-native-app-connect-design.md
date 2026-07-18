@@ -37,7 +37,7 @@ credential carries no secret.
 | --- | --- |
 | Credential type | OAuth **Native App** (public client, PKCE, no secret). Confirmed in the Adobe Developer Console: Lightroom Services attaches to a Native App credential that exposes only a client ID. |
 | Credential source | Unified: an **embedded** default client ID plus a **BYO** fallback. |
-| Client secret | **None.** Removed from the auth manager, storage, and UI. |
+| Client secret | **Not required.** None is bundled or requested by the embedded flow. An optional `clientSecret` is retained in the auth manager, storage, and BYO UI for legacy Web App credentials, and is sent only if the user supplies one. |
 | Refresh token | **Opportunistic.** Request `offline_access`; persist and use a refresh token if Adobe returns one; otherwise re-authenticate on access-token expiry. Never require it. |
 | Redirect capture | **Embedded:** auto-capture via the credential's Adobe-generated custom scheme (`adobe+<hash>://adobeid/<clientId>`) using `flutter_web_auth_2`. **BYO:** copy-paste (the per-credential scheme cannot be registered at build time). |
 | Poll model | **Manual scan + inline re-auth.** Retire the unattended periodic auto-poll (nothing can renew the token headless without a refresh token). |
@@ -46,7 +46,7 @@ credential carries no secret.
 ### Non-goals
 
 - No Submersion-operated backend or token broker.
-- No client secret anywhere.
+- No bundled client secret and none required (an optional `clientSecret` field is retained for BYO/legacy Web App credentials).
 - No Web App or Single-Page App credential path.
 - No Universal Links / App Links / associated-domains (custom scheme + loopback only).
 - No change to scan, matching, enrichment, the Media Store pipeline, or the
@@ -58,8 +58,8 @@ credential carries no secret.
 
 | Component | Change |
 | --- | --- |
-| `AdobeImsAuthManager` (`lib/core/services/lightroom/adobe_ims_auth_manager.dart`) | Remove the client secret entirely. Take `clientId` and `redirectUri` as inputs, so embedded vs BYO differ only by argument. Stop requiring a refresh token — cache the access token with its expiry; persist a refresh token only if one is returned. Add a `needsReauth` signal when the access token has expired and no refresh path exists. |
-| `LightroomAuthStore` / `LightroomAuthData` | Drop `clientSecret`. Store `clientId`, credential `source` (embedded/byo), `redirectUri`, optional `refreshToken`, catalog id, and account labels. |
+| `AdobeImsAuthManager` (`lib/core/services/lightroom/adobe_ims_auth_manager.dart`) | Make the client secret optional (no longer required; retained for BYO/legacy Web App credentials and sent only when provided). Take `clientId` and `redirectUri` as inputs, so embedded vs BYO differ only by argument. Stop requiring a refresh token — cache the access token with its expiry; persist a refresh token only if one is returned. Add a `needsReauth` signal when the access token has expired and no refresh path exists. |
+| `LightroomAuthStore` / `LightroomAuthData` | Keep `clientSecret` as an optional field (no longer required). Store `clientId`, optional `clientSecret`, credential `source` (embedded/byo), `redirectUri`, optional `refreshToken`, catalog id, and account labels. |
 | `LightroomConnectDialog` (`lib/features/settings/presentation/widgets/lightroom_connect_dialog.dart`) | Split capture by source. Embedded: `flutter_web_auth_2` in-app auth session (non-ephemeral), no paste. BYO: keep the copy-paste field. Reused as the wizard's sign-in step. |
 | `lightroom_settings_page.dart` | Disconnected state offers a primary **Connect Lightroom** (embedded) and an **Advanced: use my own Adobe credentials** entry to the BYO wizard. |
 | New `LightroomSetupWizard` | Focused BYO wizard (see §5). |

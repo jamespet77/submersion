@@ -12939,7 +12939,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String settings_lightroom_clientId_help(String redirectUri) {
-    return 'Erstelle in der Adobe Developer Console eine Integration mit der Lightroom Services API und einem Anmeldetyp, der PKCE unterstützt. Lege als Redirect-URI $redirectUri fest.';
+    return 'Erstelle in der Adobe Developer Console eine Integration mit der Lightroom Services API und einem Anmeldetyp, der PKCE unterstützt. Gib unten die Redirect-URI deiner Anmeldedaten ein — Native-App-Anmeldedaten verwenden ein benutzerdefiniertes Schema — oder lass das Feld leer, um $redirectUri zu verwenden.';
   }
 
   @override
@@ -12948,6 +12948,9 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settings_lightroom_clientSecret_label =>
       'Client-Secret (optional)';
+
+  @override
+  String get settings_lightroom_redirectUri_label => 'Redirect-URI (optional)';
 
   @override
   String get settings_lightroom_connect => 'Lightroom verbinden';

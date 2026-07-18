@@ -12316,7 +12316,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String settings_lightroom_clientId_help(String redirectUri) {
-    return '在 Adobe Developer Console 中使用 Lightroom Services API 创建集成，并选择支持 PKCE 的凭据类型。将重定向 URI 设置为 $redirectUri。';
+    return '在 Adobe Developer Console 中使用 Lightroom Services API 创建集成，并选择支持 PKCE 的凭据类型。在下方输入您凭据的重定向 URI（Native App 凭据使用自定义方案），或留空以使用 $redirectUri。';
   }
 
   @override
@@ -12324,6 +12324,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_lightroom_clientSecret_label => '客户端密钥（可选）';
+
+  @override
+  String get settings_lightroom_redirectUri_label => '重定向 URI（可选）';
 
   @override
   String get settings_lightroom_connect => '连接 Lightroom';

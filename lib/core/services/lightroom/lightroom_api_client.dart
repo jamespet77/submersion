@@ -113,7 +113,7 @@ class LightroomApiClient {
     return LightroomAssetPage(
       assets: [
         for (final resource in _resources(json))
-          LightroomAsset.fromResource(resource),
+          ?LightroomAsset.fromResource(resource),
       ],
       nextUrl: _nextUrl(json),
     );
@@ -136,7 +136,7 @@ class LightroomApiClient {
       assets: [
         for (final resource in _resources(json))
           if (resource['asset'] is Map<String, Object?>)
-            LightroomAsset.fromResource(
+            ?LightroomAsset.fromResource(
               resource['asset']! as Map<String, Object?>,
             ),
       ],
@@ -190,15 +190,56 @@ class LightroomApiClient {
       );
     }
     // Surface Adobe's error body (usually JSON naming the offending
-    // parameter); the bare status code alone hides the actual problem.
-    final trimmed = body?.trim() ?? '';
-    final detail = trimmed.isEmpty
-        ? ''
-        : ': ${trimmed.length > 300 ? trimmed.substring(0, 300) : trimmed}';
+    // parameter); the bare status code alone hides the actual problem. The
+    // body carries the abuse-guard prefix and can be verbose/multiline, so
+    // strip the guard, prefer a concise JSON error field, and compact
+    // whitespace before showing it to the user.
+    final detail = _conciseErrorDetail(body);
     return LightroomApiException(
       statusCode,
-      'Lightroom API error $statusCode$detail',
+      detail.isEmpty
+          ? 'Lightroom API error $statusCode'
+          : 'Lightroom API error $statusCode: $detail',
     );
+  }
+
+  /// Extract a short, human-readable detail from a Lightroom error body:
+  /// abuse guard stripped, a concise field (`error_description`, `message`,
+  /// ...) preferred when the payload is JSON, whitespace collapsed, and the
+  /// result truncated so user-facing messages stay readable.
+  static String _conciseErrorDetail(String? body) {
+    if (body == null) return '';
+    final cleaned = stripAbuseGuard(body).trim();
+    if (cleaned.isEmpty) return '';
+    try {
+      final decoded = jsonDecode(cleaned);
+      if (decoded is Map<String, Object?>) {
+        for (final key in const [
+          'error_description',
+          'description',
+          'message',
+          'error',
+          'reason',
+          'code',
+          'title',
+        ]) {
+          final value = decoded[key];
+          if (value is String && value.trim().isNotEmpty) {
+            return _compactWhitespace(value);
+          }
+        }
+      }
+    } catch (_) {
+      // Not JSON (HTML error page, plain text); fall through to a snippet.
+    }
+    return _compactWhitespace(cleaned);
+  }
+
+  static String _compactWhitespace(String value) {
+    final collapsed = value.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return collapsed.length > 200
+        ? '${collapsed.substring(0, 200)}...'
+        : collapsed;
   }
 
   List<Map<String, Object?>> _resources(Map<String, Object?> json) {

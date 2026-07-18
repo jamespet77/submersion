@@ -231,7 +231,10 @@ class LightroomScanService {
           nextUrl: next,
         );
         pageNum++;
-        _log.info(
+        // Per-page detail (including capture timestamps) is verbose and would
+        // flood logs on large catalogs -- keep it at debug; the span and
+        // summary lines below stay at info.
+        _log.debug(
           '[LR-SCAN] page $pageNum: got=${page.assets.length} '
           'firstDates=[${page.assets.take(4).map((a) => a.captureDate?.toIso8601String() ?? 'null').join(' | ')}] '
           'lastDate=${page.assets.isEmpty ? 'n/a' : page.assets.last.captureDate?.toIso8601String()} '
@@ -240,8 +243,10 @@ class LightroomScanService {
         for (final asset in page.assets) {
           final captureDate = asset.captureDate;
           if (captureDate != null && captureDate.isBefore(span.start)) {
+            // Assets page newest-first, so everything after this one is older
+            // than the window start too -- stop scanning this page.
             reachedStart = true;
-            continue;
+            break;
           }
           assets.add(asset);
         }

@@ -12847,7 +12847,7 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String settings_lightroom_clientId_help(String redirectUri) {
-    return 'Maak in de Adobe Developer Console een integratie met de Lightroom Services API en een referentietype dat PKCE ondersteunt. Stel de redirect-URI in op $redirectUri.';
+    return 'Maak in de Adobe Developer Console een integratie met de Lightroom Services API en een referentietype dat PKCE ondersteunt. Voer hieronder de redirect-URI van je referentie in — Native App-referenties gebruiken een aangepast schema — of laat het leeg om $redirectUri te gebruiken.';
   }
 
   @override
@@ -12856,6 +12856,9 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get settings_lightroom_clientSecret_label =>
       'Client secret (optioneel)';
+
+  @override
+  String get settings_lightroom_redirectUri_label => 'Redirect-URI (optioneel)';
 
   @override
   String get settings_lightroom_connect => 'Lightroom koppelen';

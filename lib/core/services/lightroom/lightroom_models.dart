@@ -44,11 +44,16 @@ class LightroomAsset {
 
   bool get isVideo => subtype == 'video';
 
-  factory LightroomAsset.fromResource(Map<String, Object?> resource) {
-    // Tolerant by design: the partner API varies asset shapes and has been
-    // seen to return a list where a scalar is expected, so every field is
-    // type-checked rather than cast -- an unchecked cast on a single odd
-    // asset would abort an entire scan.
+  /// Builds an asset from a partner-API resource, or returns null when the
+  /// resource has no usable string `id`.
+  ///
+  /// Tolerant by design: the partner API varies asset shapes and has been
+  /// seen to return a list where a scalar is expected, so every field is
+  /// type-checked rather than cast -- one odd asset (including a missing or
+  /// non-string id) is skipped rather than aborting an entire scan.
+  static LightroomAsset? fromResource(Map<String, Object?> resource) {
+    final id = _asString(resource['id']);
+    if (id == null || id.isEmpty) return null;
     final payload = _asMap(resource['payload']);
     final rawCapture = _asString(payload['captureDate']);
     DateTime? captureDate;
@@ -59,7 +64,7 @@ class LightroomAsset {
     final location = _asMap(payload['location']);
     final video = _asMap(payload['video']);
     return LightroomAsset(
-      id: resource['id'] as String,
+      id: id,
       subtype: _asString(resource['subtype']) ?? 'image',
       captureDate: captureDate,
       fileName: _asString(importSource['fileName']),
