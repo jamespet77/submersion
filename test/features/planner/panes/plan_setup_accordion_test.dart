@@ -27,6 +27,7 @@ class _TestSettingsNotifier extends StateNotifier<AppSettings>
 
 Widget _harness() => testApp(
   overrides: [settingsProvider.overrideWith((ref) => _TestSettingsNotifier())],
+  locale: const Locale('en'),
   child: const SingleChildScrollView(child: PlanSetupAccordion()),
 );
 

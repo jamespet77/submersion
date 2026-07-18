@@ -6,6 +6,8 @@
 
 **Scope note (deliberate deferral - safety):** The spec's Phase 5 also calls for (a) passive pSCR, whose loop physics differ from the existing CMF `Scr` model, and (b) recreational mode, an NDL-maximization solver. Both are NEW safety-critical deco algorithms that the spec itself says require independent Python golden-vector validation (VPM-B-class rigor). Producing and validating that math is not safe in an autonomous pass, so both are deferred to a golden-vector-validated follow-up. This plan ships only the SCR mode that reuses validated code.
 
+**Update (deferral resolved, same PR):** Both deferred items were subsequently implemented in this PR under the required validation. Passive pSCR (`PassiveScr` in `lib/core/deco/entities/breathing_config.dart`) is a faithful port of Subsurface's `pscr_o2`, verified against the Subsurface source and covered by hand-computed vectors in `test/core/deco/passive_scr_test.dart`. The recreational NDL solver (`RecreationalNdlSolver` in `lib/features/planner/domain/services/recreational_ndl_solver.dart`) is a thin layer over the validated Buhlmann model, cross-checked against `DecoModel.ndlSeconds`. VPM-B (Phase 6) shipped with its own golden vectors (`test/core/deco/vpm_b_golden_test.dart`).
+
 **Architecture:** `PlanMode` gains `scr` (stored as the string `'scr'` in the existing TEXT column - no migration; `PlanMode.values.byName` already parses it). `PlanEngine._breathingFor` gets an SCR branch constructing the validated `Scr` from the segment gas as supply, with the injection rate from `PlanEngineConfig`. The header mode control cycles OC -> CCR -> SCR.
 
 ## Global Constraints

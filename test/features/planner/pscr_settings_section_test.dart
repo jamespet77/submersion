@@ -29,7 +29,7 @@ void main() {
     expect(find.widgetWithText(TextFormField, '250'), findsOneWidget);
   });
 
-  testWidgets('editing the field writes the pSCR ratio setting', (
+  testWidgets('persists the final value after debounce, not per keystroke', (
     tester,
   ) async {
     final notifier = MockSettingsNotifier();
@@ -42,7 +42,13 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField), '180');
-    await tester.pump();
+    // Before the debounce elapses nothing is persisted (no per-keystroke
+    // save storm / overlapping writes).
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(notifier.state.pscrRatio, 100.0);
+
+    // After the debounce, the final value lands exactly once.
+    await tester.pump(const Duration(milliseconds: 300));
     expect(notifier.state.pscrRatio, 180.0);
   });
 }

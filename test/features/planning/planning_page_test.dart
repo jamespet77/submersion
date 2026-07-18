@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/constants/map_style.dart';
 import 'package:submersion/core/providers/provider.dart';
@@ -50,6 +51,7 @@ void main() {
           settingsProvider.overrideWith((ref) => _TestSettingsNotifier()),
           divePlanSummariesProvider.overrideWith((ref) async => summaries),
         ],
+        locale: const Locale('en'),
         child: const PlanningPage(),
       ),
     );

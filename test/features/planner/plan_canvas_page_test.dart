@@ -43,6 +43,7 @@ void main() {
     overrides: [
       settingsProvider.overrideWith((ref) => _TestSettingsNotifier()),
     ],
+    locale: const Locale('en'),
     child: const PlanCanvasPage(),
   );
 

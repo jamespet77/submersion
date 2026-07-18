@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:submersion/core/providers/provider.dart';
@@ -16,8 +18,12 @@ class PscrSettingsSection extends ConsumerStatefulWidget {
 }
 
 class _PscrSettingsSectionState extends ConsumerState<PscrSettingsSection> {
+  static const _debounceDelay = Duration(milliseconds: 300);
+
   late final TextEditingController _ratioController;
   final FocusNode _focusNode = FocusNode();
+  Timer? _debounce;
+  double? _pending;
 
   @override
   void initState() {
@@ -25,14 +31,20 @@ class _PscrSettingsSectionState extends ConsumerState<PscrSettingsSection> {
     _ratioController = TextEditingController(
       text: _format(ref.read(pscrRatioProvider)),
     );
-    // Re-sync to the authoritative (clamped) value when the field loses focus.
+    // On blur, persist any pending edit immediately, then re-sync to the
+    // authoritative (clamped) value.
     _focusNode.addListener(() {
-      if (!_focusNode.hasFocus) _syncFromProvider(ref.read(pscrRatioProvider));
+      if (!_focusNode.hasFocus) {
+        _flush();
+        _syncFromProvider(ref.read(pscrRatioProvider));
+      }
     });
   }
 
   @override
   void dispose() {
+    _flush();
+    _debounce?.cancel();
     _ratioController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -46,6 +58,24 @@ class _PscrSettingsSectionState extends ConsumerState<PscrSettingsSection> {
     if (_focusNode.hasFocus) return;
     final text = _format(ratio);
     if (_ratioController.text != text) _ratioController.text = text;
+  }
+
+  void _onChanged(String text) {
+    final parsed = double.tryParse(text);
+    if (parsed == null || parsed <= 0) return;
+    _pending = parsed;
+    // Debounce persistence: a burst of keystrokes collapses to a single,
+    // ordered save of the final value rather than overlapping writes.
+    _debounce?.cancel();
+    _debounce = Timer(_debounceDelay, _flush);
+  }
+
+  void _flush() {
+    _debounce?.cancel();
+    final value = _pending;
+    if (value == null) return;
+    _pending = null;
+    ref.read(settingsProvider.notifier).setPscrRatio(value);
   }
 
   @override
@@ -69,11 +99,7 @@ class _PscrSettingsSectionState extends ConsumerState<PscrSettingsSection> {
                 border: const OutlineInputBorder(),
               ),
               keyboardType: const TextInputType.numberWithOptions(),
-              onChanged: (text) {
-                final parsed = double.tryParse(text);
-                if (parsed == null || parsed <= 0) return;
-                ref.read(settingsProvider.notifier).setPscrRatio(parsed);
-              },
+              onChanged: _onChanged,
             ),
           ),
         ],
