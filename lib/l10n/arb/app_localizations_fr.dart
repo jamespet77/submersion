@@ -2211,17 +2211,35 @@ class AppLocalizationsFr extends AppLocalizations {
   String get courses_action_add => 'Ajouter un cours';
 
   @override
+  String get courses_action_addFromTemplate => 'Ajouter depuis un modèle';
+
+  @override
+  String get courses_action_addRequirement => 'Ajouter une exigence';
+
+  @override
   String get courses_action_create => 'Créer un cours';
 
   @override
+  String get courses_action_deleteRequirement => 'Supprimer l\'exigence';
+
+  @override
   String get courses_action_edit => 'Modifier le cours';
+
+  @override
+  String get courses_action_editRequirement => 'Modifier l\'exigence';
 
   @override
   String get courses_action_exportTrainingLog =>
       'Exporter le carnet de formation';
 
   @override
+  String get courses_action_linkDive => 'Associer';
+
+  @override
   String get courses_action_markCompleted => 'Marquer comme terminé';
+
+  @override
+  String get courses_action_unlinkDive => 'Dissocier la plongée';
 
   @override
   String get courses_action_moreOptions => 'Plus d\'options';
@@ -2402,6 +2420,35 @@ class AppLocalizationsFr extends AppLocalizations {
       'Appuyez pour associer à un cours de formation';
 
   @override
+  String courses_requirement_diveProgress(int count, int target) {
+    return '$count sur $target plongées';
+  }
+
+  @override
+  String get courses_requirement_field_name => 'Nom';
+
+  @override
+  String get courses_requirement_field_targetCount => 'Plongées requises';
+
+  @override
+  String get courses_requirement_kind_checklist => 'Élément à cocher';
+
+  @override
+  String get courses_requirement_kind_dive => 'Exigence de plongée';
+
+  @override
+  String get courses_requirement_suggestions => 'Plongées suggérées';
+
+  @override
+  String get courses_requirements_empty =>
+      'Suivez les plongées aventure, les prérequis et les éléments à cocher pour ce cours.';
+
+  @override
+  String courses_requirements_progress(int satisfied, int total) {
+    return '$satisfied sur $total terminés';
+  }
+
+  @override
   String get courses_section_details => 'Détails du cours';
 
   @override
@@ -2412,6 +2459,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get courses_section_notes => 'Notes';
+
+  @override
+  String get courses_section_requirements => 'Exigences';
 
   @override
   String get courses_section_trainingDives => 'Plongées de formation';
@@ -2435,6 +2485,11 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String courses_status_semanticLabel(Object status, Object duration) {
     return '$status, $duration';
+  }
+
+  @override
+  String courses_template_addsCount(int count) {
+    return 'Ajoute $count exigences';
   }
 
   @override
@@ -2471,6 +2526,9 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get courses_validation_nameRequired =>
       'Veuillez entrer un nom de cours';
+
+  @override
+  String get dashboard_activeCourses_title => 'Cours en cours';
 
   @override
   String get dashboard_activity_daySinceDiving =>
@@ -4401,10 +4459,44 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diveLog_edit_notesHint => 'Ajoute des notes sur cette plongee...';
 
   @override
+  String get diveLog_edit_overline_tanks => 'Blocs';
+
+  @override
+  String get diveLog_edit_profile_draw => 'Dessiner un profil';
+
+  @override
+  String get diveLog_edit_profile_none => 'Non enregistre';
+
+  @override
+  String diveLog_edit_profile_outliers(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count valeurs aberrantes potentielles detectees',
+      one: '1 valeur aberrante potentielle detectee',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String diveLog_edit_profile_points(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count points',
+      one: '1 point',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get diveLog_edit_row_addSite => 'Ajouter un site';
 
   @override
   String get diveLog_edit_row_diveCenter => 'Centre de plongée';
+
+  @override
+  String get diveLog_edit_row_diveProfile => 'Profil de plongee';
 
   @override
   String get diveLog_edit_row_entry => 'Mise à l\'eau';
@@ -9444,6 +9536,219 @@ class AppLocalizationsFr extends AppLocalizations {
   String get equipment_detail_serviceInfoTitle => 'Informations de revision';
 
   @override
+  String get equipment_serviceClocks_title => 'Compteurs d\'entretien';
+
+  @override
+  String get equipment_serviceClocks_addClock => 'Ajouter un compteur';
+
+  @override
+  String get equipment_serviceClocks_logService => 'Enregistrer un entretien';
+
+  @override
+  String get equipment_serviceClocks_edit => 'Modifier les intervalles';
+
+  @override
+  String get equipment_serviceClocks_pause => 'Suspendre';
+
+  @override
+  String get equipment_serviceClocks_resume => 'Reprendre';
+
+  @override
+  String get equipment_serviceClocks_remove => 'Supprimer';
+
+  @override
+  String get equipment_serviceClocks_paused => 'Suspendu';
+
+  @override
+  String get equipment_serviceClocks_empty => 'Aucun compteur d\'entretien';
+
+  @override
+  String equipment_serviceClocks_dueOn(String date) {
+    return 'Échéance le $date';
+  }
+
+  @override
+  String equipment_serviceClocks_overdueSince(String date) {
+    return 'En retard depuis le $date';
+  }
+
+  @override
+  String get equipment_serviceClocks_overdue => 'En retard';
+
+  @override
+  String equipment_serviceClocks_divesLeft(int remaining, int total) {
+    return '$remaining plongées restantes sur $total';
+  }
+
+  @override
+  String equipment_serviceClocks_hoursLeft(String remaining, String total) {
+    return '$remaining heures restantes sur $total';
+  }
+
+  @override
+  String get equipment_serviceClocks_manageKinds =>
+      'Gérer les types d\'entretien';
+
+  @override
+  String get equipment_serviceClocks_appliesToClock =>
+      'S\'applique au compteur';
+
+  @override
+  String get equipment_serviceClocks_noClockOption => 'Non lié à un compteur';
+
+  @override
+  String get equipment_scheduleDialog_title => 'Modifier le compteur';
+
+  @override
+  String get equipment_scheduleDialog_intervalDays => 'Intervalle (jours)';
+
+  @override
+  String get equipment_scheduleDialog_intervalDives => 'Intervalle (plongées)';
+
+  @override
+  String get equipment_scheduleDialog_intervalHours => 'Intervalle (heures)';
+
+  @override
+  String equipment_scheduleDialog_inheritHint(String value) {
+    return 'Par défaut : $value';
+  }
+
+  @override
+  String get equipment_scheduleDialog_anchorDate => 'Date de référence';
+
+  @override
+  String get equipment_scheduleDialog_anchorHint =>
+      'Utilisée lorsqu\'aucun entretien de ce type n\'a encore été enregistré';
+
+  @override
+  String get equipment_scheduleDialog_clearAnchor =>
+      'Effacer la date de référence';
+
+  @override
+  String get equipment_scheduleDialog_save => 'Enregistrer';
+
+  @override
+  String get equipment_scheduleDialog_cancel => 'Annuler';
+
+  @override
+  String get equipment_serviceKinds_title => 'Types d\'entretien';
+
+  @override
+  String get equipment_serviceKinds_builtIn => 'Intégrés';
+
+  @override
+  String get equipment_serviceKinds_custom => 'Personnalisés';
+
+  @override
+  String get equipment_serviceKinds_add => 'Ajouter un type d\'entretien';
+
+  @override
+  String get equipment_serviceKinds_editTitle =>
+      'Modifier le type d\'entretien';
+
+  @override
+  String get equipment_serviceKinds_nameLabel => 'Nom';
+
+  @override
+  String get equipment_serviceKinds_nameRequired => 'Un nom est requis';
+
+  @override
+  String get equipment_serviceKinds_appliesTo => 'S\'applique à';
+
+  @override
+  String get equipment_serviceKinds_autoAttach =>
+      'Associer automatiquement au nouvel équipement';
+
+  @override
+  String get equipment_serviceKinds_deleteConfirmTitle =>
+      'Supprimer ce type d\'entretien ?';
+
+  @override
+  String get equipment_serviceKinds_deleteConfirmBody =>
+      'Les compteurs utilisant ce type d\'entretien seront supprimés.';
+
+  @override
+  String get equipment_serviceKinds_delete => 'Supprimer';
+
+  @override
+  String get equipment_serviceKinds_cancel => 'Annuler';
+
+  @override
+  String get equipment_serviceKinds_save => 'Enregistrer';
+
+  @override
+  String get equipment_serviceKinds_emptyCustom =>
+      'Aucun type d\'entretien personnalisé pour le moment';
+
+  @override
+  String equipment_serviceKinds_everyDays(int days) {
+    return 'tous les $days jours';
+  }
+
+  @override
+  String equipment_serviceKinds_everyDives(int dives) {
+    return 'toutes les $dives plongées';
+  }
+
+  @override
+  String equipment_serviceKinds_everyHours(String hours) {
+    return 'toutes les $hours heures';
+  }
+
+  @override
+  String get dashboard_serviceDue_title => 'Entretien à prévoir';
+
+  @override
+  String dashboard_serviceDue_more(int count) {
+    return '+$count de plus';
+  }
+
+  @override
+  String dashboard_alerts_clockDue(String name, String kind) {
+    return '$name : $kind à échéance';
+  }
+
+  @override
+  String dashboard_alerts_clockOverdue(String name, String kind) {
+    return '$name : $kind en retard';
+  }
+
+  @override
+  String equipment_list_worstClock(String kind) {
+    return '$kind en retard';
+  }
+
+  @override
+  String trips_serviceAlert_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count équipements nécessitent un entretien avant ce voyage',
+      one: '1 équipement nécessite un entretien avant ce voyage',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String trips_serviceAlert_dueBefore(String kind, String date) {
+    return '$kind à échéance le $date';
+  }
+
+  @override
+  String trips_serviceAlert_overdue(String kind) {
+    return '$kind en retard';
+  }
+
+  @override
+  String get settings_notifications_tripLeadTitle =>
+      'Délai d\'alerte d\'entretien avant un voyage';
+
+  @override
+  String settings_notifications_tripLeadDays(int days) {
+    return '$days jours avant un voyage';
+  }
+
+  @override
   String get equipment_detail_serviceIntervalLabel => 'Intervalle de revision';
 
   @override
@@ -9745,6 +10050,17 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String equipment_list_tile_daysCount(Object days) {
     return '$days jours';
+  }
+
+  @override
+  String equipment_list_tile_serviceInDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Revision dans $days jours',
+      one: 'Revision dans 1 jour',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -10930,6 +11246,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get media_photoPicker_appBarTitle => 'Selectionner des photos';
 
   @override
+  String get media_photoPicker_tab_gallery => 'Galerie';
+
+  @override
+  String get media_photoPicker_tab_files => 'Fichiers';
+
+  @override
+  String get media_photoPicker_tab_url => 'URL';
+
+  @override
   String get media_photoPicker_clearSelectionButton => 'Effacer';
 
   @override
@@ -10997,6 +11322,43 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get media_photoPicker_thumbnailAlreadyLinkedLabel =>
       'Photo deja associee a cette plongee';
+
+  @override
+  String get media_perdixOverlay_labelCns => 'CNS';
+
+  @override
+  String get media_perdixOverlay_labelDepth => 'PROF';
+
+  @override
+  String get media_perdixOverlay_labelGas => 'GAS';
+
+  @override
+  String get media_perdixOverlay_labelMax => 'MAX';
+
+  @override
+  String get media_perdixOverlay_labelNdl => 'NDL';
+
+  @override
+  String get media_perdixOverlay_labelPpo2 => 'PPO2';
+
+  @override
+  String get media_perdixOverlay_labelStop => 'STOP';
+
+  @override
+  String get media_perdixOverlay_labelTank => 'TANK';
+
+  @override
+  String get media_perdixOverlay_labelTemp => 'TEMP';
+
+  @override
+  String get media_perdixOverlay_labelTime => 'TEMPS';
+
+  @override
+  String get media_perdixOverlay_labelTts => 'TTS';
+
+  @override
+  String get media_perdixOverlay_toggleTooltip =>
+      'Superposition ordinateur de plongée';
 
   @override
   String get media_photoViewer_cannotShare =>
@@ -11323,6 +11685,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Profondeur de bascule du setpoint';
 
   @override
+  String get plannerCanvas_pscr_ratio => 'Ratio pSCR';
+
+  @override
+  String get plannerCanvas_pscr_ratio_hint =>
+      'Plus grand = plus de gaz frais, chute d\'O₂ plus faible';
+
+  @override
   String plannerCanvas_chip_cns(String value) {
     return 'CNS $value%';
   }
@@ -11361,6 +11730,11 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get plannerCanvas_contingency_timeDelta => 'Minutes en plus';
+
+  @override
+  String plannerCanvas_chart_meanDepth(String depth) {
+    return 'moyenne $depth';
+  }
 
   @override
   String get plannerCanvas_contingency_title => 'Plans de secours';
@@ -11438,6 +11812,27 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get plannerCanvas_range_legend =>
       'Les cellules indiquent le temps de remontée ; rouge = non plongeable comme prévu';
+
+  @override
+  String get plannerCanvas_pane_collapse => 'Réduire le panneau';
+
+  @override
+  String get plannerCanvas_pane_expand => 'Développer le panneau';
+
+  @override
+  String get plannerCanvas_tab_setup => 'Réglages';
+
+  @override
+  String get plannerCanvas_o2Narcotic => 'Traiter l\'O₂ comme narcotique';
+
+  @override
+  String get plannerCanvas_rates_ascent => 'Vitesse de remontée';
+
+  @override
+  String get plannerCanvas_rates_descent => 'Vitesse de descente';
+
+  @override
+  String get plannerCanvas_rates_title => 'Vitesses';
 
   @override
   String get plannerCanvas_range_title => 'Table de variations';
@@ -12176,7 +12571,8 @@ class AppLocalizationsFr extends AppLocalizations {
   String get settings_backToSettings_tooltip => 'Retour aux reglages';
 
   @override
-  String get settings_cloudSync_appBar_title => 'Synchronisation cloud';
+  String get settings_cloudSync_appBar_title =>
+      'Synchronisation cloud de la base de donnees';
 
   @override
   String get settings_cloudSync_autoSync => 'Synchronisation automatique';
@@ -12645,7 +13041,8 @@ class AppLocalizationsFr extends AppLocalizations {
       'Creer une sauvegarde de vos donnees';
 
   @override
-  String get settings_data_cloudSync => 'Synchronisation cloud';
+  String get settings_data_cloudSync =>
+      'Synchronisation cloud de la base de donnees';
 
   @override
   String get settings_data_customFolder => 'Dossier personnalise';
@@ -12785,6 +13182,10 @@ class AppLocalizationsFr extends AppLocalizations {
       'Gradient Factors';
 
   @override
+  String get settings_decompression_header_oxygenToxicity =>
+      'Toxicité de l\'oxygène';
+
+  @override
   String settings_decompression_preset_selectLabel(Object presetName) {
     return 'Selectionner le niveau de conservatisme $presetName';
   }
@@ -12808,6 +13209,67 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get settings_decompression_endLimit_dialog_title => 'Limite END';
+
+  @override
+  String get settings_decompression_cnsMethodTitle => 'Calcul du CNS';
+
+  @override
+  String get settings_decompression_cnsMethodClassic =>
+      'Table NOAA, par paliers (classique)';
+
+  @override
+  String get settings_decompression_cnsMethodClassicDesc =>
+      'Calcule chaque plage de 0,1 bar à sa limite la plus stricte. Méthode d\'origine de Submersion.';
+
+  @override
+  String get settings_decompression_cnsMethodShearwater =>
+      'Interpolation linéaire (style Shearwater)';
+
+  @override
+  String get settings_decompression_cnsMethodShearwaterDesc =>
+      'Interpole entre les limites NOAA telles que documentées par Shearwater. Correspond à la plupart des ordinateurs de plongée.';
+
+  @override
+  String get settings_decompression_cnsMethodSubsurface =>
+      'Ajustement exponentiel (comme Subsurface)';
+
+  @override
+  String get settings_decompression_cnsMethodSubsurfaceDesc =>
+      'Ajustement de courbe lisse sur la table NOAA. Correspond au CNS calculé par Subsurface.';
+
+  @override
+  String get settings_decompression_cnsMethodAboutTitle =>
+      'À propos de ces méthodes';
+
+  @override
+  String get settings_decompression_cnsMethodAboutBody =>
+      'Les trois méthodes reposent sur les limites d\'exposition à l\'oxygène du NOAA Diving Manual (300 minutes à un ppO2 de 1,0 bar, 45 minutes à 1,6 bar). La table ne définit des limites que par pas de 0,1 bar : la méthode classique calcule tout ce qui se trouve dans une plage à la limite la plus stricte de celle-ci, ce qui surestime systématiquement l\'exposition entre les valeurs. Les ordinateurs de plongée Shearwater documentent une interpolation linéaire entre les limites NOAA, avec un taux fixe de 15 % par minute au-dessus de 1,65 bar. En 2019, Subsurface a remplacé sa recherche par table par un ajustement exponentiel lisse en deux segments sur les mêmes données NOAA (Robert C. Helling), qui s\'étend aussi naturellement au-delà de 1,6 bar. Entre les valeurs de la table, les deux méthodes lisses concordent à environ un point de CNS près ; la méthode classique affiche des valeurs plus élevées.';
+
+  @override
+  String get settings_decompression_cnsMethodDisclaimer =>
+      'Les noms font référence aux méthodes publiées des projets et fabricants respectifs ; aucune affiliation ni approbation n\'est sous-entendue. Les valeurs calculées peuvent différer des relevés réels de l\'ordinateur de plongée.';
+
+  @override
+  String get settings_decompression_cnsMethodSourcesTitle => 'Sources';
+
+  @override
+  String get settings_linkOpenFailed => 'Impossible d\'ouvrir le lien.';
+
+  @override
+  String get settings_decompression_cnsMethodSourceNoaa =>
+      'NOAA : Diving Program (éditeur du NOAA Diving Manual)';
+
+  @override
+  String get settings_decompression_cnsMethodSourceShearwater =>
+      'Shearwater : l\'horloge à oxygène CNS';
+
+  @override
+  String get settings_decompression_cnsMethodSourceTheoreticalDiver =>
+      'The Theoretical Diver : calcul de la toxicité CNS de l\'oxygène';
+
+  @override
+  String get settings_decompression_cnsMethodSourceSubsurface =>
+      'Subsurface : implémentation (divelist.cpp)';
 
   @override
   String get settings_existingDb_cancel => 'Annuler';
@@ -12997,7 +13459,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String settings_lightroom_clientId_help(String redirectUri) {
-    return 'Créez une intégration dans l\'Adobe Developer Console avec l\'API Lightroom Services et un type d\'identifiant compatible PKCE. Définissez l\'URI de redirection sur $redirectUri.';
+    return 'Créez une intégration dans l\'Adobe Developer Console avec l\'API Lightroom Services et un type d\'identifiant compatible PKCE. Saisissez ci-dessous l\'URI de redirection de votre identifiant — les identifiants Native App utilisent un schéma personnalisé — ou laissez le champ vide pour utiliser $redirectUri.';
   }
 
   @override
@@ -13008,7 +13470,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Secret client (facultatif)';
 
   @override
+  String get settings_lightroom_redirectUri_label =>
+      'URI de redirection (facultatif)';
+
+  @override
   String get settings_lightroom_connect => 'Connecter Lightroom';
+
+  @override
+  String get settings_lightroom_connectEmbedded => 'Se connecter avec Adobe';
+
+  @override
+  String get settings_lightroom_advancedByo =>
+      'Utiliser vos propres identifiants Adobe';
 
   @override
   String get settings_lightroom_connect_codeLabel => 'URL redirigée ou code';
