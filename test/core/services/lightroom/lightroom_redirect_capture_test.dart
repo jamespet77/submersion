@@ -38,6 +38,11 @@ void main() {
 
   test('capture forwards the authorize url and callback scheme to '
       'FlutterWebAuth2 and returns the captured redirect url', () async {
+    // Restore the real platform instance afterward so the fake never leaks
+    // into later tests sharing this isolate.
+    final previous = FlutterWebAuth2Platform.instance;
+    addTearDown(() => FlutterWebAuth2Platform.instance = previous);
+
     final fake = _FakeWebAuthPlatform('adobe+scheme://adobeid/cid?code=xyz');
     FlutterWebAuth2Platform.instance = fake;
 
