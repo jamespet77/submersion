@@ -140,10 +140,10 @@ void main() {
     // Exercises the overflow-menu scan actions and the Lightroom item, which
     // only shows when a Lightroom account is connected.
     testWidgets('overflow menu runs scan actions', (tester) async {
-      // The Lightroom menu item is gated behind kLightroomUiEnabled (default
+      // The Lightroom menu item is gated behind lightroomUiEnabled (default
       // false while pending Adobe review); enable it to verify the wiring.
-      kLightroomUiEnabled = true;
-      addTearDown(() => kLightroomUiEnabled = false);
+      lightroomUiEnabled = true;
+      addTearDown(() => lightroomUiEnabled = false);
       _setMobileTestSurfaceSize(tester);
       final story = buildTripStory(
         trip: testTrip,

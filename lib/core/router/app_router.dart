@@ -940,15 +940,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
-              // Lightroom settings route gated out pending Adobe review
-              // (kLightroomUiEnabled). Removing the route makes the page
-              // unreachable even via deep link while the entry point is hidden.
-              if (kLightroomUiEnabled)
-                GoRoute(
-                  path: 'lightroom',
-                  name: 'lightroom',
-                  builder: (context, state) => const LightroomSettingsPage(),
-                ),
+              // Lightroom settings page hidden pending Adobe review
+              // (lightroomUiEnabled). The route stays defined so any lingering
+              // navigation to it (a deep link, or PendingSetupService which
+              // computes '/settings/lightroom' for an on-device Lightroom
+              // account) degrades gracefully by redirecting to the media
+              // sources page instead of hitting an unknown-route error screen.
+              GoRoute(
+                path: 'lightroom',
+                name: 'lightroom',
+                redirect: (context, state) =>
+                    lightroomUiEnabled ? null : '/settings/media-sources',
+                builder: (context, state) => const LightroomSettingsPage(),
+              ),
               GoRoute(
                 path: 'photos-media',
                 name: 'photosMedia',

@@ -128,9 +128,9 @@ class MediaSourcesPage extends ConsumerWidget {
             ),
           ),
           // Lightroom entry point hidden pending Adobe review
-          // (kLightroomUiEnabled). Wraps the spacer too so no orphan gap
+          // (lightroomUiEnabled). Wraps the spacer too so no orphan gap
           // is left behind when hidden.
-          if (kLightroomUiEnabled) ...[
+          if (lightroomUiEnabled) ...[
             const SizedBox(height: 16),
             Card(
               child: ListTile(

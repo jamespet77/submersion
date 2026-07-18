@@ -25,11 +25,11 @@ void main() {
     prefs = await SharedPreferences.getInstance();
     // Enabled so the "Open in Lightroom" wiring can be verified; the flag
     // defaults to false while Lightroom is pending Adobe review.
-    kLightroomUiEnabled = true;
+    lightroomUiEnabled = true;
   });
 
   tearDown(() async {
-    kLightroomUiEnabled = false;
+    lightroomUiEnabled = false;
     await tearDownTestDatabase();
   });
 
@@ -94,11 +94,11 @@ void main() {
     expect(find.byTooltip('Open in Lightroom'), findsOneWidget);
   });
 
-  testWidgets('hides Open in Lightroom when kLightroomUiEnabled is false even '
+  testWidgets('hides Open in Lightroom when lightroomUiEnabled is false even '
       'for a connected-device connector item (pending Adobe review)', (
     tester,
   ) async {
-    kLightroomUiEnabled = false;
+    lightroomUiEnabled = false;
     await pump(tester, media: item(), withAccount: account);
     expect(find.byTooltip('Open in Lightroom'), findsNothing);
   });

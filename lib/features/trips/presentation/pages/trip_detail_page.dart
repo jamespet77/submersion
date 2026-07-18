@@ -406,10 +406,9 @@ class _TripDetailContent extends ConsumerWidget {
     // Read this during build, not inside itemBuilder: itemBuilder runs when the
     // menu opens (outside this consumer's build phase), where ref.watch would
     // register a dependency outside Riverpod's build lifecycle.
-    // Lightroom scan hidden pending Adobe review (kLightroomUiEnabled).
+    // Lightroom scan hidden pending Adobe review (lightroomUiEnabled).
     final hasLightroomAccount =
-        kLightroomUiEnabled &&
-        ref.watch(lightroomAccountProvider).value != null;
+        lightroomUiEnabled && ref.watch(lightroomAccountProvider).value != null;
     return PopupMenuButton<String>(
       tooltip: context.l10n.trips_detail_tooltip_moreOptions,
       onSelected: (value) async {

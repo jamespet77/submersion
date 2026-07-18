@@ -81,8 +81,8 @@ class TripPhotoSection extends ConsumerWidget {
                     onPressed: onScanPressed,
                   ),
                 // Lightroom scan hidden pending Adobe review
-                // (kLightroomUiEnabled).
-                if (kLightroomUiEnabled && onLightroomScanPressed != null)
+                // (lightroomUiEnabled).
+                if (lightroomUiEnabled && onLightroomScanPressed != null)
                   IconButton(
                     icon: Icon(
                       Icons.cloud_sync_outlined,

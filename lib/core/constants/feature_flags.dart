@@ -1,9 +1,13 @@
-/// Compile-time feature flags for gating in-progress or externally-blocked
-/// features out of the user-facing UI without deleting their implementation.
+/// Feature flags for gating in-progress or externally-blocked features out of
+/// the user-facing UI without deleting their implementation.
 ///
 /// These flags intentionally gate UI surfaces only. The backing services,
 /// providers, repositories, auth flows, and database code remain fully intact
 /// and functional so a feature can be restored by flipping a single flag.
+///
+/// Flags here are plain mutable top-level variables (not `const`) so that
+/// widget tests can toggle them; they are evaluated at runtime, and production
+/// code only ever reads them.
 library;
 
 /// Whether the Adobe Lightroom integration is surfaced in the UI.
@@ -28,4 +32,4 @@ library;
 /// route, and the per-dive / per-trip / photo-viewer scan and "Open in
 /// Lightroom" actions. If Adobe permanently rejects the integration, the
 /// Lightroom code and this flag can be deleted together in a follow-up cleanup.
-bool kLightroomUiEnabled = false;
+bool lightroomUiEnabled = false;

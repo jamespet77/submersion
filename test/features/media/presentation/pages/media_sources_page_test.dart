@@ -60,12 +60,12 @@ Widget _wrapWith(List<Object> overrides) => ProviderScope(
 );
 
 void main() {
-  // The Lightroom entry point is gated behind [kLightroomUiEnabled], which
+  // The Lightroom entry point is gated behind [lightroomUiEnabled], which
   // defaults to false while the integration is pending Adobe review. Enable it
   // for the surface tests that assert the Lightroom UI wires up correctly, and
   // reset after each test so the value does not leak.
-  setUp(() => kLightroomUiEnabled = true);
-  tearDown(() => kLightroomUiEnabled = false);
+  setUp(() => lightroomUiEnabled = true);
+  tearDown(() => lightroomUiEnabled = false);
 
   testWidgets('renders Photo library and Adobe Lightroom, without the '
       'hidden-picker-tabs toggle', (tester) async {
@@ -80,9 +80,9 @@ void main() {
     expect(find.byType(Switch), findsNothing);
   });
 
-  testWidgets('hides the Adobe Lightroom entry point when kLightroomUiEnabled '
+  testWidgets('hides the Adobe Lightroom entry point when lightroomUiEnabled '
       'is false (pending Adobe review)', (tester) async {
-    kLightroomUiEnabled = false;
+    lightroomUiEnabled = false;
     await tester.pumpWidget(_wrap());
     await tester.pumpAndSettle();
 

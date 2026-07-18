@@ -351,9 +351,9 @@ class _PhotoViewerPageState extends ConsumerState<PhotoViewerPage> {
   /// (the catalog id lives only on the connected device).
   String? _lightroomWebUrl(MediaItem item) {
     // Lightroom "Open in Lightroom" action hidden pending Adobe review
-    // (kLightroomUiEnabled). Returning null here suppresses both the toolbar
+    // (lightroomUiEnabled). Returning null here suppresses both the toolbar
     // button and the video-poster overlay, which are gated on this URL.
-    if (!kLightroomUiEnabled) return null;
+    if (!lightroomUiEnabled) return null;
     if (item.sourceType != MediaSourceType.serviceConnector ||
         item.remoteAssetId == null) {
       return null;

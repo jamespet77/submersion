@@ -12,10 +12,10 @@ void main() {
     await setUpTestDatabase();
     // Enabled so the scan-button wiring can be verified; the flag defaults to
     // false while Lightroom is pending Adobe review.
-    kLightroomUiEnabled = true;
+    lightroomUiEnabled = true;
   });
   tearDown(() async {
-    kLightroomUiEnabled = false;
+    lightroomUiEnabled = false;
     await tearDownTestDatabase();
   });
 
@@ -62,9 +62,9 @@ void main() {
     expect(find.byTooltip('Scan Lightroom'), findsNothing);
   });
 
-  testWidgets('hides the Lightroom scan button when kLightroomUiEnabled is '
+  testWidgets('hides the Lightroom scan button when lightroomUiEnabled is '
       'false even with a handler (pending Adobe review)', (tester) async {
-    kLightroomUiEnabled = false;
+    lightroomUiEnabled = false;
     await pump(tester, onLightroomScanPressed: () {});
     expect(find.byTooltip('Scan Lightroom'), findsNothing);
   });

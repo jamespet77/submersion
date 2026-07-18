@@ -307,8 +307,8 @@ class _DiveMediaSectionState extends ConsumerState<DiveMediaSection> {
                       onPressed: widget.onScanPressed,
                     ),
                   // Lightroom scan hidden pending Adobe review
-                  // (kLightroomUiEnabled).
-                  if (kLightroomUiEnabled &&
+                  // (lightroomUiEnabled).
+                  if (lightroomUiEnabled &&
                       ref.watch(lightroomAccountProvider).value != null)
                     IconButton(
                       icon: Icon(
@@ -407,8 +407,8 @@ class _DiveMediaSectionState extends ConsumerState<DiveMediaSection> {
               ),
             ),
             // Lightroom suggestions hidden pending Adobe review
-            // (kLightroomUiEnabled).
-            if (kLightroomUiEnabled)
+            // (lightroomUiEnabled).
+            if (lightroomUiEnabled)
               LightroomSuggestionsRow(diveId: widget.diveId),
           ],
         ),
