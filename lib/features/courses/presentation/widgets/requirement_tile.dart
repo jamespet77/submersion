@@ -27,8 +27,8 @@ class RequirementTile extends ConsumerWidget {
     if (requirement.kind == RequirementKind.checklist) {
       return CheckboxListTile(
         value: requirement.completedAt != null,
-        onChanged: (checked) {
-          ref
+        onChanged: (checked) async {
+          await ref
               .read(courseRequirementRepositoryProvider)
               .setChecklistComplete(requirement.id, checked ?? false);
         },
@@ -68,12 +68,12 @@ class RequirementMenuButton extends ConsumerWidget {
     final l10n = context.l10n;
     return PopupMenuButton<String>(
       iconSize: 18,
-      onSelected: (action) {
+      onSelected: (action) async {
         switch (action) {
           case 'edit':
-            _edit(context, ref);
+            await _edit(context, ref);
           case 'delete':
-            ref
+            await ref
                 .read(courseRequirementRepositoryProvider)
                 .deleteRequirement(requirement.id);
         }
@@ -140,8 +140,8 @@ class _DiveRequirementTile extends ConsumerWidget {
             trailing: IconButton(
               tooltip: context.l10n.courses_action_unlinkDive,
               icon: const Icon(Icons.link_off, size: 18),
-              onPressed: () {
-                ref
+              onPressed: () async {
+                await ref
                     .read(courseRequirementRepositoryProvider)
                     .unlinkDive(
                       requirementId: requirement.id,
@@ -168,8 +168,8 @@ class _DiveRequirementTile extends ConsumerWidget {
                     for (final dive in suggestions)
                       ActionChip(
                         label: Text(_diveLabel(dive)),
-                        onPressed: () {
-                          ref
+                        onPressed: () async {
+                          await ref
                               .read(courseRequirementRepositoryProvider)
                               .linkDive(
                                 requirementId: requirement.id,
