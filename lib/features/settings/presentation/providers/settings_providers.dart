@@ -1567,7 +1567,9 @@ final lastStopDepthProvider = Provider<double>((ref) {
   return ref.watch(settingsProvider.select((s) => s.lastStopDepth));
 });
 
-/// The diver's passive-SCR ratio (Subsurface `pscr_ratio`, default 100).
+/// The device-local passive-SCR ratio (Subsurface `pscr_ratio`, default 100).
+/// Persisted to SharedPreferences, not per-diver, so switching the active diver
+/// does not change it.
 final pscrRatioProvider = Provider<double>((ref) {
   return ref.watch(settingsProvider.select((s) => s.pscrRatio));
 });

@@ -51,4 +51,27 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(notifier.state.pscrRatio, 180.0);
   });
+
+  testWidgets('clearing the field before the debounce drops the pending edit', (
+    tester,
+  ) async {
+    final notifier = MockSettingsNotifier();
+    await tester.pumpWidget(
+      testApp(
+        overrides: [settingsProvider.overrideWith((ref) => notifier)],
+        child: const PscrSettingsSection(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Type a valid value, then clear the field before the debounce elapses.
+    await tester.enterText(find.byType(TextFormField), '180');
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.enterText(find.byType(TextFormField), '');
+
+    // The now-deleted 180 must not flush after the delay: invalid/empty input
+    // cancels the pending save (regression for the stale-flush bug).
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(notifier.state.pscrRatio, 100.0);
+  });
 }

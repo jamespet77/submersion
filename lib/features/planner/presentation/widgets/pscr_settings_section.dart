@@ -62,7 +62,14 @@ class _PscrSettingsSectionState extends ConsumerState<PscrSettingsSection> {
 
   void _onChanged(String text) {
     final parsed = double.tryParse(text);
-    if (parsed == null || parsed <= 0) return;
+    if (parsed == null || parsed <= 0) {
+      // Invalid/empty input: drop any pending valid value and cancel the
+      // debounce so an earlier edit can't flush after the user has cleared or
+      // invalidated the field. The field re-syncs to the saved value on blur.
+      _debounce?.cancel();
+      _pending = null;
+      return;
+    }
     _pending = parsed;
     // Debounce persistence: a burst of keystrokes collapses to a single,
     // ordered save of the final value rather than overlapping writes.
