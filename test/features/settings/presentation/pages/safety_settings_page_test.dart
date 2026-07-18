@@ -74,7 +74,9 @@ void main() {
       settingsProvider.overrideWith((ref) => MockSettingsNotifier()),
       // The sweep now scopes to the active diver; override the provider so it
       // does not build the real notifier (which hits SharedPreferences/DB).
-      currentDiverIdProvider.overrideWith((ref) => MockCurrentDiverIdNotifier()),
+      currentDiverIdProvider.overrideWith(
+        (ref) => MockCurrentDiverIdNotifier(),
+      ),
       ...extra,
     ],
     child: const MaterialApp(
