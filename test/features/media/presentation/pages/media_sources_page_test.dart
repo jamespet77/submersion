@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:submersion/core/constants/feature_flags.dart';
 import 'package:submersion/features/media/data/services/local_files_diagnostics_service.dart';
 import 'package:submersion/features/media/presentation/pages/media_sources_page.dart';
 import 'package:submersion/features/media/presentation/providers/media_resolver_providers.dart';
@@ -59,6 +60,13 @@ Widget _wrapWith(List<Object> overrides) => ProviderScope(
 );
 
 void main() {
+  // The Lightroom entry point is gated behind [kLightroomUiEnabled], which
+  // defaults to false while the integration is pending Adobe review. Enable it
+  // for the surface tests that assert the Lightroom UI wires up correctly, and
+  // reset after each test so the value does not leak.
+  setUp(() => kLightroomUiEnabled = true);
+  tearDown(() => kLightroomUiEnabled = false);
+
   testWidgets('renders Photo library and Adobe Lightroom, without the '
       'hidden-picker-tabs toggle', (tester) async {
     await tester.pumpWidget(_wrap());
@@ -70,6 +78,18 @@ void main() {
     // The debug toggle is retired; the picker always shows all tabs.
     expect(find.text('Show hidden picker tabs'), findsNothing);
     expect(find.byType(Switch), findsNothing);
+  });
+
+  testWidgets('hides the Adobe Lightroom entry point when kLightroomUiEnabled '
+      'is false (pending Adobe review)', (tester) async {
+    kLightroomUiEnabled = false;
+    await tester.pumpWidget(_wrap());
+    await tester.pumpAndSettle();
+
+    // Other sources remain; only the Lightroom card is gated out.
+    expect(find.text('Photo library'), findsOneWidget);
+    expect(find.text('Network sources'), findsOneWidget);
+    expect(find.text('Adobe Lightroom'), findsNothing);
   });
 
   testWidgets(

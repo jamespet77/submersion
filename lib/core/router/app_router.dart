@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:submersion/core/accessibility/app_shortcuts.dart';
+import 'package:submersion/core/constants/feature_flags.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -939,11 +940,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   ),
                 ],
               ),
-              GoRoute(
-                path: 'lightroom',
-                name: 'lightroom',
-                builder: (context, state) => const LightroomSettingsPage(),
-              ),
+              // Lightroom settings route gated out pending Adobe review
+              // (kLightroomUiEnabled). Removing the route makes the page
+              // unreachable even via deep link while the entry point is hidden.
+              if (kLightroomUiEnabled)
+                GoRoute(
+                  path: 'lightroom',
+                  name: 'lightroom',
+                  builder: (context, state) => const LightroomSettingsPage(),
+                ),
               GoRoute(
                 path: 'photos-media',
                 name: 'photosMedia',

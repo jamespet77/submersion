@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 
+import 'package:submersion/core/constants/feature_flags.dart';
 import 'package:submersion/core/providers/provider.dart';
 import 'package:submersion/core/services/lightroom/lightroom_api_client.dart';
 import 'package:submersion/core/utils/unit_formatter.dart';
@@ -349,6 +350,10 @@ class _PhotoViewerPageState extends ConsumerState<PhotoViewerPage> {
   /// item is not Lightroom-linked or this device has no connected account
   /// (the catalog id lives only on the connected device).
   String? _lightroomWebUrl(MediaItem item) {
+    // Lightroom "Open in Lightroom" action hidden pending Adobe review
+    // (kLightroomUiEnabled). Returning null here suppresses both the toolbar
+    // button and the video-poster overlay, which are gated on this URL.
+    if (!kLightroomUiEnabled) return null;
     if (item.sourceType != MediaSourceType.serviceConnector ||
         item.remoteAssetId == null) {
       return null;

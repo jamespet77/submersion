@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:submersion/core/constants/feature_flags.dart';
 import 'package:submersion/core/services/accounts/account_kind.dart';
 import 'package:submersion/core/services/accounts/connected_account.dart'
     as domain;
@@ -22,9 +23,13 @@ void main() {
     await setUpTestDatabase();
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
+    // Enabled so the "Open in Lightroom" wiring can be verified; the flag
+    // defaults to false while Lightroom is pending Adobe review.
+    kLightroomUiEnabled = true;
   });
 
   tearDown(() async {
+    kLightroomUiEnabled = false;
     await tearDownTestDatabase();
   });
 
@@ -87,6 +92,15 @@ void main() {
       'connected device', (tester) async {
     await pump(tester, media: item(), withAccount: account);
     expect(find.byTooltip('Open in Lightroom'), findsOneWidget);
+  });
+
+  testWidgets('hides Open in Lightroom when kLightroomUiEnabled is false even '
+      'for a connected-device connector item (pending Adobe review)', (
+    tester,
+  ) async {
+    kLightroomUiEnabled = false;
+    await pump(tester, media: item(), withAccount: account);
+    expect(find.byTooltip('Open in Lightroom'), findsNothing);
   });
 
   testWidgets('hides Open in Lightroom without a connected account', (

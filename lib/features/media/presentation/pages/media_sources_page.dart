@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:submersion/core/constants/feature_flags.dart';
 import 'package:submersion/features/media/presentation/providers/media_resolver_providers.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
 
@@ -126,16 +127,21 @@ class MediaSourcesPage extends ConsumerWidget {
                   context.push('/settings/media-sources/network-sources'),
             ),
           ),
-          const SizedBox(height: 16),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.cloud_sync_outlined),
-              title: Text(context.l10n.settings_lightroom_title),
-              subtitle: Text(context.l10n.settings_lightroom_subtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push('/settings/lightroom'),
+          // Lightroom entry point hidden pending Adobe review
+          // (kLightroomUiEnabled). Wraps the spacer too so no orphan gap
+          // is left behind when hidden.
+          if (kLightroomUiEnabled) ...[
+            const SizedBox(height: 16),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.cloud_sync_outlined),
+                title: Text(context.l10n.settings_lightroom_title),
+                subtitle: Text(context.l10n.settings_lightroom_subtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push('/settings/lightroom'),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );
