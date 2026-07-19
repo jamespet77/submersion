@@ -199,6 +199,9 @@ class BuoyancySection extends ConsumerWidget {
       'water' => l10n.tools_weight_waterTerm,
       'suit' => l10n.buoyancy_suitTerm,
       'lead' => l10n.buoyancy_leadTerm,
+      // Fallback for a tank with no preset/user name (see the assembler and
+      // plan provider). Reuses the existing translated tanks-section term.
+      'tank' => l10n.diveDetailSection_tanks_name,
       _ => raw,
     };
   }

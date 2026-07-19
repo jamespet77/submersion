@@ -71,7 +71,11 @@ final planBuoyancyTwinProvider = Provider<BuoyancyTwinOutcome?>((ref) {
     for (final t in state.tanks)
       TwinTankInput(
         id: t.id,
-        label: t.presetName ?? t.name ?? 'Tank',
+        // 'tank' is a stable key localized by the breakdown widget's
+        // _termLabel (like 'suit'/'lead'), not a display string -- a hardcoded
+        // 'Tank' would leak English on localized UIs. Real preset/user names
+        // pass through untranslated, as intended.
+        label: t.presetName ?? t.name ?? 'tank',
         presetName: t.presetName,
         volumeL: t.volume,
         workingPressureBar: t.workingPressure,

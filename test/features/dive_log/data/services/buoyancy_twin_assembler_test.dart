@@ -96,6 +96,33 @@ void main() {
       expect(input.staticTerms.any((t) => t.label == 'water'), isTrue);
     });
 
+    test('unnamed tank falls back to the localizable "tank" key', () {
+      // A tank with neither a preset nor a user name must not carry a
+      // hardcoded English 'Tank' label (which would leak into localized UIs);
+      // it uses the 'tank' key that the breakdown widget localizes.
+      final input = BuoyancyTwinAssembler.assemble(
+        dive: diveWith(
+          tanks: const [
+            DiveTank(
+              id: 't1',
+              volume: 11.0,
+              workingPressure: 207,
+              startPressure: 200,
+              endPressure: 50,
+              material: TankMaterial.aluminum,
+              gasMix: GasMix(o2: 21),
+            ),
+          ],
+          equipment: [wetsuit],
+        ),
+        tankPressures: const {},
+        model: emptyModel(),
+        bodyWeightKg: 75,
+      );
+
+      expect(input!.tanks.single.label, 'tank');
+    });
+
     test('returns null when there is nothing to model', () {
       final input = BuoyancyTwinAssembler.assemble(
         dive: diveWith(equipment: [mask]),

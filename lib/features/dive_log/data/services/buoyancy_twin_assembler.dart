@@ -56,7 +56,10 @@ class BuoyancyTwinAssembler {
       tanks.add(
         TwinTankInput(
           id: t.id,
-          label: t.presetName ?? t.name ?? 'Tank',
+          // 'tank' is a stable key the breakdown widget localizes via
+          // _termLabel; a hardcoded 'Tank' would leak English. Real
+          // preset/user names pass through untranslated, as intended.
+          label: t.presetName ?? t.name ?? 'tank',
           presetName: t.presetName,
           volumeL: t.volume,
           workingPressureBar: t.workingPressure,
