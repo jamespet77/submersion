@@ -3,12 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/database/database.dart';
 
 /// Minimal pre-no-fly shape: a diver_settings table with at least one column
-/// (so the PRAGMA-guarded ALTER fires). Stamped at v123 so the 123->124
-/// upgrade runs the no-fly migration block directly.
-NativeDatabase _dbAt123() {
+/// (so the PRAGMA-guarded ALTER fires). Stamped at v124 so the 124->125
+/// upgrade runs the no-fly migration block directly, without invoking the
+/// v124 equipment-attributes migration (which expects an equipment table).
+NativeDatabase _dbAt124() {
   return NativeDatabase.memory(
     setup: (rawDb) {
-      rawDb.execute('PRAGMA user_version = 123');
+      rawDb.execute('PRAGMA user_version = 124');
       rawDb.execute('''
         CREATE TABLE diver_settings (
           id TEXT NOT NULL PRIMARY KEY
@@ -20,8 +21,8 @@ NativeDatabase _dbAt123() {
 }
 
 void main() {
-  test('v124 adds no_fly_preset to diver_settings', () async {
-    final db = AppDatabase(_dbAt123());
+  test('v125 adds no_fly_preset to diver_settings', () async {
+    final db = AppDatabase(_dbAt124());
     addTearDown(() => db.close());
 
     final cols = await db
@@ -36,11 +37,11 @@ void main() {
     expect(rows.single.read<String>('no_fly_preset'), 'standard');
   });
 
-  test('v124 is the current schema version (exact-latest tripwire)', () {
+  test('v125 is the current schema version (exact-latest tripwire)', () {
     // Exact assertion: the newest migration owns the tripwire, so the next
     // schema bump must move it forward. Relax to greaterThanOrEqualTo and add
-    // a fresh exact test when a later migration lands on top of v124.
-    expect(AppDatabase.currentSchemaVersion, 124);
-    expect(AppDatabase.migrationVersions, contains(124));
+    // a fresh exact test when a later migration lands on top of v125.
+    expect(AppDatabase.currentSchemaVersion, 125);
+    expect(AppDatabase.migrationVersions, contains(125));
   });
 }
