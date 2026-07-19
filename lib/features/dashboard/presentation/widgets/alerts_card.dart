@@ -37,10 +37,12 @@ class _CompactAlertsBanner extends StatelessWidget {
     final noFly = alerts.noFlyStatus;
     // A cached status can expire while the dashboard stays mounted; only show
     // the countdown while it is still active, otherwise fall through to the
-    // next-priority alert.
-    if (noFly != null && alerts.hasActiveNoFly) {
+    // next-priority alert. Sample the clock once so the active check and the
+    // remaining-time label agree at the expiry boundary.
+    final now = DateTime.now().toUtc();
+    if (noFly != null && noFly.isActiveAt(now)) {
       return context.l10n.safetyHub_alert_noFly(
-        formatNoFlyRemaining(noFly.remaining(DateTime.now().toUtc())),
+        formatNoFlyRemaining(noFly.remaining(now)),
       );
     }
     if (alerts.insuranceExpired) {
