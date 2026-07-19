@@ -49,11 +49,11 @@ void main() {
 
   test('custom field colliding with a curated key is not dropped', () {
     final csv = CsvExportService().generateEquipmentCsvContent([
-      EquipmentItem(
+      const EquipmentItem(
         id: 'e1',
         name: 'Suit',
         type: EquipmentType.wetsuit,
-        attributes: const [
+        attributes: [
           // Curated size fills the dedicated Size column.
           EquipmentAttribute(
             id: 'attr_e1_size',
