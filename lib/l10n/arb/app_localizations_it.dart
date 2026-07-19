@@ -20884,9 +20884,6 @@ class AppLocalizationsIt extends AppLocalizations {
       'Intervalli indicativi dopo una singola immersione senza deco, immersioni ripetitive e immersioni con deco';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'No-fly: mancano $remaining';
   }
@@ -20921,16 +20918,6 @@ class AppLocalizationsIt extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'Linee guida DAN/UHMS dall\'ultima immersione. Non sostituisce il tempo no-fly del tuo computer subacqueo.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => 'Il sito è in quota';

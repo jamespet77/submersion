@@ -20502,9 +20502,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'فترات إرشادية بعد غطسة واحدة بلا توقفات، وغطسات متكررة، وغطسات بتخفيف الضغط';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'حظر الطيران: متبقٍ $remaining';
   }
@@ -20538,16 +20535,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'إرشادات DAN/UHMS منذ آخر غطسة. ليست بديلاً عن وقت حظر الطيران في حاسوب الغوص الخاص بك.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => 'موقع الغوص على ارتفاع';

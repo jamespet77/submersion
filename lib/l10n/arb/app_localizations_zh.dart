@@ -19826,9 +19826,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get safetySettings_noFlyPreset_subtitle => '单次免减压潜水、重复潜水和减压潜水后的指导间隔';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return '禁飞:剩余 $remaining';
   }
@@ -19862,16 +19859,6 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       '自最后一次潜水起的 DAN/UHMS 指导值。不能替代潜水电脑的禁飞时间。';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => '潜点位于高海拔';

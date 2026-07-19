@@ -20356,9 +20356,6 @@ class AppLocalizationsHe extends AppLocalizations {
       'מרווחים מנחים אחרי צלילה בודדת ללא דקו, צלילות חוזרות וצלילות דקומפרסיה';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'איסור טיסה: נותרו $remaining';
   }
@@ -20392,16 +20389,6 @@ class AppLocalizationsHe extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'הנחיות DAN/UHMS מאז הצלילה האחרונה. אינו תחליף לזמן איסור הטיסה של מחשב הצלילה שלך.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => 'אתר הצלילה נמצא בגובה';

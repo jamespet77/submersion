@@ -20956,9 +20956,6 @@ class AppLocalizationsFr extends AppLocalizations {
       'Intervalles indicatifs après une plongée unique sans déco, des plongées successives et des plongées avec déco';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'Interdiction de vol : $remaining restant';
   }
@@ -20993,16 +20990,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'Recommandations DAN/UHMS depuis votre dernière plongée. Ne remplace pas le temps d\'interdiction de vol de votre ordinateur de plongée.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => 'Le site est en altitude';

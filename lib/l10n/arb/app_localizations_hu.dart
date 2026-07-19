@@ -20818,9 +20818,6 @@ class AppLocalizationsHu extends AppLocalizations {
       'Irányadó időközök egyetlen nullidős merülés, ismétlő merülések és dekós merülések után';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'Repülési tilalom: $remaining van hátra';
   }
@@ -20855,16 +20852,6 @@ class AppLocalizationsHu extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'DAN/UHMS irányelvek az utolsó merüléstől számítva. Nem helyettesíti a búvárkomputer no-fly idejét.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title =>

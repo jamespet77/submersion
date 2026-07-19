@@ -34962,12 +34962,6 @@ abstract class AppLocalizations {
   /// **'Guideline intervals after a single no-deco dive, repetitive dives, and deco dives'**
   String get safetySettings_noFlyPreset_subtitle;
 
-  /// No description provided for @safetyHub_title.
-  ///
-  /// In en, this message translates to:
-  /// **'Safety'**
-  String get safetyHub_title;
-
   /// No description provided for @safetyHub_noFly_active_title.
   ///
   /// In en, this message translates to:
@@ -35015,24 +35009,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'DAN/UHMS guideline intervals from your last dive. Not a substitute for your dive computer\'s no-fly time.'**
   String get safetyHub_noFly_disclaimer;
-
-  /// No description provided for @safetyHub_surfaceIntervalLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Surface interval tool'**
-  String get safetyHub_surfaceIntervalLink;
-
-  /// No description provided for @safetyHub_surfaceIntervalLink_subtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Educational tissue desaturation model'**
-  String get safetyHub_surfaceIntervalLink_subtitle;
-
-  /// No description provided for @safetyHub_settingsLink.
-  ///
-  /// In en, this message translates to:
-  /// **'Safety settings'**
-  String get safetyHub_settingsLink;
 
   /// No description provided for @diveLog_detail_altitudeMismatch_title.
   ///

@@ -20719,9 +20719,6 @@ class AppLocalizationsNl extends AppLocalizations {
       'Richttijden na een enkele duik zonder deco, herhalingsduiken en decoduiken';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'Vliegverbod: nog $remaining';
   }
@@ -20755,16 +20752,6 @@ class AppLocalizationsNl extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'DAN/UHMS-richtlijnen vanaf je laatste duik. Geen vervanging voor de no-fly-tijd van je duikcomputer.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => 'Duikstek ligt op hoogte';

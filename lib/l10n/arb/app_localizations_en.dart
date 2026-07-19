@@ -20531,9 +20531,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Guideline intervals after a single no-deco dive, repetitive dives, and deco dives';
 
   @override
-  String get safetyHub_title => 'Safety';
-
-  @override
   String safetyHub_noFly_active_title(String remaining) {
     return 'No-fly: $remaining remaining';
   }
@@ -20567,16 +20564,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get safetyHub_noFly_disclaimer =>
       'DAN/UHMS guideline intervals from your last dive. Not a substitute for your dive computer\'s no-fly time.';
-
-  @override
-  String get safetyHub_surfaceIntervalLink => 'Surface interval tool';
-
-  @override
-  String get safetyHub_surfaceIntervalLink_subtitle =>
-      'Educational tissue desaturation model';
-
-  @override
-  String get safetyHub_settingsLink => 'Safety settings';
 
   @override
   String get diveLog_detail_altitudeMismatch_title => 'Site is at altitude';
