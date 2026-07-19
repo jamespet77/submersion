@@ -232,9 +232,7 @@ class _ChamberTile extends ConsumerWidget {
         subtitle: Text(subtitle),
         trailing: PopupMenuButton<String>(
           onSelected: (value) async {
-            if (value == 'call') {
-              await onCall(chamber.phone);
-            } else if (value == 'hide') {
+            if (value == 'hide') {
               // Capture the messenger before the await; hiding a bundled
               // chamber is otherwise irreversible from this screen, so offer
               // an immediate undo.
@@ -258,7 +256,6 @@ class _ChamberTile extends ConsumerWidget {
             }
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'call', child: Icon(Icons.phone)),
             if (chamber.isBuiltIn)
               PopupMenuItem(
                 value: 'hide',
