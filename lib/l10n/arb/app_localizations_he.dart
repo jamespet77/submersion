@@ -2205,6 +2205,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get preDive_runner_undo => 'אפס לממתין';
 
   @override
+  String get preDive_runner_serviceOverdue => 'פג תוקף הטיפול';
+
+  @override
   String get preDive_runner_addNote => 'הוסף הערה';
 
   @override

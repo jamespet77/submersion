@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/features/pre_dive/domain/entities/pre_dive_checklist_template.dart';
 import 'package:submersion/features/pre_dive/domain/entities/pre_dive_session.dart';
@@ -46,6 +47,7 @@ void main() {
   }) async {
     await tester.pumpWidget(
       testApp(
+        locale: const Locale('en'),
         overrides: [
           preDiveActiveSessionProvider.overrideWith((ref) async => active),
           preDiveSessionsProvider.overrideWith((ref) async => sessions),

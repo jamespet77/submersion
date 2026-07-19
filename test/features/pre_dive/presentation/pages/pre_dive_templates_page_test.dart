@@ -29,6 +29,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       testApp(
+        locale: const Locale('en'),
         overrides: [
           preDiveTemplatesProvider.overrideWith((ref) async => templates),
         ],

@@ -63,6 +63,7 @@ void main() {
     });
     await tester.pumpWidget(
       testApp(
+        locale: const Locale('en'),
         overrides: [
           preDiveTemplateRepositoryProvider.overrideWithValue(fakeRepo),
           preDiveTemplatesProvider.overrideWith(

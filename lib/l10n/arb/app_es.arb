@@ -770,6 +770,7 @@
   "preDive_runner_skip": "Omitir",
   "preDive_runner_flag": "Marcar",
   "preDive_runner_undo": "Restablecer a pendiente",
+  "preDive_runner_serviceOverdue": "Mantenimiento vencido",
   "preDive_runner_addNote": "Agregar nota",
   "preDive_runner_enterValue": "Introducir valor",
   "preDive_runner_flaggedBadge": "{count} marcados",

@@ -2232,6 +2232,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get preDive_runner_undo => 'Reset to pending';
 
   @override
+  String get preDive_runner_serviceOverdue => 'Service overdue';
+
+  @override
   String get preDive_runner_addNote => 'Add note';
 
   @override

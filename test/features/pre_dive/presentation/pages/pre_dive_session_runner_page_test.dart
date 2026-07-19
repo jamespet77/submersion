@@ -68,6 +68,7 @@ void main() {
     final repo = _FakeSessionRepo();
     await tester.pumpWidget(
       testApp(
+        locale: const Locale('en'),
         overrides: [
           preDiveSessionRepositoryProvider.overrideWithValue(repo),
           preDiveSessionProvider('s1').overrideWith((ref) async => s),

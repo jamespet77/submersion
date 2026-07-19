@@ -2278,6 +2278,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get preDive_runner_undo => 'Restablecer a pendiente';
 
   @override
+  String get preDive_runner_serviceOverdue => 'Mantenimiento vencido';
+
+  @override
   String get preDive_runner_addNote => 'Agregar nota';
 
   @override

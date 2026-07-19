@@ -67,6 +67,9 @@ class _StartSessionSheetState extends ConsumerState<_StartSessionSheet> {
   Future<void> _begin() async {
     final template = _template;
     if (template == null || _starting) return;
+    // Capture the localized note before any await, so the composer never
+    // touches BuildContext across an async gap.
+    final serviceOverdueNote = context.l10n.preDive_runner_serviceOverdue;
     setState(() => _starting = true);
     try {
       final diverId = await ref.read(validatedCurrentDiverIdProvider.future);
@@ -83,6 +86,7 @@ class _StartSessionSheetState extends ConsumerState<_StartSessionSheet> {
         equipmentSet: chosenSet,
         equipmentItems: gear,
         now: DateTime.now(),
+        serviceOverdueNote: serviceOverdueNote,
       );
       final session = await ref
           .read(preDiveSessionRepositoryProvider)

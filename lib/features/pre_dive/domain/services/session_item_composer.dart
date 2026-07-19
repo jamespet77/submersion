@@ -14,6 +14,10 @@ class SessionItemComposer {
     EquipmentSet? equipmentSet,
     List<EquipmentItem> equipmentItems = const [],
     required DateTime now,
+    // Localized note stamped on gear rows whose service is overdue. Passed in
+    // from the UI call site so this domain service stays pure and free of
+    // hard-coded English (the note is displayed verbatim in the runner).
+    required String serviceOverdueNote,
   }) {
     final byId = {for (final g in equipmentItems) g.id: g};
     final sorted = [...templateItems]
@@ -41,7 +45,7 @@ class SessionItemComposer {
               state: overdue
                   ? PreDiveItemState.flagged
                   : PreDiveItemState.pending,
-              note: overdue ? 'Service overdue' : '',
+              note: overdue ? serviceOverdueNote : '',
               completedAt: overdue ? now : null,
               equipmentId: gear.id,
               createdAt: now,

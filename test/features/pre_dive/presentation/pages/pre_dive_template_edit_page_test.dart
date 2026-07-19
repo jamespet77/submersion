@@ -6,7 +6,12 @@ import '../../../../helpers/test_app.dart';
 
 void main() {
   Future<void> pumpNewTemplatePage(WidgetTester tester) async {
-    await tester.pumpWidget(testApp(child: const PreDiveTemplateEditPage()));
+    await tester.pumpWidget(
+      testApp(
+        locale: const Locale('en'),
+        child: const PreDiveTemplateEditPage(),
+      ),
+    );
     await tester.pumpAndSettle();
   }
 

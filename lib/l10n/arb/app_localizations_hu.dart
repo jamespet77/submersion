@@ -2263,6 +2263,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get preDive_runner_undo => 'Visszaállítás függő állapotba';
 
   @override
+  String get preDive_runner_serviceOverdue => 'A karbantartás lejárt';
+
+  @override
   String get preDive_runner_addNote => 'Megjegyzés hozzáadása';
 
   @override

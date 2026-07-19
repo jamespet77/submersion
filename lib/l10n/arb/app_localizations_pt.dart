@@ -2273,6 +2273,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get preDive_runner_undo => 'Redefinir como pendente';
 
   @override
+  String get preDive_runner_serviceOverdue => 'Manutenção vencida';
+
+  @override
   String get preDive_runner_addNote => 'Adicionar nota';
 
   @override

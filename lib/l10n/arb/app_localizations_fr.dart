@@ -2282,6 +2282,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get preDive_runner_undo => 'Remettre en attente';
 
   @override
+  String get preDive_runner_serviceOverdue => 'Entretien en retard';
+
+  @override
   String get preDive_runner_addNote => 'Ajouter une note';
 
   @override

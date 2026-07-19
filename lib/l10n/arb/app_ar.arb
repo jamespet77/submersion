@@ -770,6 +770,7 @@
   "preDive_runner_skip": "تخطي",
   "preDive_runner_flag": "وضع علامة",
   "preDive_runner_undo": "إعادة إلى قيد الانتظار",
+  "preDive_runner_serviceOverdue": "الصيانة متأخرة",
   "preDive_runner_addNote": "إضافة ملاحظة",
   "preDive_runner_enterValue": "أدخل القيمة",
   "preDive_runner_flaggedBadge": "{count} معلَّمة",

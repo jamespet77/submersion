@@ -31,6 +31,7 @@ void main() {
   }) async {
     await tester.pumpWidget(
       testApp(
+        locale: const Locale('en'),
         overrides: [
           preDiveSessionForDiveProvider(
             'd1',

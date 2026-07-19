@@ -3870,6 +3870,12 @@ abstract class AppLocalizations {
   /// **'Reset to pending'**
   String get preDive_runner_undo;
 
+  /// No description provided for @preDive_runner_serviceOverdue.
+  ///
+  /// In en, this message translates to:
+  /// **'Service overdue'**
+  String get preDive_runner_serviceOverdue;
+
   /// No description provided for @preDive_runner_addNote.
   ///
   /// In en, this message translates to:

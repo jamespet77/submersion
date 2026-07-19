@@ -44,6 +44,7 @@ void main() {
         tItem(1, type: PreDiveItemType.value),
       ],
       now: now,
+      serviceOverdueNote: 'Service overdue',
     );
     expect(out, hasLength(2));
     expect(out[0].id, isEmpty);
@@ -75,6 +76,7 @@ void main() {
       equipmentSet: set,
       equipmentItems: [gear('g1', 'Regulator'), gear('g2', 'BCD')],
       now: now,
+      serviceOverdueNote: 'Service overdue',
     );
     expect(out.map((i) => i.title).toList(), ['T0', 'Regulator', 'BCD', 'T2']);
     final reg = out[1];
@@ -99,9 +101,10 @@ void main() {
       equipmentSet: set,
       equipmentItems: [gear('g1', 'Old Reg', overdue: true)],
       now: now,
+      serviceOverdueNote: 'Service overdue',
     );
     expect(out.single.state, PreDiveItemState.flagged);
-    expect(out.single.note, isNotEmpty);
+    expect(out.single.note, 'Service overdue');
     expect(out.single.completedAt, isNotNull);
   });
 
@@ -109,6 +112,7 @@ void main() {
     final out = SessionItemComposer.compose(
       templateItems: [tItem(0, type: PreDiveItemType.equipmentSet)],
       now: now,
+      serviceOverdueNote: 'Service overdue',
     );
     expect(out.single.itemType, PreDiveItemType.check);
     expect(out.single.equipmentId, isNull);
