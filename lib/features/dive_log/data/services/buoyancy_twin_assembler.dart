@@ -200,6 +200,20 @@ class BuoyancyTwinAssembler {
     return (type == null || _isDroppable(type)) ? legacy : 0.0;
   }
 
+  /// Sum of droppable lead from a planned per-[WeightType] breakdown (keys are
+  /// [WeightType.name], as produced by the Dive Planner). Belt and integrated
+  /// are ditchable; every other placement (and any unrecognized key) is fixed.
+  static double droppableLeadFromPlacement(Map<String, double> placement) {
+    var sum = 0.0;
+    for (final entry in placement.entries) {
+      final type = WeightType.values
+          .where((t) => t.name == entry.key)
+          .firstOrNull;
+      if (type != null && _isDroppable(type)) sum += entry.value;
+    }
+    return sum;
+  }
+
   static TwinSuitInput _suitInput(
     EquipmentItem? suitItem,
     FittedWeightModel m,

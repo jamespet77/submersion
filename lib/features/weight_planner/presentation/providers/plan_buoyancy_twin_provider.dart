@@ -101,13 +101,21 @@ final planBuoyancyTwinProvider = Provider<BuoyancyTwinOutcome?>((ref) {
     bodyWeightKg: latestWeight?.weightKg,
   );
 
+  // Some planned lead may be non-ditchable (e.g. backplate/trim). When the
+  // planner carries a per-WeightType placement, count only the droppable
+  // (belt + integrated) portion; otherwise assume all lead is droppable.
+  final placement = state.plannedWeightPlacement;
+  final droppableLead = placement == null
+      ? lead
+      : BuoyancyTwinAssembler.droppableLeadFromPlacement(placement);
+
   final input = TwinInput(
     profile: synthesizePlanProfile(state.segments),
     tanks: tanks,
     suit: rig.suit,
     staticTerms: rig.staticTerms,
     leadKg: lead,
-    droppableLeadKg: lead,
+    droppableLeadKg: droppableLead,
     environment: DiveEnvironment.forConditions(
       altitudeMeters: state.altitude,
       waterType:

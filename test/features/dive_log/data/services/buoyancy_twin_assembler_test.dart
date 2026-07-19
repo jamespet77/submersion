@@ -210,4 +210,24 @@ void main() {
       expect(BuoyancyTwinAssembler.droppableLeadKg(dive), closeTo(5.0, 1e-9));
     });
   });
+
+  group('BuoyancyTwinAssembler.droppableLeadFromPlacement', () {
+    test('counts only belt and integrated placements', () {
+      final droppable = BuoyancyTwinAssembler.droppableLeadFromPlacement({
+        WeightType.belt.name: 4.0,
+        WeightType.integrated.name: 2.0,
+        WeightType.backplate.name: 3.0,
+        WeightType.trimWeights.name: 1.0,
+      });
+      expect(droppable, closeTo(6.0, 1e-9)); // belt + integrated only
+    });
+
+    test('ignores unrecognized placement keys', () {
+      final droppable = BuoyancyTwinAssembler.droppableLeadFromPlacement({
+        WeightType.belt.name: 5.0,
+        'nonsense': 10.0,
+      });
+      expect(droppable, closeTo(5.0, 1e-9));
+    });
+  });
 }
