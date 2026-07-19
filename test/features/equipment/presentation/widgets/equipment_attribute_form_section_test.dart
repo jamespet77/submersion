@@ -112,6 +112,10 @@ void main() {
     expect(emitted?.key, 'buoyancy_kg');
     expect(emitted?.valueNum, closeTo(-2.5, 0.001));
 
+    // A comma decimal separator (non-dot locales) parses the same as a dot.
+    await tester.enterText(buoyancy, '7,5');
+    expect(emitted?.valueNum, closeTo(7.5, 0.001));
+
     // Emptying the field is the only thing that clears it.
     await tester.enterText(buoyancy, '');
     expect(cleared, contains('buoyancy_kg'));

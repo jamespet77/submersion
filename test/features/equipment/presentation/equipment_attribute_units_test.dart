@@ -185,6 +185,22 @@ void main() {
       expect(formatAttributeValue(attr(num: 800), def, units, l10n), '800');
     });
 
+    test('formatAttributeNumberForEditing trims converted precision', () {
+      final def = EquipmentAttributeCatalog.defFor(
+        EquipmentAttrKeys.buoyancyKg,
+      );
+      // 2.5 kg -> pounds is a long decimal; the editable value must stay
+      // readable (at most one decimal place, no leaked precision).
+      final text = formatAttributeNumberForEditing(
+        def!.dimension,
+        imperial,
+        2.5,
+      );
+      expect(text, matches(r'^\d+(\.\d)?$'));
+      // A whole-number display drops the decimal entirely.
+      expect(formatAttributeNumberForEditing(def.dimension, units, 3.0), '3');
+    });
+
     test('choice kind resolves the localized option label', () {
       final def = EquipmentAttributeCatalog.defFor('suit_style');
       expect(formatAttributeValue(attr(), def, units, l10n), '');
@@ -194,7 +210,7 @@ void main() {
       );
     });
 
-    test('flag kind maps 1/0 to the yes/no labels', () {
+    test('flag kind maps 1/0 to the yes/no labels, empty when unset', () {
       final def = EquipmentAttributeCatalog.defFor('cold_water_rated');
       expect(
         formatAttributeValue(attr(num: 1), def, units, l10n),
@@ -204,6 +220,8 @@ void main() {
         formatAttributeValue(attr(num: 0), def, units, l10n),
         l10n.attr_flagNo,
       );
+      // Unset renders empty rather than an explicit "No".
+      expect(formatAttributeValue(attr(), def, units, l10n), '');
     });
 
     test('date kind formats the stored epoch millis, empty when unset', () {

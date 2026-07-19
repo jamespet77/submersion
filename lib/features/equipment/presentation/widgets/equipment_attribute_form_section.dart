@@ -99,11 +99,11 @@ class EquipmentAttributeFormSection extends StatelessWidget {
           key: fieldKey,
           initialValue: current?.valueNum == null
               ? ''
-              : attributeDisplayFromMetric(
+              : formatAttributeNumberForEditing(
                   def.dimension,
                   units,
                   current!.valueNum!,
-                ).toString(),
+                ),
           decoration: InputDecoration(
             labelText: symbol.isEmpty ? label : '$label ($symbol)',
           ),
@@ -117,7 +117,9 @@ class EquipmentAttributeFormSection extends StatelessWidget {
               onCleared(def.key);
               return;
             }
-            final parsed = double.tryParse(trimmed);
+            // Tolerate a comma decimal separator (many locales' numeric
+            // keyboards produce "7,5"), like the suit-thickness filter bounds.
+            final parsed = double.tryParse(trimmed.replaceAll(',', '.'));
             if (parsed != null) {
               onChanged(
                 _base(def.key).copyWith(
