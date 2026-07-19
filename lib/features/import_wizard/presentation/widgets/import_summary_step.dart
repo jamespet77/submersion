@@ -203,7 +203,7 @@ class _SuccessView extends StatelessWidget {
                       ref
                           .watch(
                             importedDivesOpenFindingsCountProvider(
-                              importedDiveIds,
+                              importedDivesFindingsKey(importedDiveIds),
                             ),
                           )
                           .value ??

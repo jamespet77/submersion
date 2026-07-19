@@ -32,18 +32,26 @@ final diveOpenFindingsCountProvider = StreamProvider.autoDispose
           .watchOpenCountForDive(diveId),
     );
 
+/// Canonical family key for [importedDivesOpenFindingsCountProvider]: dive ids
+/// sorted and comma-joined. A `List` key uses identity equality, so equal id
+/// sets across rebuilds would spin up duplicate providers/subscriptions and
+/// miss cache hits; a value-type string key collapses them to one instance.
+/// Dive ids are UUIDs, so a comma is a safe delimiter.
+String importedDivesFindingsKey(Iterable<String> diveIds) =>
+    (diveIds.toList()..sort()).join(',');
+
 /// Open-finding count over an import's dive set (for the import summary line).
-/// List-keyed families need a stable key; callers pass a fixed list instance.
+/// Keyed by [importedDivesFindingsKey] so equal id sets share one provider.
 final importedDivesOpenFindingsCountProvider = StreamProvider.autoDispose
-    .family<int, List<String>>((ref, diveIds) {
+    .family<int, String>((ref, key) {
+      final ids = key.isEmpty ? const <String>{} : key.split(',').toSet();
       final repo = ref.watch(qualityFindingsRepositoryProvider);
       return repo.watchFindings().map(
         (all) => all
             .where(
               (f) =>
                   f.status == QualityStatus.open &&
-                  (diveIds.contains(f.diveId) ||
-                      diveIds.contains(f.relatedDiveId)),
+                  (ids.contains(f.diveId) || ids.contains(f.relatedDiveId)),
             )
             .length,
       );

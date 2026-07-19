@@ -89,6 +89,67 @@ void main() {
       final ctx = makeContext(dive: ccrDive, samples: flatProfile(depth: 35));
       expect(det.detect(ctx), isEmpty);
     });
+
+    test('OC dive with no tanks yields nothing', () {
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: const []),
+        samples: flatProfile(depth: 35),
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
+
+    test('EAN50 held at 24 m sustains ppO2 1.7 -> warning', () {
+      // ppO2 = 0.50 * (24/10 + 1) = 1.7: above warn (1.6), below critical (1.8).
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: [tank(o2: 50)]),
+        samples: flatProfile(depth: 24),
+      );
+      final out = det.detect(ctx);
+      expect(out, hasLength(1));
+      expect(out.single.severity, QualitySeverity.warning);
+      expect(out.single.params['peakPpO2'], closeTo(1.7, 1e-9));
+    });
+
+    test('a brief ppO2 excursion under the sustain window is not flagged', () {
+      // One 1.7-bar sample, then shallow: the run is 0 s < ppO2SustainSeconds.
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: [tank(o2: 50)]),
+        samples: const [
+          QualitySample(t: 0, depth: 24),
+          QualitySample(t: 10, depth: 5),
+          QualitySample(t: 20, depth: 5),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
+
+    test('hypoxic 10/90 breathed at the surface is flagged', () {
+      // fo2 0.10 < hypoxicFo2, depth < 3 m sustained for the whole profile.
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: [tank(o2: 10)]),
+        samples: flatProfile(depth: 2),
+      );
+      final out = det.detect(ctx);
+      expect(out, hasLength(1));
+      expect(out.single.params['o2Percent'], closeTo(10.0, 1e-9));
+    });
+
+    test('switch-MOD guards skip null depth, unknown tank and zero-O2', () {
+      final tanks = [
+        tank(id: 'back', o2: 21),
+        tank(id: 'zero', o2: 0, order: 1),
+      ];
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: tanks),
+        samples: const [], // no ppO2/hypoxic runs
+        gasSwitches: [
+          sw(id: 'g-nodepth', t: 600, tankId: 'back', depth: null),
+          sw(id: 'g-unknown', t: 700, tankId: 'ghost', depth: 30),
+          sw(id: 'g-zero', t: 800, tankId: 'zero', depth: 30),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
   });
 
   group('TankAssignmentDetector', () {

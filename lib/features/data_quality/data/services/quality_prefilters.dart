@@ -40,6 +40,11 @@ class QualityPrefilters {
       'SELECT d.id AS id FROM dives d WHERE '
       '(SELECT COUNT(*) FROM dive_data_sources s WHERE s.dive_id = d.id) >= 2',
     );
+    // `IS` (not `=`) is intentional: unassigned dives (diver_id NULL) all
+    // belong to the implicit default diver -- the same scope `getAllDives(null)`
+    // and `DiveMatcher` use -- so both-NULL must match. `IS` still keeps a
+    // null-diver dive from pairing across into a specific diver's dives. Do not
+    // switch to `=`: it drops the common single-diver (all-NULL) library.
     final pairWindow = await ids(
       'SELECT DISTINCT a.id AS id FROM dives a JOIN dives b ON a.id != b.id '
       'AND a.diver_id IS b.diver_id '

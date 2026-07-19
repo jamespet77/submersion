@@ -185,10 +185,19 @@ class TankPressureRepository {
               .get())
         r.id,
     ];
-    await (_db.update(_db.tankPressureProfiles)..where((t) => t.id.isIn(aIds)))
-        .write(TankPressureProfilesCompanion(tankId: Value(tankIdB)));
-    await (_db.update(_db.tankPressureProfiles)..where((t) => t.id.isIn(bIds)))
-        .write(TankPressureProfilesCompanion(tankId: Value(tankIdA)));
+    // Snapshot the row ids first so the two writes can't feed into each other.
+    // Guard empty lists: `isIn([])` would emit an `IN ()` clause and touch no
+    // rows anyway, so skip the write when a tank has no pressure series.
+    if (aIds.isNotEmpty) {
+      await (_db.update(_db.tankPressureProfiles)
+            ..where((t) => t.id.isIn(aIds)))
+          .write(TankPressureProfilesCompanion(tankId: Value(tankIdB)));
+    }
+    if (bIds.isNotEmpty) {
+      await (_db.update(_db.tankPressureProfiles)
+            ..where((t) => t.id.isIn(bIds)))
+          .write(TankPressureProfilesCompanion(tankId: Value(tankIdA)));
+    }
     await _touchDive(diveId, now);
   }
 

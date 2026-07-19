@@ -27,6 +27,10 @@ QualityUnitFormatters buildQualityUnitFormatters(WidgetRef ref) {
     depth: (m) => units.formatDepth(m),
     pressure: (bar) => units.formatPressure(bar),
     temperature: (c) => units.formatTemperature(c),
+    // Surface air consumption is a volume rate; honor the volume unit
+    // preference (L/min vs cuft/min) rather than the pressure-based SAC mode.
+    sac: (lpm) =>
+        '${units.convertVolume(lpm).toStringAsFixed(1)} ${units.volumeSymbol}/min',
   );
 }
 

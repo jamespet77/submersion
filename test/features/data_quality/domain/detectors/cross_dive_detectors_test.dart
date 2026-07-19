@@ -210,5 +210,148 @@ void main() {
       );
       expect(det.detect(ctx), isEmpty);
     });
+
+    test('null serial -> no finding', () {
+      final ctx = makeContext(
+        dive: makeTestDive(id: 'dA', entry: entry, serial: null),
+        neighbors: [
+          QualityNeighbor(
+            id: 'dB',
+            entryTime: entry.add(const Duration(minutes: 5)),
+            computerSerial: null,
+            firstSampleDepth: 6.0,
+          ),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
+
+    test('null runtime -> no finding', () {
+      final ctx = makeContext(
+        dive: makeTestDive(
+          id: 'dA',
+          entry: entry,
+          serial: 'SN-1',
+          runtime: null,
+        ),
+        neighbors: [
+          QualityNeighbor(
+            id: 'dB',
+            entryTime: entry.add(const Duration(minutes: 5)),
+            computerSerial: 'SN-1',
+            firstSampleDepth: 6.0,
+          ),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
+
+    test(
+      'this dive resuming after an earlier same-serial neighbor -> finding',
+      () {
+        // Neighbor 09:15-09:55 ends deep (8 m); this dive starts 10:00, gap 5 min.
+        final samples = [
+          const QualitySample(t: 0, depth: 6.0),
+          const QualitySample(t: 2400, depth: 3.0),
+        ];
+        final ctx = makeContext(
+          dive: makeTestDive(id: 'dB', entry: entry, serial: 'SN-1'),
+          samples: samples,
+          neighbors: [
+            QualityNeighbor(
+              id: 'dA',
+              entryTime: entry.subtract(const Duration(minutes: 45)),
+              exitTime: entry.subtract(const Duration(minutes: 5)),
+              computerSerial: 'SN-1',
+              lastSampleDepth: 8.0,
+            ),
+          ],
+        );
+        final out = det.detect(ctx);
+        expect(out, hasLength(1));
+        expect(out.single.params['gapSeconds'], 300);
+        expect(out.single.params['earlierEndsDeep'], true);
+      },
+    );
+
+    test(
+      'later dive whose earlier neighbor has no exit time -> no finding',
+      () {
+        final ctx = makeContext(
+          dive: makeTestDive(id: 'dB', entry: entry, serial: 'SN-1'),
+          neighbors: [
+            QualityNeighbor(
+              id: 'dA',
+              entryTime: entry.subtract(const Duration(minutes: 45)),
+              computerSerial: 'SN-1',
+              lastSampleDepth: 8.0,
+            ),
+          ],
+        );
+        expect(det.detect(ctx), isEmpty);
+      },
+    );
+
+    test(
+      'shallow 2 min gap with no deep ends still reads as a continuation',
+      () {
+        // Both ends shallow, but the 2 min gap is within splitShallowGap.
+        final samples = [
+          const QualitySample(t: 0, depth: 0),
+          const QualitySample(t: 2400, depth: 0.5),
+        ];
+        final ctx = makeContext(
+          dive: makeTestDive(id: 'dA', entry: entry, serial: 'SN-1'),
+          samples: samples,
+          neighbors: [
+            QualityNeighbor(
+              id: 'dB',
+              entryTime: entry.add(const Duration(minutes: 42)),
+              computerSerial: 'SN-1',
+              firstSampleDepth: 0.5,
+            ),
+          ],
+        );
+        final out = det.detect(ctx);
+        expect(out, hasLength(1));
+        expect(out.single.params['earlierEndsDeep'], false);
+        expect(out.single.params['laterStartsDeep'], false);
+      },
+    );
+
+    test('5 min gap with shallow ends is not a continuation', () {
+      final samples = [
+        const QualitySample(t: 0, depth: 0),
+        const QualitySample(t: 2400, depth: 0.5),
+      ];
+      final ctx = makeContext(
+        dive: makeTestDive(id: 'dA', entry: entry, serial: 'SN-1'),
+        samples: samples,
+        neighbors: [
+          QualityNeighbor(
+            id: 'dB',
+            entryTime: entry.add(const Duration(minutes: 45)),
+            computerSerial: 'SN-1',
+            firstSampleDepth: 0.5,
+          ),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
+
+    test('overlapping neighbor (negative gap) is skipped', () {
+      final ctx = makeContext(
+        dive: makeTestDive(id: 'dA', entry: entry, serial: 'SN-1'),
+        neighbors: [
+          QualityNeighbor(
+            id: 'dB',
+            entryTime: entry.add(const Duration(minutes: 20)),
+            computerSerial: 'SN-1',
+            firstSampleDepth: 6.0,
+          ),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
   });
 }

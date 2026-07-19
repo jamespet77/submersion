@@ -86,4 +86,205 @@ void main() {
       );
     }
   });
+
+  group('clock_offset sub-branches', () {
+    test('overlap offers navigation to both dives', () {
+      final actions = repairOptionsFor(
+        f(
+          detectorId: 'clock_offset',
+          params: {'overlapMinutes': 10},
+          relatedDiveId: 'd2',
+        ),
+      );
+      expect(actions.whereType<GoToDiveRepair>().map((a) => a.diveId), [
+        'd1',
+        'd2',
+      ]);
+    });
+
+    test('overlap without related dive navigates to only the dive', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'clock_offset', params: {'overlapMinutes': 10}),
+      );
+      expect(actions.whereType<GoToDiveRepair>(), hasLength(1));
+    });
+
+    test('ancient/future entry offers a zero-offset import-wide shift', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'clock_offset', params: {'entryTimeMs': 0}),
+      );
+      final shift = actions.whereType<TimeShiftRepair>().single;
+      expect(shift.suggestedOffset, Duration.zero);
+      expect(shift.offerImportWide, isTrue);
+    });
+
+    test('bare clock_offset falls back to navigation', () {
+      final actions = repairOptionsFor(f(detectorId: 'clock_offset'));
+      expect(actions.single, isA<GoToDiveRepair>());
+    });
+  });
+
+  group('pair repairs without a related dive', () {
+    test('duplicate offers no consolidate when related is null', () {
+      final actions = repairOptionsFor(f(detectorId: 'duplicate'));
+      expect(actions.whereType<ConsolidateDuplicateRepair>(), isEmpty);
+      expect(actions.whereType<GoToDiveRepair>(), hasLength(1));
+    });
+
+    test('split offers no combine when related is null', () {
+      final actions = repairOptionsFor(f(detectorId: 'split_pair'));
+      expect(actions.whereType<CombineSplitRepair>(), isEmpty);
+    });
+  });
+
+  test('sample_gap offers fill-gaps then navigation', () {
+    final actions = repairOptionsFor(f(detectorId: 'sample_gap'));
+    expect(actions.first, isA<FillGapsRepair>());
+    expect(actions.whereType<GoToDiveRepair>(), hasLength(1));
+  });
+
+  test('depth spike (non-mismatch) offers despike', () {
+    final actions = repairOptionsFor(
+      f(detectorId: 'depth_spike', params: {'depth': 60.0}),
+    );
+    expect(actions.first, isA<DespikeRepair>());
+  });
+
+  test('impossible_rate offers despike', () {
+    final actions = repairOptionsFor(f(detectorId: 'impossible_rate'));
+    expect(actions.first, isA<DespikeRepair>());
+  });
+
+  group('temp_anomaly branches', () {
+    test('fahrenheit-as-kelvin offers a kelvin-scale conversion', () {
+      final actions = repairOptionsFor(
+        f(
+          detectorId: 'temp_anomaly',
+          params: {'fahrenheitAsKelvinSuspected': true},
+        ),
+      );
+      final c = actions.whereType<ConvertTemperatureRepair>().single;
+      expect(c.kelvinScale, isTrue);
+    });
+
+    test('delta jump offers temperature smoothing', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'temp_anomaly', params: {'deltaC': 9.0}),
+      );
+      expect(actions.first, isA<SmoothTemperatureRepair>());
+    });
+
+    test('scalar water temp gets navigation only', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'temp_anomaly', params: {'waterTempC': 60.0}),
+      );
+      expect(actions.single, isA<GoToDiveRepair>());
+    });
+
+    test('range anomaly offers a non-kelvin conversion', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'temp_anomaly', params: {'minTempC': 1.0}),
+      );
+      final c = actions.whereType<ConvertTemperatureRepair>().single;
+      expect(c.kelvinScale, isFalse);
+    });
+  });
+
+  group('pressure_anomaly branches', () {
+    test('swap offers a start/end-exchanged record repair', () {
+      final actions = repairOptionsFor(
+        f(
+          detectorId: 'pressure_anomaly',
+          params: {'tankId': 't1', 'startBar': 50.0, 'endBar': 200.0},
+        ),
+      );
+      final r = actions.whereType<SwapTankRecordPressuresRepair>().single;
+      expect(r.startBar, 200.0); // exchanged
+      expect(r.endBar, 50.0);
+    });
+
+    test('endpoint mismatch offers set-from-series with the endpoint', () {
+      final actions = repairOptionsFor(
+        f(
+          detectorId: 'pressure_anomaly',
+          params: {
+            'tankId': 't1',
+            'recordBar': 210.0,
+            'seriesBar': 190.0,
+            'endpoint': 'end',
+          },
+        ),
+      );
+      final r = actions.whereType<SetTankRecordFromSeriesRepair>().single;
+      expect(r.seriesBar, 190.0);
+      expect(r.endpoint, 'end');
+    });
+
+    test('endpoint mismatch defaults endpoint to start', () {
+      final actions = repairOptionsFor(
+        f(
+          detectorId: 'pressure_anomaly',
+          params: {'tankId': 't1', 'recordBar': 210.0, 'seriesBar': 190.0},
+        ),
+      );
+      expect(
+        actions.whereType<SetTankRecordFromSeriesRepair>().single.endpoint,
+        'start',
+      );
+    });
+
+    test('rise (no tankId) gets navigation only', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'pressure_anomaly', params: {'riseBar': 15.0}),
+      );
+      expect(actions.single, isA<GoToDiveRepair>());
+    });
+  });
+
+  group('tank_assignment branches', () {
+    test('twin tanks offer swap and reassign', () {
+      final actions = repairOptionsFor(
+        f(
+          detectorId: 'tank_assignment',
+          params: {'tankIdA': 'a', 'tankIdB': 'b'},
+        ),
+      );
+      expect(actions.whereType<SwapPressureSeriesRepair>(), hasLength(1));
+      expect(actions.whereType<ReassignPressureSeriesRepair>(), hasLength(1));
+    });
+
+    test('single-tank drop offers reassign then navigation', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'tank_assignment', params: {'tankId': 't1'}),
+      );
+      expect(actions.first, isA<ReassignPressureSeriesRepair>());
+      expect(actions.whereType<GoToDiveRepair>(), hasLength(1));
+    });
+
+    test('tank_assignment without ids gets navigation only', () {
+      final actions = repairOptionsFor(f(detectorId: 'tank_assignment'));
+      expect(actions.single, isA<GoToDiveRepair>());
+    });
+  });
+
+  group('source_conflict branches', () {
+    test('with a source id offers set-primary, split, and compare', () {
+      final actions = repairOptionsFor(
+        f(detectorId: 'source_conflict', params: {'sourceId': 's1'}),
+      );
+      expect(actions.whereType<SetPrimarySourceRepair>(), hasLength(1));
+      expect(actions.whereType<SplitSourceRepair>(), hasLength(1));
+      expect(actions.whereType<CompareSourcesRepair>(), hasLength(1));
+    });
+
+    test('without a source id gets navigation only', () {
+      final actions = repairOptionsFor(f(detectorId: 'source_conflict'));
+      expect(actions.single, isA<GoToDiveRepair>());
+    });
+  });
+
+  test('unknown detector id falls back to navigation', () {
+    final actions = repairOptionsFor(f(detectorId: 'mystery'));
+    expect(actions.single, isA<GoToDiveRepair>());
+  });
 }

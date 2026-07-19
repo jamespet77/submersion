@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:submersion/core/database/database.dart';
 import 'package:submersion/features/data_quality/data/services/quality_context_builder.dart';
@@ -64,6 +65,75 @@ void main() {
     expect(ctx.primarySamples.map((s) => s.t), [0, 10]); // sorted, bad dropped
     expect(ctx.dive.id, 'd1');
   });
+
+  test(
+    'builds tank pressures (dropping non-finite) and gas switches',
+    () async {
+      final entry = DateTime.utc(2026, 7, 1, 10);
+      // tank_pressure_profiles.tankId and gas_switches.tankId both FK to
+      // dive_tanks, so the referenced tanks must exist first.
+      await diveRepo.createDive(
+        domain.Dive(
+          id: 'dP',
+          dateTime: entry,
+          entryTime: entry,
+          tanks: const [
+            domain.DiveTank(
+              id: 'tankA',
+              gasMix: domain.GasMix(o2: 21),
+              order: 0,
+            ),
+            domain.DiveTank(
+              id: 'tankB',
+              gasMix: domain.GasMix(o2: 50),
+              order: 1,
+            ),
+          ],
+        ),
+      );
+      await db
+          .into(db.tankPressureProfiles)
+          .insert(
+            TankPressureProfilesCompanion.insert(
+              id: 'tp1',
+              diveId: 'dP',
+              tankId: 'tankA',
+              timestamp: 0,
+              pressure: 200.0,
+            ),
+          );
+      // Non-finite pressure must be dropped by the sanitizing loop.
+      await db
+          .into(db.tankPressureProfiles)
+          .insert(
+            TankPressureProfilesCompanion.insert(
+              id: 'tp2',
+              diveId: 'dP',
+              tankId: 'tankA',
+              timestamp: 10,
+              pressure: double.infinity,
+            ),
+          );
+      await db
+          .into(db.gasSwitches)
+          .insert(
+            GasSwitchesCompanion.insert(
+              id: 'gs1',
+              diveId: 'dP',
+              timestamp: 300,
+              tankId: 'tankB',
+              depth: const Value(20.0),
+              createdAt: DateTime.utc(2026).millisecondsSinceEpoch,
+            ),
+          );
+
+      final ctx = (await builder.buildAll(['dP'])).single;
+      expect(ctx.pressuresByTankId['tankA'], hasLength(1)); // infinite dropped
+      expect(ctx.pressuresByTankId['tankA']!.single.bar, 200.0);
+      expect(ctx.gasSwitches.single.tankId, 'tankB');
+      expect(ctx.gasSwitches.single.timestamp, 300);
+    },
+  );
 
   test(
     'finds same-diver neighbors within the window with edge depths',

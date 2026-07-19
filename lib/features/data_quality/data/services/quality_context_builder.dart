@@ -93,6 +93,12 @@ class QualityContextBuilder {
     final entry = dive.effectiveEntryTime;
     final exit = entry.add(dive.effectiveRuntime ?? Duration.zero);
     final windowMs = QualityThresholds.neighborWindow.inMilliseconds;
+    // `IS` (not `=`) is intentional: an unassigned dive (diver_id NULL) belongs
+    // to the implicit default diver, and `getAllDives(null)`/`DiveMatcher` treat
+    // all such dives as one scope. `IS` matches same-id and both-NULL, but never
+    // NULL-vs-non-NULL, so a null-diver dive is never paired across into a
+    // specific diver's dives. Do not "fix" this to `=`: that drops neighbor
+    // detection for the common single-diver (all-NULL) library.
     final rows = await _db
         .customSelect(
           'SELECT id, entry_time, dive_date_time, exit_time, max_depth, '
@@ -123,9 +129,11 @@ class QualityContextBuilder {
       out.add(
         QualityNeighbor(
           id: id,
-          entryTime: DateTime.fromMillisecondsSinceEpoch(entryMs),
+          // Dive times are stored/read as UTC epoch millis; reconstruct with
+          // isUtc so calendar fields and wall-clock dates match the dive repo.
+          entryTime: DateTime.fromMillisecondsSinceEpoch(entryMs, isUtc: true),
           exitTime: exitMs != null
-              ? DateTime.fromMillisecondsSinceEpoch(exitMs)
+              ? DateTime.fromMillisecondsSinceEpoch(exitMs, isUtc: true)
               : null,
           maxDepth: row.read<double?>('max_depth'),
           durationSeconds: durationSeconds,

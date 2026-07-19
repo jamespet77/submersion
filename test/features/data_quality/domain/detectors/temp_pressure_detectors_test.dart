@@ -4,6 +4,7 @@ import 'package:submersion/features/data_quality/domain/detectors/temp_anomaly_d
 import 'package:submersion/features/data_quality/domain/entities/dive_quality_context.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart'
     as domain;
+import 'package:submersion/features/dive_log/domain/entities/gas_switch.dart';
 
 import '../../helpers/quality_test_helpers.dart';
 
@@ -143,6 +144,61 @@ void main() {
       final out = det.detect(ctx);
       expect(out, hasLength(1));
       expect(out.single.params['surfaceLpm'], closeTo(180.0, 1e-6));
+    });
+
+    test('series end 20 bar away from recorded end flags mismatch', () {
+      final series = [
+        const QualityPressureSample(t: 0, bar: 200),
+        const QualityPressureSample(t: 2400, bar: 80),
+      ];
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: [tank(start: 200, end: 60)]),
+        pressures: {'t1': series},
+      );
+      final out = det.detect(ctx);
+      final endMismatch = out.singleWhere((f) => f.params['endpoint'] == 'end');
+      expect(endMismatch.params['recordBar'], 60);
+      expect(endMismatch.params['seriesBar'], 80);
+    });
+
+    test('a mid-dive rise coincident with a gas switch is suppressed', () {
+      final series = [
+        const QualityPressureSample(t: 0, bar: 200),
+        const QualityPressureSample(t: 600, bar: 180),
+        const QualityPressureSample(t: 660, bar: 190), // 10 bar rise
+        const QualityPressureSample(t: 2400, bar: 175),
+      ];
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: [tank(start: 200, end: 175)]),
+        pressures: {'t1': series},
+        gasSwitches: [
+          GasSwitch(
+            id: 'g1',
+            diveId: 'd1',
+            timestamp: 630, // within switchProximitySeconds of the rise
+            tankId: 't1',
+            depth: 20,
+            createdAt: DateTime.utc(2026, 7, 1),
+          ),
+        ],
+      );
+      expect(det.detect(ctx), isEmpty);
+    });
+
+    test('implausible consumption flags SAC using mean sample depth', () {
+      // avgDepth is null so the detector falls back to the mean of the samples.
+      final fast = [
+        const QualityPressureSample(t: 0, bar: 200),
+        const QualityPressureSample(t: 300, bar: 50),
+      ];
+      final ctx = makeContext(
+        dive: makeTestDive(tanks: [tank(end: 50)]),
+        samples: flatProfile(depth: 10, durationSeconds: 300),
+        pressures: {'t1': fast},
+      );
+      final out = det.detect(ctx);
+      final sac = out.singleWhere((f) => f.params.containsKey('surfaceLpm'));
+      expect(sac.params['surfaceLpm'] as double, greaterThan(100.0));
     });
   });
 }

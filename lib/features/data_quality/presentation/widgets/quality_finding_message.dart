@@ -6,10 +6,15 @@ class QualityUnitFormatters {
     required this.depth,
     required this.pressure,
     required this.temperature,
+    required this.sac,
   });
   final String Function(double meters) depth;
   final String Function(double bar) pressure;
   final String Function(double celsius) temperature;
+
+  /// Formats a surface air consumption rate given in L/min into the diver's
+  /// preferred volume unit (L/min vs cuft/min), including the unit suffix.
+  final String Function(double litersPerMin) sac;
 }
 
 class QualityFindingMessage {
@@ -55,7 +60,12 @@ QualityFindingMessage buildFindingMessage(
       } else if (p.containsKey('overlapMinutes')) {
         detail = l10n.dataQuality_msg_clock_overlap(i('overlapMinutes'));
       } else {
-        final date = DateTime.fromMillisecondsSinceEpoch(i('entryTimeMs'));
+        // Stored as UTC epoch millis; reconstruct with isUtc so the displayed
+        // year/date and the ancient-vs-future split don't drift by timezone.
+        final date = DateTime.fromMillisecondsSinceEpoch(
+          i('entryTimeMs'),
+          isUtc: true,
+        );
         detail = date.year < 1950
             ? l10n.dataQuality_msg_clock_ancient('$date')
             : l10n.dataQuality_msg_clock_future('$date');
@@ -122,7 +132,7 @@ QualityFindingMessage buildFindingMessage(
       } else if (p.containsKey('riseBar')) {
         detail = l10n.dataQuality_msg_pressureRise(fmt.pressure(d('riseBar')));
       } else {
-        detail = l10n.dataQuality_msg_sac('${d('surfaceLpm').round()} L/min');
+        detail = l10n.dataQuality_msg_sac(fmt.sac(d('surfaceLpm')));
       }
     case 'gas_mod':
       if (p.containsKey('peakPpO2')) {
