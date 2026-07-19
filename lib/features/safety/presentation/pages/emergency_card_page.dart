@@ -33,7 +33,15 @@ class EmergencyCardPage extends ConsumerWidget {
       ),
       body: dataAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              l10n.common_error_tryAgain,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
         data: (data) => _CardBody(data: data),
       ),
     );
@@ -98,7 +106,7 @@ class _CardBody extends ConsumerWidget {
         ),
         const SizedBox(height: 24),
         if (diver != null) ...[
-          _DiverSection(diver: diver),
+          _DiverSection(diver: diver, onCall: _call),
         ] else
           Card(
             child: Padding(
@@ -124,14 +132,17 @@ class _CardBody extends ConsumerWidget {
 
   Future<void> _call(String number) async {
     final uri = Uri(scheme: 'tel', path: number.replaceAll(' ', ''));
-    await launchUrl(uri);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 }
 
 class _DiverSection extends StatelessWidget {
   final Diver diver;
+  final Future<void> Function(String) onCall;
 
-  const _DiverSection({required this.diver});
+  const _DiverSection({required this.diver, required this.onCall});
 
   @override
   Widget build(BuildContext context) {
@@ -150,9 +161,7 @@ class _DiverSection extends StatelessWidget {
         ),
         subtitle: Text(c.phone ?? ''),
         trailing: const Icon(Icons.phone, size: 20),
-        onTap: c.phone != null
-            ? () => launchUrl(Uri(scheme: 'tel', path: c.phone!))
-            : null,
+        onTap: c.phone != null ? () => onCall(c.phone!) : null,
       );
     }
 

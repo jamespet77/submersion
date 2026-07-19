@@ -11465,6 +11465,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get addChamber_save => '保存';
 
   @override
+  String get addChamber_nameRequired => '名称为必填项';
+
+  @override
+  String get addChamber_countryRequired => '国家代码为必填项';
+
+  @override
+  String get addChamber_phoneRequired => '电话号码为必填项';
+
+  @override
   String get safetyHub_emergencyCardLink => '紧急卡片';
 
   @override

@@ -12077,6 +12077,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addChamber_save => 'Enregistrer';
 
   @override
+  String get addChamber_nameRequired => 'Le nom est requis';
+
+  @override
+  String get addChamber_countryRequired => 'Le code pays est requis';
+
+  @override
+  String get addChamber_phoneRequired => 'Le numéro de téléphone est requis';
+
+  @override
   String get safetyHub_emergencyCardLink => 'Carte d\'urgence';
 
   @override

@@ -5856,6 +5856,9 @@
   "addChamber_phone": "Telefon",
   "addChamber_notes": "Jegyzetek",
   "addChamber_save": "Mentés",
+  "addChamber_nameRequired": "A név megadása kötelező",
+  "addChamber_countryRequired": "Az országkód megadása kötelező",
+  "addChamber_phoneRequired": "A telefonszám megadása kötelező",
   "safetyHub_emergencyCardLink": "Vészhelyzeti kártya",
   "safetyHub_emergencyCardLink_subtitle": "Offline: segélyvonal, segélyhívó, kamrák, egészségügyi és biztosítási adataid",
   "dashboard_quickAction_emergency": "Vészhelyzeti kártya"

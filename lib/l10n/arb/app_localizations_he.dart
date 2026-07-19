@@ -11732,6 +11732,15 @@ class AppLocalizationsHe extends AppLocalizations {
   String get addChamber_save => 'שמור';
 
   @override
+  String get addChamber_nameRequired => 'שם נדרש';
+
+  @override
+  String get addChamber_countryRequired => 'קוד מדינה נדרש';
+
+  @override
+  String get addChamber_phoneRequired => 'מספר טלפון נדרש';
+
+  @override
   String get safetyHub_emergencyCardLink => 'כרטיס חירום';
 
   @override

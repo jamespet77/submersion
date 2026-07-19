@@ -12026,6 +12026,15 @@ class AppLocalizationsEs extends AppLocalizations {
   String get addChamber_save => 'Guardar';
 
   @override
+  String get addChamber_nameRequired => 'El nombre es obligatorio';
+
+  @override
+  String get addChamber_countryRequired => 'El código de país es obligatorio';
+
+  @override
+  String get addChamber_phoneRequired => 'El número de teléfono es obligatorio';
+
+  @override
   String get safetyHub_emergencyCardLink => 'Tarjeta de emergencia';
 
   @override

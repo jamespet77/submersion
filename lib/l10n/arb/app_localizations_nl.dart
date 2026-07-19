@@ -11947,6 +11947,15 @@ class AppLocalizationsNl extends AppLocalizations {
   String get addChamber_save => 'Opslaan';
 
   @override
+  String get addChamber_nameRequired => 'Naam is verplicht';
+
+  @override
+  String get addChamber_countryRequired => 'Landcode is verplicht';
+
+  @override
+  String get addChamber_phoneRequired => 'Telefoonnummer is verplicht';
+
+  @override
   String get safetyHub_emergencyCardLink => 'Noodkaart';
 
   @override

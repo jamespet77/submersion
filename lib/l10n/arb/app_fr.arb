@@ -5856,6 +5856,9 @@
   "addChamber_phone": "Téléphone",
   "addChamber_notes": "Notes",
   "addChamber_save": "Enregistrer",
+  "addChamber_nameRequired": "Le nom est requis",
+  "addChamber_countryRequired": "Le code pays est requis",
+  "addChamber_phoneRequired": "Le numéro de téléphone est requis",
   "safetyHub_emergencyCardLink": "Carte d'urgence",
   "safetyHub_emergencyCardLink_subtitle": "Hors ligne : ligne directe, secours, caissons, vos données médicales et d'assurance",
   "dashboard_quickAction_emergency": "Carte d'urgence"

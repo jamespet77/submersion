@@ -5856,6 +5856,9 @@
   "addChamber_phone": "电话",
   "addChamber_notes": "备注",
   "addChamber_save": "保存",
+  "addChamber_nameRequired": "名称为必填项",
+  "addChamber_countryRequired": "国家代码为必填项",
+  "addChamber_phoneRequired": "电话号码为必填项",
   "safetyHub_emergencyCardLink": "紧急卡片",
   "safetyHub_emergencyCardLink_subtitle": "离线可用:热线、急救、减压舱、你的医疗和保险信息",
   "dashboard_quickAction_emergency": "紧急卡片"

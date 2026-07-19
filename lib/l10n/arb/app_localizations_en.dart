@@ -11841,6 +11841,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get addChamber_save => 'Save';
 
   @override
+  String get addChamber_nameRequired => 'Name is required';
+
+  @override
+  String get addChamber_countryRequired => 'Country code is required';
+
+  @override
+  String get addChamber_phoneRequired => 'Phone number is required';
+
+  @override
   String get safetyHub_emergencyCardLink => 'Emergency card';
 
   @override

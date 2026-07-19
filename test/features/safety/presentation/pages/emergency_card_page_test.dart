@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show Size;
+import 'package:flutter/material.dart' show Locale, MaterialApp, Size;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -7,8 +7,8 @@ import 'package:submersion/features/safety/domain/entities/emergency_info.dart';
 import 'package:submersion/features/safety/presentation/pages/emergency_card_page.dart';
 import 'package:submersion/features/safety/presentation/providers/emergency_providers.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
+import 'package:submersion/l10n/arb/app_localizations.dart';
 
-import '../../../../helpers/l10n_test_helpers.dart';
 import '../../../../helpers/mock_providers.dart';
 
 void main() {
@@ -62,7 +62,13 @@ void main() {
             ),
           ),
         ],
-        child: localizedMaterialApp(home: const EmergencyCardPage()),
+        child: const MaterialApp(
+          // Pinned: the assertions match English strings.
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: EmergencyCardPage(),
+        ),
       ),
     );
     await tester.pump();

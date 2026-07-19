@@ -20426,6 +20426,24 @@ abstract class AppLocalizations {
   /// **'Save'**
   String get addChamber_save;
 
+  /// No description provided for @addChamber_nameRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name is required'**
+  String get addChamber_nameRequired;
+
+  /// No description provided for @addChamber_countryRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Country code is required'**
+  String get addChamber_countryRequired;
+
+  /// No description provided for @addChamber_phoneRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number is required'**
+  String get addChamber_phoneRequired;
+
   /// No description provided for @safetyHub_emergencyCardLink.
   ///
   /// In en, this message translates to:

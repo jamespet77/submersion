@@ -5856,6 +5856,9 @@
   "addChamber_phone": "Telefono",
   "addChamber_notes": "Note",
   "addChamber_save": "Salva",
+  "addChamber_nameRequired": "Il nome è obbligatorio",
+  "addChamber_countryRequired": "Il codice paese è obbligatorio",
+  "addChamber_phoneRequired": "Il numero di telefono è obbligatorio",
   "safetyHub_emergencyCardLink": "Scheda di emergenza",
   "safetyHub_emergencyCardLink_subtitle": "Offline: linea diretta, emergenze, camere, i tuoi dati medici e assicurativi",
   "dashboard_quickAction_emergency": "Scheda di emergenza"

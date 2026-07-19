@@ -5856,6 +5856,9 @@
   "addChamber_phone": "Telefon",
   "addChamber_notes": "Notizen",
   "addChamber_save": "Speichern",
+  "addChamber_nameRequired": "Name ist erforderlich",
+  "addChamber_countryRequired": "Ländercode ist erforderlich",
+  "addChamber_phoneRequired": "Telefonnummer ist erforderlich",
   "safetyHub_emergencyCardLink": "Notfallkarte",
   "safetyHub_emergencyCardLink_subtitle": "Offline: Hotline, Notruf, Kammern, deine medizinischen und Versicherungsdaten",
   "dashboard_quickAction_emergency": "Notfallkarte"

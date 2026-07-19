@@ -12001,6 +12001,15 @@ class AppLocalizationsHu extends AppLocalizations {
   String get addChamber_save => 'Mentés';
 
   @override
+  String get addChamber_nameRequired => 'A név megadása kötelező';
+
+  @override
+  String get addChamber_countryRequired => 'Az országkód megadása kötelező';
+
+  @override
+  String get addChamber_phoneRequired => 'A telefonszám megadása kötelező';
+
+  @override
   String get safetyHub_emergencyCardLink => 'Vészhelyzeti kártya';
 
   @override

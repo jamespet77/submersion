@@ -11814,6 +11814,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get addChamber_save => 'حفظ';
 
   @override
+  String get addChamber_nameRequired => 'الاسم مطلوب';
+
+  @override
+  String get addChamber_countryRequired => 'رمز الدولة مطلوب';
+
+  @override
+  String get addChamber_phoneRequired => 'رقم الهاتف مطلوب';
+
+  @override
   String get safetyHub_emergencyCardLink => 'بطاقة الطوارئ';
 
   @override

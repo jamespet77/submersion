@@ -5856,6 +5856,9 @@
   "addChamber_phone": "Telefoon",
   "addChamber_notes": "Notities",
   "addChamber_save": "Opslaan",
+  "addChamber_nameRequired": "Naam is verplicht",
+  "addChamber_countryRequired": "Landcode is verplicht",
+  "addChamber_phoneRequired": "Telefoonnummer is verplicht",
   "safetyHub_emergencyCardLink": "Noodkaart",
   "safetyHub_emergencyCardLink_subtitle": "Offline: noodlijn, hulpdiensten, kamers, je medische en verzekeringsgegevens",
   "dashboard_quickAction_emergency": "Noodkaart"

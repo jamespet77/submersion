@@ -5856,6 +5856,9 @@
   "addChamber_phone": "الهاتف",
   "addChamber_notes": "ملاحظات",
   "addChamber_save": "حفظ",
+  "addChamber_nameRequired": "الاسم مطلوب",
+  "addChamber_countryRequired": "رمز الدولة مطلوب",
+  "addChamber_phoneRequired": "رقم الهاتف مطلوب",
   "safetyHub_emergencyCardLink": "بطاقة الطوارئ",
   "safetyHub_emergencyCardLink_subtitle": "دون اتصال: الخط الساخن، الطوارئ، الغرف، بياناتك الطبية والتأمينية",
   "dashboard_quickAction_emergency": "بطاقة الطوارئ"

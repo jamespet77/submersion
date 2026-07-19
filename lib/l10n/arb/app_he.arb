@@ -5856,6 +5856,9 @@
   "addChamber_phone": "טלפון",
   "addChamber_notes": "הערות",
   "addChamber_save": "שמור",
+  "addChamber_nameRequired": "שם נדרש",
+  "addChamber_countryRequired": "קוד מדינה נדרש",
+  "addChamber_phoneRequired": "מספר טלפון נדרש",
   "safetyHub_emergencyCardLink": "כרטיס חירום",
   "safetyHub_emergencyCardLink_subtitle": "לא מקוון: קו חם, חירום, תאי לחץ, הנתונים הרפואיים והביטוחיים שלך",
   "dashboard_quickAction_emergency": "כרטיס חירום"
