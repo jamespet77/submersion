@@ -134,6 +134,24 @@ void main() {
     expect(data.countryCode, 'DE');
   });
 
+  test('region resolves localized country names from geocoding', () async {
+    // Platform geocoding returns Placemark.country in the device language.
+    for (final entry in {
+      'Deutschland': 'DE',
+      'España': 'ES',
+      'Égypte': 'EG',
+      'Türkei': 'TR',
+    }.entries) {
+      final container = _container(summaries: [_summary(country: entry.key)]);
+      addTearDown(container.dispose);
+      expect(
+        await container.read(emergencyRegionProvider.future),
+        entry.value,
+        reason: entry.key,
+      );
+    }
+  });
+
   test('no dives resolves to the worldwide hotline and default EMS', () async {
     final container = _container(summaries: const []);
     addTearDown(container.dispose);
