@@ -1,0 +1,43 @@
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:submersion/core/database/database.dart';
+
+/// Minimal pre-no-fly shape: a diver_settings table with at least one column
+/// (so the PRAGMA-guarded ALTER fires). Stamped at v123 so the 123->124
+/// upgrade runs the no-fly migration block directly.
+NativeDatabase _dbAt123() {
+  return NativeDatabase.memory(
+    setup: (rawDb) {
+      rawDb.execute('PRAGMA user_version = 123');
+      rawDb.execute('''
+        CREATE TABLE diver_settings (
+          id TEXT NOT NULL PRIMARY KEY
+        )
+      ''');
+      rawDb.execute("INSERT INTO diver_settings (id) VALUES ('settings')");
+    },
+  );
+}
+
+void main() {
+  test('v124 adds no_fly_preset to diver_settings', () async {
+    final db = AppDatabase(_dbAt123());
+    addTearDown(() => db.close());
+
+    final cols = await db
+        .customSelect("PRAGMA table_info('diver_settings')")
+        .get();
+    final byName = {for (final c in cols) c.read<String>('name'): c};
+    expect(byName.keys, contains('no_fly_preset'));
+    // Existing rows take the guideline default.
+    final rows = await db
+        .customSelect("SELECT no_fly_preset FROM diver_settings")
+        .get();
+    expect(rows.single.read<String>('no_fly_preset'), 'standard');
+  });
+
+  test('v124 is the current schema version (exact-latest tripwire)', () {
+    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(124));
+    expect(AppDatabase.migrationVersions, contains(124));
+  });
+}
