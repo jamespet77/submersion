@@ -54,8 +54,13 @@ void main() {
     expect(await _columns(db, 'equipment'), contains('lift_capacity_kg'));
   });
 
-  test('version ladder includes 119', () {
-    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(119));
+  test('version ladder includes 119 and holds the exact-latest tripwire', () {
+    // Superseded-tripwire convention: as the newest migration test, this holds
+    // the exact-latest assertion (equipment_set_geofence_schema_test relaxed
+    // its former equals(112) to >= when this branch added v119). Bumping
+    // currentSchemaVersion past 119 must fail here until the new migration adds
+    // its own test and moves this tripwire forward.
+    expect(AppDatabase.currentSchemaVersion, equals(119));
     expect(AppDatabase.migrationVersions, contains(119));
   });
 }
