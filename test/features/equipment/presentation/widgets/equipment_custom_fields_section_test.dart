@@ -58,7 +58,7 @@ void main() {
       onChanged: (f) => result = f,
     );
     await tester.enterText(
-      find.byKey(const ValueKey('custom-key-0')),
+      find.byKey(const ValueKey('custom-key-c-serial')),
       'asset_tag',
     );
     expect(result, hasLength(1));
@@ -75,7 +75,7 @@ void main() {
       onChanged: (f) => result = f,
     );
     await tester.enterText(
-      find.byKey(const ValueKey('custom-value-0')),
+      find.byKey(const ValueKey('custom-value-c-serial')),
       'ABC-999',
     );
     expect(result!.single.key, 'serial');
@@ -98,5 +98,42 @@ void main() {
 
     expect(result, hasLength(1));
     expect(result!.single.key, 'b');
+  });
+
+  testWidgets('deleting a row does not leak values into remaining rows', (
+    tester,
+  ) async {
+    // Stateful wrapper so the section rebuilds in place after a delete
+    // (index-based field keys would reuse the wrong FormFieldState here).
+    var fields = <EquipmentAttribute>[
+      custom('a', value: '1'),
+      custom('b', value: '2'),
+    ];
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: StatefulBuilder(
+            builder: (context, setState) => SingleChildScrollView(
+              child: EquipmentCustomFieldsSection(
+                fields: fields,
+                onChanged: (f) => setState(() => fields = f),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Delete the first row ('a'); 'b' must keep its own value '2'.
+    await tester.tap(find.byIcon(Icons.close).first);
+    await tester.pumpAndSettle();
+
+    expect(fields, hasLength(1));
+    expect(fields.single.key, 'b');
+    expect(find.text('2'), findsOneWidget);
+    expect(find.text('1'), findsNothing);
   });
 }

@@ -154,8 +154,10 @@ class StatisticsProgressionPage extends ConsumerWidget {
   ) {
     final thicknessAsync = ref.watch(divesBySuitThicknessProvider);
 
+    // Space before the unit ("5 mm"), matching the attribute formatter and
+    // the rest of the app's thickness rendering.
     String label(double mm) =>
-        mm == mm.roundToDouble() ? '${mm.toStringAsFixed(0)}mm' : '${mm}mm';
+        mm == mm.roundToDouble() ? '${mm.toStringAsFixed(0)} mm' : '$mm mm';
 
     return StatSectionCard(
       title: context.l10n.statistics_progression_divesBySuitThickness_title,

@@ -7,6 +7,7 @@ import 'package:submersion/features/equipment/domain/entities/equipment_attribut
 import 'package:submersion/features/equipment/domain/entities/equipment_item.dart';
 import 'package:submersion/features/equipment/presentation/pages/equipment_edit_page.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
+import 'package:submersion/features/equipment/presentation/widgets/equipment_custom_fields_section.dart';
 import 'package:submersion/l10n/arb/app_localizations.dart';
 
 import '../../../helpers/mock_providers.dart';
@@ -34,6 +35,7 @@ void main() {
             equipmentRepositoryProvider.overrideWithValue(repository),
           ].cast(),
           child: MaterialApp(
+            locale: const Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
@@ -122,16 +124,18 @@ void main() {
       await tester.tap(addButton);
       await tester.pumpAndSettle();
 
+      // Rows carry stable uuid-based keys, so locate the four inputs by their
+      // position within the section: key0, value0, key1, value1.
+      final inputs = find.descendant(
+        of: find.byType(EquipmentCustomFieldsSection),
+        matching: find.byType(TextFormField),
+      );
+      await scrollTo(inputs.first);
       // Give both the same key but distinct values; dedup keeps the first.
-      final key0 = find.byKey(const ValueKey('custom-key-0'));
-      final value0 = find.byKey(const ValueKey('custom-value-0'));
-      final key1 = find.byKey(const ValueKey('custom-key-1'));
-      final value1 = find.byKey(const ValueKey('custom-value-1'));
-      await scrollTo(key0);
-      await tester.enterText(key0, 'warranty');
-      await tester.enterText(value0, 'first');
-      await tester.enterText(key1, 'warranty');
-      await tester.enterText(value1, 'second');
+      await tester.enterText(inputs.at(0), 'warranty');
+      await tester.enterText(inputs.at(1), 'first');
+      await tester.enterText(inputs.at(2), 'warranty');
+      await tester.enterText(inputs.at(3), 'second');
 
       final saveButton = find.text('Save');
       await scrollTo(saveButton);

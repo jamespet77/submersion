@@ -368,6 +368,37 @@ void main() {
     expect(applied.equipmentAttrMax, 5);
   });
 
+  testWidgets('suit-thickness bounds keep decimals and accept comma input', (
+    tester,
+  ) async {
+    // Hydrate with a fractional min: the field must render "2.5", not "2".
+    final ref = await openSheet(
+      tester,
+      initial: const DiveFilterState(
+        equipmentAttrKey: 'thickness_mm',
+        equipmentAttrMin: 2.5,
+      ),
+    );
+
+    await scrollTo(tester, find.text('Suit thickness (mm)'));
+    expect(find.widgetWithText(TextField, '2.5'), findsOneWidget);
+
+    // A comma decimal separator parses to the same value as a dot.
+    final maxField = find.byWidgetPredicate(
+      (w) =>
+          w is TextField &&
+          w.decoration?.labelText == 'Max' &&
+          w.decoration?.suffixText == null,
+    );
+    await tester.enterText(maxField, '7,5');
+    await tester.pumpAndSettle();
+
+    await tapText(tester, 'Apply Filters');
+    final applied = ref.read(filterProvider);
+    expect(applied.equipmentAttrMin, 2.5);
+    expect(applied.equipmentAttrMax, 7.5);
+  });
+
   testWidgets('Clear All resets the filter and closes the sheet', (
     tester,
   ) async {
