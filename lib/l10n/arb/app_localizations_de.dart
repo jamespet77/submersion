@@ -4049,7 +4049,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_cylinderSac_badge_basic => 'Basis';
 
   @override
-  String get diveLog_cylinderSac_noSac => 'SAC: --';
+  String get diveLog_cylinderSac_noSac => 'AMV: --';
 
   @override
   String get diveLog_cylinderSac_tooltip_aiData =>
@@ -4292,7 +4292,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_detail_label_rateOfChange => 'Änderungsrate';
 
   @override
-  String get diveLog_detail_label_sacRate => 'SAC-Rate';
+  String get diveLog_detail_label_sacRate => 'AMV';
 
   @override
   String get diveLog_detail_label_state => 'Zustand';
@@ -4369,7 +4369,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_detail_section_oxygenToxicity => 'Sauerstofftoxizität';
 
   @override
-  String get diveLog_detail_section_sacRateBySegment => 'SAC-Rate nach Segment';
+  String get diveLog_detail_section_sacRateBySegment => 'AMV nach Segment';
 
   @override
   String get diveLog_detail_section_tags => 'Tags';
@@ -5397,7 +5397,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_legend_label_pressureThresholds => 'Druckschwellen';
 
   @override
-  String get diveLog_legend_label_sacRate => 'SAC-Rate';
+  String get diveLog_legend_label_sacRate => 'AMV';
 
   @override
   String get diveLog_legend_label_showGas => 'Gase';
@@ -5922,7 +5922,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get setup_units_pressure => 'Druck';
 
   @override
-  String get setup_units_sac => 'SAC-Rate';
+  String get setup_units_sac => 'AMV';
 
   @override
   String get setup_units_subtitle =>
@@ -6407,7 +6407,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_rangeStats_label_minTemp => 'Min Temp';
 
   @override
-  String get diveLog_rangeStats_label_sacRate => 'SAC Rate';
+  String get diveLog_rangeStats_label_sacRate => 'AMV';
 
   @override
   String get diveLog_rangeStats_title => 'Bereichsstatistik';
@@ -7081,7 +7081,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get divePlanner_label_runtime => 'Laufzeit';
 
   @override
-  String get divePlanner_label_sacRate => 'AMV-Rate:';
+  String get divePlanner_label_sacRate => 'AMV:';
 
   @override
   String get divePlanner_label_status => 'Status';
@@ -9287,10 +9287,10 @@ class AppLocalizationsDe extends AppLocalizations {
   String get enum_profileMetric_pressure_short => 'Druck';
 
   @override
-  String get enum_profileMetric_sacRate => 'SAC-Rate';
+  String get enum_profileMetric_sacRate => 'AMV';
 
   @override
-  String get enum_profileMetric_sacRate_short => 'SAC';
+  String get enum_profileMetric_sacRate_short => 'AMV';
 
   @override
   String get enum_profileMetric_surfaceGf => 'Oberflächenm GF';
@@ -10921,7 +10921,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get gasCalculators_resetAll => 'Alle Rechner zurücksetzen';
 
   @override
-  String get gasCalculators_sacRate => 'AMV-Rate';
+  String get gasCalculators_sacRate => 'AMV';
 
   @override
   String get gasCalculators_tab_bestMix => 'Bestes Gemisch';
@@ -12528,11 +12528,11 @@ class AppLocalizationsDe extends AppLocalizations {
   }
 
   @override
-  String get diveDetailSection_sacSegments_name => 'SAC-Rate nach Segment';
+  String get diveDetailSection_sacSegments_name => 'AMV nach Segment';
 
   @override
   String get diveDetailSection_sacSegments_description =>
-      'SAC-Segmentierung nach Phase/Zeit';
+      'AMV-Segmentierung nach Phase/Zeit';
 
   @override
   String get diveDetailSection_details_name => 'Details';
@@ -12736,7 +12736,7 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get diveDetailSection_tanks_description =>
-      'Flaschenliste, Gasmischungen, Drucke, Flaschen-SAC';
+      'Flaschenliste, Gasmischungen, Drucke, Flaschen-AMV';
 
   @override
   String get diveDetailSection_buddies_name => 'Buddies';
@@ -12901,7 +12901,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_appearance_metric_pressure => 'Druck';
 
   @override
-  String get settings_appearance_metric_sacRate => 'SAC-Rate';
+  String get settings_appearance_metric_sacRate => 'AMV';
 
   @override
   String get settings_appearance_metric_surfaceGf => 'Oberflächenfaktor GF';
@@ -14593,7 +14593,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_units_dialog_pressureUnit => 'Druckeinheit';
 
   @override
-  String get settings_units_dialog_sacRateUnit => 'SAC-Raten-Einheit';
+  String get settings_units_dialog_sacRateUnit => 'AMV-Einheit';
 
   @override
   String get settings_units_dialog_temperatureUnit => 'Temperatureinheit';
@@ -14635,7 +14635,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get settings_units_quickSelect => 'Schnellauswahl';
 
   @override
-  String get settings_units_sacRate => 'SAC-Rate';
+  String get settings_units_sacRate => 'AMV';
 
   @override
   String get settings_units_sac_pressurePerMinute => 'Druck pro Minute';
@@ -14809,7 +14809,7 @@ class AppLocalizationsDe extends AppLocalizations {
   String get statistics_category_equipment_title => 'Ausrüstung';
 
   @override
-  String get statistics_category_gas_subtitle => 'SAC-Raten & Gasgemische';
+  String get statistics_category_gas_subtitle => 'AMV & Gasgemische';
 
   @override
   String get statistics_category_gas_title => 'Luftverbrauch';
@@ -15022,46 +15022,46 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get statistics_gas_sacByRole_error =>
-      'SAC nach Rolle konnte nicht geladen werden';
+      'AMV nach Rolle konnte nicht geladen werden';
 
   @override
   String get statistics_gas_sacByRole_subtitle =>
       'Durchschnittlicher Verbrauch nach Flaschentyp';
 
   @override
-  String get statistics_gas_sacByRole_title => 'SAC nach Flaschenrolle';
+  String get statistics_gas_sacByRole_title => 'AMV nach Flaschenrolle';
 
   @override
-  String get statistics_gas_sacRecords_best => 'Beste SAC-Rate';
+  String get statistics_gas_sacRecords_best => 'Bestes AMV';
 
   @override
   String get statistics_gas_sacRecords_empty =>
-      'Noch keine SAC-Daten verfügbar';
+      'Noch keine AMV-Daten verfügbar';
 
   @override
   String get statistics_gas_sacRecords_error =>
-      'SAC-Rekorde konnten nicht geladen werden';
+      'AMV-Rekorde konnten nicht geladen werden';
 
   @override
-  String get statistics_gas_sacRecords_highest => 'Höchste SAC-Rate';
+  String get statistics_gas_sacRecords_highest => 'Höchstes AMV';
 
   @override
   String get statistics_gas_sacRecords_subtitle =>
       'Bester und schlechtester Luftverbrauch';
 
   @override
-  String get statistics_gas_sacRecords_title => 'SAC-Raten-Rekorde';
+  String get statistics_gas_sacRecords_title => 'AMV-Rekorde';
 
   @override
   String get statistics_gas_sacTrend_error =>
-      'SAC-Trend konnte nicht geladen werden';
+      'AMV-Trend konnte nicht geladen werden';
 
   @override
   String get statistics_gas_sacTrend_subtitle =>
       'Monatlicher Durchschnitt über 5 Jahre';
 
   @override
-  String get statistics_gas_sacTrend_title => 'SAC-Raten-Trend';
+  String get statistics_gas_sacTrend_title => 'AMV-Trend';
 
   @override
   String get statistics_gas_tankRole_backGas => 'Rückengas';

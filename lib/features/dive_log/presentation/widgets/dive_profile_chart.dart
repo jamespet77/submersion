@@ -1118,7 +1118,11 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
         }
       }
       rows.add(
-        TooltipRow(label: 'SAC', value: sacValue, bulletColor: Colors.teal),
+        TooltipRow(
+          label: context.l10n.diveLog_tooltip_sac,
+          value: sacValue,
+          bulletColor: Colors.teal,
+        ),
       );
     }
 
