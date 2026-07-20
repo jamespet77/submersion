@@ -60,6 +60,11 @@ class SyncResult {
   final DateTime? lastSyncTime;
   final bool adoptedFreshIdentity;
 
+  /// Peers skipped because their manifests are from an older or unknown
+  /// library epoch. They must adopt the current library before their changes
+  /// can be safely merged.
+  final Set<String> skippedPeerDeviceIds;
+
   /// Set with [SyncResultStatus.awaitingAdoption]: the cloud library was
   /// replaced under this marker's epoch and the user must adopt (or defer)
   /// before any sync can proceed.
@@ -72,6 +77,7 @@ class SyncResult {
     this.conflictsFound = 0,
     this.lastSyncTime,
     this.adoptedFreshIdentity = false,
+    this.skippedPeerDeviceIds = const {},
     this.replaceMarker,
   });
 
@@ -163,13 +169,9 @@ typedef ParentRef = ({String field, String parent, bool nullable});
 /// resolved [currentEpochId] to stamp and filter by for the rest of the sync
 /// (null in the pre-epoch world).
 class _EpochGate {
-  const _EpochGate.proceed(this.currentEpochId, {this.legacyEpochCutoffMs})
-    : terminal = null;
-  const _EpochGate.halt(this.terminal)
-    : currentEpochId = null,
-      legacyEpochCutoffMs = null;
+  const _EpochGate.proceed(this.currentEpochId) : terminal = null;
+  const _EpochGate.halt(this.terminal) : currentEpochId = null;
   final String? currentEpochId;
-  final int? legacyEpochCutoffMs;
   final SyncResult? terminal;
 }
 
@@ -454,7 +456,6 @@ class SyncService {
         selfDeviceId: deviceId,
         folderId: folderId,
         currentEpochId: currentEpochId,
-        legacyEpochCutoffMs: gate.legacyEpochCutoffMs,
         // Reuse the fence check's listing (null after a rejoin, which mutates
         // the folder and needs a fresh view).
         preListedFiles: fence.files,
@@ -599,23 +600,31 @@ class SyncService {
       }
 
       _reportProgress(SyncPhase.complete, 1.0, 'Sync complete');
+      final skippedPeerMessage = pullResult.skippedPeerDeviceIds.isEmpty
+          ? null
+          : '${pullResult.skippedPeerDeviceIds.length} device(s) still have '
+                'an older or unknown library version and were not merged. '
+                'Those devices must adopt the current library.';
+      final resultMessage = recordsFailed > 0
+          ? '$recordsFailed record(s) failed to apply'
+          : skippedPeerMessage ??
+                (adoptedFreshIdentity
+                    ? 'Another device was syncing with this device\'s '
+                          'identity. This device adopted a new identity and '
+                          'merged the cloud data.'
+                    : null);
       return SyncResult(
         status: recordsFailed > 0
             ? SyncResultStatus.error
             : (conflictsFound > 0
                   ? SyncResultStatus.hasConflicts
                   : SyncResultStatus.success),
-        message: recordsFailed > 0
-            ? '$recordsFailed record(s) failed to apply'
-            : (adoptedFreshIdentity
-                  ? 'Another device was syncing with this device\'s '
-                        'identity. This device adopted a new identity and '
-                        'merged the cloud data.'
-                  : null),
+        message: resultMessage,
         recordsSynced: recordsSynced,
         conflictsFound: conflictsFound,
         lastSyncTime: recordsFailed == 0 ? now : null,
         adoptedFreshIdentity: adoptedFreshIdentity,
+        skippedPeerDeviceIds: pullResult.skippedPeerDeviceIds,
       );
     } on TimeoutException {
       _log.warning('Sync timed out');
@@ -685,18 +694,12 @@ class SyncService {
             _log.warning('Could not self-heal epoch marker: $e');
           }
         }
-        return _EpochGate.proceed(
-          accepted,
-          legacyEpochCutoffMs: epochStore.lastAcceptedMarker?.replacedAt,
-        );
+        return _EpochGate.proceed(accepted);
       }
       return const _EpochGate.proceed(null); // pre-epoch world
     }
     if (marker.epochId == accepted) {
-      return _EpochGate.proceed(
-        accepted,
-        legacyEpochCutoffMs: marker.replacedAt,
-      );
+      return _EpochGate.proceed(accepted);
     }
     // Before halting for adoption, make sure the marked library is actually
     // readable. A marker with no current-format (ssv1) library is either a

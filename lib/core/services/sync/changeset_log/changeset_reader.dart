@@ -22,6 +22,7 @@ class ChangesetReadResult {
     required this.peersProcessed,
     required this.payloadsApplied,
     this.peerManifests = const [],
+    this.skippedPeerDeviceIds = const {},
     this.retiredPeerIds = const {},
     this.retiredPeerHasFiles = false,
   });
@@ -31,6 +32,11 @@ class ChangesetReadResult {
   /// Every non-retired peer manifest seen this pull (including stale-epoch
   /// ones, which stay inert for merging but still block/inform tombstone GC).
   final List<SyncManifest> peerManifests;
+
+  /// Peers whose manifests were deliberately not applied because they do not
+  /// belong to the current library epoch. The caller should surface these to
+  /// the user rather than reporting a misleadingly clean sync.
+  final Set<String> skippedPeerDeviceIds;
   final Set<String> retiredPeerIds;
 
   /// True when a retired peer still has non-marker files in the bucket (a
@@ -57,7 +63,6 @@ class ChangesetReader {
     required ApplyPayload apply,
     required ApplyBaseFile applyBaseFile,
     String? currentEpochId,
-    int? legacyEpochCutoffMs,
     List<CloudFileInfo>? preListedFiles,
   }) async {
     final providerId = provider.providerId;
@@ -91,6 +96,7 @@ class ChangesetReader {
           retiredPeerIds.contains(ChangesetLogLayout.deviceIdOf(f.name)),
     );
     final peerManifests = <SyncManifest>[];
+    final skippedPeerDeviceIds = <String>{};
 
     var peersProcessed = 0;
     var payloadsApplied = 0;
@@ -108,20 +114,12 @@ class ChangesetReader {
         peerManifests.add(manifest);
 
         // Stale-epoch filter: once this device is on a library epoch, a peer
-        // stamped with a different epoch is inert -- applying it would leak a
-        // replaced-away library back in. Unstamped peers are allowed only when
-        // their manifest was rewritten after the current epoch began; this
-        // supports devices that upgraded around the epoch-protocol rollout.
-        // Null currentEpochId is the pre-epoch world: no filtering, apply every
-        // peer.
-        final isPostEpochLegacyManifest =
-            currentEpochId != null &&
-            manifest.epochId == null &&
-            legacyEpochCutoffMs != null &&
-            manifest.updatedAt >= legacyEpochCutoffMs;
-        if (currentEpochId != null &&
-            manifest.epochId != currentEpochId &&
-            !isPostEpochLegacyManifest) {
+        // stamped with a different epoch (including an unstamped legacy peer)
+        // is inert. Applying it could leak a replaced-away library back in.
+        // Timestamps cannot prove that a peer observed the replacement because
+        // heartbeats rewrite updatedAt without changing the library epoch.
+        if (currentEpochId != null && manifest.epochId != currentEpochId) {
+          skippedPeerDeviceIds.add(peerId);
           continue;
         }
         peersProcessed++;
@@ -200,6 +198,7 @@ class ChangesetReader {
       peersProcessed: peersProcessed,
       payloadsApplied: payloadsApplied,
       peerManifests: peerManifests,
+      skippedPeerDeviceIds: skippedPeerDeviceIds,
       retiredPeerIds: retiredPeerIds,
       retiredPeerHasFiles: retiredPeerHasFiles,
     );

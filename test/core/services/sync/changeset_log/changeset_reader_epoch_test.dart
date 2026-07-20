@@ -13,8 +13,8 @@ import '../../../../helpers/test_database.dart';
 import '../../../../helpers/mock_providers.dart';
 import '../../../../support/fake_cloud_storage_provider.dart';
 
-/// Epoch filtering keeps replaced-away data inert while allowing legacy peers
-/// that continued publishing after the epoch protocol was introduced.
+/// Epoch filtering keeps replaced-away data inert and reports peers that still
+/// need to adopt the current library epoch.
 void main() {
   late FakeCloudStorageProvider provider;
   late ChangesetWriter writer;
@@ -53,17 +53,13 @@ void main() {
     );
   }
 
-  Future<ChangesetReadResult> pull({
-    String? currentEpochId,
-    int? legacyEpochCutoffMs,
-  }) => reader.pull(
+  Future<ChangesetReadResult> pull({String? currentEpochId}) => reader.pull(
     provider: provider,
     selfDeviceId: 'reader-x',
     folderId: folder,
     apply: spyApply,
     applyBaseFile: spyApplyBaseFile(applied),
     currentEpochId: currentEpochId,
-    legacyEpochCutoffMs: legacyEpochCutoffMs,
   );
 
   test('applies a peer stamped with the current epoch', () async {
@@ -87,38 +83,38 @@ void main() {
     final result = await pull(currentEpochId: 'epoch-NEW');
 
     expect(result.peersProcessed, 0);
+    expect(result.skippedPeerDeviceIds, {'peer-1'});
     expect(applied, isEmpty);
   });
 
-  test('skips an unstamped peer published before the current epoch', () async {
+  test('skips an unstamped peer and reports it', () async {
     await DiveRepository().createDive(
       createTestDiveWithBottomTime(id: 'd1', diveNumber: 1),
     );
     await publishPeer('peer-1'); // no epochId
 
-    final result = await pull(
-      currentEpochId: 'epoch-NEW',
-      legacyEpochCutoffMs: DateTime.now().millisecondsSinceEpoch + 1000,
-    );
+    final result = await pull(currentEpochId: 'epoch-NEW');
 
     expect(result.peersProcessed, 0);
     expect(applied, isEmpty);
+    expect(result.skippedPeerDeviceIds, {'peer-1'});
   });
 
-  test('applies an unstamped peer rewritten after the current epoch', () async {
-    await DiveRepository().createDive(
-      createTestDiveWithBottomTime(id: 'd1', diveNumber: 1),
-    );
-    await publishPeer('peer-1'); // legacy publisher, but recently rewritten
+  test(
+    'skips an unstamped peer regardless of its manifest timestamp',
+    () async {
+      await DiveRepository().createDive(
+        createTestDiveWithBottomTime(id: 'd1', diveNumber: 1),
+      );
+      await publishPeer('peer-1'); // legacy publisher, but recently rewritten
 
-    final result = await pull(
-      currentEpochId: 'epoch-NEW',
-      legacyEpochCutoffMs: DateTime.now().millisecondsSinceEpoch - 1000,
-    );
+      final result = await pull(currentEpochId: 'epoch-NEW');
 
-    expect(result.peersProcessed, 1);
-    expect(applied.single.data.dives.map((d) => d['id']), contains('d1'));
-  });
+      expect(result.peersProcessed, 0);
+      expect(result.skippedPeerDeviceIds, {'peer-1'});
+      expect(applied, isEmpty);
+    },
+  );
 
   test('pre-epoch world (null currentEpochId) applies every peer', () async {
     await DiveRepository().createDive(
