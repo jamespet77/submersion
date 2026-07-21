@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/core/providers/provider.dart';
-import 'package:submersion/features/equipment/domain/entities/service_clock_status.dart';
+import 'package:submersion/features/equipment/domain/entities/service_kind.dart';
 import 'package:submersion/features/equipment/domain/entities/service_schedule.dart';
 import 'package:submersion/features/equipment/presentation/providers/equipment_providers.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
@@ -89,23 +89,32 @@ Future<void> showServiceKindPicker(
   );
 }
 
-/// Edits one schedule's interval overrides and baseline date.
+/// Edits one schedule's interval overrides and baseline date. Accepts the
+/// schedule and its kind directly so it serves brand-new and unconfigured
+/// clocks as well as existing ones.
 Future<void> showScheduleOverrideDialog(
   BuildContext context,
   WidgetRef ref, {
-  required ServiceClockStatus status,
+  required ServiceSchedule schedule,
+  required ServiceKind kind,
 }) async {
   await showDialog<void>(
     context: context,
-    builder: (context) => _ScheduleOverrideDialog(status: status, ref: ref),
+    builder: (context) =>
+        _ScheduleOverrideDialog(schedule: schedule, kind: kind, ref: ref),
   );
 }
 
 class _ScheduleOverrideDialog extends StatefulWidget {
-  final ServiceClockStatus status;
+  final ServiceSchedule schedule;
+  final ServiceKind kind;
   final WidgetRef ref;
 
-  const _ScheduleOverrideDialog({required this.status, required this.ref});
+  const _ScheduleOverrideDialog({
+    required this.schedule,
+    required this.kind,
+    required this.ref,
+  });
 
   @override
   State<_ScheduleOverrideDialog> createState() =>
@@ -121,7 +130,7 @@ class _ScheduleOverrideDialogState extends State<_ScheduleOverrideDialog> {
   @override
   void initState() {
     super.initState();
-    final s = widget.status.schedule;
+    final s = widget.schedule;
     _days = TextEditingController(text: s.intervalDays?.toString() ?? '');
     _dives = TextEditingController(text: s.intervalDives?.toString() ?? '');
     _hours = TextEditingController(text: s.intervalHours?.toString() ?? '');
@@ -140,7 +149,7 @@ class _ScheduleOverrideDialogState extends State<_ScheduleOverrideDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final kind = widget.status.kind;
+    final kind = widget.kind;
     final l10n = context.l10n;
     return AlertDialog(
       title: Text('${l10n.equipment_scheduleDialog_title}: ${kind.name}'),
@@ -235,7 +244,7 @@ class _ScheduleOverrideDialogState extends State<_ScheduleOverrideDialog> {
         ),
         FilledButton(
           onPressed: () async {
-            final schedule = widget.status.schedule;
+            final schedule = widget.schedule;
             // copyWith cannot null a field; build the updated entity directly.
             final updated = ServiceSchedule(
               id: schedule.id,

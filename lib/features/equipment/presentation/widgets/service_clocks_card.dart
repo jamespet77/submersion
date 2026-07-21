@@ -224,7 +224,12 @@ class ServiceClocksCard extends ConsumerWidget {
       case 'log':
         onLogService?.call(status);
       case 'edit':
-        await showScheduleOverrideDialog(context, ref, status: status);
+        await showScheduleOverrideDialog(
+          context,
+          ref,
+          schedule: status.schedule,
+          kind: status.kind,
+        );
       case 'pause':
         await ref
             .read(serviceScheduleRepositoryProvider)
