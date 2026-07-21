@@ -27,6 +27,8 @@ jobs:
   # still runs and reports green because skipped jobs are acceptable there.
   # Bias is FAIL-SAFE: any path not explicitly recognized as inert, and any
   # inability to compute the diff, yields code=true (run the full pipeline).
+  # Escape hatch: put [full-ci] in the PR title or a commit message to force the
+  # full pipeline even for a docs/CI-only change (e.g. to validate a ci.yaml edit).
   changes:
     name: Detect code changes
     runs-on: ubuntu-latest
@@ -43,6 +45,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
           PUSH_BEFORE: ${{ github.event.before }}
           PUSH_AFTER: ${{ github.sha }}
         run: |
@@ -59,11 +62,23 @@ jobs:
             echo "code=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          # Escape hatch: a [full-ci] marker in the PR title or any commit
+          # message in the range forces the full pipeline. Lets CI/meta-only
+          # changes (e.g. editing this very workflow), which otherwise skip the
+          # heavy jobs, opt in to exercising the whole DAG. Only ever forces
+          # MORE work, so it cannot cause a false skip.
           if [ "$EVENT" = "pull_request" ]; then
-            files="$(git diff --name-only "${base}...${head}")"
+            range="${base}...${head}"
           else
-            files="$(git diff --name-only "$base" "$head")"
+            range="${base}..${head}"
           fi
+          if printf '%s\n%s' "$PR_TITLE" "$(git log --format=%B "$range")" \
+               | grep -qiF '[full-ci]'; then
+            echo "[full-ci] override found; running the full pipeline."
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files="$(git diff --name-only "$range")"
           echo "Changed files:"
           printf '%s\n' "$files"
           # code=true unless EVERY changed file matches an inert pattern below.
