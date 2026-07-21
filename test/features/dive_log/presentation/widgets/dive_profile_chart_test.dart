@@ -523,6 +523,42 @@ void main() {
       expect(depthBar.spots.first.x, 0);
     });
 
+    testWidgets('analysis curves are extended to t=0 at their first value', (
+      tester,
+    ) async {
+      // Held flat rather than zeroed: on a repetitive dive the first sample
+      // already carries residual loading (CNS here starts at 12%), and forcing
+      // a synthetic 0 would draw it as a first dive of the day.
+      final profile = [
+        for (var i = 1; i <= 8; i++)
+          DiveProfilePoint(timestamp: i * 10, depth: i * 2.0),
+      ];
+      final cns = [for (var i = 0; i < 8; i++) 12.0 + i];
+      final ndl = [for (var i = 0; i < 8; i++) 1080 - i * 10];
+
+      await tester.pumpWidget(
+        _buildChart(profile: profile, cnsCurve: cns, ndlCurve: ndl),
+      );
+      await tester.pumpAndSettle();
+
+      final bars = tester
+          .widget<LineChart>(find.byType(LineChart).first)
+          .data
+          .lineBarsData;
+
+      // Bar 0 is depth, which descends from the surface rather than holding
+      // flat; the analysis curves after it hold their first value.
+      expect(bars.first.spots.first, const FlSpot(0, 0));
+
+      final analysisLeadIns = bars
+          .skip(1)
+          .where((b) => b.spots.length > 1 && b.spots.first.x == 0);
+      expect(analysisLeadIns, isNotEmpty);
+      for (final bar in analysisLeadIns) {
+        expect(bar.spots.first.y, bar.spots[1].y);
+      }
+    });
+
     testWidgets('a trimmed profile keeps its gap rather than inventing a '
         'descent', (tester) async {
       // First sample far beyond one interval: drawing from the surface would

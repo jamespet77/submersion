@@ -3757,6 +3757,33 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     return lines;
   }
 
+  /// Extend a curve back to the t=0 axis origin with a lead-in vertex at
+  /// [surfaceY] (already in chart y-space, i.e. negated/normalised the same way
+  /// the curve's own points are).
+  ///
+  /// Computers do not sample at t=0, so without this every line starts one
+  /// sample interval inside the chart and the left edge reads as ragged
+  /// (issue #684). No-ops when the profile already starts at zero, when the gap
+  /// is too wide to attribute to the sampling rate, or when the curve drew no
+  /// points at all.
+  List<FlSpot> _withSurfaceLeadIn(List<FlSpot> spots, double surfaceY) {
+    if (spots.isEmpty) return spots;
+    if (!DiveProfileChart.shouldDrawSurfaceLeadIn(widget.profile)) return spots;
+    // A curve that is only drawn where it has data (the ceiling line skips
+    // ceiling <= 0) may legitimately start mid-dive; only bridge a curve whose
+    // own first point is the dive's first sample.
+    if (spots.first.x != widget.profile.first.timestamp.toDouble()) {
+      return spots;
+    }
+    return [FlSpot(0, surfaceY), ...spots];
+  }
+
+  /// Lead-in for curves that barely change across one sample interval
+  /// (temperature, partial pressures, MOD, density, SAC, tank pressure, heart
+  /// rate): hold the first reading flat back to t=0.
+  List<FlSpot> _withFlatSurfaceLeadIn(List<FlSpot> spots) =>
+      spots.isEmpty ? spots : _withSurfaceLeadIn(spots, spots.first.y);
+
   /// Build a single depth line segment with the given color
   LineChartBarData _buildSingleDepthSegment(
     Color color,
@@ -3879,21 +3906,23 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     UnitFormatter units,
   ) {
     return LineChartBarData(
-      spots: widget.profile
-          .where((p) => p.temperature != null)
-          .map(
-            (p) => FlSpot(
-              p.timestamp.toDouble(),
-              // Convert temp to user's unit, then map to depth axis
-              -_mapTempToDepth(
-                units.convertTemperature(p.temperature!),
-                chartMaxDepth,
-                minTemp,
-                maxTemp,
+      spots: _withFlatSurfaceLeadIn(
+        widget.profile
+            .where((p) => p.temperature != null)
+            .map(
+              (p) => FlSpot(
+                p.timestamp.toDouble(),
+                // Convert temp to user's unit, then map to depth axis
+                -_mapTempToDepth(
+                  units.convertTemperature(p.temperature!),
+                  chartMaxDepth,
+                  minTemp,
+                  maxTemp,
+                ),
               ),
-            ),
-          )
-          .toList(),
+            )
+            .toList(),
+      ),
       isCurved: true,
       curveSmoothness: 0.2,
       color: colorScheme.tertiary,
@@ -3968,19 +3997,23 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
 
       lines.add(
         LineChartBarData(
-          spots: pressurePoints
-              .map(
-                (p) => FlSpot(
-                  p.timestamp.toDouble(),
-                  -_mapValueToDepth(
-                    p.pressure,
-                    chartMaxDepth,
-                    minPressure,
-                    maxPressure,
+          // A tank first breathed mid-dive keeps its own start: the lead-in
+          // only bridges a series that begins at the dive's first sample.
+          spots: _withFlatSurfaceLeadIn(
+            pressurePoints
+                .map(
+                  (p) => FlSpot(
+                    p.timestamp.toDouble(),
+                    -_mapValueToDepth(
+                      p.pressure,
+                      chartMaxDepth,
+                      minPressure,
+                      maxPressure,
+                    ),
                   ),
-                ),
-              )
-              .toList(),
+                )
+                .toList(),
+          ),
           // Synthesized estimates are straight (flat-drop-flat); curve
           // smoothing would round their corners. Real AI data stays curved.
           isCurved: !(widget.estimatedTankIds?.contains(tankId) ?? false),
@@ -4052,7 +4085,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.3,
       color: sacColor,
@@ -4087,7 +4120,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       );
     }
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: Colors.lime,
@@ -4165,7 +4198,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: ceilingColor,
@@ -4202,7 +4235,10 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      // Held flat, not forced to maximum: on a repetitive dive the NDL at the
+      // surface is already cut short by residual loading, which the first
+      // sample reflects and a synthetic maximum would not.
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       preventCurveOverShooting: true,
@@ -4232,7 +4268,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: ppO2Color,
@@ -4260,7 +4296,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: ppN2Color,
@@ -4296,7 +4332,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: ppHeColor,
@@ -4361,7 +4397,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: densityColor,
@@ -4390,7 +4426,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: gfColor,
@@ -4419,7 +4455,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: surfaceGfColor,
@@ -4446,7 +4482,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: meanDepthColor,
@@ -4477,7 +4513,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: ttsColor,
@@ -4518,7 +4554,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: cnsColor,
@@ -4545,7 +4581,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     }
 
     return LineChartBarData(
-      spots: spots,
+      spots: _withFlatSurfaceLeadIn(spots),
       isCurved: true,
       curveSmoothness: 0.2,
       color: otuColor,
