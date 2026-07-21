@@ -51,7 +51,7 @@ void main() {
 
   test('v129 quality_findings migration stays in the schema ladder', () {
     // The exact-latest tripwire lives in
-    // media_compressed_columns_migration_test.dart (v132); this test now only
+    // media_compressed_columns_migration_test.dart (v133); this test now only
     // asserts v129 still has its migration.
     expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(129));
     expect(AppDatabase.migrationVersions, contains(129));

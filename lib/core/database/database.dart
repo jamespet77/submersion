@@ -1231,7 +1231,7 @@ class Media extends Table {
   IntColumn get remoteUploadedAt => integer().nullable()();
   IntColumn get remoteThumbUploadedAt => integer().nullable()();
 
-  // Adjustable upload quality (v130): a compressed rendition, keyed by the
+  // Adjustable upload quality (v133): a compressed rendition, keyed by the
   // original's content hash, may be uploaded instead of the original.
   TextColumn get compressedLevel => text().nullable()();
   IntColumn get compressedSizeBytes => integer().nullable()();
@@ -3829,8 +3829,8 @@ class AppDatabase extends _$AppDatabase {
     ''');
   }
 
-  /// Idempotent DDL for the v130 compressed-rendition columns. Called from the
-  /// v130 onUpgrade step and the beforeOpen backstop, matching the
+  /// Idempotent DDL for the v133 compressed-rendition columns. Called from the
+  /// v133 onUpgrade step and the beforeOpen backstop, matching the
   /// _assertMediaStoreSchema pattern so a schema-version collision cannot
   /// strand a database without them.
   Future<void> _assertMediaCompressedRenditionColumns() async {
