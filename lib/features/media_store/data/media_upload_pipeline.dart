@@ -262,6 +262,14 @@ class MediaUploadPipeline {
         }
       }
       await _queue.markDone(entry.id);
+      // Transcode-once cleanup (spec section 8): a video that uploads its
+      // original still clears any deterministic transcode left for this hash
+      // (e.g. a prior attempt's rendition, then a switch to Original or a lost
+      // engine) so it can't be stranded. Mirrors the rendition branch above;
+      // best-effort and never throws.
+      if (item.mediaType == MediaType.video) {
+        await _cache.deleteTranscodeArtifacts(digest.hash);
+      }
       return (isOverride || existing == null)
           ? UploadOutcome.uploaded
           : UploadOutcome.deduplicated;

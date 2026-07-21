@@ -15,10 +15,12 @@ class VideoProbe {
 }
 
 /// Parses `ffprobe -print_format json -show_format -show_streams` output.
-/// Returns null for anything that is not a probeable video (malformed JSON,
-/// an unexpected JSON shape, no video stream, missing dimensions) — the
-/// caller uploads the original. Parsed defensively with type checks so an
-/// unexpected shape falls back rather than throwing TypeError/CastError.
+/// Returns null when there is no probeable video stream with integer
+/// dimensions (malformed JSON, a non-map root, `streams` not a list, or
+/// missing/non-int width/height) — the caller uploads the original. A missing
+/// or malformed `format` object is tolerated: duration and bitrate degrade to
+/// 0 rather than failing. Parsed defensively with type checks so an unexpected
+/// shape never throws TypeError/CastError.
 VideoProbe? parseFfprobeJson(String json) {
   final Object? decoded;
   try {

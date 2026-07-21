@@ -4,8 +4,10 @@ import 'package:submersion_transcoder/src/transcode_target.dart';
 import 'package:submersion_transcoder/src/video_probe.dart';
 
 /// A genuine engine failure (as opposed to "input this engine cannot
-/// handle", which is reported as a null probe). Callers surface it to the
-/// transfer queue's normal retry/backoff.
+/// handle", which is reported as a null probe). The app-side adapter
+/// (PlatformVideoTranscoder) catches this and falls back to uploading the
+/// original, because a capability failure (e.g. ffmpeg present but built
+/// without libx264) would otherwise fail the queue entry and retry forever.
 class TranscodeException implements Exception {
   const TranscodeException(this.message);
   final String message;
