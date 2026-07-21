@@ -255,7 +255,12 @@ void main() {
     final result = await repository.getProfilesByDataSource('dive-2');
 
     expect(result, hasLength(1));
+    // Key and sourceId use the deterministic id the beforeOpen backfill
+    // (_backfillMissingDataSources) will persist, so the synthesized-on-read
+    // source and the later backfilled row share one id.
+    expect(result.keys.single, 'legacy-src-dive-2');
     final source = result.values.single;
+    expect(source.sourceId, 'legacy-src-dive-2');
     expect(source.points.map((p) => p.depth).toList(), [8.0, 9.0]);
     expect(source.isEdited, false);
   });

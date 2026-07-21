@@ -686,9 +686,16 @@ class DiveRepository {
                   ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
                 .get();
         if (primaryRows.isEmpty) return {};
+        // Key/sourceId must equal the row that _backfillMissingDataSources
+        // (AppDatabase.beforeOpen) will persist, so the synthesized-on-read
+        // source and the later backfilled row expose the SAME id. Otherwise a
+        // consumer that keeps a selected source id (activeDiveSourceProvider)
+        // would see it change out from under it when the heal runs. Keep this
+        // prefix in sync with that helper's `legacy-src-` id.
+        final syntheticSourceId = 'legacy-src-$diveId';
         return {
-          diveId: domain.SourceProfile(
-            sourceId: diveId,
+          syntheticSourceId: domain.SourceProfile(
+            sourceId: syntheticSourceId,
             computerId: primaryRows.first.computerId,
             isEdited: false,
             points: primaryRows.map(_profilePointFromRow).toList(),
