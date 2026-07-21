@@ -264,6 +264,47 @@ void main() {
         expect(segments[0].gasMix.o2, 32);
       },
     );
+
+    // Sample intervals vary by computer: 1s and 2s on Shearwater, 4s/5s on
+    // Suunto, 10s in Subsurface's default export, 20s/30s on older units. The
+    // rule keys off the dive's own first sample, never a fixed constant.
+    for (final firstSample in const [0, 1, 2, 4, 5, 10, 20, 30, 60]) {
+      test('initial-gas declaration is recognised at a first sample of '
+          '${firstSample}s', () {
+        final deco = _tank(id: 'deco', o2: 32, name: 'Deco');
+        final back = _tank(id: 'back', o2: 21, name: 'Back', order: 1);
+        final segments = buildGasUsageSegments(
+          tanks: [deco, back],
+          gasSwitches: [
+            _switch(tankId: 'back', timestamp: firstSample, o2Fraction: 0.21),
+          ],
+          diveDurationSeconds: 1800,
+          firstSampleSeconds: firstSample,
+        );
+        expect(segments, hasLength(1));
+        expect(segments.single.startSeconds, 0);
+        expect(segments.single.endSeconds, 1800);
+        expect(segments.single.gasMix.o2, 21);
+        expect(segments.single.tankName, 'Back');
+      });
+    }
+
+    test('a switch one second after the first sample is a real switch', () {
+      final back = _tank(id: 'back', o2: 21, name: 'Back');
+      final deco = _tank(id: 'deco', o2: 50, name: 'Deco', order: 1);
+      final segments = buildGasUsageSegments(
+        tanks: [back, deco],
+        gasSwitches: [_switch(tankId: 'deco', timestamp: 5, o2Fraction: 0.50)],
+        diveDurationSeconds: 1800,
+        firstSampleSeconds: 4,
+      );
+      expect(segments, hasLength(2));
+      expect(segments[0].startSeconds, 0);
+      expect(segments[0].endSeconds, 5);
+      expect(segments[0].gasMix.o2, 21);
+      expect(segments[1].startSeconds, 5);
+      expect(segments[1].gasMix.o2, 50);
+    });
   });
 
   group('buildActiveTankIntervals', () {
