@@ -79,9 +79,9 @@ void main() {
   });
 
   test('v131 service-reconcile migration stays in the schema ladder', () {
-    // v132 (media compressed rendition columns) now owns the exact-latest
-    // tripwire in media_compressed_columns_migration_test.dart; relaxed to
-    // greaterThanOrEqualTo when that migration landed on top of v131.
+    // Relaxed from an exact-latest tripwire: later migrations landed on top of
+    // v131. The exact-latest assertion now lives in
+    // media_compressed_columns_migration_test.dart (v133).
     expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(131));
     expect(AppDatabase.migrationVersions, contains(131));
   });
