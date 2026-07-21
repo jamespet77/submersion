@@ -25,3 +25,6 @@ flutter:
       macos:
         pluginClass: SubmersionTranscoderPlugin
         sharedDarwinSource: true
+      android:
+        package: app.submersion.transcoder
+        pluginClass: SubmersionTranscoderPlugin
