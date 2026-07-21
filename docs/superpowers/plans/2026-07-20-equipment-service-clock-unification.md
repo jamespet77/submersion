@@ -14,7 +14,7 @@
 - Static analysis: `flutter analyze` must be clean over the whole project; info-level lints (e.g. `prefer_const`) fail CI.
 - Localization: any new user-facing string is added to all 11 arb files (`en` is the template; also `ar de es fr he hu it nl pt zh`) and regenerated with `flutter gen-l10n`.
 - No emojis in code, comments, or docs.
-- Schema version: current `currentSchemaVersion` is 129; this plan bumps it to 130.
+- Schema version: current `currentSchemaVersion` is 130; this plan bumps it to 131.
 - Immutability: never mutate entities; use `copyWith`.
 - Tests are written first (TDD) and must fail before implementation.
 
@@ -35,7 +35,7 @@ Production files touched:
 - `lib/core/constants/sort_options.dart` — add `EquipmentSortField.serviceDue`.
 - `lib/features/equipment/presentation/providers/equipment_providers.dart` — add `equipmentServiceUrgencyProvider`; `applyEquipmentSorting` clock arg.
 - `lib/features/equipment/domain/constants/equipment_field.dart` — adapter carries clock map; redirect service-forecast fields.
-- `lib/core/database/database.dart` — v130 reconciliation migration.
+- `lib/core/database/database.dart` — v131 reconciliation migration.
 - `lib/l10n/arb/app_*.arb` (11 files) — `equipment_serviceClocks_unconfigured`.
 
 ---
@@ -1246,18 +1246,18 @@ git commit -m "feat(equipment): table Next Service Due column reads clocks"
 
 ---
 
-## Task 10: v130 migration to reconcile late legacy edits
+## Task 10: v131 migration to reconcile late legacy edits
 
 **Files:**
 - Modify: `lib/core/database/database.dart`
-- Test: `test/core/database/migration_v130_service_reconcile_test.dart` (create)
+- Test: `test/core/database/migration_v131_service_reconcile_test.dart` (create)
 
 **Interfaces:**
-- Bumps `currentSchemaVersion` 129 -> 130 and adds an onUpgrade `if (from < 130)` block calling `_reconcileLegacyServiceSchedules()`.
+- Bumps `currentSchemaVersion` 130 -> 131 and adds an onUpgrade `if (from < 131)` block calling `_reconcileLegacyServiceSchedules()`.
 
 - [ ] **Step 1: Write the failing test**
 
-Create `test/core/database/migration_v130_service_reconcile_test.dart`. Open an `AppDatabase` on an in-memory executor, insert a diver + equipment with `service_interval_days` set but no `legacy-svc-` schedule, run `_reconcileLegacyServiceSchedules`, and assert a schedule with id `legacy-svc-<id>` now exists; then a second item whose `legacy-svc-` id is present in `deletion_log` must NOT get a schedule. Mirror the harness of an existing migration test under `test/core/database/` for constructing the database and calling migration helpers (use the same `NativeDatabase.memory()` / test constructor pattern those tests use).
+Create `test/core/database/migration_v131_service_reconcile_test.dart`. Open an `AppDatabase` on an in-memory executor, insert a diver + equipment with `service_interval_days` set but no `legacy-svc-` schedule, run `_reconcileLegacyServiceSchedules`, and assert a schedule with id `legacy-svc-<id>` now exists; then a second item whose `legacy-svc-` id is present in `deletion_log` must NOT get a schedule. Mirror the harness of an existing migration test under `test/core/database/` for constructing the database and calling migration helpers (use the same `NativeDatabase.memory()` / test constructor pattern those tests use).
 
 ```dart
 // Skeleton — follow an existing migration test for DB construction.
@@ -1284,7 +1284,7 @@ test('reconcile skips a tombstoned legacy-svc clock', () async {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `flutter test test/core/database/migration_v130_service_reconcile_test.dart`
+Run: `flutter test test/core/database/migration_v131_service_reconcile_test.dart`
 Expected: FAIL — the reconcile helper does not exist.
 
 - [ ] **Step 3: Add the reconcile helper**
@@ -1292,7 +1292,7 @@ Expected: FAIL — the reconcile helper does not exist.
 In `database.dart`, add the method next to `_backfillLegacyServiceSchedules`:
 
 ```dart
-  /// v130 one-time reconciliation: items whose legacy interval was set via the
+  /// v131 one-time reconciliation: items whose legacy interval was set via the
   /// edit form AFTER the v122 backfill ran have an interval column but no
   /// clock. Create the same deterministic `legacy-svc-<id>` "General service"
   /// clock for them so removing the legacy edit field does not drop their due
@@ -1326,7 +1326,7 @@ In `database.dart`, add the method next to `_backfillLegacyServiceSchedules`:
     ''');
   }
 
-  /// Test-only hook to exercise the v130 reconciliation directly.
+  /// Test-only hook to exercise the v131 reconciliation directly.
   @visibleForTesting
   Future<void> reconcileLegacyServiceSchedulesForTest() =>
       _reconcileLegacyServiceSchedules();
@@ -1336,30 +1336,30 @@ Ensure `import 'package:flutter/foundation.dart';` (for `@visibleForTesting`) is
 
 - [ ] **Step 4: Bump the schema version and wire the onUpgrade block**
 
-Change `static const int currentSchemaVersion = 129;` to `= 130;`.
+Change `static const int currentSchemaVersion = 130;` to `= 131;`.
 
 In the `onUpgrade` migration callback, after the `if (from < 129) ...` block, add:
 
 ```dart
-        // v130: reconcile legacy service intervals edited after the v122
+        // v131: reconcile legacy service intervals edited after the v122
         // backfill into General service clocks (deletion-log guarded).
-        if (from < 130) {
+        if (from < 131) {
           await _reconcileLegacyServiceSchedules();
         }
-        if (from < 130) await reportProgress();
+        if (from < 131) await reportProgress();
 ```
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `flutter test test/core/database/migration_v130_service_reconcile_test.dart`
+Run: `flutter test test/core/database/migration_v131_service_reconcile_test.dart`
 Expected: PASS (both cases)
 
 - [ ] **Step 6: Commit**
 
 ```bash
 dart format .
-git add lib/core/database/database.dart test/core/database/migration_v130_service_reconcile_test.dart
-git commit -m "feat(db): v130 reconcile legacy service intervals into clocks"
+git add lib/core/database/database.dart test/core/database/migration_v131_service_reconcile_test.dart
+git commit -m "feat(db): v131 reconcile legacy service intervals into clocks"
 ```
 
 ---

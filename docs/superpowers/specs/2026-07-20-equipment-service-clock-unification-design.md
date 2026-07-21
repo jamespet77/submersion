@@ -131,9 +131,9 @@ directly), but no UI reads the getters after this change.
   `serviceIntervalDays` column keeps reading the frozen column (kept to avoid
   breaking persisted table configs that reference it by name).
 
-### Part D: Migration (v130, one-time)
+### Part D: Migration (v131, one-time)
 
-Bump `currentSchemaVersion` 129 -> 130. Add an onUpgrade `if (from < 130)` block
+Bump `currentSchemaVersion` 130 -> 131. Add an onUpgrade `if (from < 131)` block
 (never in `beforeOpen`) that reconciles the edge case where a legacy interval was
 set via the edit form after the v122 backfill ran, so such an item keeps a due
 signal once the field is removed:
@@ -178,7 +178,7 @@ unless `equipment` has the `service_interval_days` / `last_service_date` columns
   reads `isServiceDue`; `SessionItemComposer` flags overdue from the passed set.
 - Sorts: `applyEquipmentSorting` with `serviceDue` orders overdue/soonest/none;
   table adapter sorts `nextServiceDue` by clock date.
-- Migration v130: item with post-v122 legacy interval and no clock gets a
+- Migration v131: item with post-v122 legacy interval and no clock gets a
   `legacy-svc-` clock; item with a tombstoned `legacy-svc-` id does not.
 - Update existing legacy-badge/service tests:
   `equipment_tile_service_badge_test`, `dense_equipment_list_tile_test`,

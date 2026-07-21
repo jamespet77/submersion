@@ -3561,7 +3561,7 @@ class AppDatabase extends _$AppDatabase {
     ''');
   }
 
-  /// Test-only hook exercising the v130 reconciliation directly.
+  /// Test-only hook exercising the v131 reconciliation directly.
   Future<void> reconcileLegacyServiceSchedulesForTest() =>
       _reconcileLegacyServiceSchedules();
 

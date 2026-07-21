@@ -82,13 +82,18 @@ class _StartSessionSheetState extends ConsumerState<_StartSessionSheet> {
           diverId: diverId,
         );
         gear = all.where((g) => chosenSet.equipmentIds.contains(g.id)).toList();
-        // Overdue gear is flagged from the service-clock ledger.
-        final worstClocks = await ref.read(equipmentWorstClockProvider.future);
-        overdueEquipmentIds = {
-          for (final entry in worstClocks.entries)
-            if (entry.value.status.severity == ServiceClockSeverity.overdue)
-              entry.key,
-        };
+        // Overdue gear is flagged from the service-clock ledger, evaluated only
+        // for the chosen set (proportional to the set, not all active gear).
+        final overdue = <String>{};
+        for (final g in gear) {
+          final statuses = await ref.read(
+            serviceClockStatusesProvider(g.id).future,
+          );
+          if (statuses.any((s) => s.severity == ServiceClockSeverity.overdue)) {
+            overdue.add(g.id);
+          }
+        }
+        overdueEquipmentIds = overdue;
       }
       final items = SessionItemComposer.compose(
         templateItems: _templateItems,
