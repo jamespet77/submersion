@@ -52,7 +52,7 @@ Future<void> showServiceKindPicker(
                   onTap: () async {
                     Navigator.pop(sheetContext);
                     final now = DateTime.now();
-                    await ref
+                    final created = await ref
                         .read(serviceScheduleRepositoryProvider)
                         .createSchedule(
                           ServiceSchedule(
@@ -63,6 +63,20 @@ Future<void> showServiceKindPicker(
                             updatedAt: now,
                           ),
                         );
+                    // A kind with no default interval yields an invisible
+                    // clock until an interval is set, so configure it now.
+                    final needsInterval =
+                        kind.defaultIntervalDays == null &&
+                        kind.defaultIntervalDives == null &&
+                        kind.defaultIntervalHours == null;
+                    if (needsInterval && context.mounted) {
+                      await showScheduleOverrideDialog(
+                        context,
+                        ref,
+                        schedule: created,
+                        kind: kind,
+                      );
+                    }
                     invalidateServiceClockProviders(ref, equipmentId);
                   },
                 ),
