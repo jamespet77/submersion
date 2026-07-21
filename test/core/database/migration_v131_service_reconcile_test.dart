@@ -78,11 +78,11 @@ void main() {
     expect(await scheduleIntervals('legacy-svc-e3'), [999]);
   });
 
-  test('v131 is the current schema version (exact-latest tripwire)', () {
-    // Exact assertion: the newest migration owns the tripwire, so the next
-    // schema bump must move it forward. Relax to greaterThanOrEqualTo and add
-    // a fresh exact test when a later migration lands on top of v131.
-    expect(AppDatabase.currentSchemaVersion, 131);
+  test('v131 is present in the schema-version ladder', () {
+    // Relaxed from an exact-latest tripwire: v132 (bottom-time backfill) landed
+    // on top of v131, so the exact-latest assertion now lives in
+    // migration_v132_bottom_time_backfill_test.dart.
+    expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(131));
     expect(AppDatabase.migrationVersions, contains(131));
   });
 }
