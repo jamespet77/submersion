@@ -3178,9 +3178,7 @@ class AppDatabase extends _$AppDatabase {
     // test fixtures (and any DB that reached this block through a guarded
     // path) may lack the tables or the specific columns this reads, in which
     // case there is simply nothing to backfill.
-    final diveCols = await customSelect(
-      "PRAGMA table_info('dives')",
-    ).get();
+    final diveCols = await customSelect("PRAGMA table_info('dives')").get();
     final diveColNames = diveCols.map((c) => c.read<String>('name')).toSet();
     if (!diveColNames.contains('bottom_time') ||
         !diveColNames.contains('runtime')) {
@@ -3192,7 +3190,8 @@ class AppDatabase extends _$AppDatabase {
     final profileColNames = profileCols
         .map((c) => c.read<String>('name'))
         .toSet();
-    if (!profileColNames.contains('is_primary') ||
+    if (!profileColNames.contains('dive_id') ||
+        !profileColNames.contains('is_primary') ||
         !profileColNames.contains('timestamp') ||
         !profileColNames.contains('depth')) {
       return;

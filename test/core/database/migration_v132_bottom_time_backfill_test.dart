@@ -188,6 +188,44 @@ void main() {
     },
   );
 
+  test('no-ops safely when dive_profiles lacks a dive_id column', () async {
+    // An ancient/minimal fixture could have dive_profiles with the read
+    // columns but without dive_id (which the per-dive query filters on). The
+    // guard must include dive_id so the migration no-ops instead of throwing
+    // "no such column: dive_id".
+    final db = AppDatabase(
+      NativeDatabase.memory(
+        setup: (rawDb) {
+          rawDb.execute('PRAGMA user_version = 130');
+          rawDb.execute('''
+            CREATE TABLE dives (
+              id TEXT NOT NULL PRIMARY KEY,
+              bottom_time INTEGER,
+              runtime INTEGER,
+              hlc TEXT
+            )
+          ''');
+          rawDb.execute('''
+            CREATE TABLE dive_profiles (
+              id TEXT NOT NULL PRIMARY KEY,
+              is_primary INTEGER NOT NULL DEFAULT 1,
+              timestamp INTEGER NOT NULL,
+              depth REAL NOT NULL
+            )
+          ''');
+          rawDb.execute(
+            'INSERT INTO dives (id, bottom_time, runtime) VALUES (?, ?, ?)',
+            ['d6', 1320, 1320],
+          );
+        },
+      ),
+    );
+    addTearDown(db.close);
+
+    // Opening (which runs onUpgrade) must not throw; the dive is untouched.
+    expect(await bottomTimeOf(db, 'd6'), 1320);
+  });
+
   test('schema version is at least 132 and the migration list includes it', () {
     expect(AppDatabase.currentSchemaVersion, greaterThanOrEqualTo(132));
     expect(AppDatabase.migrationVersions, contains(132));
