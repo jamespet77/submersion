@@ -88,9 +88,7 @@ class LinuxFfmpegEngine implements TranscodeEngine {
       } on FileSystemException {
         // Nothing to clean.
       }
-      final stderr = _runner is SystemProcessRunner
-          ? _runner.lastStderr
-          : '';
+      final stderr = _runner is SystemProcessRunner ? _runner.lastStderr : '';
       throw TranscodeException(
         'ffmpeg exited $exitCode${stderr.isEmpty ? '' : ': $stderr'}',
       );
