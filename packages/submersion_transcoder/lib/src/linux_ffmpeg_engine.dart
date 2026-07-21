@@ -47,7 +47,7 @@ class LinuxFfmpegEngine implements TranscodeEngine {
   }) async {
     final tmp = File('${output.path}.tmp');
     final durationMs = probe?.durationMs ?? 0;
-    final exitCode = await _runner.stream(
+    final result = await _runner.stream(
       'ffmpeg',
       [
         '-y',
@@ -87,15 +87,15 @@ class LinuxFfmpegEngine implements TranscodeEngine {
         }
       },
     );
-    if (exitCode != 0) {
+    if (result.exitCode != 0) {
       try {
         await tmp.delete();
       } on FileSystemException {
         // Nothing to clean.
       }
-      final stderr = _runner is SystemProcessRunner ? _runner.lastStderr : '';
+      final stderr = result.stderr;
       throw TranscodeException(
-        'ffmpeg exited $exitCode${stderr.isEmpty ? '' : ': $stderr'}',
+        'ffmpeg exited ${result.exitCode}${stderr.isEmpty ? '' : ': $stderr'}',
       );
     }
     await tmp.rename(output.path);
