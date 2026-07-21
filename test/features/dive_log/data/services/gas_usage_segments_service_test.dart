@@ -199,6 +199,71 @@ void main() {
       expect(segments.single.gasMix.he, 45);
       expect(segments.single.label, 'Tx 18/45');
     });
+
+    test(
+      'gas change at the first sample declares the initial gas, not a switch',
+      () {
+        // Subsurface writes the starting gas as a gaschange event at the first
+        // sample (t=10), never at t=0, and it may name a cylinder other than
+        // the lowest-order one (fixtures 002 and 003 do exactly this).
+        final deco = _tank(id: 'deco', o2: 32, name: 'Deco');
+        final back = _tank(id: 'back', o2: 21, name: 'Back', order: 1);
+        final segments = buildGasUsageSegments(
+          tanks: [deco, back],
+          gasSwitches: [
+            _switch(tankId: 'back', timestamp: 10, o2Fraction: 0.21),
+          ],
+          diveDurationSeconds: 1800,
+          firstSampleSeconds: 10,
+        );
+        expect(segments, hasLength(1));
+        expect(segments.single.startSeconds, 0);
+        expect(segments.single.endSeconds, 1800);
+        expect(segments.single.gasMix.o2, 21);
+        expect(segments.single.tankName, 'Back');
+      },
+    );
+
+    test('a genuine mid-dive switch still gets its own segment', () {
+      final deco = _tank(id: 'deco', o2: 50, name: 'Deco');
+      final back = _tank(id: 'back', o2: 21, name: 'Back', order: 1);
+      final segments = buildGasUsageSegments(
+        tanks: [deco, back],
+        gasSwitches: [
+          _switch(tankId: 'back', timestamp: 10, o2Fraction: 0.21),
+          _switch(tankId: 'deco', timestamp: 1500, o2Fraction: 0.50),
+        ],
+        diveDurationSeconds: 3000,
+        firstSampleSeconds: 10,
+      );
+      expect(segments, hasLength(2));
+      expect(segments[0].startSeconds, 0);
+      expect(segments[0].endSeconds, 1500);
+      expect(segments[0].gasMix.o2, 21);
+      expect(segments[1].startSeconds, 1500);
+      expect(segments[1].endSeconds, 3000);
+      expect(segments[1].gasMix.o2, 50);
+    });
+
+    test(
+      'a switch after the first sample still gets a starting-tank segment',
+      () {
+        final back = _tank(id: 'back', o2: 32, name: 'Back');
+        final deco = _tank(id: 'deco', o2: 80, order: 1);
+        final segments = buildGasUsageSegments(
+          tanks: [back, deco],
+          gasSwitches: [
+            _switch(tankId: 'deco', timestamp: 600, o2Fraction: 0.80),
+          ],
+          diveDurationSeconds: 1800,
+          firstSampleSeconds: 10,
+        );
+        expect(segments, hasLength(2));
+        expect(segments[0].startSeconds, 0);
+        expect(segments[0].endSeconds, 600);
+        expect(segments[0].gasMix.o2, 32);
+      },
+    );
   });
 
   group('buildActiveTankIntervals', () {
@@ -295,6 +360,21 @@ void main() {
           _switch(tankId: 'deco', timestamp: 9000, o2Fraction: 0.50),
         ],
         diveDurationSeconds: 1800,
+      );
+      expect(result['back'], [(start: 0, end: 1800)]);
+      expect(result.containsKey('deco'), isFalse);
+    });
+
+    test('gas change at the first sample owns the window from t=0, not the '
+        'lowest-order tank', () {
+      final result = buildActiveTankIntervals(
+        tanks: [
+          _tank(id: 'deco', o2: 32),
+          _tank(id: 'back', o2: 21, order: 1),
+        ],
+        gasSwitches: [_switch(tankId: 'back', timestamp: 10, o2Fraction: 0.21)],
+        diveDurationSeconds: 1800,
+        firstSampleSeconds: 10,
       );
       expect(result['back'], [(start: 0, end: 1800)]);
       expect(result.containsKey('deco'), isFalse);
