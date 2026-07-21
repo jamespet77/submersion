@@ -27,6 +27,48 @@ public class SubmersionTranscoderPlugin: NSObject, FlutterPlugin, FlutterStreamH
     switch call.method {
     case "isAvailable":
       result(true)
+    case "probe":
+      guard let args = call.arguments as? [String: Any],
+        let path = args["path"] as? String
+      else {
+        result(nil)
+        return
+      }
+      result(AvfTranscoder.probe(path: path))
+    case "transcode":
+      guard let a = call.arguments as? [String: Any],
+        let source = a["source"] as? String,
+        let output = a["output"] as? String,
+        let maxHeight = a["maxHeight"] as? Int,
+        let vk = a["videoBitrateKbps"] as? Int,
+        let ak = a["audioBitrateKbps"] as? Int,
+        let progressId = a["progressId"] as? String
+      else {
+        result(
+          FlutterError(code: "bad_args", message: "transcode args", details: nil))
+        return
+      }
+      DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+        do {
+          try AvfTranscoder.transcode(
+            source: source, output: output,
+            maxHeight: maxHeight, videoBitrateKbps: vk, audioBitrateKbps: ak,
+            onProgress: { fraction in
+              DispatchQueue.main.async {
+                self?.progressSink?(
+                  ["progressId": progressId, "fraction": fraction])
+              }
+            })
+          DispatchQueue.main.async { result(nil) }
+        } catch {
+          DispatchQueue.main.async {
+            result(
+              FlutterError(
+                code: "transcode_failed",
+                message: error.localizedDescription, details: nil))
+          }
+        }
+      }
     default:
       result(FlutterMethodNotImplemented)
     }
