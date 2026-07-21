@@ -129,15 +129,21 @@ List<EquipmentItem> applyEquipmentSorting(
         );
       case EquipmentSortField.serviceDue:
         final ra = urgencyRank(a), rb = urgencyRank(b);
+        int cmp;
         if (ra != rb) {
           // Higher rank = more urgent; ascending lists most urgent first.
-          final c = rb.compareTo(ra);
-          return sort.direction == SortDirection.ascending ? c : -c;
+          cmp = rb.compareTo(ra);
+        } else {
+          final da = serviceUrgency[a.id]?.dueDate;
+          final db = serviceUrgency[b.id]?.dueDate;
+          cmp = (da ?? DateTime(9999)).compareTo(db ?? DateTime(9999));
+          // Deterministic tie-break: List.sort is not stable, so equal-urgency
+          // items (common while the urgency map is empty/loading) could reorder
+          // between rebuilds and flicker. Fall back to name, then id.
+          if (cmp == 0) cmp = a.name.compareTo(b.name);
+          if (cmp == 0) cmp = a.id.compareTo(b.id);
         }
-        final da = serviceUrgency[a.id]?.dueDate;
-        final db = serviceUrgency[b.id]?.dueDate;
-        final byDate = (da ?? DateTime(9999)).compareTo(db ?? DateTime(9999));
-        return sort.direction == SortDirection.ascending ? byDate : -byDate;
+        return sort.direction == SortDirection.ascending ? cmp : -cmp;
     }
 
     if (invertForText) {

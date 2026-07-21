@@ -60,4 +60,35 @@ void main() {
       expect(sorted.map((e) => e.id).toList(), ['a', 'b', 'c']);
     },
   );
+
+  test('serviceDue breaks ties deterministically by name (empty urgency)', () {
+    // No urgency data: every item has equal rank/dueDate, so the comparator
+    // must fall back to a stable key or a non-stable List.sort could reorder
+    // them between rebuilds (flicker).
+    const charlie = EquipmentItem(
+      id: 'i3',
+      name: 'Charlie',
+      type: EquipmentType.tank,
+    );
+    const alpha = EquipmentItem(
+      id: 'i1',
+      name: 'Alpha',
+      type: EquipmentType.tank,
+    );
+    const bravo = EquipmentItem(
+      id: 'i2',
+      name: 'Bravo',
+      type: EquipmentType.tank,
+    );
+
+    final sorted = applyEquipmentSorting(
+      [charlie, alpha, bravo],
+      const SortState(
+        field: EquipmentSortField.serviceDue,
+        direction: SortDirection.ascending,
+      ),
+    );
+
+    expect(sorted.map((e) => e.name).toList(), ['Alpha', 'Bravo', 'Charlie']);
+  });
 }
