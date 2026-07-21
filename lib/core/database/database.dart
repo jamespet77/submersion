@@ -6944,12 +6944,6 @@ class AppDatabase extends _$AppDatabase {
           );
         }
 
-        // Data self-heal: backfill a primary dive_data_sources row for dives
-        // that have profile samples but no source row (legacy file imports).
-        // Without it, the 3D/spatial/compare views spin forever on those dives.
-        // Idempotent and local-only (deterministic ids, no HLC bump).
-        await _backfillMissingDataSources();
-
         // Performance indexes historically existed only in onUpgrade blocks,
         // so a database created fresh at a recent schema version -- or
         // arriving via restore or sync-adopt -- never got them, and per-dive
@@ -6968,6 +6962,15 @@ class AppDatabase extends _$AppDatabase {
           }
           return true;
         }());
+
+        // Data self-heal: backfill a primary dive_data_sources row for dives
+        // that have profile samples but no source row (legacy file imports).
+        // Without it, the 3D/spatial/compare views spin forever on those dives.
+        // Idempotent and local-only (deterministic ids, no HLC bump). Runs
+        // AFTER ensurePerformanceIndexes so its per-dive EXISTS/NOT EXISTS
+        // subqueries hit idx_dive_profiles_dive_id / idx_dive_data_sources_dive_id
+        // instead of full-scanning million-row tables on a fresh/restored DB.
+        await _backfillMissingDataSources();
       },
     );
   }
