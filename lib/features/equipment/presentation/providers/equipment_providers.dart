@@ -595,8 +595,21 @@ final serviceClockStatusesProvider =
       return _evaluateClocksFor(ref, item);
     });
 
-/// Every clock on active gear that is due soon or overdue, overdue first.
-final dueClocksProvider = FutureProvider<List<DueClock>>((ref) async {
+/// One active equipment item paired with every evaluated clock on it.
+typedef EquipmentClocks = ({
+  EquipmentItem item,
+  List<ServiceClockStatus> statuses,
+});
+
+/// Evaluates the clocks of every active gear item exactly once. Both
+/// [dueClocksProvider] (badges/dashboard/trip) and
+/// [equipmentServiceUrgencyProvider] (sort/table columns) derive from this, so
+/// a screen watching both pays the per-item DB evaluation (schedules + records
+/// + usage + window) a single time instead of twice. Invalidate THIS provider
+/// (not the derived ones) to force a re-evaluation after schedule/kind edits.
+final activeEquipmentClocksProvider = FutureProvider<List<EquipmentClocks>>((
+  ref,
+) async {
   final repository = ref.watch(equipmentRepositoryProvider);
   final validatedDiverId = await ref.watch(
     validatedCurrentDiverIdProvider.future,
@@ -605,14 +618,20 @@ final dueClocksProvider = FutureProvider<List<DueClock>>((ref) async {
 
   final items = await repository.getActiveEquipment(diverId: validatedDiverId);
   final kinds = await ref.watch(serviceKindRepositoryProvider).getAllKinds();
-  final due = <DueClock>[];
-  for (final item in items) {
-    final statuses = await _evaluateClocksFor(ref, item, kinds: kinds);
-    due.addAll([
-      for (final s in statuses)
-        if (s.severity != ServiceClockSeverity.ok) (item: item, status: s),
-    ]);
-  }
+  return [
+    for (final item in items)
+      (item: item, statuses: await _evaluateClocksFor(ref, item, kinds: kinds)),
+  ];
+});
+
+/// Every clock on active gear that is due soon or overdue, overdue first.
+final dueClocksProvider = FutureProvider<List<DueClock>>((ref) async {
+  final evaluated = await ref.watch(activeEquipmentClocksProvider.future);
+  final due = <DueClock>[
+    for (final e in evaluated)
+      for (final s in e.statuses)
+        if (s.severity != ServiceClockSeverity.ok) (item: e.item, status: s),
+  ];
   due.sort((a, b) {
     if (a.status.severity != b.status.severity) {
       return b.status.severity.index.compareTo(a.status.severity.index);
@@ -646,25 +665,13 @@ final equipmentWorstClockProvider = FutureProvider<Map<String, DueClock>>((
 /// column so not-yet-due gear still sorts and displays its upcoming date.
 final equipmentServiceUrgencyProvider =
     FutureProvider<Map<String, ServiceClockStatus>>((ref) async {
-      final repository = ref.watch(equipmentRepositoryProvider);
-      final validatedDiverId = await ref.watch(
-        validatedCurrentDiverIdProvider.future,
-      );
-      ref.invalidateSelfWhen(repository.watchEquipmentChanges());
-      final items = await repository.getActiveEquipment(
-        diverId: validatedDiverId,
-      );
-      final kinds = await ref
-          .watch(serviceKindRepositoryProvider)
-          .getAllKinds();
-      final out = <String, ServiceClockStatus>{};
-      for (final item in items) {
-        final statuses = await _evaluateClocksFor(ref, item, kinds: kinds);
-        if (statuses.isEmpty) continue;
-        // Engine returns statuses worst-severity-first, then dueDate ascending.
-        out[item.id] = statuses.first;
-      }
-      return out;
+      final evaluated = await ref.watch(activeEquipmentClocksProvider.future);
+      return {
+        for (final e in evaluated)
+          if (e.statuses.isNotEmpty)
+            // Engine returns statuses worst-severity-first, then dueDate asc.
+            e.item.id: e.statuses.first,
+      };
     });
 
 /// Clocks that block an upcoming trip: date trigger before the trip ends, or

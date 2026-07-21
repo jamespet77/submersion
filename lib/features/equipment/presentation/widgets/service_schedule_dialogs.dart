@@ -12,13 +12,13 @@ import 'package:submersion/l10n/l10n_extension.dart';
 void invalidateServiceClockProviders(WidgetRef ref, String equipmentId) {
   ref.invalidate(serviceClockStatusesProvider(equipmentId));
   ref.invalidate(serviceSchedulesForEquipmentProvider(equipmentId));
-  ref.invalidate(dueClocksProvider);
-  ref.invalidate(equipmentWorstClockProvider);
-  // Schedule writes hit service_schedules, not the equipment table, so the
-  // urgency provider's invalidateSelfWhen(watchEquipmentChanges) never fires
-  // for them -- invalidate it here or the Service Due sort/table forecast
-  // columns stay stale until an unrelated equipment change.
-  ref.invalidate(equipmentServiceUrgencyProvider);
+  // dueClocks/worstClock (badges, dashboard, trip) and serviceUrgency (Service
+  // Due sort + table forecast columns) all derive from this single per-item
+  // evaluation, so invalidating it refreshes them all with one re-eval.
+  // Schedule writes touch only service_schedules, so its
+  // invalidateSelfWhen(watchEquipmentChanges) never fires for them -- it must
+  // be invalidated explicitly here.
+  ref.invalidate(activeEquipmentClocksProvider);
 }
 
 /// Bottom sheet listing service kinds that apply to [equipmentType] and are

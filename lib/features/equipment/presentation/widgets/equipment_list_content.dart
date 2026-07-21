@@ -117,8 +117,16 @@ class _EquipmentListContentState extends ConsumerState<EquipmentListContent> {
   Widget build(BuildContext context) {
     final sort = ref.watch(equipmentSortProvider);
     final viewMode = ref.watch(equipmentListViewModeProvider);
-    final serviceUrgency =
-        ref.watch(equipmentServiceUrgencyProvider).value ?? const {};
+    // The urgency map drives the Service Due sort and (in table mode) the
+    // forecast columns, and it evaluates clocks for all active gear -- so only
+    // watch it when needed, not on the common name/type list sorts.
+    final needsUrgency =
+        viewMode == ListViewMode.table ||
+        sort.field == EquipmentSortField.serviceDue;
+    final serviceUrgency = needsUrgency
+        ? (ref.watch(equipmentServiceUrgencyProvider).value ??
+              const <String, ServiceClockStatus>{})
+        : const <String, ServiceClockStatus>{};
 
     final AsyncValue<List<EquipmentItem>> equipmentAsync;
     if (_selectedFilter == _serviceDueFilter) {
