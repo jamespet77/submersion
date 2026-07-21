@@ -114,6 +114,25 @@ void main() {
     expect(await output.exists(), isFalse);
   });
 
+  test('a rename failure becomes a TranscodeException, no tmp left', () async {
+    // Make the output path an existing directory so the final tmp->output
+    // rename fails with a FileSystemException; the engine must convert that to
+    // a TranscodeException (contract) so the adapter can fall back to original.
+    await Directory('${dir.path}/out.mp4').create();
+    runner.onStream = (exe, args) {
+      File(args.last).writeAsBytesSync([1, 2, 3]);
+    };
+    await expectLater(
+      engine.transcode(
+        source: File('${dir.path}/in.mov'),
+        output: File('${dir.path}/out.mp4'),
+        target: target,
+      ),
+      throwsA(isA<TranscodeException>()),
+    );
+    expect(await File('${dir.path}/out.mp4.tmp').exists(), isFalse);
+  });
+
   test(
     'progress fractions derive from out_time_us over probe duration',
     () async {

@@ -98,6 +98,19 @@ class LinuxFfmpegEngine implements TranscodeEngine {
         'ffmpeg exited ${result.exitCode}${stderr.isEmpty ? '' : ': $stderr'}',
       );
     }
-    await tmp.rename(output.path);
+    // The final rename can still fail (permission/IO); surface it as a
+    // TranscodeException (contract: engine failures throw TranscodeException,
+    // never a raw FileSystemException) so PlatformVideoTranscoder's
+    // fallback-to-original path catches it, and leave no .tmp behind.
+    try {
+      await tmp.rename(output.path);
+    } on FileSystemException catch (e) {
+      try {
+        await tmp.delete();
+      } on FileSystemException {
+        // Nothing to clean.
+      }
+      throw TranscodeException('failed to finalize output: ${e.message}');
+    }
   }
 }
