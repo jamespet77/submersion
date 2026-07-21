@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -98,6 +99,61 @@ void main() {
     );
     expect(ids.length, 2);
     expect(ids[0], isNot(ids[1]));
+  });
+
+  test('progress routes by progressId, clamps, and stops after done', () async {
+    const progressChannel = MethodChannel('submersion_transcoder/progress');
+    // Swallow the EventChannel listen/cancel calls.
+    messenger.setMockMethodCallHandler(progressChannel, (_) async => null);
+    addTearDown(
+      () => messenger.setMockMethodCallHandler(progressChannel, null),
+    );
+
+    Future<void> emit(Map<String, dynamic> data) async {
+      await messenger.handlePlatformMessage(
+        progressChannel.name,
+        const StandardMethodCodec().encodeSuccessEnvelope(data),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero); // let the broadcast deliver
+    }
+
+    final reported = <double>[];
+    final methodDone = Completer<void>();
+    String? progressId;
+    messenger.setMockMethodCallHandler(methods, (call) async {
+      if (call.method == 'transcode') {
+        progressId = (call.arguments as Map)['progressId'] as String;
+        await methodDone.future; // keep transcode pending while we emit
+      }
+      return null;
+    });
+
+    final future = DarwinAvfEngine().transcode(
+      source: File('/in.mov'),
+      output: File('/out.mp4'),
+      target: const TranscodeTarget(
+        maxHeight: 720,
+        videoBitrateKbps: 4000,
+        audioBitrateKbps: 128,
+      ),
+      onProgress: reported.add,
+    );
+    while (progressId == null) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    await emit({'progressId': 'someone-else', 'fraction': 0.5}); // wrong id
+    await emit({'progressId': progressId, 'fraction': 0.5}); // -> 0.5
+    await emit({'progressId': progressId, 'fraction': 1.5}); // clamp -> 1.0
+    await emit({'progressId': progressId, 'fraction': -0.3}); // clamp -> 0.0
+    expect(reported, [0.5, 1.0, 0.0]);
+
+    methodDone.complete();
+    await future; // transcode completes -> subscription cancelled in finally
+
+    await emit({'progressId': progressId, 'fraction': 0.8}); // after cancel
+    expect(reported, [0.5, 1.0, 0.0], reason: 'no callbacks after completion');
   });
 
   test('a PlatformException becomes a TranscodeException', () async {
