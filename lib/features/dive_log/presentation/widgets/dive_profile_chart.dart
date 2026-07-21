@@ -1254,7 +1254,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
         rows.add(
           TooltipRow(
             label: 'ppHe',
-            value: '${ppHe.toStringAsFixed(2)} bar',
+            value: '${_readoutValue(ppHe, onLeadIn).toStringAsFixed(2)} bar',
             bulletColor: Colors.pink.shade300,
           ),
         );
@@ -1285,7 +1285,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
         TooltipRow(
           label: 'Density',
           value:
-              '${widget.densityCurve![spot.spotIndex].toStringAsFixed(2)} g/L',
+              '${_readoutValue(widget.densityCurve![spot.spotIndex], onLeadIn).toStringAsFixed(2)} g/L',
           bulletColor: Colors.brown,
         ),
       );
@@ -2622,6 +2622,15 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                       depthIndex >= 0 &&
                       depthIndex < widget.profile.length;
 
+                  // The cursor is on the lead-in vertex when the resolved bar's
+                  // start is negative and the touched spot is its first: the
+                  // readout must describe t=0, not repeat the first sample.
+                  final onLeadIn =
+                      depthSpot != null &&
+                      depthSpot.spotIndex == 0 &&
+                      depthBarStarts[depthSpot.barIndex] < 0 &&
+                      shouldDrawSurfaceLeadIn(widget.profile);
+
                   // Return cached result if the same sample is touched again.
                   // The cache is keyed on the resolved depth index, but the
                   // cached list length equals the number of touched bars when it
@@ -2648,7 +2657,9 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                     }
                     final spot = (spotIndex: depthIndex);
 
-                    final point = widget.profile[spot.spotIndex];
+                    final point = onLeadIn
+                        ? _surfaceReadoutPoint()
+                        : widget.profile[spot.spotIndex];
                     final minutes = point.timestamp ~/ 60;
                     final seconds = point.timestamp % 60;
 
@@ -2899,7 +2910,10 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                       String ppO2Value = '—';
                       if (widget.ppO2Curve != null &&
                           spot.spotIndex < widget.ppO2Curve!.length) {
-                        final ppO2 = widget.ppO2Curve![spot.spotIndex];
+                        final ppO2 = _readoutValue(
+                          widget.ppO2Curve![spot.spotIndex],
+                          onLeadIn,
+                        );
                         ppO2Value = '${ppO2.toStringAsFixed(2)} bar';
                       }
                       addRow(
@@ -2930,7 +2944,10 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                       String ppN2Value = '—';
                       if (widget.ppN2Curve != null &&
                           spot.spotIndex < widget.ppN2Curve!.length) {
-                        final ppN2 = widget.ppN2Curve![spot.spotIndex];
+                        final ppN2 = _readoutValue(
+                          widget.ppN2Curve![spot.spotIndex],
+                          onLeadIn,
+                        );
                         ppN2Value = '${ppN2.toStringAsFixed(2)} bar';
                       }
                       addRow(
@@ -2947,7 +2964,8 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                           spot.spotIndex < widget.ppHeCurve!.length) {
                         final ppHe = widget.ppHeCurve![spot.spotIndex];
                         if (ppHe > 0.001) {
-                          ppHeValue = '${ppHe.toStringAsFixed(2)} bar';
+                          ppHeValue =
+                              '${_readoutValue(ppHe, onLeadIn).toStringAsFixed(2)} bar';
                         }
                       }
                       addRow(
@@ -2979,7 +2997,10 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                       String densityValue = '—';
                       if (widget.densityCurve != null &&
                           spot.spotIndex < widget.densityCurve!.length) {
-                        final density = widget.densityCurve![spot.spotIndex];
+                        final density = _readoutValue(
+                          widget.densityCurve![spot.spotIndex],
+                          onLeadIn,
+                        );
                         densityValue = '${density.toStringAsFixed(2)} g/L';
                       }
                       addRow(
@@ -3170,10 +3191,35 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
                       }
                     }
 
+                    // On the lead-in, mark every carried-over value so a held
+                    // reading is never shown as measured. Exact and computed
+                    // rows (time, depth, the partial pressures, MOD, density)
+                    // are left untouched -- same set as the overlay readout.
+                    final displayRows = onLeadIn
+                        ? [
+                            for (final row in tooltipRows)
+                              if (_exactAtSurfaceLabels(
+                                    context,
+                                  ).contains(row.label) ||
+                                  row.label.startsWith(
+                                    context.l10n.diveLog_tooltip_depth,
+                                  ))
+                                row
+                              else
+                                (
+                                  label: row.label,
+                                  value: '${row.value} (interpolated)',
+                                  bulletColor: row.bulletColor,
+                                  bullet: row.bullet,
+                                  bulletSize: row.bulletSize,
+                                ),
+                          ]
+                        : tooltipRows;
+
                     const rowWidth = labelWidth + valueWidth;
                     final rowFiller = List.filled(rowWidth, '0').join();
                     final lines = <TextSpan>[];
-                    for (final row in tooltipRows) {
+                    for (final row in displayRows) {
                       if (lines.isNotEmpty) {
                         lines.add(const TextSpan(text: '\n'));
                       }
@@ -3799,12 +3845,20 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
   /// Built at the call site because some labels are localized: matching
   /// hardcoded English would silently mark them interpolated in other locales.
   Set<String> _exactAtSurfaceLabels(BuildContext context) => {
+    // The overlay readout uses hardcoded labels; the inline (fl_chart) readout
+    // uses localized ones. Both forms are exempt so neither is mislabelled.
     'Time',
     'Depth',
     'ppN2',
     'ppHe',
     'Density',
     'MOD',
+    context.l10n.diveLog_tooltip_time,
+    context.l10n.diveLog_tooltip_depth,
+    context.l10n.diveLog_tooltip_ppN2,
+    context.l10n.diveLog_tooltip_ppHe,
+    context.l10n.diveLog_tooltip_mod,
+    context.l10n.diveLog_tooltip_density,
     context.l10n.diveLog_tooltip_ppO2,
     '${context.l10n.diveLog_tooltip_ppO2} '
         '${context.l10n.diveLog_tooltip_avgCalculated}',
