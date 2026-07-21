@@ -108,7 +108,7 @@ void main() {
   );
 
   test(
-    'applies a pre-v130 diver_settings payload missing deco stop keys',
+    'applies a pre-v133 diver_settings payload missing deco stop keys',
     () async {
       await db.customStatement('PRAGMA foreign_keys = OFF');
 
@@ -126,7 +126,7 @@ void main() {
       final exported = await serializer.fetchRecord('diverSettings', 'ds3');
       expect(exported, isNotNull);
 
-      // A payload exported before v130 has neither key. Both columns are NOT
+      // A payload exported before v133 has neither key. Both columns are NOT
       // NULL, so an unseeded import would throw in DiverSetting.fromJson.
       final legacy = Map<String, dynamic>.from(exported!)
         ..remove('showDecoStopsOnProfile')
@@ -142,7 +142,7 @@ void main() {
       final row = await (db.select(
         db.diverSettings,
       )..where((t) => t.id.equals('ds3'))).getSingle();
-      // The v130 columns hydrate to their defaults rather than throwing.
+      // The v133 columns hydrate to their defaults rather than throwing.
       expect(row.showDecoStopsOnProfile, isTrue);
       expect(row.defaultDecoStopSource, 1);
     },

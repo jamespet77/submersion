@@ -5146,7 +5146,7 @@ class SyncDataSerializer {
       // v113: seed it so payloads predating the column hydrate instead of
       // throwing in DiverSetting.fromJson.
       'cnsCalculationMethod': 'shearwater',
-      // v130: non-nullable columns; seed them so payloads predating the
+      // v133: non-nullable columns; seed them so payloads predating the
       // columns hydrate instead of throwing in DiverSetting.fromJson.
       'showDecoStopsOnProfile': true,
       'defaultDecoStopSource': 1,

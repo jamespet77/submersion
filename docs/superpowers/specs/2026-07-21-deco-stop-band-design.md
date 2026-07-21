@@ -75,7 +75,7 @@ maximum in CLAUDE.md. The chart calls the builder next to `_buildCeilingLine`.
   needed. The step direction holds each stop value forward from its sample
   until the next transition, so the vertical edge lands at the moment the stop
   level changes.
-- **Fill:** `belowBarData` with `cutOffY: 0` and `applyCutOffY: true`, so the
+- **Fill:** `aboveBarData` with `cutOffY: 0` and `applyCutOffY: true`, so the
   band spans from the stop depth up to the surface.
 - **Gaps:** where the curve is 0 there is no obligation and the band collapses
   to zero height on its own. No special-case gap handling.
@@ -101,7 +101,7 @@ this up without individual changes.
 
 ### 3. Settings and persistence
 
-Two new `diver_settings` columns, schema version **129 to 130**:
+Two new `diver_settings` columns, schema version **132 to 133**:
 
 | Column | Type | Default | Mirrors |
 | ------ | ---- | ------- | ------- |
@@ -117,9 +117,9 @@ column addition:
 1. PRAGMA-guarded idempotent `_assert…Column` helpers, never bare
    `m.addColumn` — partial-schema migration tests instantiate old databases
    without unrelated tables and crash on unguarded DDL.
-2. Helpers called from **both** the `if (from < 130)` `onUpgrade` block **and**
+2. Helpers called from **both** the `if (from < 133)` `onUpgrade` block **and**
    the `beforeOpen` backstop section.
-3. The exact-latest schema tripwire test updated to 130. It may be skipped on
+3. The exact-latest schema tripwire test updated to 133. It may be skipped on
    Windows full runs, so forgetting it fails only on CI.
 4. Both keys seeded in `_applyDiverSettingDefaults` in
    [sync_data_serializer.dart](../../../lib/core/services/sync/sync_data_serializer.dart),
