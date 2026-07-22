@@ -6908,6 +6908,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get divePlanner_action_convertToDive => 'Omzetten naar duik';
 
   @override
+  String get divePlanner_action_deletePlan => 'Plan verwijderen';
+
+  @override
   String get divePlanner_action_editTank => 'Fles bewerken';
 
   @override
@@ -7083,6 +7086,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Geen profiel om weer te geven';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '\'$name\' verwijderen?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan verwijderd';
 
   @override
   String get divePlanner_message_planSaved => 'Plan opgeslagen';
@@ -18852,6 +18863,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get divePlanner_segmentType_safetyStop => 'Veiligheidsstop';
+
+  @override
+  String get divePlanner_undo => 'Ongedaan maken';
 
   @override
   String get gasCalculators_rockBottom_aboutDescription =>

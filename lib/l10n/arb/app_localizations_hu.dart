@@ -6944,6 +6944,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get divePlanner_action_convertToDive => 'Átalakítás merüléssé';
 
   @override
+  String get divePlanner_action_deletePlan => 'Terv törlése';
+
+  @override
   String get divePlanner_action_editTank => 'Palack szerkesztése';
 
   @override
@@ -7121,6 +7124,14 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Nincs megjeleníthető profil';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'Törli a(z) \'$name\' tervet?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Terv törölve';
 
   @override
   String get divePlanner_message_planSaved => 'Terv mentve';
@@ -18957,6 +18968,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get divePlanner_segmentType_safetyStop => 'Biztonsagi megallo';
+
+  @override
+  String get divePlanner_undo => 'Visszavonás';
 
   @override
   String get gasCalculators_rockBottom_aboutDescription =>
