@@ -234,16 +234,20 @@ final FutureProvider<MediaStoreRuntime?> mediaStoreRuntimeProvider =
           return WorkerGate.proceed;
         },
       );
+      // Recover orphaned 'transferring' rows once per process, and do it
+      // BEFORE any drain can start - including a connectivity-triggered one.
+      // Awaited before the network subscription is attached so a network
+      // event during the await cannot kick a drain that marks a row
+      // 'transferring' while requeueStale is still running. Driven via the
+      // cached provider (not inside drain()) so a connect/disconnect rebuild
+      // cannot reclaim a row a still-running worker from the previous runtime
+      // owns; the cache makes it run only once.
+      await ref.read(mediaTransferQueueReclaimProvider.future);
+
       final connectivitySub = network.changes.listen((kind) {
         if (kind != NetworkKind.offline) unawaited(worker.drain());
       });
       ref.onDispose(connectivitySub.cancel);
-
-      // Recover orphaned 'transferring' rows once per process, before this
-      // (or any) worker drains. Awaited here rather than inside drain() so a
-      // connect/disconnect rebuild cannot reclaim a row a still-running
-      // worker from the previous runtime owns. Cached, so it runs only once.
-      await ref.read(mediaTransferQueueReclaimProvider.future);
       unawaited(worker.drain());
 
       return MediaStoreRuntime(
