@@ -19,12 +19,12 @@ void main() {
       expect(call.method, 'isAvailable');
       return true;
     });
-    expect(await DarwinAvfEngine().isAvailable(), isTrue);
+    expect(await ChannelTranscodeEngine().isAvailable(), isTrue);
   });
 
   test('isAvailable is false when the plugin is missing', () async {
     // No handler registered -> MissingPluginException.
-    expect(await DarwinAvfEngine().isAvailable(), isFalse);
+    expect(await ChannelTranscodeEngine().isAvailable(), isFalse);
   });
 
   test('probe decodes the channel map', () async {
@@ -38,14 +38,14 @@ void main() {
         'overallBitrateKbps': 9000,
       };
     });
-    final probe = (await DarwinAvfEngine().probe(File('/x.mov')))!;
+    final probe = (await ChannelTranscodeEngine().probe(File('/x.mov')))!;
     expect(probe.height, 1080);
     expect(probe.overallBitrateKbps, 9000);
   });
 
   test('probe returns null when the channel returns null', () async {
     messenger.setMockMethodCallHandler(methods, (call) async => null);
-    expect(await DarwinAvfEngine().probe(File('/x.mov')), isNull);
+    expect(await ChannelTranscodeEngine().probe(File('/x.mov')), isNull);
   });
 
   test('transcode forwards target args and completes on success', () async {
@@ -57,7 +57,7 @@ void main() {
       }
       return null;
     });
-    await DarwinAvfEngine().transcode(
+    await ChannelTranscodeEngine().transcode(
       source: File('/in.mov'),
       output: File('/out.mp4'),
       target: const TranscodeTarget(
@@ -87,12 +87,12 @@ void main() {
     );
     // Two separate engine instances: an instance-local counter would emit 'p0'
     // for both and collide on the shared progress channel.
-    await DarwinAvfEngine().transcode(
+    await ChannelTranscodeEngine().transcode(
       source: File('/a.mov'),
       output: File('/a.mp4'),
       target: target,
     );
-    await DarwinAvfEngine().transcode(
+    await ChannelTranscodeEngine().transcode(
       source: File('/b.mov'),
       output: File('/b.mp4'),
       target: target,
@@ -129,7 +129,7 @@ void main() {
       return null;
     });
 
-    final future = DarwinAvfEngine().transcode(
+    final future = ChannelTranscodeEngine().transcode(
       source: File('/in.mov'),
       output: File('/out.mp4'),
       target: const TranscodeTarget(
@@ -161,7 +161,7 @@ void main() {
       throw PlatformException(code: 'transcode_failed', message: 'boom');
     });
     await expectLater(
-      DarwinAvfEngine().transcode(
+      ChannelTranscodeEngine().transcode(
         source: File('/in.mov'),
         output: File('/out.mp4'),
         target: const TranscodeTarget(
@@ -183,7 +183,7 @@ void main() {
       );
     });
     try {
-      await DarwinAvfEngine().transcode(
+      await ChannelTranscodeEngine().transcode(
         source: File('/in.mov'),
         output: File('/out.mp4'),
         target: const TranscodeTarget(
@@ -222,13 +222,13 @@ void main() {
       videoBitrateKbps: 4000,
       audioBitrateKbps: 128,
     );
-    final a = DarwinAvfEngine().transcode(
+    final a = ChannelTranscodeEngine().transcode(
       source: File('/a.mov'),
       output: File('/a.mp4'),
       target: target,
       onProgress: (_) {},
     );
-    final b = DarwinAvfEngine().transcode(
+    final b = ChannelTranscodeEngine().transcode(
       source: File('/b.mov'),
       output: File('/b.mp4'),
       target: target,
