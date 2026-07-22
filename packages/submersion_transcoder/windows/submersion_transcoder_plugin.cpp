@@ -101,6 +101,20 @@ void TranscodeOnWorker(
   namespace WS = winrt::Windows::Storage;
   namespace WMP = winrt::Windows::Media::MediaProperties;
   namespace WMT = winrt::Windows::Media::Transcoding;
+  // The transcode writes to "<output>.tmp" and renames on success. Any failure
+  // path must remove it so we never leave a partial temp behind (matches the
+  // darwin/android engines). Best-effort: a missing file just throws + is
+  // swallowed.
+  const std::wstring tmp_path = Wide(output) + L".tmp";
+  auto delete_tmp = [&tmp_path] {
+    try {
+      WS::StorageFile::GetFileFromPathAsync(winrt::hstring(tmp_path))
+          .get()
+          .DeleteAsync()
+          .get();
+    } catch (...) {
+    }
+  };
   try {
     winrt::init_apartment(winrt::apartment_type::multi_threaded);
 
@@ -152,6 +166,7 @@ void TranscodeOnWorker(
     auto prep =
         transcoder.PrepareFileTranscodeAsync(src_file, tmp_file, profile).get();
     if (!prep.CanTranscode()) {
+      delete_tmp();
       result->Error("transcode_failed", "source cannot be transcoded");
       return;
     }
@@ -176,8 +191,10 @@ void TranscodeOnWorker(
     }));
     result->Success(EncodableValue());
   } catch (winrt::hresult_error const& e) {
+    delete_tmp();
     result->Error("transcode_failed", Utf8(std::wstring(e.message())));
   } catch (...) {
+    delete_tmp();
     result->Error("transcode_failed", "unknown transcode error");
   }
 }
@@ -242,6 +259,11 @@ SubmersionTranscoderPlugin::SubmersionTranscoderPlugin(
 }
 
 SubmersionTranscoderPlugin::~SubmersionTranscoderPlugin() {
+  // A detached transcode worker may still hold the dispatcher. Once the window
+  // proc delegate is gone nothing can drain queued events, so stop the worker
+  // from emitting (null HWND makes Emit() drop) and release the sink first.
+  dispatcher_->SetWindow(nullptr);
+  dispatcher_->SetSink(nullptr);
   registrar_->UnregisterTopLevelWindowProcDelegate(window_proc_delegate_id_);
 }
 
