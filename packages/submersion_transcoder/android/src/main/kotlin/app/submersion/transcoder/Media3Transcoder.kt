@@ -69,7 +69,6 @@ object Media3Transcoder {
      * (the caller posts to the main looper). [onDone] receives null on success
      * or an error message; [onProgress] receives 0..1 fractions.
      */
-    @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
     fun transcode(
         context: Context,
         source: String,
@@ -85,9 +84,50 @@ object Media3Transcoder {
 
         val handler = Handler(Looper.getMainLooper())
 
+        // probe() uses MediaMetadataRetriever, which can be slow on large
+        // clips, so read the source height off the main thread. The Transformer
+        // itself is Looper-bound (it delivers listener callbacks and reports
+        // progress on the thread it is started on), so hop back to the main
+        // looper for all Transformer work once the height is known.
+        Thread {
+            val srcHeight = probe(source)?.get("height") as? Int ?: maxHeight
+            handler.post {
+                startTransform(
+                    context = context,
+                    source = source,
+                    output = output,
+                    tmp = tmp,
+                    handler = handler,
+                    srcHeight = srcHeight,
+                    maxHeight = maxHeight,
+                    videoBitrateKbps = videoBitrateKbps,
+                    onProgress = onProgress,
+                    onDone = onDone,
+                )
+            }
+        }.start()
+    }
+
+    /**
+     * Builds and starts the Media3 [Transformer]. Must run on a Looper thread
+     * (the caller posts it to the main looper); the listener resolves [onDone]
+     * on that same thread.
+     */
+    @androidx.annotation.OptIn(markerClass = [UnstableApi::class])
+    private fun startTransform(
+        context: Context,
+        source: String,
+        output: String,
+        tmp: File,
+        handler: Handler,
+        srcHeight: Int,
+        maxHeight: Int,
+        videoBitrateKbps: Int,
+        onProgress: (Double) -> Unit,
+        onDone: (String?) -> Unit,
+    ) {
         try {
             // Never upscale: only resize when the source is taller than the cap.
-            val srcHeight = probe(source)?.get("height") as? Int ?: maxHeight
             val effectiveHeight = minOf(maxHeight, srcHeight)
             val videoEffects: List<Effect> =
                 if (effectiveHeight < srcHeight) {
