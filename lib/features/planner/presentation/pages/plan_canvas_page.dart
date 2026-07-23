@@ -21,6 +21,7 @@ import 'package:submersion/features/planner/presentation/panes/plan_editor_pane.
 import 'package:submersion/features/planner/presentation/panes/plan_results_pane.dart';
 import 'package:submersion/features/planner/presentation/panes/plan_setup_accordion.dart';
 import 'package:submersion/features/planner/presentation/providers/plan_canvas_providers.dart';
+import 'package:submersion/features/planner/presentation/providers/plan_repository_providers.dart';
 import 'package:submersion/features/planner/presentation/providers/planner_layout_providers.dart';
 import 'package:submersion/features/planner/presentation/widgets/contingency_chips.dart';
 import 'package:submersion/features/planner/presentation/widgets/follow_dive_sheet.dart';
@@ -28,6 +29,13 @@ import 'package:submersion/features/planner/presentation/widgets/plan_status_chi
 import 'package:submersion/features/planner/presentation/widgets/saved_plans_sheet.dart';
 import 'package:submersion/features/settings/presentation/providers/settings_providers.dart';
 import 'package:submersion/l10n/l10n_extension.dart';
+
+/// Whether [id] refers to a plan that already exists in the store. Drives the
+/// visibility of the destructive "Delete plan" action: a brand-new, never-saved
+/// plan has nothing to delete (Reset covers clearing it).
+@visibleForTesting
+bool planIsPersisted(String id, List<domain.DivePlanSummary> summaries) =>
+    summaries.any((s) => s.id == id);
 
 /// Mission Control: a thin layout router over the planner's three panes.
 /// Editing state lives on [divePlanNotifierProvider]; every displayed number
@@ -76,6 +84,18 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
   Widget build(BuildContext context) {
     final planState = ref.watch(divePlanNotifierProvider);
     final units = UnitFormatter(ref.watch(settingsProvider));
+    // A plan opened via the :planId route is known-persisted, so short-circuit
+    // before watching the (DB-backed) summaries provider; that avoids an
+    // avoidable subscription/fetch in the common edit-a-saved-plan case. The
+    // summaries watch only runs for a new plan, where it flips the Delete item
+    // on once the plan is first saved.
+    final canDelete =
+        widget.planId != null ||
+        planIsPersisted(
+          planState.id,
+          ref.watch(divePlanSummariesProvider).valueOrNull ??
+              const <domain.DivePlanSummary>[],
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -168,6 +188,7 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
                 Icons.refresh,
                 context.l10n.divePlanner_action_resetPlan,
               ),
+              if (canDelete) _deleteMenuItem(context),
             ],
           ),
         ],
@@ -200,6 +221,21 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
     );
   }
 
+  PopupMenuItem<String> _deleteMenuItem(BuildContext context) {
+    final error = Theme.of(context).colorScheme.error;
+    return PopupMenuItem(
+      value: 'delete',
+      child: ListTile(
+        leading: Icon(Icons.delete_outline, color: error),
+        title: Text(
+          context.l10n.divePlanner_action_deletePlan,
+          style: TextStyle(color: error),
+        ),
+        contentPadding: EdgeInsets.zero,
+      ),
+    );
+  }
+
   void _onMenu(String value) {
     switch (value) {
       case 'quickPlan':
@@ -221,6 +257,8 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
         _sharePlanFile();
       case 'reset':
         _resetPlan();
+      case 'delete':
+        _deletePlan();
     }
   }
 
@@ -572,6 +610,85 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
     }
     final total = profile.last.timeSeconds - profile.first.timeSeconds;
     return total > 0 ? weighted / total : 0;
+  }
+
+  Future<void> _deletePlan() async {
+    // Prefer the route's planId. During the loadPlanById() window the notifier
+    // state still holds a freshly generated placeholder id, so reading it here
+    // could target (and tombstone) the wrong plan. widget.planId is the
+    // authoritative plan being edited; fall back to the notifier id only for a
+    // routeless plan saved this session.
+    final repository = ref.read(divePlanRepositoryProvider);
+    final planId = widget.planId ?? ref.read(divePlanNotifierProvider).id;
+
+    // Read the authoritative plan (and its persisted summary numbers) from the
+    // store first, so the confirm dialog, the deletion, and the undo snapshot
+    // all refer to the same real plan. Capturing the summary from the store
+    // (not planOutcomeProvider, which reflects transient in-memory edits) keeps
+    // the restored saved-plans list numbers consistent with the restored plan.
+    // A null plan means it was already deleted elsewhere (e.g. via sync); we
+    // still delete and navigate so the user is never stranded on a dead
+    // :planId route, but omit Undo since there is no snapshot to restore.
+    final captured = await repository.getPlan(planId);
+    if (!mounted) return;
+    final capturedSummary = captured == null
+        ? null
+        : await repository.getPlanSummary(planId);
+    if (!mounted) return;
+    final name = captured?.name ?? ref.read(divePlanNotifierProvider).name;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.divePlanner_action_deletePlan),
+        content: Text(
+          context.l10n.divePlanner_message_deleteConfirmation(name),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.common_action_cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.l10n.common_action_delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    await repository.deletePlan(planId);
+    if (!mounted) return;
+
+    // Capture messenger + strings before navigating; this page is about to be
+    // disposed and its context becomes defunct.
+    final messenger = ScaffoldMessenger.of(context);
+    final deletedLabel = context.l10n.divePlanner_message_planDeleted;
+    final undoLabel = context.l10n.divePlanner_undo;
+    context.go('/planning');
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(deletedLabel),
+        duration: const Duration(seconds: 5),
+        // A SnackBar with an action defaults to persist: true, which makes the
+        // auto-dismiss timer a no-op so the banner never hides on its own.
+        // Force the 5s auto-dismiss and add a close icon so the banner can be
+        // dismissed without tapping Undo (which would restore the plan). #406.
+        persist: false,
+        showCloseIcon: true,
+        action: captured == null
+            ? null
+            : SnackBarAction(
+                label: undoLabel,
+                onPressed: () =>
+                    repository.savePlan(captured, summary: capturedSummary),
+              ),
+      ),
+    );
   }
 
   void _resetPlan() {

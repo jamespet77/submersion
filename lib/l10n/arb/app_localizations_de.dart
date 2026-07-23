@@ -6962,6 +6962,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get divePlanner_action_convertToDive => 'In Tauchgang umwandeln';
 
   @override
+  String get divePlanner_action_deletePlan => 'Plan löschen';
+
+  @override
   String get divePlanner_action_editTank => 'Flasche bearbeiten';
 
   @override
@@ -7139,6 +7142,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Kein Profil zum Anzeigen';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '\'$name\' löschen?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan gelöscht';
 
   @override
   String get divePlanner_message_planSaved => 'Plan gespeichert';
@@ -18982,6 +18993,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get divePlanner_segmentType_safetyStop => 'Sicherheitsstopp';
+
+  @override
+  String get divePlanner_undo => 'Rückgängig';
 
   @override
   String get gasCalculators_rockBottom_aboutDescription =>

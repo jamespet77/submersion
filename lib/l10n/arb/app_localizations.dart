@@ -11828,6 +11828,12 @@ abstract class AppLocalizations {
   /// **'Convert to Dive'**
   String get divePlanner_action_convertToDive;
 
+  /// No description provided for @divePlanner_action_deletePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete plan'**
+  String get divePlanner_action_deletePlan;
+
   /// No description provided for @divePlanner_action_editTank.
   ///
   /// In en, this message translates to:
@@ -12157,6 +12163,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No profile to display'**
   String get divePlanner_message_noProfile;
+
+  /// No description provided for @divePlanner_message_deleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \'{name}\'?'**
+  String divePlanner_message_deleteConfirmation(String name);
+
+  /// No description provided for @divePlanner_message_planDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan deleted'**
+  String get divePlanner_message_planDeleted;
 
   /// No description provided for @divePlanner_message_planSaved.
   ///
@@ -31861,6 +31879,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Safety Stop'**
   String get divePlanner_segmentType_safetyStop;
+
+  /// No description provided for @divePlanner_undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get divePlanner_undo;
 
   /// No description provided for @gasCalculators_rockBottom_aboutDescription.
   ///

@@ -6820,6 +6820,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get divePlanner_action_convertToDive => 'تحويل إلى غطسة';
 
   @override
+  String get divePlanner_action_deletePlan => 'حذف الخطة';
+
+  @override
   String get divePlanner_action_editTank => 'تعديل الأسطوانة';
 
   @override
@@ -6996,6 +6999,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'لا يوجد ملف للعرض';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'حذف \'$name\'؟';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'تم حذف الخطة';
 
   @override
   String get divePlanner_message_planSaved => 'تم حفظ الخطة';
@@ -18660,6 +18671,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get divePlanner_segmentType_safetyStop => 'وقفة أمان';
+
+  @override
+  String get divePlanner_undo => 'تراجع';
 
   @override
   String get gasCalculators_rockBottom_aboutDescription =>

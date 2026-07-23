@@ -6784,6 +6784,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get divePlanner_action_convertToDive => 'המר לצלילה';
 
   @override
+  String get divePlanner_action_deletePlan => 'מחק תוכנית';
+
+  @override
   String get divePlanner_action_editTank => 'ערוך מיכל';
 
   @override
@@ -6958,6 +6961,14 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'אין פרופיל להצגה';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'למחוק את \'$name\'?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'התוכנית נמחקה';
 
   @override
   String get divePlanner_message_planSaved => 'תכנית נשמרה';
@@ -18527,6 +18538,9 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get divePlanner_segmentType_safetyStop => 'עצירת בטיחות';
+
+  @override
+  String get divePlanner_undo => 'בטל';
 
   @override
   String get gasCalculators_rockBottom_aboutDescription =>

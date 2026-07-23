@@ -3998,6 +3998,7 @@
   },
   "divePlanner_action_addTank": "Add Tank",
   "divePlanner_action_convertToDive": "Convert to Dive",
+  "divePlanner_action_deletePlan": "Delete plan",
   "divePlanner_action_editTank": "Edit Tank",
   "divePlanner_action_moreOptions": "More options",
   "divePlanner_action_quickPlan": "Quick Plan",
@@ -4053,6 +4054,13 @@
   "divePlanner_message_addSegmentsForProfile": "Add segments to see the dive profile",
   "divePlanner_message_convertingPlan": "Converting plan to dive...",
   "divePlanner_message_noProfile": "No profile to display",
+  "divePlanner_message_deleteConfirmation": "Delete '{name}'?",
+  "@divePlanner_message_deleteConfirmation": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "divePlanner_message_planDeleted": "Plan deleted",
   "divePlanner_message_planSaved": "Plan saved",
   "divePlanner_message_resetConfirmation": "Are you sure you want to reset the plan?",
   "divePlanner_semantics_criticalWarning": "Critical warning: {message}",
@@ -11732,6 +11740,7 @@
   "divePlanner_segmentType_descent": "Descent",
   "divePlanner_segmentType_gasSwitch": "Gas Switch",
   "divePlanner_segmentType_safetyStop": "Safety Stop",
+  "divePlanner_undo": "Undo",
   "gasCalculators_rockBottom_aboutDescription": "Rock bottom is the minimum gas reserve for an emergency ascent while sharing air with your buddy.\n\n• Uses stressed SAC rates (2-3x normal)\n• Assumes both divers on one tank\n• Includes safety stop when enabled\n\nAlways turn the dive BEFORE reaching rock bottom!",
   "gasCalculators_rockBottom_aboutTitle": "About Rock Bottom",
   "gasCalculators_rockBottom_ascentGasRequired": "Ascent gas required",

@@ -6620,6 +6620,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get divePlanner_action_convertToDive => '转换为潜水';
 
   @override
+  String get divePlanner_action_deletePlan => '删除计划';
+
+  @override
   String get divePlanner_action_editTank => '编辑气瓶';
 
   @override
@@ -6791,6 +6794,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => '无档案到显示';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '删除 \'$name\'？';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => '计划已删除';
 
   @override
   String get divePlanner_message_planSaved => '计划已保存';
@@ -18040,6 +18051,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get divePlanner_segmentType_safetyStop => '安全停留';
+
+  @override
+  String get divePlanner_undo => '撤销';
 
   @override
   String get gasCalculators_rockBottom_aboutDescription =>
