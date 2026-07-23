@@ -280,4 +280,148 @@ void main() {
       expect(match, isNull);
     });
   });
+
+  // photo_manager's darwin layer serializes title as "" (not null) unless
+  // FilterOption.needTitle is set, so both the stored originalFilename and
+  // every candidate filename can be empty. An empty name is the ABSENCE of a
+  // signal; treating it as a value silently reduces tier 1 to a timestamp-only
+  // match that can bind the wrong asset.
+  group('matchByFilenameAndTimestamp with empty filenames', () {
+    test('returns null when the item filename is empty', () {
+      final item = createTestItem(
+        originalFilename: '',
+        takenAt: DateTime(2025, 6, 15, 10, 30, 0),
+      );
+
+      final candidates = [
+        AssetInfo(
+          id: 'only-candidate',
+          type: AssetType.image,
+          createDateTime: DateTime(2025, 6, 15, 10, 30, 1),
+          width: 4000,
+          height: 3000,
+          filename: '',
+        ),
+      ];
+
+      expect(
+        AssetResolutionService.matchByFilenameAndTimestamp(item, candidates),
+        isNull,
+      );
+    });
+
+    test('ignores candidates whose filename is empty', () {
+      final item = createTestItem(
+        originalFilename: 'IMG_001.jpg',
+        takenAt: DateTime(2025, 6, 15, 10, 30, 0),
+      );
+
+      final candidates = [
+        AssetInfo(
+          id: 'no-name',
+          type: AssetType.image,
+          createDateTime: DateTime(2025, 6, 15, 10, 30, 1),
+          width: 4000,
+          height: 3000,
+          filename: '',
+        ),
+      ];
+
+      expect(
+        AssetResolutionService.matchByFilenameAndTimestamp(item, candidates),
+        isNull,
+      );
+    });
+  });
+
+  // Interval/burst sequences (a GoPro shooting every 2s) produce frames with
+  // identical dimensions and no usable filename. The default +-2s window sees
+  // the neighbours and refuses to guess, but capture timestamps survive the
+  // iCloud round-trip intact, so the exact second is unique.
+  group('matchByTimestampAndDimensions tolerance (burst sequences)', () {
+    List<AssetInfo> burstFrames() => [
+      AssetInfo(
+        id: 'burst-minus-2s',
+        type: AssetType.image,
+        createDateTime: DateTime(2025, 6, 15, 10, 30, 8),
+        width: 4000,
+        height: 3000,
+        filename: '',
+      ),
+      AssetInfo(
+        id: 'burst-exact',
+        type: AssetType.image,
+        createDateTime: DateTime(2025, 6, 15, 10, 30, 10),
+        width: 4000,
+        height: 3000,
+        filename: '',
+      ),
+      AssetInfo(
+        id: 'burst-plus-2s',
+        type: AssetType.image,
+        createDateTime: DateTime(2025, 6, 15, 10, 30, 12),
+        width: 4000,
+        height: 3000,
+        filename: '',
+      ),
+    ];
+
+    MediaItem burstItem() => createTestItem(
+      originalFilename: '',
+      takenAt: DateTime(2025, 6, 15, 10, 30, 10),
+      width: 4000,
+      height: 3000,
+    );
+
+    test('default window is ambiguous across a burst', () {
+      expect(
+        AssetResolutionService.matchByTimestampAndDimensions(
+          burstItem(),
+          burstFrames(),
+        ),
+        isNull,
+      );
+    });
+
+    test('zero tolerance resolves the burst frame uniquely', () {
+      expect(
+        AssetResolutionService.matchByTimestampAndDimensions(
+          burstItem(),
+          burstFrames(),
+          tolerance: Duration.zero,
+        ),
+        equals('burst-exact'),
+      );
+    });
+
+    test('zero tolerance still refuses two frames in the same second', () {
+      final sameSecond = [
+        AssetInfo(
+          id: 'twin-a',
+          type: AssetType.image,
+          createDateTime: DateTime(2025, 6, 15, 10, 30, 10),
+          width: 4000,
+          height: 3000,
+          filename: '',
+        ),
+        AssetInfo(
+          id: 'twin-b',
+          type: AssetType.image,
+          createDateTime: DateTime(2025, 6, 15, 10, 30, 10),
+          width: 4000,
+          height: 3000,
+          filename: '',
+        ),
+      ];
+
+      expect(
+        AssetResolutionService.matchByTimestampAndDimensions(
+          burstItem(),
+          sameSecond,
+          tolerance: Duration.zero,
+        ),
+        isNull,
+      );
+    });
+  });
 }

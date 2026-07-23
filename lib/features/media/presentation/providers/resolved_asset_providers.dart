@@ -9,10 +9,15 @@ import 'package:submersion/features/media/domain/value_objects/media_source_data
 import 'package:submersion/features/media/presentation/providers/photo_picker_providers.dart';
 import 'package:submersion/features/media_store/presentation/providers/media_store_providers.dart';
 
+/// Provider for the local asset resolution cache (singleton).
+final localAssetCacheRepositoryProvider = Provider<LocalAssetCacheRepository>(
+  (ref) => LocalAssetCacheRepository(),
+);
+
 /// Provider for the asset resolution service (singleton).
 final assetResolutionServiceProvider = Provider<AssetResolutionService>((ref) {
   return AssetResolutionService(
-    cacheRepository: LocalAssetCacheRepository(),
+    cacheRepository: ref.watch(localAssetCacheRepositoryProvider),
     photoPickerService: ref.watch(photoPickerServiceProvider),
   );
 });
