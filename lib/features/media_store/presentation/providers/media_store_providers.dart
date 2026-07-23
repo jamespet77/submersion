@@ -21,6 +21,7 @@ import 'package:submersion/features/media/presentation/providers/media_resolver_
 import 'package:submersion/features/media_store/data/media_backfill_service.dart';
 import 'package:submersion/features/media_store/data/media_cache_store.dart';
 import 'package:submersion/features/media_store/data/media_delete_processor.dart';
+import 'package:submersion/features/media_store/data/media_deletion_coordinator.dart';
 import 'package:submersion/features/media_store/data/media_store_service.dart';
 import 'package:submersion/features/media_store/data/media_store_worker.dart';
 import 'package:submersion/features/media_store/data/media_stores_repository.dart';
@@ -86,6 +87,23 @@ final FutureProvider<void> mediaTransferQueueReclaimProvider =
     FutureProvider<void>((ref) async {
       await ref.read(mediaTransferQueueRepositoryProvider).requeueStale();
     });
+
+/// Deletion entry point for UI flows: enqueue-before-delete per the
+/// orphan-prevention spec (5.2). The queue and runtime are read lazily
+/// (never watched) so consumer widget tests without a media store runtime
+/// are unaffected, and the coordinator itself swallows enqueue failures.
+final mediaDeletionCoordinatorProvider = Provider<MediaDeletionCoordinator>((
+  ref,
+) {
+  return MediaDeletionCoordinator(
+    mediaRepository: ref.watch(mediaRepositoryProvider),
+    queue: () => ref.read(mediaTransferQueueRepositoryProvider),
+    kickWorker: () async {
+      final runtime = await ref.read(mediaStoreRuntimeProvider.future);
+      await runtime?.worker?.drain();
+    },
+  );
+});
 
 final mediaBackfillServiceProvider = Provider<MediaBackfillService>(
   (ref) => MediaBackfillService(
