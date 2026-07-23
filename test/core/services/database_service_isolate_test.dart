@@ -350,6 +350,37 @@ void main() {
     },
   );
 
+  test(
+    'a no-op restore sweeps restore temp files stranded by a prior run',
+    () async {
+      final defaultPath = p.join(tempDir.path, 'Submersion', 'submersion.db');
+      await DatabaseService.instance.initialize(
+        locationService: _FakeLocation(defaultPath),
+      );
+      await DatabaseService.instance.database
+          .customSelect('SELECT 1')
+          .getSingle();
+
+      // Temp files a prior restore left behind (e.g. a large .pre-restore copy
+      // from a best-effort cleanup that failed) must not accumulate on disk.
+      File('$defaultPath.pre-restore').writeAsStringSync('stale');
+      File('$defaultPath.restore-staging').writeAsStringSync('stale');
+
+      // A restore pointed at a missing file is a no-op, but still sweeps temps.
+      await DatabaseService.instance.restore(
+        p.join(tempDir.path, 'missing.db'),
+      );
+
+      expect(File('$defaultPath.pre-restore').existsSync(), isFalse);
+      expect(File('$defaultPath.restore-staging').existsSync(), isFalse);
+      // The live database was never touched.
+      final one = await DatabaseService.instance.database
+          .customSelect('SELECT 1 AS v')
+          .getSingle();
+      expect(one.read<int>('v'), 1);
+    },
+  );
+
   test('restore with a missing backup file leaves the live DB open', () async {
     // A restore pointed at a nonexistent file must be a true no-op: it must
     // NOT close the database (which would open an unavailable window for

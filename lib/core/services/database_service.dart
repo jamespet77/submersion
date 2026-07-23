@@ -387,7 +387,13 @@ class DatabaseService {
     // effective no-op that still opened a needless "database unavailable"
     // window — during which a provider rebuild caches a fatal
     // "Database not initialized" error.
-    if (!await backupFile.exists()) return;
+    if (!await backupFile.exists()) {
+      // Still sweep any temp files a prior restore may have stranded (e.g. a
+      // large .pre-restore copy left by a best-effort cleanup that failed), so
+      // they don't accumulate on disk. Best-effort; the live DB is untouched.
+      await _sweepRestoreTempFiles(destinationPath);
+      return;
+    }
 
     // Copy the backup to a staging file NEXT TO the destination while the live
     // database stays open and keeps serving reads. This keeps the database
@@ -457,13 +463,10 @@ class DatabaseService {
     // The database is open again on the restored file; the pre-restore copy is
     // no longer needed. Its deletion is best-effort — a transient failure (e.g.
     // a Windows file lock) must NOT fail a restore that already succeeded and
-    // leave the app with a closed database despite a valid file on disk. The
-    // leftover copy is harmless and is cleared at the start of the next restore.
-    try {
-      await _deleteIfExists(asidePath);
-    } catch (_) {
-      // Best-effort: a leftover pre-restore copy is harmless.
-    }
+    // leave the app with a closed database despite a valid file on disk. A
+    // leftover copy is harmless and is swept by the next restore (including a
+    // no-op one).
+    await _bestEffortDelete(asidePath);
   }
 
   Future<void> _deleteIfExists(String path) async {
@@ -471,6 +474,24 @@ class DatabaseService {
     if (await file.exists()) {
       await file.delete();
     }
+  }
+
+  /// Delete [path] if present, swallowing any error. For cleanup that must not
+  /// abort the caller (a transient file lock on a stale temp file is harmless).
+  Future<void> _bestEffortDelete(String path) async {
+    try {
+      await _deleteIfExists(path);
+    } catch (_) {
+      // Best-effort: a stranded temp file is harmless and swept on a later run.
+    }
+  }
+
+  /// Best-effort removal of the temp files a [restore] may leave behind
+  /// (`.restore-staging`, `.pre-restore`). Safe to call while the live database
+  /// is open — it touches only the sidecar temp files, never the live DB.
+  Future<void> _sweepRestoreTempFiles(String destinationPath) async {
+    await _bestEffortDelete('$destinationPath.restore-staging');
+    await _bestEffortDelete('$destinationPath.pre-restore');
   }
 
   /// Delete all data and recreate a fresh empty database.

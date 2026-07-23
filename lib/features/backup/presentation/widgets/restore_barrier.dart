@@ -53,35 +53,43 @@ class _RestoreOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // The provider already supplies an English progress string; fall back to a
+    // plain one if it is ever absent.
+    final label = message ?? 'Restoring backup...';
 
-    return Stack(
-      children: [
-        // Absorbs every pointer event and paints the scrim, so nothing beneath
-        // can be tapped or scrolled during the restore.
-        const ModalBarrier(dismissible: false, color: Colors.black54),
-        Center(
-          child: Material(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  // The provider already supplies an English progress string;
-                  // fall back to a plain one if it is ever absent.
-                  Text(
-                    message ?? 'Restoring backup...',
-                    style: theme.textTheme.bodyMedium,
+    // Announce the busy/restoring state to screen readers as a live region, and
+    // exclude the inner widgets' own semantics so the state is announced once
+    // (not duplicated by the progress indicator and the label Text).
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      label: label,
+      child: ExcludeSemantics(
+        child: Stack(
+          children: [
+            // Absorbs every pointer event and paints the scrim, so nothing
+            // beneath can be tapped or scrolled during the restore.
+            const ModalBarrier(dismissible: false, color: Colors.black54),
+            Center(
+              child: Material(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 16),
+                      Text(label, style: theme.textTheme.bodyMedium),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

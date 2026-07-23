@@ -67,4 +67,17 @@ void main() {
     await tester.pumpWidget(wrap(restoring: true, onTap: () {}));
     expect(find.text('Restoring backup...'), findsOneWidget);
   });
+
+  testWidgets(
+    'exposes a semantics label so screen readers announce the state',
+    (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(restoring: true, message: 'Restoring backup...', onTap: () {}),
+      );
+
+      expect(find.bySemanticsLabel('Restoring backup...'), findsOneWidget);
+      handle.dispose();
+    },
+  );
 }
