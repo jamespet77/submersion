@@ -52,20 +52,30 @@ class _TransferTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = context.l10n;
+    // Delete entries (remote-blob cleanup for deleted media) share the
+    // upload lifecycle but read differently: the active label says what
+    // is actually happening, and every state keeps the delete icon so a
+    // row never looks like an upload.
+    final isDelete = entry.direction == 'delete';
     final (icon, label) = switch (entry.state) {
       'transferring' => (
-        Icons.cloud_upload,
-        l10n.settings_mediaStorage_transfers_state_transferring,
+        isDelete ? Icons.delete_outline : Icons.cloud_upload,
+        isDelete
+            ? l10n.settings_mediaStorage_transfers_state_deleting
+            : l10n.settings_mediaStorage_transfers_state_transferring,
       ),
       'failed' => (
         Icons.error_outline,
         l10n.settings_mediaStorage_transfers_state_failed,
       ),
       'done' => (
-        Icons.cloud_done,
+        isDelete ? Icons.delete_outline : Icons.cloud_done,
         l10n.settings_mediaStorage_transfers_state_done,
       ),
-      _ => (Icons.schedule, l10n.settings_mediaStorage_transfers_state_pending),
+      _ => (
+        isDelete ? Icons.delete_outline : Icons.schedule,
+        l10n.settings_mediaStorage_transfers_state_pending,
+      ),
     };
     return ListTile(
       leading: Icon(
