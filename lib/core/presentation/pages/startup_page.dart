@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kReleaseMode;
@@ -25,6 +26,10 @@ import 'package:submersion/features/backup/data/services/pre_migration_backup_se
 import 'package:submersion/features/backup/domain/exceptions/backup_failed_exception.dart';
 import 'package:submersion/features/maps/data/services/tile_cache_service.dart';
 import 'package:submersion/features/marine_life/data/repositories/species_repository.dart';
+import 'package:submersion/features/media/data/repositories/media_repository.dart';
+import 'package:submersion/features/media_store/data/media_deletion_coordinator.dart';
+import 'package:submersion/features/media_store/data/media_orphan_backlog_sweep.dart';
+import 'package:submersion/features/media_store/data/media_transfer_queue_repository.dart';
 import 'package:submersion/main.dart' show SubmersionRestart;
 
 /// Callback signature for the service initializer used by [StartupWrapper].
@@ -368,6 +373,25 @@ class _StartupWrapperState extends State<StartupWrapper>
       final speciesRepository = SpeciesRepository();
       await speciesRepository.seedBuiltInSpecies();
     });
+
+    // One-time orphaned-media backlog sweep (orphan-prevention spec 4.3).
+    // Fire-and-forget: it must not delay first frame, runs against the
+    // now-open databases, and self-guards with a persisted flag that is
+    // only set on success (a failed run retries next launch).
+    final mediaRepository = MediaRepository();
+    unawaited(
+      MediaOrphanBacklogSweep(
+        mediaRepository: mediaRepository,
+        coordinator: MediaDeletionCoordinator(
+          mediaRepository: mediaRepository,
+          queue: () => MediaTransferQueueRepository(),
+        ),
+        prefs: SharedPreferences.getInstance,
+      ).runIfNeeded().catchError((Object e) {
+        debugPrint('Orphaned-media backlog sweep failed (will retry): $e');
+        return 0;
+      }),
+    );
     // coverage:ignore-end
   }
 
