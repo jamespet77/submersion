@@ -151,6 +151,122 @@ void main() {
     });
   });
 
+  /// Drives the full tier ladder rather than the matchers in isolation, so
+  /// the order the tiers run in is pinned: the exact-second tier must be
+  /// reached before the fuzzy window, which is the whole point of adding it.
+  group('resolveAssetId tier selection', () {
+    /// Cross-device state: nothing cached, and the stored platformAssetId
+    /// does not load here, so resolution falls through to gallery matching.
+    void stubGalleryFallback(List<AssetInfo> candidates) {
+      when(mockPicker.supportsGalleryBrowsing).thenReturn(true);
+      when(mockCache.getCachedAssetId('media-1')).thenAnswer((_) async => null);
+      when(mockCache.getCacheEntry('media-1')).thenAnswer((_) async => null);
+      when(
+        mockPicker.getThumbnail('original-asset-id', size: 50),
+      ).thenAnswer((_) async => null);
+      when(
+        mockPicker.getAssetsInDateRange(any, any),
+      ).thenAnswer((_) async => candidates);
+      when(
+        mockCache.cacheResolution(
+          mediaId: anyNamed('mediaId'),
+          localAssetId: anyNamed('localAssetId'),
+          method: anyNamed('method'),
+        ),
+      ).thenAnswer((_) async {});
+    }
+
+    AssetInfo frame(String id, int second) => AssetInfo(
+      id: id,
+      type: AssetType.image,
+      createDateTime: DateTime(2025, 6, 15, 10, 30, second),
+      width: 4000,
+      height: 3000,
+      filename: '',
+    );
+
+    test('resolves a burst frame via the exact-second tier', () async {
+      // Three interval-shot frames two seconds apart. The fuzzy +-2s window
+      // sees all three and cannot choose; the exact second is unique.
+      stubGalleryFallback([
+        frame('burst-minus-2s', 8),
+        frame('burst-exact', 10),
+        frame('burst-plus-2s', 12),
+      ]);
+
+      final result = await service.resolveAssetId(
+        createTestItem(
+          originalFilename: '',
+          takenAt: DateTime(2025, 6, 15, 10, 30, 10),
+          width: 4000,
+          height: 3000,
+        ),
+      );
+
+      expect(result.status, equals(ResolutionStatus.resolved));
+      expect(result.localAssetId, equals('burst-exact'));
+      verify(
+        mockCache.cacheResolution(
+          mediaId: 'media-1',
+          localAssetId: 'burst-exact',
+          method: 'exact_timestamp_dimensions',
+        ),
+      ).called(1);
+    });
+
+    test('falls back to the fuzzy window when no exact second matches', () {
+      // A lone candidate one second off: the exact tier finds nothing, so
+      // the +-2s dimension tier takes it.
+      stubGalleryFallback([frame('drifted', 11)]);
+
+      return service
+          .resolveAssetId(
+            createTestItem(
+              originalFilename: '',
+              takenAt: DateTime(2025, 6, 15, 10, 30, 10),
+              width: 4000,
+              height: 3000,
+            ),
+          )
+          .then((result) {
+            expect(result.status, equals(ResolutionStatus.resolved));
+            expect(result.localAssetId, equals('drifted'));
+            verify(
+              mockCache.cacheResolution(
+                mediaId: 'media-1',
+                localAssetId: 'drifted',
+                method: 'timestamp_dimensions',
+              ),
+            ).called(1);
+          });
+    });
+
+    test('records unresolved when every tier is ambiguous', () async {
+      // Two frames sharing the exact capture second and dimensions: nothing
+      // distinguishes them, so the service must refuse rather than guess.
+      stubGalleryFallback([frame('twin-a', 10), frame('twin-b', 10)]);
+      when(
+        mockCache.cacheResolution(
+          mediaId: anyNamed('mediaId'),
+          localAssetId: null,
+          method: 'unresolved',
+        ),
+      ).thenAnswer((_) async {});
+
+      final result = await service.resolveAssetId(
+        createTestItem(
+          originalFilename: '',
+          takenAt: DateTime(2025, 6, 15, 10, 30, 10),
+          width: 4000,
+          height: 3000,
+        ),
+      );
+
+      expect(result.status, equals(ResolutionStatus.unavailable));
+      expect(result.localAssetId, isNull);
+    });
+  });
+
   group('matchByFilenameAndTimestamp (tier 1)', () {
     test('matches single asset with same filename and close timestamp', () {
       final item = createTestItem(
