@@ -3670,17 +3670,31 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
         overlay.points,
         (p) => p.depth,
       );
+      // Keyed on the overlay's OWN points, not the active profile: an overlaid
+      // computer has its own first sample and sampling interval, so the active
+      // dive cannot decide whether this trace needs a lead-in. Without that,
+      // an overlay starting at t=10 stays gapped whenever the active profile
+      // starts at t=0.
+      final overlayDepthSpots = [
+        for (final i in depthKeep)
+          FlSpot(
+            overlay.points[i].timestamp.toDouble(),
+            -units.convertDepth(overlay.points[i].depth),
+          ),
+      ];
       lines.add(
         LineChartBarData(
-          spots: [
-            for (final i in depthKeep)
-              FlSpot(
-                overlay.points[i].timestamp.toDouble(),
-                -units.convertDepth(overlay.points[i].depth),
-              ),
-          ],
+          spots: _withSurfaceLeadIn(
+            overlayDepthSpots,
+            0,
+            owner: overlay.points,
+          ),
           isCurved: true,
           curveSmoothness: 0.2,
+          preventCurveOverShooting: _seriesGetsLeadIn(
+            overlayDepthSpots,
+            overlay.points,
+          ),
           color: overlay.color,
           barWidth: 2,
           isStrokeCapRound: true,
@@ -3807,15 +3821,30 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
   /// (issue #684). No-ops when the profile already starts at zero, when the gap
   /// is too wide to attribute to the sampling rate, or when the curve drew no
   /// points at all.
-  List<FlSpot> _withSurfaceLeadIn(List<FlSpot> spots, double surfaceY) {
-    if (spots.isEmpty) return spots;
-    if (!shouldDrawSurfaceLeadIn(widget.profile)) return spots;
-    // A curve that is only drawn where it has data (the ceiling line skips
-    // ceiling <= 0) may legitimately start mid-dive; only bridge a curve whose
-    // own first point is the dive's first sample.
-    if (spots.first.x != widget.profile.first.timestamp.toDouble()) {
-      return spots;
-    }
+  /// Whether [spots] is eligible for a lead-in against [owner], the profile the
+  /// series was built from.
+  ///
+  /// [owner] is passed rather than assumed to be [widget.profile]: an overlaid
+  /// source has its own samples and its own sampling interval, so keying an
+  /// overlay's lead-in off the active profile would test the wrong dive.
+  ///
+  /// A curve that is only drawn where it has data (the ceiling line skips
+  /// ceiling <= 0, a deco bottle's pressure starts when it is first breathed)
+  /// may legitimately start mid-dive; only a curve whose own first point is its
+  /// profile's first sample is bridged back to t=0.
+  bool _seriesGetsLeadIn(List<FlSpot> spots, List<DiveProfilePoint> owner) =>
+      spots.isNotEmpty &&
+      owner.isNotEmpty &&
+      shouldDrawSurfaceLeadIn(owner) &&
+      spots.first.x == owner.first.timestamp.toDouble();
+
+  List<FlSpot> _withSurfaceLeadIn(
+    List<FlSpot> spots,
+    double surfaceY, {
+    List<DiveProfilePoint>? owner,
+  }) {
+    final source = owner ?? widget.profile;
+    if (!_seriesGetsLeadIn(spots, source)) return spots;
     return [FlSpot(0, surfaceY), ...spots];
   }
 
@@ -3892,8 +3921,12 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       ? valueAtFirstSample
       : surfaceValueAtOneBar(valueAtFirstSample, widget.profile.first.depth);
 
-  List<FlSpot> _withFlatSurfaceLeadIn(List<FlSpot> spots) =>
-      spots.isEmpty ? spots : _withSurfaceLeadIn(spots, spots.first.y);
+  List<FlSpot> _withFlatSurfaceLeadIn(
+    List<FlSpot> spots, {
+    List<DiveProfilePoint>? owner,
+  }) => spots.isEmpty
+      ? spots
+      : _withSurfaceLeadIn(spots, spots.first.y, owner: owner);
 
   /// Build a single depth line segment with the given color
   LineChartBarData _buildSingleDepthSegment(
@@ -3923,7 +3956,8 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting:
+          startIndex == 0 && shouldDrawSurfaceLeadIn(widget.profile),
       color: color,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4020,31 +4054,33 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
     double maxTemp,
     UnitFormatter units,
   ) {
+    // Built first so the smoothing flag below can ask whether this series
+    // actually receives a lead-in: samples without a temperature are skipped,
+    // so the curve can legitimately start after the dive's first sample.
+    final tempSpots = widget.profile
+        .where((p) => p.temperature != null)
+        .map(
+          (p) => FlSpot(
+            p.timestamp.toDouble(),
+            // Convert temp to user's unit, then map to depth axis
+            -_mapTempToDepth(
+              units.convertTemperature(p.temperature!),
+              chartMaxDepth,
+              minTemp,
+              maxTemp,
+            ),
+          ),
+        )
+        .toList();
     return LineChartBarData(
-      spots: _withFlatSurfaceLeadIn(
-        widget.profile
-            .where((p) => p.temperature != null)
-            .map(
-              (p) => FlSpot(
-                p.timestamp.toDouble(),
-                // Convert temp to user's unit, then map to depth axis
-                -_mapTempToDepth(
-                  units.convertTemperature(p.temperature!),
-                  chartMaxDepth,
-                  minTemp,
-                  maxTemp,
-                ),
-              ),
-            )
-            .toList(),
-      ),
+      spots: _withFlatSurfaceLeadIn(tempSpots),
       isCurved: true,
       curveSmoothness: 0.2,
       // Only while a lead-in is drawn: that vertex is a sharp direction
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(tempSpots, widget.profile),
       color: colorScheme.tertiary,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4115,32 +4151,35 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
           : _getTankColor(i);
       final dashPattern = _getTankDashPattern(i);
 
+      // A tank first breathed mid-dive keeps its own start: the lead-in only
+      // bridges a series that begins at the dive's first sample. Built first so
+      // the smoothing flag below reflects whether THIS tank got one.
+      final tankSpots = pressurePoints
+          .map(
+            (p) => FlSpot(
+              p.timestamp.toDouble(),
+              -_mapValueToDepth(
+                p.pressure,
+                chartMaxDepth,
+                minPressure,
+                maxPressure,
+              ),
+            ),
+          )
+          .toList();
       lines.add(
         LineChartBarData(
-          // A tank first breathed mid-dive keeps its own start: the lead-in
-          // only bridges a series that begins at the dive's first sample.
-          spots: _withFlatSurfaceLeadIn(
-            pressurePoints
-                .map(
-                  (p) => FlSpot(
-                    p.timestamp.toDouble(),
-                    -_mapValueToDepth(
-                      p.pressure,
-                      chartMaxDepth,
-                      minPressure,
-                      maxPressure,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
+          spots: _withFlatSurfaceLeadIn(tankSpots),
           // Synthesized estimates are straight (flat-drop-flat); curve
           // smoothing would round their corners. Real AI data stays curved.
           isCurved: !(widget.estimatedTankIds?.contains(tankId) ?? false),
           curveSmoothness: 0.2,
           // The lead-in vertex is a sharp direction change; without this the
           // spline overshoots it and hooks below the curve at the left edge.
-          preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+          preventCurveOverShooting: _seriesGetsLeadIn(
+            tankSpots,
+            widget.profile,
+          ),
           color: color,
           barWidth: 2,
           isStrokeCapRound: true,
@@ -4215,7 +4254,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: sacColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4255,7 +4294,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: Colors.lime,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4338,7 +4377,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: ceilingColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4423,7 +4462,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: ppO2Color,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4465,7 +4504,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: ppN2Color,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4517,7 +4556,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: ppHeColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4600,7 +4639,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: densityColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4634,7 +4673,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: gfColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4668,7 +4707,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: surfaceGfColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4700,7 +4739,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: meanDepthColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4736,7 +4775,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: ttsColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4782,7 +4821,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: cnsColor,
       barWidth: 2,
       isStrokeCapRound: true,
@@ -4814,7 +4853,7 @@ class _DiveProfileChartState extends ConsumerState<DiveProfileChart> {
       // change and the spline would otherwise overshoot it and hook below
       // the curve at the left edge. Dives already starting at t=0 keep
       // their existing smoothing untouched.
-      preventCurveOverShooting: shouldDrawSurfaceLeadIn(widget.profile),
+      preventCurveOverShooting: _seriesGetsLeadIn(spots, widget.profile),
       color: otuColor,
       barWidth: 2,
       isStrokeCapRound: true,

@@ -722,6 +722,119 @@ void main() {
     );
 
     testWidgets(
+      'an overlay gets its lead-in from its own samples, not the active dive',
+      (tester) async {
+        // The case the hard-wired predicate missed: the active profile starts
+        // at t=0 (so it needs no lead-in) while the overlaid computer starts at
+        // t=10 and does. Keying off the active dive would leave the overlay
+        // gapped.
+        final active = [
+          for (var i = 0; i < 8; i++)
+            DiveProfilePoint(timestamp: i * 10, depth: i * 2.0),
+        ];
+        final other = [
+          for (var i = 1; i <= 8; i++)
+            DiveProfilePoint(timestamp: i * 10, depth: i * 1.5),
+        ];
+
+        await tester.pumpWidget(
+          _buildChart(
+            profile: active,
+            activeComputerId: 'comp-a',
+            overlays: [overlay(color: Colors.purple, points: other)],
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final bars = tester
+            .widget<LineChart>(find.byType(LineChart).first)
+            .data
+            .lineBarsData;
+
+        // Active depth bar: starts at t=0 already, so no synthetic vertex.
+        expect(bars.first.spots.length, active.length);
+        expect(bars.first.spots.first.x, 0);
+
+        // Overlay depth bar is appended last and DOES get one.
+        final overlayBar = bars.last;
+        expect(overlayBar.color, Colors.purple);
+        expect(overlayBar.spots.first, const FlSpot(0, 0));
+        expect(overlayBar.spots.length, other.length + 1);
+        expect(overlayBar.spots[1].x, 10);
+      },
+    );
+
+    testWidgets(
+      'a tank first breathed mid-dive keeps its smoothing untouched',
+      (tester) async {
+        // A deco bottle's pressure trace legitimately starts mid-dive, so it
+        // receives no lead-in -- and must not have its smoothing changed by
+        // the dive-level flag either.
+        final profile = [
+          for (var i = 1; i <= 10; i++)
+            DiveProfilePoint(timestamp: i * 10, depth: i * 2.0),
+        ];
+        const tanks = [
+          DiveTank(id: 'back', gasMix: GasMix(o2: 21), order: 0),
+          DiveTank(id: 'deco', gasMix: GasMix(o2: 50), order: 1),
+        ];
+        const pressures = {
+          'back': [
+            TankPressurePoint(
+              id: 'b0',
+              tankId: 'back',
+              timestamp: 10,
+              pressure: 200,
+            ),
+            TankPressurePoint(
+              id: 'b1',
+              tankId: 'back',
+              timestamp: 100,
+              pressure: 80,
+            ),
+          ],
+          'deco': [
+            TankPressurePoint(
+              id: 'd0',
+              tankId: 'deco',
+              timestamp: 60,
+              pressure: 200,
+            ),
+            TankPressurePoint(
+              id: 'd1',
+              tankId: 'deco',
+              timestamp: 100,
+              pressure: 150,
+            ),
+          ],
+        };
+
+        await tester.pumpWidget(
+          _buildChart(profile: profile, tanks: tanks, tankPressures: pressures),
+        );
+        await tester.pumpAndSettle();
+
+        final bars = tester
+            .widget<LineChart>(find.byType(LineChart).first)
+            .data
+            .lineBarsData;
+
+        // The deco series starts at t=60: no lead-in, and no smoothing change.
+        final decoBar = bars.firstWhere(
+          (b) => b.spots.length == 2 && b.spots.first.x == 60,
+        );
+        expect(decoBar.preventCurveOverShooting, isFalse);
+
+        // The back-gas series starts at the dive's first sample, so it does
+        // get a lead-in and the overshoot guard with it.
+        final backBar = bars.firstWhere(
+          (b) => b.spots.length == 3 && b.spots.first.x == 0,
+        );
+        expect(backBar.preventCurveOverShooting, isTrue);
+      },
+    );
+
+    testWidgets(
       'inline tooltip on the lead-in computes pressures and marks held values',
       (tester) async {
         // First sample at 10s and 20 m depth => 3 bar ambient. A ppO2 of
