@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/intl.dart';
 import 'package:submersion/core/constants/enums.dart';
 import 'package:submersion/features/dive_log/domain/entities/dive.dart';
 import 'package:submersion/features/dive_sites/domain/entities/dive_site.dart';
@@ -25,6 +26,15 @@ Future<void> pumpHeader(
   TripStoryDay day, {
   double textScale = 1.0,
 }) async {
+  // The header dates itself with DateFormat.MMMEd(), which resolves against
+  // Intl.defaultLocale - a process global that app.dart sets from the app
+  // locale - NOT the MaterialApp.locale set below. Pin it so the "Mar 8"
+  // assertion states its real dependency instead of riding on intl's implicit
+  // en_US fallback, and restore it so the global stays contained.
+  final previousLocale = Intl.defaultLocale;
+  Intl.defaultLocale = 'en';
+  addTearDown(() => Intl.defaultLocale = previousLocale);
+
   await tester.pumpWidget(
     MaterialApp(
       locale: const Locale('en'),
