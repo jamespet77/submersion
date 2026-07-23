@@ -613,8 +613,22 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
   }
 
   Future<void> _deletePlan() async {
-    final planId = ref.read(divePlanNotifierProvider).id;
-    final name = ref.read(divePlanNotifierProvider).name;
+    // Prefer the route's planId. During the loadPlanById() window the notifier
+    // state still holds a freshly generated placeholder id, so reading it here
+    // could target (and tombstone) the wrong plan. widget.planId is the
+    // authoritative plan being edited; fall back to the notifier id only for a
+    // routeless plan saved this session.
+    final repository = ref.read(divePlanRepositoryProvider);
+    final planId = widget.planId ?? ref.read(divePlanNotifierProvider).id;
+
+    // Read the authoritative plan from the store first, so the confirm dialog,
+    // the deletion, and the undo snapshot all refer to the same real plan. Null
+    // means it was already deleted elsewhere (e.g. via sync); we still delete
+    // and navigate so the user is never stranded on a dead :planId route, but
+    // omit Undo since there is no snapshot to restore.
+    final captured = await repository.getPlan(planId);
+    if (!mounted) return;
+    final name = captured?.name ?? ref.read(divePlanNotifierProvider).name;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -640,16 +654,7 @@ class _PlanCanvasPageState extends ConsumerState<PlanCanvasPage> {
     );
     if (confirmed != true || !mounted) return;
 
-    final repository = ref.read(divePlanRepositoryProvider);
     final outcome = ref.read(planOutcomeProvider);
-
-    // Capture the full plan before deleting so undo can re-save it verbatim.
-    // The plan may be null if it was already deleted elsewhere (e.g. via sync)
-    // between opening and confirming. In that case we still delete and navigate
-    // so the user is never stranded on a dead :planId route, but we omit Undo
-    // since there is no snapshot to restore.
-    final captured = await repository.getPlan(planId);
-    if (!mounted) return;
     final capturedSummary = captured == null
         ? null
         : PlanSummaryData(

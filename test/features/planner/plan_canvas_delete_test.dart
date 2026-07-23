@@ -101,6 +101,25 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
+  testWidgets('deletes the routed plan, not another plan in the store', (
+    tester,
+  ) async {
+    await repository.savePlan(_plan('a', 'Reef dive'));
+    await repository.savePlan(_plan('b', 'Wreck dive'));
+
+    await tester.pumpWidget(harness('/planning/dive-planner/a'));
+    await tester.pumpAndSettle();
+
+    await openMenu(tester);
+    await tester.tap(find.text('Delete plan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'Delete'));
+    await tester.pumpAndSettle();
+
+    final remaining = await repository.getAllPlanSummaries();
+    expect(remaining.map((p) => p.id), ['b']);
+  });
+
   testWidgets('undo restores the deleted plan', (tester) async {
     await repository.savePlan(_plan('a', 'Reef dive'));
 
