@@ -79,8 +79,7 @@ void main() {
     );
   });
 
-  test('never-uploaded and hashless rows delete without enqueueing',
-      () async {
+  test('never-uploaded and hashless rows delete without enqueueing', () async {
     await repo.createMedia(photo('m2', hash: 'bb')); // hash, no stamp
     await repo.createMedia(photo('m3')); // no hash
     await coordinator.deleteMultipleMedia(['m2', 'm3']);

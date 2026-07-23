@@ -51,15 +51,17 @@ void main() {
     return (await queue.allForTesting()).firstWhere((r) => r.id == id);
   }
 
-  test('deletes all three tiers and marks done when hash is unreferenced',
-      () async {
-    store.objects[originalKey] = [1, 2, 3];
-    store.objects[thumbKey] = [4];
-    store.objects[renditionKey] = [5];
-    await processor.process(await deleteEntry());
-    expect(store.objects, isEmpty);
-    expect((await queue.allForTesting()).single.state, 'done');
-  });
+  test(
+    'deletes all three tiers and marks done when hash is unreferenced',
+    () async {
+      store.objects[originalKey] = [1, 2, 3];
+      store.objects[thumbKey] = [4];
+      store.objects[renditionKey] = [5];
+      await processor.process(await deleteEntry());
+      expect(store.objects, isEmpty);
+      expect((await queue.allForTesting()).single.state, 'done');
+    },
+  );
 
   test('skips deletion when any row still references the hash', () async {
     await mediaRepository.createMedia(
@@ -88,34 +90,38 @@ void main() {
     expect(row.errorMessage, contains('boom'));
   });
 
-  test('malformed payload still deletes the thumb via fallback defaults',
-      () async {
-    final entryBefore = await deleteEntry();
-    // Corrupt the payload behind the repository's back.
-    await (cacheDb.update(cacheDb.mediaTransferQueue)
-          ..where((t) => t.id.equals(entryBefore.id)))
-        .write(const MediaTransferQueueCompanion(payloadJson: Value('nope')));
-    store.objects[thumbKey] = [4];
-    final entry = (await queue.allForTesting()).single;
-    await processor.process(entry);
-    expect(store.objects, isEmpty);
-    expect((await queue.allForTesting()).single.state, 'done');
-  });
+  test(
+    'malformed payload still deletes the thumb via fallback defaults',
+    () async {
+      final entryBefore = await deleteEntry();
+      // Corrupt the payload behind the repository's back.
+      await (cacheDb.update(cacheDb.mediaTransferQueue)
+            ..where((t) => t.id.equals(entryBefore.id)))
+          .write(const MediaTransferQueueCompanion(payloadJson: Value('nope')));
+      store.objects[thumbKey] = [4];
+      final entry = (await queue.allForTesting()).single;
+      await processor.process(entry);
+      expect(store.objects, isEmpty);
+      expect((await queue.allForTesting()).single.state, 'done');
+    },
+  );
 
-  test('an entry without a content hash completes without touching the store',
-      () async {
-    final id = await queue.enqueueDelete(
-      mediaId: 'gone',
-      contentHash: 'temp',
-      originalExt: 'jpg',
-      renditionExt: 'jpg',
-    );
-    await (cacheDb.update(cacheDb.mediaTransferQueue)
-          ..where((t) => t.id.equals(id)))
-        .write(const MediaTransferQueueCompanion(contentHash: Value(null)));
-    store.objects[thumbKey] = [4];
-    await processor.process((await queue.allForTesting()).single);
-    expect(store.objects.keys, contains(thumbKey));
-    expect((await queue.allForTesting()).single.state, 'done');
-  });
+  test(
+    'an entry without a content hash completes without touching the store',
+    () async {
+      final id = await queue.enqueueDelete(
+        mediaId: 'gone',
+        contentHash: 'temp',
+        originalExt: 'jpg',
+        renditionExt: 'jpg',
+      );
+      await (cacheDb.update(cacheDb.mediaTransferQueue)
+            ..where((t) => t.id.equals(id)))
+          .write(const MediaTransferQueueCompanion(contentHash: Value(null)));
+      store.objects[thumbKey] = [4];
+      await processor.process((await queue.allForTesting()).single);
+      expect(store.objects.keys, contains(thumbKey));
+      expect((await queue.allForTesting()).single.state, 'done');
+    },
+  );
 }

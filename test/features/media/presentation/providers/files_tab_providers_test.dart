@@ -422,9 +422,7 @@ void main() {
       final notifier = container.read(filesTabNotifierProvider.notifier);
       await notifier.undoCommit(['id-1', 'id-2', 'id-3']);
 
-      verify(
-        mockRepo.deleteMultipleMedia(['id-1', 'id-2', 'id-3']),
-      ).called(1);
+      verify(mockRepo.deleteMultipleMedia(['id-1', 'id-2', 'id-3'])).called(1);
     });
 
     test('undoCommit on empty list deletes nothing', () async {

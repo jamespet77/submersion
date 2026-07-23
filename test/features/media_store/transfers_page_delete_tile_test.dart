@@ -35,8 +35,9 @@ void main() {
     ),
   );
 
-  testWidgets('a transferring delete entry shows the removing label',
-      (tester) async {
+  testWidgets('a transferring delete entry shows the removing label', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       app(entry(direction: 'delete', state: 'transferring')),
     );

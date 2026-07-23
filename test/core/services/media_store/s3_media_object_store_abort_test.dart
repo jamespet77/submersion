@@ -48,63 +48,69 @@ void main() {
 
   const key = 'smv1/objects/aa/aabb.mp4';
 
-  test('putFile without resume persistence aborts the session on failure',
-      () async {
-    final store = build();
-    final src = await bigSource();
-    server.failAfterPartUploads = 1;
-    await expectLater(
-      store.putFile(key, src, contentType: 'video/mp4'),
-      throwsA(isA<MediaStoreException>()),
-    );
-    server.failAfterPartUploads = null;
-    expect(server.activeMultipartUploadCount, 0);
-  });
+  test(
+    'putFile without resume persistence aborts the session on failure',
+    () async {
+      final store = build();
+      final src = await bigSource();
+      server.failAfterPartUploads = 1;
+      await expectLater(
+        store.putFile(key, src, contentType: 'video/mp4'),
+        throwsA(isA<MediaStoreException>()),
+      );
+      server.failAfterPartUploads = null;
+      expect(server.activeMultipartUploadCount, 0);
+    },
+  );
 
-  test('putFile WITH resume persistence keeps the session for resume',
-      () async {
-    final store = build();
-    final src = await bigSource();
-    server.failAfterPartUploads = 1;
-    String? resume;
-    await expectLater(
-      store.putFile(
-        key,
-        src,
-        contentType: 'video/mp4',
-        onResumeStateChanged: (json) => resume = json,
-      ),
-      throwsA(isA<MediaStoreException>()),
-    );
-    server.failAfterPartUploads = null;
-    expect(server.activeMultipartUploadCount, 1);
-    expect(resume, isNotNull);
-  });
+  test(
+    'putFile WITH resume persistence keeps the session for resume',
+    () async {
+      final store = build();
+      final src = await bigSource();
+      server.failAfterPartUploads = 1;
+      String? resume;
+      await expectLater(
+        store.putFile(
+          key,
+          src,
+          contentType: 'video/mp4',
+          onResumeStateChanged: (json) => resume = json,
+        ),
+        throwsA(isA<MediaStoreException>()),
+      );
+      server.failAfterPartUploads = null;
+      expect(server.activeMultipartUploadCount, 1);
+      expect(resume, isNotNull);
+    },
+  );
 
-  test('abandonResume aborts the recorded session and tolerates junk',
-      () async {
-    final store = build();
-    final src = await bigSource();
-    server.failAfterPartUploads = 1;
-    String? resume;
-    await expectLater(
-      store.putFile(
-        key,
-        src,
-        contentType: 'video/mp4',
-        onResumeStateChanged: (json) => resume = json,
-      ),
-      throwsA(isA<MediaStoreException>()),
-    );
-    server.failAfterPartUploads = null;
-    expect(server.activeMultipartUploadCount, 1);
+  test(
+    'abandonResume aborts the recorded session and tolerates junk',
+    () async {
+      final store = build();
+      final src = await bigSource();
+      server.failAfterPartUploads = 1;
+      String? resume;
+      await expectLater(
+        store.putFile(
+          key,
+          src,
+          contentType: 'video/mp4',
+          onResumeStateChanged: (json) => resume = json,
+        ),
+        throwsA(isA<MediaStoreException>()),
+      );
+      server.failAfterPartUploads = null;
+      expect(server.activeMultipartUploadCount, 1);
 
-    await store.abandonResume(key, resume);
-    expect(server.activeMultipartUploadCount, 0);
+      await store.abandonResume(key, resume);
+      expect(server.activeMultipartUploadCount, 0);
 
-    // Junk inputs are silently tolerated.
-    await store.abandonResume(key, 'not json');
-    await store.abandonResume(key, '{"noUploadId":true}');
-    await store.abandonResume(key, null);
-  });
+      // Junk inputs are silently tolerated.
+      await store.abandonResume(key, 'not json');
+      await store.abandonResume(key, '{"noUploadId":true}');
+      await store.abandonResume(key, null);
+    },
+  );
 }

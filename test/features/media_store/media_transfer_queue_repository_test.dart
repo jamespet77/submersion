@@ -515,9 +515,7 @@ void main() {
     final names = cols.map((c) => c.read<String>('name')).toSet();
     expect(names, contains('payload_json'));
     final kept = await upgraded
-        .customSelect(
-          "SELECT media_id, payload_json FROM media_transfer_queue",
-        )
+        .customSelect("SELECT media_id, payload_json FROM media_transfer_queue")
         .getSingle();
     expect(kept.data['media_id'], 'm1');
     expect(kept.data['payload_json'], isNull);
