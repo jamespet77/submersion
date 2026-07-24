@@ -13005,6 +13005,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings_cloudSync_dropbox_account_title => 'حساب Dropbox';
 
   @override
+  String get settings_cloudSync_googleDrive_account_title => 'Google account';
+
+  @override
   String get settings_cloudSync_dropbox_connect_browserFailed =>
       'تعذر فتح المتصفح. جرب زر إعادة فتح المتصفح.';
 
@@ -13058,6 +13061,18 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get settings_cloudSync_provider_googleDrive_subtitle =>
       'المزامنة عبر Google Drive';
+
+  @override
+  String get settings_cloudSync_googleDrive_desktopNotConfigured =>
+      'غير متوفر في هذا الإصدار';
+
+  @override
+  String get settings_cloudSync_googleDrive_browserWait_title =>
+      'تابع في متصفحك';
+
+  @override
+  String get settings_cloudSync_googleDrive_browserWait_message =>
+      'أكمل تسجيل الدخول إلى Google في متصفح الويب الخاص بك، ثم عد إلى Submersion.';
 
   @override
   String get settings_cloudSync_provider_icloud => 'iCloud';

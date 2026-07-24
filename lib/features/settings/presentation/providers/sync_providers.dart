@@ -22,6 +22,8 @@ import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.da
 import 'package:submersion/core/services/cloud_storage/dropbox/dropbox_app.dart';
 import 'package:submersion/core/services/cloud_storage/dropbox/dropbox_auth_store.dart';
 import 'package:submersion/core/services/cloud_storage/dropbox_storage_provider.dart';
+import 'package:submersion/core/services/cloud_storage/google_drive_storage_provider.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:submersion/core/services/cloud_storage/encrypting_cloud_storage_provider.dart';
 import 'package:submersion/core/services/cloud_storage/icloud_native_service.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
@@ -297,14 +299,13 @@ final selectedSyncAccountProvider = FutureProvider<domain.ConnectedAccount?>((
   if (type == null) return null;
   final repo = ref.watch(connectedAccountsRepositoryProvider);
   try {
+    final syncRepo = ref.read(syncRepositoryProvider);
     final account = await ensureAccountForProviderType(
       type,
       repo,
-      syncRepository: ref.read(syncRepositoryProvider),
+      syncRepository: syncRepo,
     );
-    await ref
-        .read(syncRepositoryProvider)
-        .setSyncAccount(accountId: account.id, providerType: type);
+    await syncRepo.setSyncAccount(accountId: account.id, providerType: type);
     await _mirrorLegacyCredentials(ref, account);
     return account;
   } catch (e, st) {
@@ -348,9 +349,8 @@ Future<void> _mirrorLegacyCredentials(
     AccountKind.adobeLightroom => null,
   };
   if (legacyKey == null) return;
-  await ref
-      .read(accountCredentialsStoreProvider)
-      .mirrorLegacy(legacyKey: legacyKey, accountId: account.id);
+  final credentialsStore = ref.read(accountCredentialsStoreProvider);
+  await credentialsStore.mirrorLegacy(legacyKey: legacyKey, accountId: account.id);
 }
 
 /// Cloud storage provider instance (null if none selected or custom folder mode)
@@ -1376,3 +1376,18 @@ final dropboxAuthDataProvider = FutureProvider<DropboxAuthData?>((ref) async {
 final dropboxConfiguredProvider = Provider<bool>(
   (ref) => dropboxAppKey.isNotEmpty,
 );
+
+/// Direct access to the Google Drive provider singleton for the connect UI
+/// (authenticate, account info).
+final googleDriveStorageProviderInstanceProvider =
+    Provider<GoogleDriveStorageProvider>(
+      (ref) => cloudProviderInstanceFor(CloudProviderType.googledrive)
+          as GoogleDriveStorageProvider,
+    );
+
+/// The current Google Drive account, or null when not authenticated.
+/// Invalidate after authenticating or signing out.
+final googleDriveAccountProvider = FutureProvider<GoogleSignInAccount?>((ref) {
+  final provider = ref.watch(googleDriveStorageProviderInstanceProvider);
+  return provider.currentUser;
+});

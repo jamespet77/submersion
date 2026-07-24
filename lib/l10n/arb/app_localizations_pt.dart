@@ -13248,6 +13248,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get settings_cloudSync_dropbox_account_title => 'Conta do Dropbox';
 
   @override
+  String get settings_cloudSync_googleDrive_account_title => 'Google account';
+
+  @override
   String get settings_cloudSync_dropbox_connect_browserFailed =>
       'Não foi possível abrir o navegador. Tente o botão Reabrir navegador.';
 
@@ -13302,6 +13305,18 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get settings_cloudSync_provider_googleDrive_subtitle =>
       'Sincronizar via Google Drive';
+
+  @override
+  String get settings_cloudSync_googleDrive_desktopNotConfigured =>
+      'Indisponível nesta versão';
+
+  @override
+  String get settings_cloudSync_googleDrive_browserWait_title =>
+      'Continue no navegador';
+
+  @override
+  String get settings_cloudSync_googleDrive_browserWait_message =>
+      'Conclua a autenticação com a sua conta Google no navegador e depois regresse ao Submersion.';
 
   @override
   String get settings_cloudSync_provider_icloud => 'iCloud';

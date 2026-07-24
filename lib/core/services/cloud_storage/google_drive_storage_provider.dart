@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:extension_google_sign_in_as_googleapis_auth/extension_google_sign_in_as_googleapis_auth.dart';
@@ -8,6 +9,7 @@ import 'package:googleapis_auth/googleapis_auth.dart' as gapis_auth;
 
 import 'package:submersion/core/services/logger_service.dart';
 import 'package:submersion/core/services/cloud_storage/cloud_storage_provider.dart';
+import 'package:submersion/core/services/cloud_storage/google_drive/google_drive_client_config.dart';
 
 /// Google Drive implementation of CloudStorageProvider
 ///
@@ -43,7 +45,13 @@ class GoogleDriveStorageProvider
 
   Future<void> _ensureInitialized() async {
     if (_initialized) return;
-    await _googleSignIn.initialize();
+    if (Platform.isAndroid) {
+      await _googleSignIn.initialize(
+        serverClientId: GoogleDriveClientConfig.androidServerClientId,
+      );
+    } else {
+      await _googleSignIn.initialize();
+    }
     _initialized = true;
   }
 
@@ -132,6 +140,9 @@ class GoogleDriveStorageProvider
   Future<String?> getUserEmail() async {
     return _currentUser?.email;
   }
+
+  /// The current Google account, or null when not authenticated.
+  GoogleSignInAccount? get currentUser => _currentUser;
 
   Future<void> _initDriveApi(
     GoogleSignInAccount account,

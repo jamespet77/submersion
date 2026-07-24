@@ -24,6 +24,8 @@
 	<key>com.apple.security.application-groups</key>
 	<array/>
 	<key>keychain-access-groups</key>
-	<array/>
+	<array>
+		<string>$(AppIdentifierPrefix)app.submersion</string>
+	</array>
 </dict>
 </plist>

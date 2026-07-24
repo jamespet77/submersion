@@ -12604,6 +12604,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settings_cloudSync_dropbox_account_title => 'Dropbox 账户';
 
   @override
+  String get settings_cloudSync_googleDrive_account_title => 'Google account';
+
+  @override
   String get settings_cloudSync_dropbox_connect_browserFailed =>
       '无法打开浏览器。请尝试“重新打开浏览器”按钮。';
 
@@ -12655,6 +12658,16 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get settings_cloudSync_provider_googleDrive_subtitle =>
       '通过 Google Drive 同步';
+
+  @override
+  String get settings_cloudSync_googleDrive_desktopNotConfigured => '此版本不可用';
+
+  @override
+  String get settings_cloudSync_googleDrive_browserWait_title => '请在浏览器中继续';
+
+  @override
+  String get settings_cloudSync_googleDrive_browserWait_message =>
+      '请在网页浏览器中完成 Google 登录，然后返回 Submersion。';
 
   @override
   String get settings_cloudSync_provider_icloud => 'iCloud';

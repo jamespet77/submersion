@@ -7,6 +7,7 @@ import 'package:submersion/core/data/repositories/sync_repository.dart'
     show CloudProviderType;
 import 'package:submersion/core/services/cloud_storage/dropbox/dropbox_auth_store.dart';
 import 'package:submersion/core/services/cloud_storage/icloud_native_service.dart';
+import 'package:submersion/core/services/cloud_storage/google_drive/google_drive_client_config.dart';
 import 'package:submersion/core/services/cloud_storage/s3/s3_config.dart';
 import 'package:submersion/core/services/sync/library_moved.dart';
 import 'package:submersion/features/backup/presentation/providers/backup_providers.dart';
@@ -56,14 +57,9 @@ class CloudSyncPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final syncState = ref.watch(syncStateProvider);
-    // Google Drive is hidden until its integration is implemented, but a
     // persisted selection or SyncRepository's fallback can still surface
-    // `googledrive`. Treat it as no provider so the page can never show
-    // Sync Now enabled with no selected tile.
-    final rawProvider = ref.watch(selectedCloudProviderTypeProvider);
-    final selectedProvider = rawProvider == CloudProviderType.googledrive
-        ? null
-        : rawProvider;
+    // `googledrive`.
+    final selectedProvider = ref.watch(selectedCloudProviderTypeProvider);
     final hasProvider = selectedProvider != null;
     final isCustomFolderMode = ref.watch(
       isCloudSyncDisabledByCustomFolderProvider,
@@ -482,9 +478,8 @@ class CloudSyncPage extends ConsumerWidget {
           isAvailable: isApple && !iCloudUnsupported,
           disabledSubtitle: iCloudDisabledSubtitle,
         ),
-        // Google Drive is hidden until its integration is fully
-        // implemented; the CloudProviderType and provider plumbing remain
-        // so re-enabling is just restoring this tile.
+        if (GoogleDriveClientConfig.isSupportedOnThisPlatform)
+          _buildGoogleDriveProviderTile(context, ref, selectedProvider),
         _buildS3ProviderTile(context, ref, selectedProvider),
         // The tile disappears in builds without a Dropbox app key
         // (dropboxAppKey empty) so users never see a connect dialog that
@@ -531,6 +526,114 @@ class CloudSyncPage extends ConsumerWidget {
             : null,
       ),
     );
+  }
+
+  Widget _buildGoogleDriveProviderTile(
+    BuildContext context,
+    WidgetRef ref,
+    CloudProviderType? selectedProvider,
+  ) {
+    final l10n = context.l10n;
+    final account = ref.watch(googleDriveAccountProvider).valueOrNull;
+    final isSelected = selectedProvider == CloudProviderType.googledrive;
+    final isConnected = account != null;
+
+    return Semantics(
+      selected: isSelected,
+      child: ListTile(
+        leading: const Icon(Icons.add_to_drive),
+        title: Text(l10n.settings_cloudSync_provider_googleDrive),
+        subtitle: Text(
+          isConnected
+              ? account.email
+              : l10n.settings_cloudSync_provider_googleDrive_subtitle,
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                semanticLabel: 'Connected',
+              ),
+            if (isConnected)
+              IconButton(
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: l10n.settings_cloudSync_googleDrive_account_title,
+                onPressed: () => _showGoogleAccountDialog(context, ref),
+              ),
+          ],
+        ),
+        onTap: () async {
+          if (isConnected) {
+            await _selectProvider(context, ref, CloudProviderType.googledrive);
+            return;
+          }
+          try {
+            final provider = ref.read(googleDriveStorageProviderInstanceProvider);
+            await provider.authenticate();
+            if (!context.mounted) return;
+            ref.invalidate(googleDriveAccountProvider);
+            await _selectProvider(context, ref, CloudProviderType.googledrive);
+          } catch (e) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Failed to connect to Google Drive: $e')),
+            );
+          }
+        },
+      ),
+    );
+  }
+
+  Future<void> _showGoogleAccountDialog(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final l10n = context.l10n;
+    final account = ref.read(googleDriveAccountProvider).valueOrNull;
+    final isActiveProvider =
+        ref.read(selectedCloudProviderTypeProvider) ==
+        CloudProviderType.googledrive;
+
+    final backupWarning =
+        isActiveProvider && ref.read(backupSettingsProvider).cloudBackupEnabled
+            ? '\n\n${l10n.settings_cloudSync_signOut_backupWarning}'
+            : '';
+
+    final signOut = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.settings_cloudSync_googleDrive_account_title),
+        content: Text(
+          '${account?.email ?? l10n.settings_cloudSync_provider_connected}$backupWarning',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              MaterialLocalizations.of(dialogContext).cancelButtonLabel,
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.settings_cloudSync_dropbox_disconnect),
+          ),
+        ],
+      ),
+    );
+
+    if (signOut == true && context.mounted) {
+      final provider = ref.read(googleDriveStorageProviderInstanceProvider);
+      await provider.signOut();
+      ref.invalidate(googleDriveAccountProvider);
+      if (isActiveProvider) {
+        await ref.read(selectedCloudProviderTypeProvider.notifier).update(
+          (state) => null,
+        );
+      }
+    }
   }
 
   Widget _buildS3ProviderTile(

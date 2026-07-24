@@ -22419,6 +22419,12 @@ abstract class AppLocalizations {
   /// **'Dropbox account'**
   String get settings_cloudSync_dropbox_account_title;
 
+  /// No description provided for @settings_cloudSync_googleDrive_account_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Google account'**
+  String get settings_cloudSync_googleDrive_account_title;
+
   /// No description provided for @settings_cloudSync_dropbox_connect_browserFailed.
   ///
   /// In en, this message translates to:
@@ -22508,6 +22514,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync via Google Drive'**
   String get settings_cloudSync_provider_googleDrive_subtitle;
+
+  /// No description provided for @settings_cloudSync_googleDrive_desktopNotConfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available in this build'**
+  String get settings_cloudSync_googleDrive_desktopNotConfigured;
+
+  /// No description provided for @settings_cloudSync_googleDrive_browserWait_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue in your browser'**
+  String get settings_cloudSync_googleDrive_browserWait_title;
+
+  /// No description provided for @settings_cloudSync_googleDrive_browserWait_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish signing in to Google in your web browser, then return to Submersion.'**
+  String get settings_cloudSync_googleDrive_browserWait_message;
 
   /// No description provided for @settings_cloudSync_provider_icloud.
   ///
