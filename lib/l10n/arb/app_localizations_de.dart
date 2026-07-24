@@ -5343,6 +5343,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'Ceiling';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6808,6 +6811,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'Ceiling';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6954,6 +6960,9 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'In Tauchgang umwandeln';
+
+  @override
+  String get divePlanner_action_deletePlan => 'Plan löschen';
 
   @override
   String get divePlanner_action_editTank => 'Flasche bearbeiten';
@@ -7133,6 +7142,14 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Kein Profil zum Anzeigen';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '\'$name\' löschen?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan gelöscht';
 
   @override
   String get divePlanner_message_planSaved => 'Plan gespeichert';
@@ -9823,6 +9840,10 @@ class AppLocalizationsDe extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'Keine Wartungsintervalle';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'Kein Intervall festgelegt - zum Konfigurieren tippen';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18989,6 +19010,9 @@ class AppLocalizationsDe extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'Sicherheitsstopp';
 
   @override
+  String get divePlanner_undo => 'Rückgängig';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'Rock Bottom ist die Mindestgasreserve für einen Notaufstieg bei Luftteilung mit dem Tauchpartner.\n\n- Verwendet erhöhte AMV-Werte (2-3x normal)\n- Geht davon aus, dass beide Taucher eine Flasche nutzen\n- Beinhaltet Sicherheitsstopp wenn aktiviert\n\nDrehen Sie den Tauchgang immer BEVOR Sie Rock Bottom erreichen!';
 
@@ -20397,6 +20421,10 @@ class AppLocalizationsDe extends AppLocalizations {
   @override
   String get settings_mediaStorage_transfers_state_transferring =>
       'Wird hochgeladen';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'Wird aus der Cloud entfernt';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'Fertig';
@@ -21942,4 +21970,37 @@ class AppLocalizationsDe extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'Überprüfen ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'Upload-Qualität';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'Fotos';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'Video';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'Original';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'Hoch';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'Ausgewogen';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'Klein';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'Wenn eine Komprimierungsstufe festgelegt ist, werden Originale in voller Auflösung nicht hochgeladen — sie verbleiben nur auf diesem Gerät.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued =>
+      'Erneuter Upload in Warteschlange';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'Installieren Sie ffmpeg, um Videokomprimierung zu aktivieren. Bis dahin werden Originale hochgeladen.';
 }

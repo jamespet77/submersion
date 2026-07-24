@@ -20,11 +20,15 @@ import 'package:submersion/features/media/presentation/providers/media_providers
 import 'package:submersion/features/media/presentation/providers/media_resolver_providers.dart';
 import 'package:submersion/features/media_store/data/media_backfill_service.dart';
 import 'package:submersion/features/media_store/data/media_cache_store.dart';
+import 'package:submersion/features/media_store/data/media_delete_processor.dart';
+import 'package:submersion/features/media_store/data/media_deletion_coordinator.dart';
 import 'package:submersion/features/media_store/data/media_store_service.dart';
 import 'package:submersion/features/media_store/data/media_store_worker.dart';
 import 'package:submersion/features/media_store/data/media_stores_repository.dart';
 import 'package:submersion/features/media_store/data/media_transfer_queue_repository.dart';
 import 'package:submersion/features/media_store/data/media_upload_pipeline.dart';
+import 'package:submersion/features/media_store/data/platform_video_transcoder.dart';
+import 'package:submersion/features/media_store/domain/media_upload_quality.dart';
 import 'package:submersion/features/media_store/presentation/widgets/media_store_badge.dart';
 
 /// Everything a configured media store needs at runtime. Built once per
@@ -62,6 +66,44 @@ final mediaTransferQueueRepositoryProvider =
     Provider<MediaTransferQueueRepository>(
       (ref) => MediaTransferQueueRepository(),
     );
+
+/// Recovers media transfer rows stranded in 'transferring' by a previous
+/// process (app killed or backgrounded mid-upload) back to 'pending'.
+///
+/// Deliberately separate from [mediaStoreRuntimeProvider] and run exactly
+/// once per process. The runtime is rebuilt on every connect/disconnect,
+/// and a rebuild can spawn a fresh worker while a worker from the previous
+/// runtime is still mid-upload (nothing cancels its in-flight drain).
+/// Reclaiming on each rebuild - or inside drain() - would flip that live
+/// transfer's row back to 'pending' and let two workers process it at once.
+/// A row is only ever orphaned by process death, which is observable only
+/// at process start, so running reclamation once before the first drain
+/// recovers every real orphan without ever touching a live worker's row.
+/// This provider is never invalidated: its cached result makes the reclaim
+/// idempotent for the process lifetime. Uses ref.read, not ref.watch, so an
+/// invalidation/override of the repository provider (e.g. in a nested test
+/// scope) cannot recompute this future and trigger a second reclaim pass.
+final FutureProvider<void> mediaTransferQueueReclaimProvider =
+    FutureProvider<void>((ref) async {
+      await ref.read(mediaTransferQueueRepositoryProvider).requeueStale();
+    });
+
+/// Deletion entry point for UI flows: enqueue-before-delete per the
+/// orphan-prevention spec (5.2). The queue and runtime are read lazily
+/// (never watched) so consumer widget tests without a media store runtime
+/// are unaffected, and the coordinator itself swallows enqueue failures.
+final mediaDeletionCoordinatorProvider = Provider<MediaDeletionCoordinator>((
+  ref,
+) {
+  return MediaDeletionCoordinator(
+    mediaRepository: ref.watch(mediaRepositoryProvider),
+    queue: () => ref.read(mediaTransferQueueRepositoryProvider),
+    kickWorker: () async {
+      final runtime = await ref.read(mediaStoreRuntimeProvider.future);
+      await runtime?.worker?.drain();
+    },
+  );
+});
 
 final mediaBackfillServiceProvider = Provider<MediaBackfillService>(
   (ref) => MediaBackfillService(
@@ -182,10 +224,17 @@ final FutureProvider<MediaStoreRuntime?> mediaStoreRuntimeProvider =
         store: store,
         registry: ref.watch(mediaSourceResolverRegistryProvider),
         cache: cache,
+        videoTranscoder: PlatformVideoTranscoder(),
+      );
+      final deleteProcessor = MediaDeleteProcessor(
+        queue: MediaTransferQueueRepository(),
+        store: store,
+        mediaRepository: mediaRepository,
       );
       final worker = MediaStoreWorker(
         queue: MediaTransferQueueRepository(),
         pipeline: pipeline,
+        deleteProcessor: deleteProcessor,
         preflight: () async {
           // Suspend all transfers when this device detached (attach state
           // re-read, not captured: disconnect can land while a drain is
@@ -201,6 +250,10 @@ final FutureProvider<MediaStoreRuntime?> mediaStoreRuntimeProvider =
           // drain; cellular defers anything the policy disallows.
           final kind = await network.current();
           if (kind == NetworkKind.offline) return WorkerGate.stopDraining;
+          // Deletes are tiny API calls with no payload: exempt from the
+          // cellular media policies, gated only by being online
+          // (orphan-prevention spec 5.6).
+          if (entry.direction == 'delete') return WorkerGate.proceed;
           if (kind == NetworkKind.cellular) {
             final item = await mediaRepository.getMediaById(entry.mediaId);
             final isVideo = item?.mediaType == MediaType.video;
@@ -212,6 +265,16 @@ final FutureProvider<MediaStoreRuntime?> mediaStoreRuntimeProvider =
           return WorkerGate.proceed;
         },
       );
+      // Recover orphaned 'transferring' rows once per process, and do it
+      // BEFORE any drain can start - including a connectivity-triggered one.
+      // Awaited before the network subscription is attached so a network
+      // event during the await cannot kick a drain that marks a row
+      // 'transferring' while requeueStale is still running. Driven via the
+      // cached provider (not inside drain()) so a connect/disconnect rebuild
+      // cannot reclaim a row a still-running worker from the previous runtime
+      // owns; the cache makes it run only once.
+      await ref.read(mediaTransferQueueReclaimProvider.future);
+
       final connectivitySub = network.changes.listen((kind) {
         if (kind != NetworkKind.offline) unawaited(worker.drain());
       });
@@ -254,3 +317,23 @@ final mediaStoreEnqueueImplProvider = Provider<void Function(String)>((ref) {
     }());
   };
 });
+
+/// Per-item re-upload at a chosen quality (settings override action).
+final mediaStoreReuploadProvider =
+    Provider<Future<void> Function(String, MediaUploadQuality)>((ref) {
+      return (mediaId, level) async {
+        final runtime = await ref.read(mediaStoreRuntimeProvider.future);
+        await runtime?.worker?.reuploadAndKick(mediaId, level);
+      };
+    });
+
+/// Whether this device can transcode video right now (spec section 12).
+/// Drives the Linux settings hint; false on platforms without an engine.
+///
+/// autoDispose so it re-checks each time Settings is re-entered: a plain
+/// FutureProvider would cache a `false` (ffmpeg not yet installed) for the
+/// container's lifetime, leaving the "install ffmpeg" hint stale after the
+/// user installs ffmpeg and comes back.
+final videoTranscodeAvailableProvider = FutureProvider.autoDispose<bool>(
+  (ref) => PlatformVideoTranscoder().isAvailable(),
+);

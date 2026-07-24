@@ -5346,6 +5346,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'Techo';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6812,6 +6815,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'Techo';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6957,6 +6963,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'Convertir a Inmersión';
+
+  @override
+  String get divePlanner_action_deletePlan => 'Eliminar plan';
 
   @override
   String get divePlanner_action_editTank => 'Editar Botella';
@@ -7136,6 +7145,14 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'No hay perfil para mostrar';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '¿Eliminar \'$name\'?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan eliminado';
 
   @override
   String get divePlanner_message_planSaved => 'Plan guardado';
@@ -9817,6 +9834,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'Sin intervalos de mantenimiento';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'Sin intervalo definido: toca para configurar';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -19028,6 +19049,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'Parada de seguridad';
 
   @override
+  String get divePlanner_undo => 'Deshacer';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'La reserva minima (rock bottom) es la cantidad minima de gas para un ascenso de emergencia compartiendo aire con tu companero.\n\n- Usa tasas SAC de estres (2-3x lo normal)\n- Asume ambos buceadores con un solo tanque\n- Incluye parada de seguridad cuando esta activada\n\nSiempre inicia el regreso ANTES de alcanzar la reserva minima!';
 
@@ -20444,6 +20468,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => 'Subiendo';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'Eliminando de la nube';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'Completado';
@@ -21988,4 +22016,36 @@ class AppLocalizationsEs extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'Revisar ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'Calidad de subida';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'Fotos';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'Vídeo';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'Original';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'Alta';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'Equilibrada';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'Pequeña';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'Con un nivel de compresión establecido, los originales a resolución completa no se suben; permanecen solo en este dispositivo.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued => 'Resubida en cola';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'Instala ffmpeg para habilitar la compresión de vídeo. Hasta entonces se suben los originales.';
 }

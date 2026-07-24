@@ -5367,6 +5367,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'Plafond';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6840,6 +6843,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'Plafond';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6986,6 +6992,9 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'Convertir en plongée';
+
+  @override
+  String get divePlanner_action_deletePlan => 'Supprimer le plan';
 
   @override
   String get divePlanner_action_editTank => 'Modifier la bouteille';
@@ -7166,6 +7175,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Aucun profil à afficher';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'Supprimer \'$name\' ?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan supprimé';
 
   @override
   String get divePlanner_message_planSaved => 'Plan enregistré';
@@ -9850,6 +9867,10 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'Aucun compteur d\'entretien';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'Aucun intervalle défini - appuyez pour configurer';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -19086,6 +19107,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'Palier de securite';
 
   @override
+  String get divePlanner_undo => 'Annuler';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'Le rock bottom est la reserve de gaz minimale pour une remontee d\'urgence en partageant l\'air avec votre binome.\n\n- Utilise des consommations majorees (2-3x la normale)\n- Suppose les deux plongeurs sur un seul bloc\n- Inclut le palier de securite si active\n\nFaites toujours demi-tour AVANT d\'atteindre le rock bottom !';
 
@@ -20502,6 +20526,10 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get settings_mediaStorage_transfers_state_transferring =>
       'Envoi en cours';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'Suppression du cloud';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'Terminé';
@@ -22048,4 +22076,38 @@ class AppLocalizationsFr extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'Vérifier ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section =>
+      'Qualité de téléversement';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'Photos';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'Vidéo';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'Original';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'Élevée';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'Équilibrée';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'Petite';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'Lorsqu\'un niveau de compression est défini, les originaux en pleine résolution ne sont pas téléversés ; ils restent uniquement sur cet appareil.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued =>
+      'Nouveau téléversement en file d\'attente';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'Installez ffmpeg pour activer la compression vidéo. Les originaux sont téléversés d\'ici là.';
 }

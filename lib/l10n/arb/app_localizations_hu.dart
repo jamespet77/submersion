@@ -5325,6 +5325,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'Plafon';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6790,6 +6793,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'Plafon';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6936,6 +6942,9 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'Átalakítás merüléssé';
+
+  @override
+  String get divePlanner_action_deletePlan => 'Terv törlése';
 
   @override
   String get divePlanner_action_editTank => 'Palack szerkesztése';
@@ -7115,6 +7124,14 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Nincs megjeleníthető profil';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'Törli a(z) \'$name\' tervet?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Terv törölve';
 
   @override
   String get divePlanner_message_planSaved => 'Terv mentve';
@@ -9802,6 +9819,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'Nincsenek szervizintervallumok';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'Nincs beállított időköz - koppintson a beállításhoz';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18964,6 +18985,9 @@ class AppLocalizationsHu extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'Biztonsagi megallo';
 
   @override
+  String get divePlanner_undo => 'Visszavonás';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'A Rock Bottom az a minimalis gaztartalek, ami egy veszelyes helyzetben szukseges a felszinre ereshez, mikozben levegot oszt meg a buddyjaval.\n\n- Stresszes SAC ertekeket hasznal (2-3x normalis)\n- Feltetelezi, hogy mindket merulo egy palackrol sziv\n- Tartalmazza a biztonsagi megallot, ha engedelyezve van\n\nMindig forduljon vissza, mielott eleri a Rock Bottom erteket!';
 
@@ -20372,6 +20396,10 @@ class AppLocalizationsHu extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => 'Feltöltés';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'Eltávolítás a felhőből';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'Kész';
@@ -21909,4 +21937,37 @@ class AppLocalizationsHu extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'Áttekintés ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'Feltöltési minőség';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'Fényképek';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'Videó';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'Eredeti';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'Magas';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'Kiegyensúlyozott';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'Kicsi';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'Ha be van állítva tömörítési szint, a teljes felbontású eredetik nem töltődnek fel — csak ezen az eszközön maradnak meg.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued =>
+      'Újratöltés sorba állítva';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'Telepítse az ffmpeg-et a videótömörítés engedélyezéséhez. Addig az eredetik kerülnek feltöltésre.';
 }

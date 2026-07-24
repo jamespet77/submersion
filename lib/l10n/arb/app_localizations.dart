@@ -8948,6 +8948,12 @@ abstract class AppLocalizations {
   /// **'Ceiling'**
   String get diveLog_legend_label_ceiling;
 
+  /// No description provided for @diveLog_legend_label_decoStops.
+  ///
+  /// In en, this message translates to:
+  /// **'Deco stops'**
+  String get diveLog_legend_label_decoStops;
+
   /// No description provided for @diveLog_legend_label_cns.
   ///
   /// In en, this message translates to:
@@ -11540,6 +11546,12 @@ abstract class AppLocalizations {
   /// **'Ceiling'**
   String get diveLog_tooltip_ceiling;
 
+  /// No description provided for @diveLog_tooltip_decoStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Deco stop'**
+  String get diveLog_tooltip_decoStop;
+
   /// No description provided for @diveLog_tooltip_cns.
   ///
   /// In en, this message translates to:
@@ -11815,6 +11827,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Convert to Dive'**
   String get divePlanner_action_convertToDive;
+
+  /// No description provided for @divePlanner_action_deletePlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete plan'**
+  String get divePlanner_action_deletePlan;
 
   /// No description provided for @divePlanner_action_editTank.
   ///
@@ -12145,6 +12163,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No profile to display'**
   String get divePlanner_message_noProfile;
+
+  /// No description provided for @divePlanner_message_deleteConfirmation.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \'{name}\'?'**
+  String divePlanner_message_deleteConfirmation(String name);
+
+  /// No description provided for @divePlanner_message_planDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Plan deleted'**
+  String get divePlanner_message_planDeleted;
 
   /// No description provided for @divePlanner_message_planSaved.
   ///
@@ -16875,6 +16905,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No service clocks'**
   String get equipment_serviceClocks_empty;
+
+  /// No description provided for @equipment_serviceClocks_unconfigured.
+  ///
+  /// In en, this message translates to:
+  /// **'No interval set - tap to configure'**
+  String get equipment_serviceClocks_unconfigured;
 
   /// No description provided for @equipment_serviceClocks_dueOn.
   ///
@@ -31868,6 +31904,12 @@ abstract class AppLocalizations {
   /// **'Safety Stop'**
   String get divePlanner_segmentType_safetyStop;
 
+  /// No description provided for @divePlanner_undo.
+  ///
+  /// In en, this message translates to:
+  /// **'Undo'**
+  String get divePlanner_undo;
+
   /// No description provided for @gasCalculators_rockBottom_aboutDescription.
   ///
   /// In en, this message translates to:
@@ -34127,6 +34169,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Uploading'**
   String get settings_mediaStorage_transfers_state_transferring;
+
+  /// No description provided for @settings_mediaStorage_transfers_state_deleting.
+  ///
+  /// In en, this message translates to:
+  /// **'Removing from cloud'**
+  String get settings_mediaStorage_transfers_state_deleting;
 
   /// No description provided for @settings_mediaStorage_transfers_state_done.
   ///
@@ -36761,6 +36809,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Review ({count})'**
   String dataQuality_detail_chipCount(int count);
+
+  /// No description provided for @settings_mediaStorage_quality_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Upload quality'**
+  String get settings_mediaStorage_quality_section;
+
+  /// No description provided for @settings_mediaStorage_quality_photos.
+  ///
+  /// In en, this message translates to:
+  /// **'Photos'**
+  String get settings_mediaStorage_quality_photos;
+
+  /// No description provided for @settings_mediaStorage_quality_video.
+  ///
+  /// In en, this message translates to:
+  /// **'Video'**
+  String get settings_mediaStorage_quality_video;
+
+  /// No description provided for @settings_mediaStorage_quality_original.
+  ///
+  /// In en, this message translates to:
+  /// **'Original'**
+  String get settings_mediaStorage_quality_original;
+
+  /// No description provided for @settings_mediaStorage_quality_high.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get settings_mediaStorage_quality_high;
+
+  /// No description provided for @settings_mediaStorage_quality_balanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get settings_mediaStorage_quality_balanced;
+
+  /// No description provided for @settings_mediaStorage_quality_small.
+  ///
+  /// In en, this message translates to:
+  /// **'Small'**
+  String get settings_mediaStorage_quality_small;
+
+  /// No description provided for @settings_mediaStorage_quality_caveat.
+  ///
+  /// In en, this message translates to:
+  /// **'With a compression level set, full-resolution originals are not uploaded — they remain only on this device.'**
+  String get settings_mediaStorage_quality_caveat;
+
+  /// No description provided for @settings_mediaStorage_quality_reuploadQueued.
+  ///
+  /// In en, this message translates to:
+  /// **'Re-upload queued'**
+  String get settings_mediaStorage_quality_reuploadQueued;
+
+  /// No description provided for @settings_mediaStorage_quality_linuxFfmpegHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Install ffmpeg to enable video compression. Originals are uploaded until then.'**
+  String get settings_mediaStorage_quality_linuxFfmpegHint;
 }
 
 class _AppLocalizationsDelegate

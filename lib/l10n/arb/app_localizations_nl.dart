@@ -5300,6 +5300,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'Plafond';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6755,6 +6758,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'Plafond';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6900,6 +6906,9 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'Omzetten naar duik';
+
+  @override
+  String get divePlanner_action_deletePlan => 'Plan verwijderen';
 
   @override
   String get divePlanner_action_editTank => 'Fles bewerken';
@@ -7077,6 +7086,14 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'Geen profiel om weer te geven';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '\'$name\' verwijderen?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan verwijderd';
 
   @override
   String get divePlanner_message_planSaved => 'Plan opgeslagen';
@@ -9747,6 +9764,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'Geen serviceintervallen';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'Geen interval ingesteld - tik om te configureren';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18859,6 +18880,9 @@ class AppLocalizationsNl extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'Veiligheidsstop';
 
   @override
+  String get divePlanner_undo => 'Ongedaan maken';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'Rock bottom is de minimale gasreserve voor een noodopstijging terwijl je lucht deelt met je buddy.\n\n• Gebruikt verhoogde SAC-waarden (2-3x normaal)\n• Gaat ervan uit dat beide duikers op een fles zitten\n• Inclusief veiligheidsstop indien ingeschakeld\n\nKeer de duik altijd om VOOR je rock bottom bereikt!';
 
@@ -20263,6 +20287,10 @@ class AppLocalizationsNl extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => 'Uploaden';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'Verwijderen uit de cloud';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'Klaar';
@@ -21800,4 +21828,37 @@ class AppLocalizationsNl extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'Controleren ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'Uploadkwaliteit';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'Foto\'s';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'Video';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'Origineel';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'Hoog';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'Gebalanceerd';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'Klein';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'Als er een compressieniveau is ingesteld, worden originelen op volledige resolutie niet geüpload; ze blijven alleen op dit apparaat.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued =>
+      'Opnieuw uploaden in wachtrij';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'Installeer ffmpeg om videocompressie in te schakelen. Tot die tijd worden originelen geüpload.';
 }

@@ -10,6 +10,11 @@ class InMemoryMediaObjectStore implements MediaObjectStore {
   /// When set, the next operation throws it once and clears the field.
   Exception? failNextWith;
 
+  /// When set, the next delete throws it once and clears the field. Unlike
+  /// [failNextWith] this targets delete specifically, so a test can fail a
+  /// best-effort GC delete without tripping the preceding putFile/head.
+  Exception? failDeleteWith;
+
   /// When set, putFile fires onResumeStateChanged with this JSON once per
   /// call (pipeline wiring tests).
   String? emitResumeState;
@@ -91,8 +96,21 @@ class InMemoryMediaObjectStore implements MediaObjectStore {
   @override
   Future<void> delete(String key) async {
     _maybeFail();
+    final e = failDeleteWith;
+    if (e != null) {
+      failDeleteWith = null;
+      throw e;
+    }
     objects.remove(key);
     modified.remove(key);
+  }
+
+  /// (key, resumeStateJson) pairs abandonResume was called with.
+  final abandonResumeCalls = <(String, String?)>[];
+
+  @override
+  Future<void> abandonResume(String key, String? resumeStateJson) async {
+    abandonResumeCalls.add((key, resumeStateJson));
   }
 
   @override

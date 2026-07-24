@@ -5059,6 +5059,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_legend_label_ceiling => '上升限制';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => '中枢神经系统%';
 
   @override
@@ -6467,6 +6470,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get diveLog_tooltip_ceiling => '上升限制';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => '中枢神经系统';
 
   @override
@@ -6612,6 +6618,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => '转换为潜水';
+
+  @override
+  String get divePlanner_action_deletePlan => '删除计划';
 
   @override
   String get divePlanner_action_editTank => '编辑气瓶';
@@ -6785,6 +6794,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => '无档案到显示';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return '删除 \'$name\'？';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => '计划已删除';
 
   @override
   String get divePlanner_message_planSaved => '计划已保存';
@@ -9385,6 +9402,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => '暂无维护倒计时';
+
+  @override
+  String get equipment_serviceClocks_unconfigured => '未设置间隔 - 点按进行配置';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18046,6 +18066,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => '安全停留';
 
   @override
+  String get divePlanner_undo => '撤销';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       '最低气量是在与潜伴共用气源进行紧急上升时所需的最低气体储备。\n\n• 使用应激耗气率（正常的 2-3 倍）\n• 假设两位潜水员共用一个气瓶\n• 启用时包含安全停留\n\n务必在到达最低气量之前折返！';
 
@@ -19384,6 +19407,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => '上传中';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting => '正在从云端移除';
 
   @override
   String get settings_mediaStorage_transfers_state_done => '已完成';
@@ -20863,4 +20889,36 @@ class AppLocalizationsZh extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return '审查 ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => '上传质量';
+
+  @override
+  String get settings_mediaStorage_quality_photos => '照片';
+
+  @override
+  String get settings_mediaStorage_quality_video => '视频';
+
+  @override
+  String get settings_mediaStorage_quality_original => '原始';
+
+  @override
+  String get settings_mediaStorage_quality_high => '高';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => '均衡';
+
+  @override
+  String get settings_mediaStorage_quality_small => '小';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      '设置压缩级别后，不会上传全分辨率原图，它们仅保留在本设备上。';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued => '重新上传已加入队列';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      '安装 ffmpeg 以启用视频压缩。在此之前将上传原始文件。';
 }

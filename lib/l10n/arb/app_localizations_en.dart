@@ -5243,6 +5243,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'Ceiling';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6686,6 +6689,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'Ceiling';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6831,6 +6837,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'Convert to Dive';
+
+  @override
+  String get divePlanner_action_deletePlan => 'Delete plan';
 
   @override
   String get divePlanner_action_editTank => 'Edit Tank';
@@ -7008,6 +7017,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'No profile to display';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'Delete \'$name\'?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'Plan deleted';
 
   @override
   String get divePlanner_message_planSaved => 'Plan saved';
@@ -9670,6 +9687,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'No service clocks';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'No interval set - tap to configure';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18691,6 +18712,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'Safety Stop';
 
   @override
+  String get divePlanner_undo => 'Undo';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'Rock bottom is the minimum gas reserve for an emergency ascent while sharing air with your buddy.\n\n• Uses stressed SAC rates (2-3x normal)\n• Assumes both divers on one tank\n• Includes safety stop when enabled\n\nAlways turn the dive BEFORE reaching rock bottom!';
 
@@ -20082,6 +20106,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => 'Uploading';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'Removing from cloud';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'Done';
@@ -21603,4 +21631,36 @@ class AppLocalizationsEn extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'Review ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'Upload quality';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'Photos';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'Video';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'Original';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'High';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'Balanced';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'Small';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'With a compression level set, full-resolution originals are not uploaded — they remain only on this device.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued => 'Re-upload queued';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'Install ffmpeg to enable video compression. Originals are uploaded until then.';
 }

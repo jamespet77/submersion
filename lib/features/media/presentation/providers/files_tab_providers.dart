@@ -12,6 +12,8 @@ import 'package:submersion/features/media/domain/entities/media_source_type.dart
 import 'package:submersion/features/media/domain/value_objects/extracted_file.dart';
 import 'package:submersion/features/media/domain/value_objects/matched_selection.dart';
 import 'package:submersion/features/media/presentation/providers/media_providers.dart';
+import 'package:submersion/features/media_store/data/media_deletion_coordinator.dart';
+import 'package:submersion/features/media_store/presentation/providers/media_store_providers.dart';
 import 'package:submersion/features/media/presentation/providers/media_resolver_providers.dart';
 
 /// State for the Files tab in the photo picker.
@@ -98,9 +100,15 @@ class FilesTabNotifier extends StateNotifier<FilesTabState> {
     required this.mediaRepository,
     required this.bookmarkStorage,
     required this.platform,
+    this.deletionCoordinator,
   }) : super(FilesTabState.initial());
 
   final MediaRepository mediaRepository;
+
+  /// Routes undo deletions through the orphan-prevention fast path when
+  /// wired (production); direct-construction tests fall back to the
+  /// repository.
+  final MediaDeletionCoordinator? deletionCoordinator;
   final LocalBookmarkStorage bookmarkStorage;
   final LocalMediaPlatform platform;
 
@@ -154,17 +162,14 @@ class FilesTabNotifier extends StateNotifier<FilesTabState> {
   /// returns the list of created IDs. Pass the list back to [undoCommit]
   /// to roll back. State is reset via [clear] before returning.
   ///
-  /// Video MIME files are skipped: Phase 2 has no local-file video playback
-  /// path. The picker / folder enumerator both restrict to images already;
-  /// this guard is belt-and-suspenders against a future regression at the
-  /// pick layer (see [FilesTab] class doc).
+  /// Both photos and videos are persisted; [_persistOne] tags each row with
+  /// the right [MediaType] from its MIME. On desktop a local-file video
+  /// resolves by localPath and plays via `VideoPlayerController.file`
+  /// (see [FilesTab] class doc for the iOS caveat).
   Future<List<String>> commit() async {
     final created = <String>[];
     for (final entry in state.match.matched.entries) {
       for (final file in entry.value) {
-        if (file.metadata.mimeType.startsWith('video/')) {
-          continue;
-        }
         final id = await _persistOne(file, entry.key);
         created.add(id);
       }
@@ -176,6 +181,11 @@ class FilesTabNotifier extends StateNotifier<FilesTabState> {
   /// Reverses a prior [commit] by deleting each row by id. Bookmark blobs
   /// in the keychain are intentionally not cleaned up — see class doc.
   Future<void> undoCommit(List<String> ids) async {
+    final coordinator = deletionCoordinator;
+    if (coordinator != null) {
+      await coordinator.deleteMultipleMedia(ids);
+      return;
+    }
     for (final id in ids) {
       await mediaRepository.deleteMedia(id);
     }
@@ -241,5 +251,6 @@ final filesTabNotifierProvider =
         mediaRepository: ref.read(mediaRepositoryProvider),
         bookmarkStorage: ref.read(localBookmarkStorageProvider),
         platform: ref.read(localMediaPlatformProvider),
+        deletionCoordinator: ref.read(mediaDeletionCoordinatorProvider),
       ),
     );

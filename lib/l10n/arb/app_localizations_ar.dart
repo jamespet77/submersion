@@ -5225,6 +5225,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'السقف';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6667,6 +6670,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'السقف';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6812,6 +6818,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'تحويل إلى غطسة';
+
+  @override
+  String get divePlanner_action_deletePlan => 'حذف الخطة';
 
   @override
   String get divePlanner_action_editTank => 'تعديل الأسطوانة';
@@ -6990,6 +6999,14 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'لا يوجد ملف للعرض';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'حذف \'$name\'؟';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'تم حذف الخطة';
 
   @override
   String get divePlanner_message_planSaved => 'تم حفظ الخطة';
@@ -9648,6 +9665,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'لا توجد عدادات صيانة';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'لم يتم تعيين فترة - انقر للإعداد';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18667,6 +18688,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'وقفة أمان';
 
   @override
+  String get divePlanner_undo => 'تراجع';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'الحد الأدنى للغاز هو أقل احتياطي غاز للصعود الطارئ أثناء مشاركة الهواء مع رفيقك.\n\n- يستخدم معدلات SAC تحت الضغط (2-3 أضعاف المعدل الطبيعي)\n- يفترض أن كلا الغواصين على أسطوانة واحدة\n- يشمل وقفة الأمان عند تفعيلها\n\nقم بإنهاء الغطسة دائمًا قبل الوصول إلى الحد الأدنى!';
 
@@ -20059,6 +20083,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => 'جارٍ الرفع';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting =>
+      'جارٍ الإزالة من السحابة';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'تم';
@@ -21573,4 +21601,37 @@ class AppLocalizationsAr extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'مراجعة ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'جودة الرفع';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'الصور';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'الفيديو';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'الأصلية';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'عالية';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'متوازنة';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'صغيرة';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'عند تعيين مستوى ضغط، لا يتم رفع النسخ الأصلية بالدقة الكاملة؛ فهي تبقى على هذا الجهاز فقط.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued =>
+      'تمت إضافة إعادة الرفع إلى قائمة الانتظار';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'ثبّت ffmpeg لتمكين ضغط الفيديو. حتى ذلك الحين يتم رفع النسخ الأصلية.';
 }

@@ -5195,6 +5195,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_legend_label_ceiling => 'תקרה';
 
   @override
+  String get diveLog_legend_label_decoStops => 'Deco stops';
+
+  @override
   String get diveLog_legend_label_cns => 'CNS%';
 
   @override
@@ -6631,6 +6634,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get diveLog_tooltip_ceiling => 'תקרה';
 
   @override
+  String get diveLog_tooltip_decoStop => 'Deco stop';
+
+  @override
   String get diveLog_tooltip_cns => 'CNS';
 
   @override
@@ -6776,6 +6782,9 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get divePlanner_action_convertToDive => 'המר לצלילה';
+
+  @override
+  String get divePlanner_action_deletePlan => 'מחק תוכנית';
 
   @override
   String get divePlanner_action_editTank => 'ערוך מיכל';
@@ -6952,6 +6961,14 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get divePlanner_message_noProfile => 'אין פרופיל להצגה';
+
+  @override
+  String divePlanner_message_deleteConfirmation(String name) {
+    return 'למחוק את \'$name\'?';
+  }
+
+  @override
+  String get divePlanner_message_planDeleted => 'התוכנית נמחקה';
 
   @override
   String get divePlanner_message_planSaved => 'תכנית נשמרה';
@@ -9591,6 +9608,10 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get equipment_serviceClocks_empty => 'אין שעוני טיפולים';
+
+  @override
+  String get equipment_serviceClocks_unconfigured =>
+      'לא הוגדר מרווח - הקישו כדי להגדיר';
 
   @override
   String equipment_serviceClocks_dueOn(String date) {
@@ -18533,6 +18554,9 @@ class AppLocalizationsHe extends AppLocalizations {
   String get divePlanner_segmentType_safetyStop => 'עצירת בטיחות';
 
   @override
+  String get divePlanner_undo => 'בטל';
+
+  @override
   String get gasCalculators_rockBottom_aboutDescription =>
       'Rock Bottom הוא מינימום עתודת הגז הנדרש לעלייה חירומית תוך שיתוף אוויר עם השותף שלך.\n\n• משתמש בקצבי SAC במצב לחץ (2-3 כפול מהרגיל)\n• מניח ששני הצוללים על מיכל אחד\n• כולל עצירת בטיחות כשמופעלת\n\nתמיד סיים את הצלילה לפני שמגיעים ל-Rock Bottom!';
 
@@ -19913,6 +19937,9 @@ class AppLocalizationsHe extends AppLocalizations {
 
   @override
   String get settings_mediaStorage_transfers_state_transferring => 'מעלה';
+
+  @override
+  String get settings_mediaStorage_transfers_state_deleting => 'מסיר מהענן';
 
   @override
   String get settings_mediaStorage_transfers_state_done => 'הושלם';
@@ -21419,4 +21446,36 @@ class AppLocalizationsHe extends AppLocalizations {
   String dataQuality_detail_chipCount(int count) {
     return 'סקירה ($count)';
   }
+
+  @override
+  String get settings_mediaStorage_quality_section => 'איכות העלאה';
+
+  @override
+  String get settings_mediaStorage_quality_photos => 'תמונות';
+
+  @override
+  String get settings_mediaStorage_quality_video => 'וידאו';
+
+  @override
+  String get settings_mediaStorage_quality_original => 'מקורי';
+
+  @override
+  String get settings_mediaStorage_quality_high => 'גבוהה';
+
+  @override
+  String get settings_mediaStorage_quality_balanced => 'מאוזנת';
+
+  @override
+  String get settings_mediaStorage_quality_small => 'קטנה';
+
+  @override
+  String get settings_mediaStorage_quality_caveat =>
+      'כאשר נקבעת רמת דחיסה, קבצי המקור ברזולוציה מלאה אינם מועלים; הם נשארים במכשיר זה בלבד.';
+
+  @override
+  String get settings_mediaStorage_quality_reuploadQueued => 'העלאה מחדש בתור';
+
+  @override
+  String get settings_mediaStorage_quality_linuxFfmpegHint =>
+      'התקן ffmpeg כדי לאפשר דחיסת וידאו. עד אז מועלים קבצי המקור.';
 }

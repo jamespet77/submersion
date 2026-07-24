@@ -138,6 +138,7 @@ void main() {
           isApplePlatformProvider.overrideWithValue(apple),
         ],
         child: const MaterialApp(
+          locale: Locale('en'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: MediaStoragePage(),
@@ -461,6 +462,51 @@ void main() {
     );
   });
 
+  testWidgets('the quality section renders both dropdowns and the caveat', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.runAsync(() async {
+      await tester.pumpWidget(app(statusHint: 'dive-media @ minio'));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
+    expect(find.byKey(const Key('media-quality-photos')), findsOneWidget);
+    expect(find.byKey(const Key('media-quality-video')), findsOneWidget);
+  });
+
+  testWidgets('changing the photo quality dropdown writes through', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.runAsync(() async {
+      await tester.pumpWidget(app(statusHint: 'dive-media @ minio'));
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
+
+    final dropdown = find.byKey(const Key('media-quality-photos'));
+    await tester.ensureVisible(dropdown);
+    await tester.runAsync(() async {
+      await tester.tap(dropdown);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+    });
+    await tester.runAsync(() async {
+      await tester.tap(find.text('Small').last);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('media_store_photo_quality'), 'small');
+  });
+
   testWidgets('backfill enqueues and reports the count', (tester) async {
     tester.view.physicalSize = const Size(800, 2200);
     tester.view.devicePixelRatio = 1.0;
@@ -555,6 +601,7 @@ void main() {
             isApplePlatformProvider.overrideWithValue(true),
           ],
           child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: MediaStoragePage(),
@@ -599,6 +646,7 @@ void main() {
             isApplePlatformProvider.overrideWithValue(true),
           ],
           child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: MediaStoragePage(),
@@ -630,6 +678,7 @@ void main() {
             isApplePlatformProvider.overrideWithValue(true),
           ],
           child: const MaterialApp(
+            locale: Locale('en'),
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             home: MediaStoragePage(),
@@ -798,6 +847,59 @@ void main() {
       service.connectCalls,
       0,
       reason: 'a path in the endpoint is invalid',
+    );
+  });
+
+  testWidgets('Linux hint shows when video level set and ffmpeg missing', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(800, 2600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    SharedPreferences.setMockInitialValues({
+      'media_store_video_quality': 'small',
+    });
+    await tester.runAsync(() async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            mediaStoreRuntimeProvider.overrideWith((ref) async => null),
+            mediaStoreCredentialsStoreProvider.overrideWithValue(
+              MediaStoreCredentialsStore(storage: InMemoryKeychain()),
+            ),
+            mediaStoreServiceProvider.overrideWithValue(service),
+            mediaBackfillServiceProvider.overrideWithValue(backfill),
+            mediaStoreStatusHintProvider.overrideWith(
+              (ref) async => 'dive-media @ minio',
+            ),
+            mediaTransferActiveCountProvider.overrideWith(
+              (ref) => Stream.value(0),
+            ),
+            isApplePlatformProvider.overrideWithValue(false),
+            isLinuxPlatformProvider.overrideWithValue(true),
+            videoTranscodeAvailableProvider.overrideWith((ref) async => false),
+          ],
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: MediaStoragePage(),
+          ),
+        ),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump(); // policy load applies; video level becomes 'small'
+      // The availability provider is only watched once _videoQuality is set
+      // (the if-condition short-circuits before it), so a second cycle lets
+      // that provider resolve and the hint render.
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await tester.pump();
+    });
+    await tester.ensureVisible(
+      find.byKey(const Key('media-quality-linux-ffmpeg-hint')),
+    );
+    expect(
+      find.byKey(const Key('media-quality-linux-ffmpeg-hint')),
+      findsOneWidget,
     );
   });
 }
